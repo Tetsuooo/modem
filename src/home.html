@@ -1,0 +1,69 @@
+<!-- src/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>modem</title>
+  <style>
+    .content {
+      position: fixed;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) scaleY(3); /* Increased vertical stretch */
+      text-align: center;
+      z-index: 2;
+      background: transparent;
+      width: 100%;
+      padding: 2rem;
+    }
+    
+    .content h1 {
+      font-size: 8rem; /* Increased size */
+      font-weight: bold;
+      margin: 0 auto;
+      color: black;
+      letter-spacing: 0.1em;
+    }
+    
+    .content p {
+      font-size: 1.5rem;
+      color: black;
+      margin: -1rem auto; /* Reduced margin to move closer to title */
+      font-weight: bold;
+      font-style: normal;
+    }
+    
+    .social-icons {
+      position: fixed; /* Position at bottom */
+      bottom: -6.5rem; /* Move much closer to the bottom edge */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .social-icons a {
+      text-decoration: none;
+      color: black;
+      font-size: 1.2rem; /* Smaller links */
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>modem</h1>
+    <p>a radio show about internet music...</p>
+    <div class="social-icons">
+      <a href="https://www.instagram.com/modemodemodem/" title="Instagram">ig</a>
+      <a href="https://www.facebook.com/modemodemodem/" title="Facebook">fb</a>
+      <a href="https://soundcloud.com/modemodemodem" title="SoundCloud">sc</a>
+      <a href="https://modemodemodem.bandcamp.com/music" title="Bandcamp">bc</a>
+      <a href="https://www.youtube.com/watch?v=M--MVB9owgc" title="YouTube">yt</a>
+      <a href="mailto:podcastmodem@gmail.com" title="Email">mail</a>
+    </div>
+  </div>
+</body>
+</html>

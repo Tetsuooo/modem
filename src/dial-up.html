@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>modem: dial-up</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #ffffff, #f0f0f0);
+      min-height: 100vh;
+      overflow: hidden; /* Disable scrolling by default (landscape) */
+    }
+    .content {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;  /* Center vertically */
+      justify-content: center;
+      transform: translateY(-5vh); /* Reduced from -15vh to make it more centered */
+      margin-top: -2rem; /* Offset the nav bar height */
+    }
+    .dial-up-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.2rem;
+      max-width: 120%;
+      margin: 0 auto;  /* Center the grid */
+    }
+    .dial-up-item {
+      font-size: 1.2rem;
+      font-weight: normal;
+      color: black;
+      text-decoration: none;
+      display: inline-block;
+      width: fit-content;
+      /* Remove transition */
+    }
+    .dial-up-item:hover {
+      color: black;
+      background: rgba(255, 255, 0, 0.8);
+    }
+    .preview-image {
+      position: fixed;
+      max-width: 512px;  /* Max size 512px */
+      max-height: 512px; /* Max size 512px */
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 99997;
+    }
+    .back-arrow {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+      color: black;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 200000;
+      transition: transform 0.2s;
+    }
+    .back-arrow:hover {
+      transform: scale(1.1);
+    }
+    nav {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1rem 0;
+      background: white;
+      position: fixed;
+      top: 0;
+      z-index: 200000;
+    }
+    nav a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    nav a:hover {
+      color: gray;
+    }
+    .dial-up-list-sequential {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    @media screen and (orientation: portrait) {
+      body {
+        overflow: auto; /* Enable scrolling in portrait mode */
+      }
+      .content {
+        align-items: flex-start;
+        padding: 2rem;
+        margin-top: 4rem; /* Add more space at top in portrait */
+        transform: none; /* Remove the upward shift in portrait */
+      }
+      .dial-up-list {
+        display: none !important;
+      }
+      .dial-up-list-sequential {
+        display: flex !important;
+        padding-left: 2rem;
+      }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pixi-apngandgif@latest/dist/pixi-apngandgif.min.js"></script>
+  <script type="module">
+    // Import the loadSpritesheet function and attach it to window.Framework.
+    import { loadSpritesheet } from './framework.js';
+    window.Framework = { loadSpritesheet };
+    // Set a ready promise so that other scripts can await this if needed.
+    window.frameworkReadyPromise = Promise.resolve(window.Framework);
+    console.log("Framework loaded:", window.Framework);
+  </script>
+</head>
+<body>
+  <button class="back-arrow" onclick="window.location.hash = ''">← back</button>
+  <div class="content">
+    <div class="dial-up-list">
+      <a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a>
+      <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a>
+      <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a>
+      <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a>
+      <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a>
+      <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a>
+      <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a>
+      <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a>
+      <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a>
+      <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a>
+      <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a>
+      <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a>
+      <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a>
+      <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a>
+      <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a>
+      <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a>
+      <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a>
+      <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a>
+      <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a>
+      <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a>
+      <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a>
+      <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a>
+      <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a>
+      <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a>
+      <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a>
+      <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a>
+      <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a>
+      <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a>
+      <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a>
+      <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a>
+      <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a>
+      <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a>
+      <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a>
+      <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a>
+      <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a>
+      <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a>
+      <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a>
+      <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a>
+      <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a>
+    </div>
+    <div class="dial-up-list-sequential">
+      <a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a>
+      <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a>
+      <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a>
+      <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a>
+      <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a>
+      <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a>
+      <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a>
+      <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a>
+      <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a>
+      <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a>
+      <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a>
+      <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a>
+      <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a>
+      <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a>
+      <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a>
+      <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a>
+      <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a>
+      <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a>
+      <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a>
+      <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a>
+      <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a>
+      <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a>
+      <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a>
+      <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a>
+      <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a>
+      <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a>
+      <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a>
+      <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a>
+      <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a>
+      <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a>
+      <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a>
+      <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a>
+      <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a>
+      <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a>
+      <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a>
+      <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a>
+      <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a>
+      <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a>
+      <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a>
+    </div>
+  </div>
+  <script>
+    // Make these available globally for reinitialization
+    window.assetData = null;
+    window.sampleInterval = null;
+    window.BASE_ASSET_PATH = 'https://m-o-d-e-m.s3.eu-central-1.amazonaws.com/assets';
+    window.mixSequences = new Map();
+    window.preview = null;
+
+    function addHoverListeners() {
+        document.querySelectorAll('.dial-up-item').forEach((link) => {
+            link.addEventListener('mouseenter', handleMouseEnter);
+            link.addEventListener('mouseleave', handleMouseLeave);
+        });
+    }
+
+    function removeHoverListeners() {
+        document.querySelectorAll('.dial-up-item').forEach((link) => {
+            link.removeEventListener('mouseenter', handleMouseEnter);
+            link.removeEventListener('mouseleave', handleMouseLeave);
+        });
+    }
+
+    function handleMouseEnter(e) {
+        if (window.sampleInterval) {
+            clearInterval(window.sampleInterval);
+            window.sampleInterval = null;
+        }
+        const mixNum = e.target.href.split('#mix')[1];
+        window.mixSequences?.delete(window.getMixKey(mixNum));
+        
+        // Create a new preview if needed
+        if (!window.preview || !window.preview.parentNode) {
+            window.preview = document.createElement('img');
+            window.preview.className = 'preview-image';
+            window.preview.crossOrigin = "anonymous";
+            document.body.appendChild(window.preview);
+        }
+        
+        // Set current active mix for validation
+        window.currentActiveMix = mixNum;
+        
+        window.updatePreview(mixNum);
+        window.sampleInterval = setInterval(() => {
+            // Only update if this mix is still active
+            if (window.currentActiveMix === mixNum) {
+                window.updatePreview(mixNum);
+            }
+        }, 500);
+    }
+
+    function handleMouseLeave() {
+        if (window.sampleInterval) {
+            clearInterval(window.sampleInterval);
+            window.sampleInterval = null;
+        }
+        window.currentActiveMix = null;
+        if (window.preview) {
+            window.preview.style.opacity = '0';
+            // Remove preview after fade animation
+            setTimeout(() => {
+                if (!window.currentActiveMix && window.preview) {
+                    window.preview.remove();
+                    window.preview = null;
+                }
+            }, 200); // Match the CSS transition time
+        }
+    }
+
+    function cleanup() {
+        if (window.sampleInterval) {
+            clearInterval(window.sampleInterval);
+            window.sampleInterval = null;
+        }
+        window.currentActiveMix = null;
+        if (window.preview) {
+            window.preview.remove();
+            window.preview = null;
+        }
+        window.mixSequences?.clear();
+    }
+
+    // Clean up when navigating away
+    window.addEventListener('unload', cleanup);
+    window.addEventListener('beforeunload', cleanup);
+    // Also clean up when this script is re-run
+    cleanup();
+
+    function showIframeForMix() {
+        const hash = window.location.hash;
+        const backArrow = document.querySelector('.back-arrow');
+        
+        if (hash && /^#mix\d+$/.test(hash)) {
+            let iframe = document.getElementById('mix-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'mix-iframe';
+                iframe.style.position = 'fixed';
+                iframe.style.bottom = '0px';
+                iframe.style.right = '0px';
+                iframe.style.border = 'none';
+                iframe.style.width = '100vw';
+                iframe.style.height = '100vh';
+                iframe.style.zIndex = '150000';
+                // Add necessary permissions for embedded content
+                iframe.setAttribute('allow', 'autoplay; encrypted-media');
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+                document.body.appendChild(iframe);
+            }
+            iframe.src = `https://modemodemodem.xyz/${hash}`;
+            // Add a message to the parent window that it's in an iframe
+            try {
+                iframe.contentWindow.postMessage({ type: 'EMBEDDED_IN_IFRAME' }, '*');
+            } catch (e) {
+                console.log('Could not send message to iframe');
+            }
+            backArrow.style.display = 'block';
+
+            // Clean up all preview functionality
+            removeHoverListeners();
+            if (window.sampleInterval) {
+                clearInterval(window.sampleInterval);
+                window.sampleInterval = null;
+            }
+            if (window.preview) {
+                window.preview.remove();
+                window.preview = null;
+            }
+        } else {
+            const existingIframe = document.getElementById('mix-iframe');
+            if (existingIframe) {
+                existingIframe.parentNode.removeChild(existingIframe);
+            }
+            backArrow.style.display = 'none';
+            
+            // Reinitialize preview functionality
+            if (!window.preview) {
+                window.preview = document.createElement('img');
+                window.preview.className = 'preview-image';
+                window.preview.crossOrigin = "anonymous";
+                document.body.appendChild(window.preview);
+            }
+            addHoverListeners();
+        }
+    }
+
+    window.positionPreviewRandomly = function() {
+      const maxX = window.innerWidth - 512;
+      const maxY = window.innerHeight - 512;
+      window.preview.style.left = Math.random() * maxX + 'px';
+      window.preview.style.top = Math.random() * maxY + 'px';
+    };
+
+    window.shuffleArray = function(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
+    window.getMixKey = function(mixNum) {
+      const num = parseInt(mixNum);
+      return `mix${num < 10 ? '0' + num : num}`;
+    };
+
+    window.createSequenceForMix = function(mixKey, mixData) {
+      const validImages = [];
+      
+      if (mixData.samples && Array.isArray(mixData.samples)) {
+        validImages.push(...mixData.samples
+          .filter(sample => 
+            sample.filename && 
+            !sample.filename.toLowerCase().includes('spritesheet') &&
+            /\.(png|jpg|jpeg|gif)$/i.test(sample.filename)
+          )
+          .map(sample => ({
+            path: `${window.BASE_ASSET_PATH}/${mixKey}/samples/${sample.filename}`,
+            type: 'sample'
+          }))
+        );
+      }
+      
+      if (mixData.mist && Array.isArray(mixData.mist)) {
+        validImages.push(...mixData.mist
+          .filter(mist => 
+            mist.filename && 
+            !mist.filename.toLowerCase().includes('spritesheet') &&
+            /\.(png|jpg|jpeg|gif)$/i.test(mist.filename)
+          )
+          .map(mist => ({
+            path: `${window.BASE_ASSET_PATH}/${mixKey}/mist/${mist.filename}`,
+            type: 'mist'
+          }))
+        );
+      }
+
+      return {
+        images: window.shuffleArray(validImages),
+        currentIndex: 0
+      };
+    };
+
+    window.getNextImageForMix = function(mixNum, mixData) {
+      const mixKey = window.getMixKey(mixNum);
+      
+      let sequence = window.mixSequences.get(mixKey);
+      if (!sequence || sequence.currentIndex >= sequence.images.length) {
+        sequence = window.createSequenceForMix(mixKey, mixData);
+        window.mixSequences.set(mixKey, sequence);
+      }
+
+      const image = sequence.images[sequence.currentIndex];
+      sequence.currentIndex++;
+
+      return image;
+    };
+
+    window.updatePreview = async function(mixNum) {
+      if (!window.assetData) {
+        console.warn('Asset data not loaded yet');
+        return;
+      }
+
+      try {
+        const mixKey = window.getMixKey(mixNum);
+        const mixData = window.assetData[mixKey];
+
+        if (!mixData) {
+          console.warn(`No data found for ${mixKey}`);
+          return;
+        }
+
+        const nextImage = window.getNextImageForMix(mixNum, mixData);
+        if (!nextImage) {
+          console.warn(`No valid images found for ${mixKey}`);
+          return;
+        }
+
+        if (!window.preview || !window.preview.parentNode) {
+          window.preview = document.createElement('img');
+          window.preview.className = 'preview-image';
+          document.body.appendChild(window.preview);
+        }
+
+        window.preview.crossOrigin = "anonymous";
+        window.preview.onload = () => {
+          window.preview.style.opacity = '1';
+          window.positionPreviewRandomly();
+        };
+        window.preview.onerror = (e) => {
+          console.log(`Failed to load image: ${e.target.src}`);
+          window.preview.style.opacity = '0';
+          setTimeout(() => window.updatePreview(mixNum), 100);
+        };
+        window.preview.src = nextImage.path;
+        console.log(`Loading ${nextImage.type} image:`, nextImage.path);
+
+      } catch (error) {
+        console.error('Error updating preview:', error);
+      }
+    };
+
+    window.loadAssetData = async function() {
+      try {
+        const response = await fetch(`${window.BASE_ASSET_PATH}/asset-data.json`);
+        if (!response.ok) {
+          throw new Error('Failed to load asset data');
+        }
+        window.assetData = await response.json();
+        console.log('Asset data loaded:', window.assetData);
+      } catch (error) {
+        console.error('Error loading asset data:', error);
+      }
+    };
+
+    // Initialize preview
+    window.preview = document.createElement('img');
+    window.preview.className = 'preview-image';
+    window.preview.crossOrigin = "anonymous";
+    document.body.appendChild(window.preview);
+
+    // Load initial data
+    window.loadAssetData();
+
+    // Add initial hover listeners
+    addHoverListeners();
+
+    // Initialize hashchange listener and back button
+    window.addEventListener('hashchange', showIframeForMix);
+    document.addEventListener('DOMContentLoaded', showIframeForMix);
+
+    const backArrow = document.querySelector('.back-arrow');
+    backArrow.addEventListener('click', () => {
+        window.location.hash = '';
+    });
+  </script>
+</body>
+</html>

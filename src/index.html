@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="initial-path" content="home.html">
+  <title>modem</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      background: white;
+    }
+
+    .background-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #swirlyCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    .cloud {
+      position: absolute;
+      width: 600px; /* Doubled size */
+      height: 600px; /* Doubled size */
+      filter: blur(150px); /* Increased blur for bigger blobs */
+      opacity: 0.8; /* Increased opacity */
+      pointer-events: none;
+    }
+
+    .cloud:nth-child(1) {
+      top: 20%;
+      left: 30%;
+      background: radial-gradient(circle, rgba(255, 0, 0, 0.6), transparent);
+      animation: move1 40s infinite ease-in-out;
+    }
+
+    .cloud:nth-child(2) {
+      top: 60%;
+      left: 70%;
+      background: radial-gradient(circle, rgba(0, 255, 0, 0.6), transparent);
+      animation: move2 50s infinite ease-in-out;
+    }
+
+    .cloud:nth-child(3) {
+      top: 70%;
+      left: 20%;
+      background: radial-gradient(circle, rgba(255, 0, 255, 0.6), transparent);
+      animation: move3 45s infinite ease-in-out;
+    }
+
+    .cloud:nth-child(4) {
+      top: 30%;
+      left: 80%;
+      background: radial-gradient(circle, rgba(255, 165, 0, 0.6), transparent);
+      animation: move4 35s infinite ease-in-out;
+    }
+
+    @keyframes move1 { 
+      50% { transform: translate(-30%, -20%) scale(1.5); }
+    }
+    @keyframes move2 { 
+      50% { transform: translate(20%, -40%) scale(1.5); }
+    }
+    @keyframes move3 { 
+      50% { transform: translate(-40%, 30%) scale(1.5); }
+    }
+    @keyframes move4 { 
+      50% { transform: translate(30%, -30%) scale(1.5); }
+    }
+
+    nav {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1rem 0;
+      background: rgba(255, 255, 255, 0.8);
+      position: fixed;
+      top: 0;
+      z-index: 200000;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    #content {
+      position: relative;
+      z-index: 2;
+      min-height: calc(100vh - 60px); /* Account for nav height */
+      margin-top: 60px; /* Space for nav */
+      background: transparent; /* Ensure content background is transparent */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="swirlyCanvas"></canvas>
+  <div class="background-animation">
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+  </div>
+
+  <nav>
+    <a href="/home">home</a>
+    <a href="/radio-show">radio show</a>
+    <a href="/year-end-lists">year-end lists</a>
+    <a href="/dial-up">dial-up</a>
+    <a href="/shop">shop</a>
+    <a href="/support">support</a>
+  </nav>
+
+  <div id="content">
+    <!-- Content will be loaded here -->
+  </div>
+
+  <script>
+    class SwirlyLine {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.points = [];
+        this.isStraightLine = Math.random() < 0.35;
+        
+        // Fixed dash count first - keep between 6 and 26
+        this.dashCount = Math.floor(Math.random() * 20) + 6;
+        
+        // Set line length based on dash count - 20px per dash
+        const baseLength = this.dashCount * 20;
+        this.maxPoints = this.isStraightLine ? 
+          baseLength * 1.2 : // Slightly longer for straight lines
+          baseLength;
+
+        this.life = 0;
+        this.drawingIndex = 0;    // Current dash being drawn
+        this.erasingIndex = 0;    // Current dash being erased
+        this.drawDelay = 150;      // Faster drawing
+        this.displayDelay = 1000; // How long to show complete line
+        this.lastDrawTime = 0;    // Track when drawing finished
+        this.erasingDelay = 150;   // Match draw speed
+        this.maxLife = 9999;      // Use indices instead of life for control
+        this.visibleDashIndices = [];
+        this.currentDashIndex = 0;  // Track current dash being drawn
+        this.nextActionTime = performance.now(); // Start immediately
+        this.circles = []; // Store circle positions and colors
+        this.addCircle = Math.random() < 0.5; // 35% chance of having circles
+        this.numCircles = this.addCircle ? (Math.random() < 0.1 ? 2 : 1) : 0; // 10% of lines with circles get 2
+        this.pathLength = 0; // Store total path length
+        this.maxDashLength = 20; // Maximum length for any dash
+        this.hasSecondaryWave = Math.random() < 0.4; // 50% chance of having secondary wave
+        this.isErasing = false;  // Track if we're in erase phase
+        this.generatePath();
+        this.calculatePathLength();
+        this.generateCircles();
+      }
+
+      calculatePathLength() {
+        this.pathLength = 0;
+        for (let i = 1; i < this.points.length; i++) {
+          const dx = this.points[i].x - this.points[i - 1].x;
+          const dy = this.points[i].y - this.points[i - 1].y;
+          this.pathLength += Math.sqrt(dx * dx + dy * dy);
+        }
+      }
+
+      generatePath() {
+        this.points = [];
+        const edgeRepulsionDistance = Math.min(this.canvas.width, this.canvas.height) * 0.08;
+        const maxRepulsionForce = 0.05;
+        
+        // Different starting position logic for straight vs curved lines
+        let x, y;
+        if (this.isStraightLine) {
+          x = Math.random() * this.canvas.width;
+          y = Math.random() * this.canvas.height;
+        } else {
+          const safeBounds = edgeRepulsionDistance * 2;
+          x = safeBounds + Math.random() * (this.canvas.width - safeBounds * 2);
+          y = safeBounds + Math.random() * (this.canvas.height - safeBounds * 2);
+        }
+        
+        let angle = this.isStraightLine ? 
+          (Math.random() < 0.5 ? 0 : Math.PI / 2) :
+          Math.random() * Math.PI * 2;
+
+        function calculateEdgeRepulsion(x, y, width, height) {
+          let angleAdjustment = 0;
+          let distanceToEdge;
+          
+          // More gradual repulsion with squared falloff
+          const calcRepulsion = (dist) => {
+            const force = (1 - (dist / edgeRepulsionDistance)) ** 2;
+            return force * maxRepulsionForce;
+          };
+          
+          if (x < edgeRepulsionDistance) 
+            angleAdjustment -= calcRepulsion(x);
+          if (width - x < edgeRepulsionDistance) 
+            angleAdjustment += calcRepulsion(width - x);
+          if (y < edgeRepulsionDistance) 
+            angleAdjustment -= calcRepulsion(y);
+          if (height - y < edgeRepulsionDistance) 
+            angleAdjustment += calcRepulsion(height - y);
+          
+          return angleAdjustment;
+        }
+
+        if (this.isStraightLine) {
+          const numTurns = Math.floor(Math.random() * 2) + 1;
+          const turnPoints = Array(numTurns).fill(0)
+            .map(() => Math.floor(Math.random() * (this.maxPoints - 100) + 50))
+            .sort((a, b) => a - b);
+          
+          for (let i = 0; i < this.maxPoints; i++) {
+            if (turnPoints.includes(i)) {
+              angle = (angle === 0) ? Math.PI / 2 : 0;
+            }
+            
+            x += Math.cos(angle) * 2;
+            y += Math.sin(angle) * 2;
+            this.points.push({ x, y });
+          }
+        } else {
+          let turnDirection = Math.random() * Math.PI * 2;
+          const baseSpeed = 1.5 + Math.random() * 0.5;
+          const turnSpeed = (Math.random() * 0.04 + 0.05) * (Math.random() < 0.5 ? 1 : -1); // Reduced turn speed
+          const waviness = Math.random() * 0.2 + 0.2; // Reduced waviness range
+          const complexity = Math.random() * 0.01 + 0.05; // Reduced complexity
+          const secondaryWave = this.hasSecondaryWave ? (Math.random() * 0.5 + 0.3) : 0; // Reduced secondary wave
+          const loopFactor = Math.random() * 0.01 + 0.03; // Reduced loop tendency
+          const turnVariation = Math.random() * 0.2 + 0.05; // Reduced turn variation
+          
+          const padding = Math.min(this.canvas.width, this.canvas.height) * 0.05;
+          
+          for (let i = 0; i < this.maxPoints; i++) {
+            turnDirection += Math.sin(i * turnVariation) * 0.05; // Reduced turn direction change
+            
+            const primaryWave = Math.sin(i * complexity) * waviness;
+            const secondaryPattern = Math.cos(i * complexity * 0.5) * secondaryWave;
+            const loopInfluence = Math.sin(i * 0.01) * loopFactor; // Slower loop frequency
+            
+            angle += turnSpeed * (primaryWave + secondaryPattern) + 
+                     Math.sin(turnDirection) * loopInfluence * 0.5; // Reduced loop influence
+            
+            const edgeAngle = calculateEdgeRepulsion(x, y, this.canvas.width, this.canvas.height);
+            angle += edgeAngle;
+
+            const speedVariation = 1 + Math.sin(i * 0.05) * 0.2; // Smoother speed changes
+            const currentSpeed = baseSpeed * speedVariation;
+            
+            x += Math.cos(angle) * currentSpeed;
+            y += Math.sin(angle) * currentSpeed;
+
+            // Soft clamping
+            x = Math.max(-padding, Math.min(this.canvas.width + padding, x));
+            y = Math.max(-padding, Math.min(this.canvas.height + padding, y));
+
+            this.points.push({ x, y });
+          }
+        }
+      }
+
+      generateCircles() {
+        if (!this.addCircle) return;
+        
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffa500'];
+        const usedIndices = new Set();
+
+        for (let i = 0; i < this.numCircles; i++) {
+          let dashIndex;
+          // Keep trying until we find an unused index
+          do {
+            dashIndex = Math.floor(Math.random() * this.dashCount);
+          } while (usedIndices.has(dashIndex));
+          usedIndices.add(dashIndex);
+
+          const baseDashLength = this.pathLength / this.dashCount;
+          const actualDashLength = Math.min(baseDashLength, this.maxDashLength);
+          
+          let currentLength = 0;
+          let targetLength = baseDashLength * dashIndex;
+          let pointIndex = 0;
+
+          // Find correct point for circle based on actual path length
+          while (currentLength < targetLength && pointIndex < this.points.length - 1) {
+            const dx = this.points[pointIndex + 1].x - this.points[pointIndex].x;
+            const dy = this.points[pointIndex + 1].y - this.points[pointIndex].y;
+            currentLength += Math.sqrt(dx * dx + dy * dy);
+            pointIndex++;
+          }
+
+          this.circles.push({
+            dashIndex,
+            point: this.points[pointIndex],
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: actualDashLength / 2
+          });
+        }
+      }
+
+      update() {
+        const now = performance.now();
+        if (now < this.nextActionTime) return false;
+
+        // Drawing phase
+        if (this.drawingIndex < this.dashCount) {
+          this.visibleDashIndices.push(this.drawingIndex);
+          this.drawingIndex++;
+          this.nextActionTime = now + this.drawDelay;
+          if (this.drawingIndex === this.dashCount) {
+            this.lastDrawTime = now; // Mark when drawing finished
+          }
+          return false;
+        }
+
+        // Display delay after drawing completes
+        if (now - this.lastDrawTime < this.displayDelay) {
+          return false;
+        }
+
+        // Erasing phase
+        if (this.visibleDashIndices.length > 0) {
+          this.visibleDashIndices.shift();
+          this.nextActionTime = now + this.drawDelay;
+          return false;
+        }
+
+        return true; // Remove when fully erased
+      }
+
+      draw() {
+        if (this.visibleDashIndices.length === 0) return;
+
+        // Fixed dash and gap lengths for consistent appearance
+        const dashLength = 15; // Fixed dash length
+        const gapLength = dashLength * 0.8;
+
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+        this.ctx.setLineDash([dashLength, gapLength]);
+
+        this.visibleDashIndices.forEach(dashIndex => {
+          if (this.circles.some(c => c.dashIndex === dashIndex)) return;
+          
+          const startPoint = dashIndex * Math.floor(this.maxPoints / this.dashCount);
+          const endPoint = Math.min(startPoint + Math.floor(this.maxPoints / this.dashCount), this.points.length - 1);
+          
+          // Draw one continuous line segment for this dash
+          this.ctx.beginPath();
+          this.ctx.moveTo(this.points[startPoint].x, this.points[startPoint].y);
+          
+          // Draw curve through all points in this dash segment
+          for (let i = startPoint + 1; i <= endPoint; i++) {
+            this.ctx.lineTo(this.points[i].x, this.points[i].y);
+          }
+          this.ctx.stroke();
+        });
+
+        // Draw circles
+        this.circles.forEach(circle => {
+          if (this.visibleDashIndices.includes(circle.dashIndex)) {
+            this.ctx.beginPath();
+            this.ctx.fillStyle = circle.color;
+            this.ctx.arc(circle.point.x, circle.point.y, circle.size, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+        });
+      }
+    }
+
+    const canvas = document.getElementById('swirlyCanvas');
+    const ctx = canvas.getContext('2d');
+    const lines = [];
+    const NUM_LINES = 5;
+    const SPAWN_DELAY = 500; // Slower initial spawning
+    let lastSpawnTime = 0;
+    let isInitializing = true; // Track initial state
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initSwirlyLines() {
+      resizeCanvas();
+    }
+
+    function animate() {
+      const now = performance.now();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Only spawn first line after a short delay
+      if (isInitializing && lines.length === 0 && now - lastSpawnTime > 1000) {
+        lines.push(new SwirlyLine(canvas));
+        lastSpawnTime = now;
+        isInitializing = false;
+      }
+      // Normal spawning after initialization
+      else if (!isInitializing && lines.length < NUM_LINES && now - lastSpawnTime > SPAWN_DELAY) {
+        lines.push(new SwirlyLine(canvas));
+        lastSpawnTime = now;
+      }
+      
+      // Update and draw existing lines
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (lines[i].update()) {
+          lines.splice(i, 1);
+        }
+      }
+      
+      lines.forEach(line => line.draw());
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    initSwirlyLines();
+    lastSpawnTime = performance.now(); // Set initial spawn time
+    animate();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const content = document.getElementById('content');
+      const links = document.querySelectorAll('nav a');
+      const defaultPage = 'home.html';
+
+      document.body.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.href.startsWith(window.location.origin)) {
+          link.target = '_blank';
+        }
+      });
+
+      async function loadPage(url) {
+        try {
+          console.log(`Loading page: ${url}`);
+          const fetchUrl = url.endsWith('.html') ? url : `${url}.html`;
+          const response = await fetch(fetchUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to load ${fetchUrl}`);
+          }
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          
+          const oldStyles = document.querySelectorAll('style[data-injected="true"]');
+          oldStyles.forEach(style => style.remove());
+          const styles = doc.querySelectorAll('style');
+          styles.forEach(style => {
+            const newStyle = document.createElement('style');
+            newStyle.textContent = style.textContent;
+            newStyle.setAttribute('data-injected', 'true');
+            document.head.appendChild(newStyle);
+          });
+          
+          const pageContent = doc.querySelector('.content');
+          if (pageContent) {
+            content.innerHTML = '';
+            const clonedContent = pageContent.cloneNode(true);
+            content.appendChild(clonedContent);
+          }
+          
+          const scripts = doc.querySelectorAll('script');
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+              newScript.src = oldScript.src;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
+            content.appendChild(newScript);
+          });
+
+          if (url === 'year-end-lists.html' || url === 'year-end-lists') {
+            initializeYearEndListsHover();
+          } else if (url === 'dial-up.html' || url === 'dial-up') {
+            if (window.loadAssetData) {
+              window.loadAssetData();
+            }
+            const dialUpItems = document.querySelectorAll('.dial-up-item');
+            if (dialUpItems.length > 0 && window.updatePreview) {
+              dialUpItems.forEach((link) => {
+                link.addEventListener('mouseenter', () => {
+                  if (window.sampleInterval) {
+                    clearInterval(window.sampleInterval);
+                  }
+                  const mixNum = link.href.split('#mix')[1];
+                  window.mixSequences?.delete(window.getMixKey(mixNum));
+                  window.updatePreview(mixNum);
+                  window.sampleInterval = setInterval(() => {
+                    window.updatePreview(mixNum);
+                  }, 500);
+                });
+
+                link.addEventListener('mouseleave', () => {
+                  if (window.sampleInterval) {
+                    clearInterval(window.sampleInterval);
+                    window.sampleInterval = null;
+                  }
+                  if (window.preview) {
+                    window.preview.style.opacity = '0';
+                  }
+                });
+              });
+            }
+            if (window.showIframeForMix) {
+              window.showIframeForMix();
+              window.addEventListener('hashchange', window.showIframeForMix);
+            }
+          } else if (url === 'radio-show.html' || url === 'radio-show') {
+            const initGrid = () => {
+              const grid = document.querySelector('.number-grid');
+              if (!grid) {
+                setTimeout(initGrid, 50);
+                return;
+              }
+              if (window.initializeRadioShow) {
+                window.initializeRadioShow();
+              }
+            };
+            initGrid();
+          }
+
+          const pageTitle = doc.querySelector('title');
+          if (pageTitle) {
+            document.title = pageTitle.textContent;
+          }
+        } catch (error) {
+          console.error('Error loading page:', error);
+        }
+      }
+
+      links.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const existingIframe = document.getElementById('mix-iframe');
+          if (existingIframe) {
+            existingIframe.parentNode.removeChild(existingIframe);
+          }
+          history.pushState("", document.title, window.location.pathname + window.location.search);
+          
+          const page = link.getAttribute('href').replace('/', '');
+          loadPage(page);
+          history.pushState({}, '', link.getAttribute('href'));
+        });
+      });
+
+      const currentPath = window.location.pathname;
+      const cleanPath = currentPath.replace(/^\/|\/$/g, '');
+      const pathToLoad = cleanPath || defaultPage.replace('.html', '');
+      loadPage(pathToLoad);
+      
+      window.addEventListener('popstate', () => {
+        const existingIframe = document.getElementById('mix-iframe');
+        if (existingIframe) {
+          existingIframe.parentNode.removeChild(existingIframe);
+        }
+        
+        const currentPath = window.location.pathname;
+        const cleanPath = currentPath.replace(/^\/|\/$/g, '');
+        const pathToLoad = cleanPath || defaultPage.replace('.html', '');
+        loadPage(pathToLoad);
+      });
+    });
+  </script>
+</body>
+</html>
