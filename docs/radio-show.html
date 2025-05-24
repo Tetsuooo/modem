@@ -1,0 +1,195 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: radio show</title><style>body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100vh;
+      background: transparent; /* Transparent to show the animation */
+      overflow: hidden;
+    }
+    nav {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1rem 0;
+      background: white;
+      position: fixed;
+      top: 0;
+      z-index: 10;
+    }
+    nav a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100%;
+      padding: 0;
+    }
+    .radio-show {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      z-index: 1; /* Ensure it overlays the animation */
+    }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+      width: 90%;
+      text-align: center;
+      direction: rtl;
+      margin: 0 auto;
+    }
+    .number-grid div {
+      font-size: 1rem;
+      font-weight: bold;
+      color: black;
+      padding: 8px;  /* Reduced padding for smaller hitbox */
+      border-radius: 0;
+      transition: all 0.15s ease;
+    }
+    .number-grid a {
+      display: block;
+      padding: inherit;
+      margin: -8px;  /* Match the new padding value */
+    }
+    .number-grid div:hover {
+      background: rgba(255, 255, 0, 0.8); /* More saturated and brighter yellow */
+      transform: scale(1.2);
+      box-shadow: 0 0 0 2px #ffff00; /* Sharp yellow border */
+    }
+    .preview-image {
+      position: fixed;
+      width: 256px;
+      height: 256px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 100;
+    }</style></head><body><div class="content"><div class="number-grid"></div></div><script>function initializeRadioShow() {
+      const grid = document.querySelector('.number-grid');
+      if (!grid) {
+        console.warn('Grid element not found');
+        // If grid isn't found, retry after a short delay
+        setTimeout(initializeRadioShow, 100);
+        return;
+      }
+
+      // Clear any existing content and preview
+      grid.innerHTML = '';
+      const existingPreview = document.querySelector('.preview-image');
+      if (existingPreview) {
+        existingPreview.remove();
+      }
+
+      const getCurrentNumber = () => {
+        const startDate = new Date('2025-05-12');
+        const today = new Date();
+        const diffInDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const additionalNumbers = Math.floor(diffInDays / 14);
+        return 212 + additionalNumbers;
+      };
+
+      const totalNumbers = getCurrentNumber();
+      const numbersPerRow = 10;
+      const rows = Math.ceil(totalNumbers / numbersPerRow);
+
+      // Create preview image element
+      const preview = document.createElement('img');
+      preview.className = 'preview-image';
+      document.body.appendChild(preview);
+
+      // Fill grid row by row, starting from the bottom
+      for (let row = rows - 1; row >= 0; row--) {
+        for (let col = 0; col < numbersPerRow; col++) {
+          const div = document.createElement('div');
+          const number = row * numbersPerRow + col + 1;
+          if (number <= totalNumbers) {
+            const link = document.createElement('a');
+            if (number === 1) {
+              link.href = 'https://radiostudent.si/glasba/modem/modem-01-0';
+            } else if (number === 100) {
+              link.href = 'https://modemodemodem.bandcamp.com/album/bag-of-toys';
+            } else if (number === 200) {
+              link.href = 'https://modemodemodem.bandcamp.com/album/bag-of-toys-2';
+            } else {
+              const paddedNumber = number < 10 ? `0${number}` : number;
+              link.href = `https://radiostudent.si/glasba/modem/modem-${paddedNumber}`;
+            }
+            link.textContent = number;
+            link.style.textDecoration = 'none';
+            link.style.color = 'black';
+
+            const handleMouseEnter = () => {
+              preview.src = `./assets/modem_covers/modem${number < 10 ? `0${number}` : number}.webp`;
+              preview.style.opacity = '1';
+              const maxX = window.innerWidth - 256;
+              const maxY = window.innerHeight - 256;
+              preview.style.left = Math.random() * maxX + 'px';
+              preview.style.top = Math.random() * maxY + 'px';
+            };
+
+            const handleMouseLeave = () => {
+              preview.style.opacity = '0';
+            };
+
+            const handlePreviewError = () => {
+              console.log(`Failed to load image: modem${number < 10 ? `0${number}` : number}.webp`);
+              preview.style.opacity = '0';
+            };
+
+            link.addEventListener('mouseenter', handleMouseEnter);
+            link.addEventListener('mouseleave', handleMouseLeave);
+            preview.addEventListener('error', handlePreviewError);
+
+            div.appendChild(link);
+          }
+          grid.appendChild(div);
+        }
+      }
+      
+      console.log('Radio show grid initialized');
+    }
+
+    // Make initialization function available globally
+    window.initializeRadioShow = initializeRadioShow;
+
+    // Set up mutation observer to watch for grid being added to DOM
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.addedNodes) {
+          mutation.addedNodes.forEach((node) => {
+            if (node.classList && node.classList.contains('number-grid')) {
+              initializeRadioShow();
+              observer.disconnect(); // Stop observing once initialized
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Initialize when this script runs
+    initializeRadioShow();
+
+    // Also initialize when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', initializeRadioShow);</script></body></html>

@@ -1,0 +1,151 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: year-end lists</title><style>body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: transparent; /* Transparent to show the animation */
+      overflow: hidden;
+      overflow-x: hidden; /* Allow vertical scroll, prevent horizontal */
+    }
+    nav {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1rem 0;
+      background: white;
+      position: fixed;
+      top: 0;
+      z-index: 10;
+    }
+    nav a {
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .container {
+      display: flex;
+      flex-direction: row; /* Organize into columns */
+      justify-content: center; /* Center columns horizontally */
+      align-items: flex-start;
+      overflow-x: auto; /* Allow horizontal scrolling for many years */
+      padding: 2rem;
+      gap: 2rem;
+      margin-top: calc(5rem + 40px); /* Move all text down by 40px */
+    }
+    .year-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-width: 150px; /* Ensure consistent column width */
+    }
+    .year {
+      font-size: 2.5rem; /* Increased font size */
+      font-weight: bold;
+      margin-bottom: 1rem;
+      padding: 0.5rem 1rem;
+      text-decoration: underline; /* Add underline */
+      color: black; /* Ensure text color is black */
+      display: inline-block;
+      cursor: default; /* Disable pointer cursor */
+      transform: scaleY(2.25); /* Stretch vertically by 225% */
+      text-transform: lowercase; /* Make text lowercase */
+    }
+    .list {
+      margin-top: 1rem;
+      display: flex; /* Added flexbox for stacking */
+      flex-direction: column; /* Stack items vertically */
+      align-items: center; /* Center items horizontally */
+    }
+    .list-item {
+      font-size: 1.2rem; /* Increased font size */
+      font-weight: bold;
+      margin: 1rem 0; /* Increased vertical margin for more spacing */
+      padding: 0 0.2rem; /* Shorter padding for yellow square */
+      color: black; /* Text color */
+      text-decoration: none; /* Remove underline */
+      border: none; /* Remove border */
+      display: inline-block;
+      transform: scaleY(2.25); /* Stretch vertically by 225% */
+      text-transform: lowercase; /* Make text lowercase */
+      line-height: 1; /* Ensure the yellow square matches the text height */
+    }
+    .list-item:hover {
+      background: #ffff00; /* Solid yellow background */
+      box-shadow: 0 0 0 2px #ffff00;
+    }
+    .preview-image {
+      position: fixed; /* Changed from absolute to fixed */
+      top: 60%; /* Slightly below the center */
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 80%; /* Ensure the image is large but fits within the viewport */
+      max-height: 80%;
+      display: none; /* Initially hidden */
+      z-index: 20;
+      pointer-events: none;
+    }
+    .year-end-lists {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      z-index: 1; /* Ensure it overlays the animation */
+    }
+
+    @media (orientation: portrait) {
+      body {
+        overflow: auto; /* Enable scrolling in portrait */
+        height: auto; /* Allow content to determine height */
+      }
+
+      .container {
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden;
+        position: relative;
+        z-index: 10; /* Keep text above images */
+      }
+
+      .year-column {
+        min-width: auto;
+        width: 100%;
+        position: relative;
+        z-index: 10; /* Keep text above images */
+      }
+
+      .preview-image {
+        position: fixed;
+        top: 50vh; /* Center vertically */
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 70vh;
+        z-index: 5; /* Keep images below text */
+      }
+    }</style></head><body><div class="content"><img id="preview-image" class="preview-image" src="" alt="Preview"><div class="container"><div class="year-column"><div class="year">2024</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2024-0" data-image="assets/year_end_list_covers/releases2024.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2024" data-image="assets/year_end_list_covers/labels2024.webp">best labels</a></div></div><div class="year-column"><div class="year">2023</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2023" data-image="assets/year_end_list_covers/releases2023.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2023" data-image="assets/year_end_list_covers/labels2023.webp">best labels</a></div></div><div class="year-column"><div class="year">2022</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2022" data-image="assets/year_end_list_covers/releases2022.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2022" data-image="assets/year_end_list_covers/labels2022.webp">best labels</a></div></div><div class="year-column"><div class="year">2021</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2021" data-image="assets/year_end_list_covers/releases2021.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2021" data-image="assets/year_end_list_covers/labels2021.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2021" data-image="assets/year_end_list_covers/videos2021.webp">best videos</a></div></div><div class="year-column"><div class="year">2020</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2020" data-image="assets/year_end_list_covers/releases2020.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2020" data-image="assets/year_end_list_covers/labels2020.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2020" data-image="assets/year_end_list_covers/videos2020.webp">best videos</a></div></div><div class="year-column"><div class="year">2019</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2019" data-image="assets/year_end_list_covers/releases2019.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2019" data-image="assets/year_end_list_covers/labels2019.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2019" data-image="assets/year_end_list_covers/videos2019.webp">best videos</a></div></div><div class="year-column"><div class="year">2018</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2018" data-image="assets/year_end_list_covers/releases2018.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2018" data-image="assets/year_end_list_covers/labels2018.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2018" data-image="assets/year_end_list_covers/videos2018.webp">best videos</a></div></div><div class="year-column"><div class="year">2017</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-of-2017" data-image="assets/year_end_list_covers/best2017.webp">best of</a></div></div></div></div><script>function initializeYearEndListsHover() {
+      const previewImage = document.getElementById('preview-image');
+      const listItems = document.querySelectorAll('.list-item');
+
+      listItems.forEach(item => {
+        item.addEventListener('mouseenter', () => {
+          const imageSrc = item.getAttribute('data-image');
+          if (imageSrc) {
+            previewImage.src = imageSrc;
+            previewImage.style.display = 'block';
+          }
+        });
+
+        item.addEventListener('mouseleave', () => {
+          previewImage.style.display = 'none';
+        });
+      });
+    }
+
+    // Call the function to initialize hover functionality
+    initializeYearEndListsHover();</script></body></html>
