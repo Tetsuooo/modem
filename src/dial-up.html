@@ -320,7 +320,7 @@
                 iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
                 document.body.appendChild(iframe);
             }
-            iframe.src = `https://modemodemodem.xyz/${hash}`;
+            iframe.src = `https://dial-up.modemodemodem.xyz/${hash}`;
             // Add a message to the parent window that it's in an iframe
             try {
                 iframe.contentWindow.postMessage({ type: 'EMBEDDED_IN_IFRAME' }, '*');
