@@ -38,7 +38,7 @@
     }
 
     .content-text p, .content-text ul {
-      font-size: 1.2rem;
+      font-size: clamp(0.75rem, 1.875vw, 0.9rem); /* Scaled down 25% */
       color: black;
     }
 
@@ -50,11 +50,11 @@
     }
 
     .support-button {
-      font-size: 1.5rem;
+      font-size: clamp(0.75rem, 2.25vw, 1.125rem); /* Scaled down 25% */
       font-weight: bold;
       color: black;
       text-decoration: none;
-      padding: 0.5rem 1rem;
+      padding: 0.375rem 0.75rem; /* 25% smaller */
       border: 2px solid black;
       border-radius: 10px;
       background: white;
@@ -67,6 +67,33 @@
       background-color: #f8f8f8;
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
     }
+
+    @media (max-width: 768px) {
+      .content {
+        flex-direction: column;
+        gap: 1.5rem; /* 25% smaller */
+        padding: 0.75rem; /* 25% smaller */
+        width: 95%;
+      }
+      .content-text {
+        max-width: 100%;
+      }
+      .support-buttons {
+        align-items: center;
+        width: 100%;
+      }
+      .support-button {
+        width: 100%;
+        text-align: center;
+        max-width: 250px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .content {
+        padding: 0.375rem; /* 25% smaller */
+      }
+    }
   </style>
 </head>
 <body>
@@ -74,10 +101,10 @@
     <div class="content-text">
       <p>pls support modem so I can keep spending all my time looking for weird music online ^^</p>
       <ul>
-        <li>8 years</li>
-        <li>209 shows</li>
+        <li><span id="year-count"></span> years</li>
+        <li><span id="show-count"></span> shows</li>
         <li>2 compilations</li>
-        <li>39 artist mixes</li>
+        <li><span id="mix-count"></span> artist mixes</li>
         <li>annual year-end lists</li>
         <li>one guy</li>
       </ul>
@@ -88,5 +115,103 @@
       <a class="support-button" href="https://ko-fi.com/modemodemodem" target="_blank">>>> Ko-fi</a>
     </div>
   </div>
+
+  <script>
+    // Calculate show count based on bi-weekly releases
+    const getCurrentNumber = () => {
+      const startDate = new Date('2025-05-12');
+      const today = new Date();
+      const diffInDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      const additionalNumbers = Math.floor(diffInDays / 14);
+      return 212 + additionalNumbers;
+    };
+
+    // Calculate year count based on January 9th anniversaries
+    const getCurrentYearCount = () => {
+      const startYear = 2017; // Assuming modem started in 2017 (8 years from 2025)
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      
+      // Check if we've passed January 9th this year
+      const janNinth = new Date(currentYear, 0, 9); // Month is 0-indexed
+      const hasPassedAnniversary = today >= janNinth;
+      
+      let yearsCompleted = currentYear - startYear;
+      if (!hasPassedAnniversary) {
+        yearsCompleted -= 1;
+      }
+      
+      return Math.max(yearsCompleted, 0);
+    };
+
+    // Calculate artist mix count by counting links in dial-up.html
+    const getMixCount = async () => {
+      try {
+        const response = await fetch('./dial-up.html');
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const mixLinks = doc.querySelectorAll('a[href*="#mix"]');
+        // Count unique mixes (avoid duplicates from grid and sequential layouts)
+        const uniqueMixes = new Set();
+        mixLinks.forEach(link => {
+          const hash = link.href.split('#')[1];
+          if (hash && hash.startsWith('mix')) {
+            uniqueMixes.add(hash);
+          }
+        });
+        return uniqueMixes.size;
+      } catch (error) {
+        console.error('Error fetching mix count:', error);
+        return 39; // Fallback to current count
+      }
+    };
+
+    // Set the counts immediately
+    const showCount = getCurrentNumber();
+    const yearCount = getCurrentYearCount();
+    
+    const showCountElement = document.getElementById('show-count');
+    const yearCountElement = document.getElementById('year-count');
+    const mixCountElement = document.getElementById('mix-count');
+    
+    if (showCountElement) {
+      showCountElement.textContent = showCount;
+    }
+    if (yearCountElement) {
+      yearCountElement.textContent = yearCount;
+    }
+
+    // Set mix count asynchronously
+    getMixCount().then(mixCount => {
+      if (mixCountElement) {
+        mixCountElement.textContent = mixCount;
+      }
+    });
+
+    // Also update on DOM loaded as backup
+    document.addEventListener('DOMContentLoaded', function() {
+      const showCount = getCurrentNumber();
+      const yearCount = getCurrentYearCount();
+      
+      const showCountElement = document.getElementById('show-count');
+      const yearCountElement = document.getElementById('year-count');
+      const mixCountElement = document.getElementById('mix-count');
+      
+      if (showCountElement) {
+        showCountElement.textContent = showCount;
+      }
+      if (yearCountElement) {
+        yearCountElement.textContent = yearCount;
+      }
+
+      // Update mix count again on DOM load
+      getMixCount().then(mixCount => {
+        if (mixCountElement) {
+          mixCountElement.textContent = mixCount;
+        }
+      });
+    });
+  </script>
 </body>
 </html>

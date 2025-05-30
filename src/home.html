@@ -1,69 +1,135 @@
 <!-- src/home.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>modem</title>
-  <style>
+<style>
+  .content {
+    position: fixed;
+    top: 45vh;
+    left: 50vw;
+    transform: translate(-50%, -50%) scaleY(3);
+    text-align: center;
+    z-index: 2;
+    background: transparent;
+    width: 100vw;
+    padding: clamp(1rem, 4vw, 2rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .content h1 {
+    font-size: clamp(3.6rem, 14.4vw, 7.2rem);
+    font-weight: bold;
+    margin: 0 auto;
+    color: black;
+    letter-spacing: 0.1em;
+    line-height: 0.9;
+  }
+
+  .content p {
+    font-size: clamp(0.675rem, 2.7vw, 1.35rem);
+    color: black;
+    margin: 0.005em 0 0 0;
+    font-weight: bold;
+    font-style: normal;
+    line-height: 0.9;
+  }
+
+  .social-icons {
+    position: fixed;
+    left: 50vw;
+    bottom: 0;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    background: transparent;
+    padding: 1rem 0;
+    width: 100vw;
+  }
+  .social-icons a {
+    text-decoration: none;
+    color: black;
+    font-size: 1.2rem;
+    font-weight: 300;
+  }
+
+  @media (max-width: 768px) {
     .content {
-      position: fixed;
-      top: 45%;
-      left: 50%;
-      transform: translate(-50%, -50%) scaleY(3); /* Increased vertical stretch */
-      text-align: center;
-      z-index: 2;
-      background: transparent;
-      width: 100%;
-      padding: 2rem;
+      padding: clamp(0.5rem, 2vw, 1rem);
     }
-    
-    .content h1 {
-      font-size: 8rem; /* Increased size */
-      font-weight: bold;
-      margin: 0 auto;
-      color: black;
-      letter-spacing: 0.1em;
-    }
-    
-    .content p {
-      font-size: 1.5rem;
-      color: black;
-      margin: -1rem auto; /* Reduced margin to move closer to title */
-      font-weight: bold;
-      font-style: normal;
-    }
-    
     .social-icons {
-      position: fixed; /* Position at bottom */
-      bottom: -6.5rem; /* Move much closer to the bottom edge */
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 2rem;
-      justify-content: center;
-      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 0;
     }
-    
     .social-icons a {
-      text-decoration: none;
-      color: black;
-      font-size: 1.2rem; /* Smaller links */
+      font-size: 1rem;
     }
-  </style>
-</head>
-<body>
-  <div class="content">
-    <h1>modem</h1>
-    <p>a radio show about internet music...</p>
-    <div class="social-icons">
-      <a href="https://www.instagram.com/modemodemodem/" title="Instagram">ig</a>
-      <a href="https://www.facebook.com/modemodemodem/" title="Facebook">fb</a>
-      <a href="https://soundcloud.com/modemodemodem" title="SoundCloud">sc</a>
-      <a href="https://modemodemodem.bandcamp.com/music" title="Bandcamp">bc</a>
-      <a href="https://www.youtube.com/watch?v=M--MVB9owgc" title="YouTube">yt</a>
-      <a href="mailto:podcastmodem@gmail.com" title="Email">mail</a>
-    </div>
-  </div>
-</body>
-</html>
+  }
+
+  @media (max-width: 480px) {
+    .content {
+      padding: clamp(0.25rem, 1vw, 0.5rem);
+    }
+    .social-icons {
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+    }
+    .social-icons a {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<div class="content">
+  <h1>modem</h1>
+  <p>a radio show about internet music...</p>
+</div>
+
+<script>
+// Clean up function to remove social icons
+window.removeHomeSocialIcons = function() {
+  const existingSocialIcons = document.getElementById('home-social-icons');
+  if (existingSocialIcons) {
+    existingSocialIcons.remove();
+  }
+};
+
+// Function to create social icons
+window.createHomeSocialIcons = function() {
+  // Remove any existing icons first
+  window.removeHomeSocialIcons();
+  
+  // Create and append social icons directly to body to bypass content container
+  const socialIcons = document.createElement('div');
+  socialIcons.className = 'social-icons';
+  socialIcons.id = 'home-social-icons';
+  socialIcons.style.cssText = `
+    position: fixed;
+    left: 50vw;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    display: flex;
+    gap: clamp(1rem, 4vw, 2rem);
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    background: transparent;
+    padding: 1rem 0;
+    width: 100vw;
+  `;
+  socialIcons.innerHTML = `
+    <a href="https://www.instagram.com/modemodemodem/" title="Instagram" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">ig</a>
+    <a href="https://www.facebook.com/modemodemodem/" title="Facebook" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">fb</a>
+    <a href="https://soundcloud.com/modemodemodem" title="SoundCloud" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">sc</a>
+    <a href="https://modemodemodem.bandcamp.com/music" title="Bandcamp" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">bc</a>
+    <a href="https://www.youtube.com/watch?v=M--MVB9owgc" title="YouTube" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">yt</a>
+    <a href="mailto:podcastmodem@gmail.com" title="Email" style="text-decoration: none; color: black; font-size: clamp(0.7rem, 2.8vw, 1.4rem); transform: scaleY(2);">mail</a>
+  `;
+  document.body.appendChild(socialIcons);
+};
+
+// Create the social icons immediately
+window.createHomeSocialIcons();
+</script>
