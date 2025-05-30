@@ -87,15 +87,15 @@
       width: 100%;
       display: flex;
       justify-content: center;
-      gap: clamp(0.15rem, 2vw, 1rem); /* More aggressive gap reduction */
-      padding: clamp(0.1rem, 0.5vw, 0.2rem) clamp(0.25rem, 1vw, 0.5rem); /* Half the vertical padding */
+      gap: clamp(0.2rem, 2vw, 1.2rem); /* Slightly reduced gap */
+      padding: clamp(0.2rem, 0.8vw, 0.35rem) clamp(0.4rem, 1.2vw, 0.8rem); /* Reduced padding */
       background: rgba(255, 255, 255, 0.8);
       position: fixed;
       top: 0;
       z-index: 200000;
       flex-wrap: nowrap; /* Force single line */
       align-items: center; /* Center items vertically */
-      min-height: clamp(15px, 2vw, 20px); /* Half the original height */
+      min-height: clamp(20px, 2.5vw, 28px); /* Reduced height */
     }
 
     nav a {
@@ -103,9 +103,9 @@
       color: black;
       font-weight: bold;
       text-transform: uppercase;
-      font-size: clamp(0.6rem, 1.8vw, 0.7rem); /* Keep larger for better mobile usability */
+      font-size: clamp(0.75rem, 2vw, 0.9rem); /* Slightly reduced font size */
       white-space: nowrap;
-      padding: clamp(0.1rem, 0.3vw, 0.15rem) clamp(0.15rem, 0.6vw, 0.25rem); /* Larger touch targets */
+      padding: clamp(0.15rem, 0.4vw, 0.25rem) clamp(0.25rem, 0.7vw, 0.4rem); /* Reduced touch targets */
       line-height: 1;
       text-align: center;
     }
@@ -119,12 +119,12 @@
 
     @media (max-width: 768px) {
       nav {
-        gap: clamp(0.12rem, 1.2vw, 0.4rem); /* Moderate gap reduction */
-        padding: clamp(0.1rem, 0.5vw, 0.2rem) clamp(0.2rem, 1vw, 0.4rem);
+        gap: clamp(0.15rem, 1.5vw, 0.6rem); /* Reduced gap for tablets */
+        padding: clamp(0.2rem, 0.7vw, 0.3rem) clamp(0.35rem, 1vw, 0.6rem);
       }
       nav a {
-        font-size: clamp(0.58rem, 1.6vw, 0.68rem); /* Keep text readable */
-        padding: clamp(0.08rem, 0.3vw, 0.12rem) clamp(0.12rem, 0.5vw, 0.2rem); /* Good touch targets */
+        font-size: clamp(0.7rem, 1.8vw, 0.85rem); /* Reduced font size for tablets */
+        padding: clamp(0.12rem, 0.35vw, 0.2rem) clamp(0.2rem, 0.6vw, 0.35rem);
       }
       
       /* Stack multi-word navigation items with better spacing */
@@ -140,12 +140,12 @@
 
     @media (max-width: 480px) {
       nav {
-        gap: clamp(0.08rem, 0.8vw, 0.25rem); /* Minimal gap reduction */
-        padding: clamp(0.08rem, 0.4vw, 0.15rem) clamp(0.15rem, 0.8vw, 0.3rem);
+        gap: clamp(0.12rem, 1vw, 0.4rem); /* Reduced gap for mobile */
+        padding: clamp(0.15rem, 0.5vw, 0.25rem) clamp(0.25rem, 0.8vw, 0.5rem);
       }
       nav a {
-        font-size: clamp(0.55rem, 1.5vw, 0.65rem); /* Keep good size for mobile */
-        padding: clamp(0.06rem, 0.25vw, 0.1rem) clamp(0.1rem, 0.4vw, 0.15rem); /* Maintain touch targets */
+        font-size: clamp(0.65rem, 1.6vw, 0.8rem); /* Reduced font size for mobile */
+        padding: clamp(0.1rem, 0.3vw, 0.15rem) clamp(0.18rem, 0.5vw, 0.25rem);
       }
     }
   </style>
@@ -175,6 +175,18 @@ lists</a>
   </div>
 
   <script>
+    // Handle redirect from 404.html
+    (function(l) {
+      if (l.search[1] === '/' ) {
+        var decoded = l.search.slice(1).split('&').map(function(s) { 
+          return s.replace(/~and~/g, '&')
+        }).join('?');
+        window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+        );
+      }
+    }(window.location))
+
     class SwirlyLine {
       constructor(canvas) {
         this.canvas = canvas;
@@ -182,11 +194,15 @@ lists</a>
         this.points = [];
         this.isStraightLine = Math.random() < 0.35;
         
+        // Scale based on screen size
+        this.screenScale = Math.min(canvas.width, canvas.height) / 1000; // Base scale on smaller dimension
+        this.screenScale = Math.max(0.5, Math.min(2, this.screenScale)); // Clamp between 0.5x and 2x
+        
         // Fixed dash count first - keep between 6 and 26
         this.dashCount = Math.floor(Math.random() * 20) + 6;
         
-        // Set line length based on dash count - 20px per dash
-        const baseLength = this.dashCount * 20;
+        // Set line length based on dash count and screen scale
+        const baseLength = this.dashCount * (20 * this.screenScale);
         this.maxPoints = this.isStraightLine ? 
           baseLength * 1.2 : // Slightly longer for straight lines
           baseLength;
@@ -206,7 +222,7 @@ lists</a>
         this.addCircle = Math.random() < 0.5; // 35% chance of having circles
         this.numCircles = this.addCircle ? (Math.random() < 0.1 ? 2 : 1) : 0; // 10% of lines with circles get 2
         this.pathLength = 0; // Store total path length
-        this.maxDashLength = 20; // Maximum length for any dash
+        this.maxDashLength = 20 * this.screenScale; // Maximum length for any dash
         this.hasSecondaryWave = Math.random() < 0.4; // 50% chance of having secondary wave
         this.isErasing = false;  // Track if we're in erase phase
         this.generatePath();
@@ -276,42 +292,41 @@ lists</a>
               angle = (angle === 0) ? Math.PI / 2 : 0;
             }
             
-            x += Math.cos(angle) * 2;
-            y += Math.sin(angle) * 2;
+            x += Math.cos(angle) * (2 * this.screenScale); // Scale movement speed
+            y += Math.sin(angle) * (2 * this.screenScale); // Scale movement speed
             this.points.push({ x, y });
           }
         } else {
           let turnDirection = Math.random() * Math.PI * 2;
-          const baseSpeed = 1.5 + Math.random() * 0.5;
-          const turnSpeed = (Math.random() * 0.04 + 0.05) * (Math.random() < 0.5 ? 1 : -1); // Reduced turn speed
-          const waviness = Math.random() * 0.2 + 0.2; // Reduced waviness range
-          const complexity = Math.random() * 0.01 + 0.05; // Reduced complexity
-          const secondaryWave = this.hasSecondaryWave ? (Math.random() * 0.5 + 0.3) : 0; // Reduced secondary wave
-          const loopFactor = Math.random() * 0.01 + 0.03; // Reduced loop tendency
-          const turnVariation = Math.random() * 0.2 + 0.05; // Reduced turn variation
+          const baseSpeed = (1.5 + Math.random() * 0.5) * this.screenScale; // Scale base speed
+          const turnSpeed = (Math.random() * 0.04 + 0.05) * (Math.random() < 0.5 ? 1 : -1);
+          const waviness = Math.random() * 0.2 + 0.2;
+          const complexity = Math.random() * 0.01 + 0.05;
+          const secondaryWave = this.hasSecondaryWave ? (Math.random() * 0.5 + 0.3) : 0;
+          const loopFactor = Math.random() * 0.01 + 0.03;
+          const turnVariation = Math.random() * 0.2 + 0.05;
           
           const padding = Math.min(this.canvas.width, this.canvas.height) * 0.05;
           
           for (let i = 0; i < this.maxPoints; i++) {
-            turnDirection += Math.sin(i * turnVariation) * 0.05; // Reduced turn direction change
+            turnDirection += Math.sin(i * turnVariation) * 0.05;
             
             const primaryWave = Math.sin(i * complexity) * waviness;
             const secondaryPattern = Math.cos(i * complexity * 0.5) * secondaryWave;
-            const loopInfluence = Math.sin(i * 0.01) * loopFactor; // Slower loop frequency
+            const loopInfluence = Math.sin(i * 0.01) * loopFactor;
             
             angle += turnSpeed * (primaryWave + secondaryPattern) + 
-                     Math.sin(turnDirection) * loopInfluence * 0.5; // Reduced loop influence
+                     Math.sin(turnDirection) * loopInfluence * 0.5;
             
             const edgeAngle = calculateEdgeRepulsion(x, y, this.canvas.width, this.canvas.height);
             angle += edgeAngle;
 
-            const speedVariation = 1 + Math.sin(i * 0.05) * 0.2; // Smoother speed changes
+            const speedVariation = 1 + Math.sin(i * 0.05) * 0.2;
             const currentSpeed = baseSpeed * speedVariation;
             
             x += Math.cos(angle) * currentSpeed;
             y += Math.sin(angle) * currentSpeed;
 
-            // Soft clamping
             x = Math.max(-padding, Math.min(this.canvas.width + padding, x));
             y = Math.max(-padding, Math.min(this.canvas.height + padding, y));
 
@@ -353,7 +368,7 @@ lists</a>
             dashIndex,
             point: this.points[pointIndex],
             color: colors[Math.floor(Math.random() * colors.length)],
-            size: actualDashLength / 2
+            size: (actualDashLength / 2) * this.screenScale // Scale circle size
           });
         }
       }
@@ -391,11 +406,11 @@ lists</a>
       draw() {
         if (this.visibleDashIndices.length === 0) return;
 
-        // Fixed dash and gap lengths for consistent appearance
-        const dashLength = 15; // Fixed dash length
+        // Scale dash and gap lengths based on screen size
+        const dashLength = 15 * this.screenScale;
         const gapLength = dashLength * 0.8;
 
-        this.ctx.lineWidth = 2;
+        this.ctx.lineWidth = 2 * this.screenScale; // Scale line width
         this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
         this.ctx.setLineDash([dashLength, gapLength]);
 
@@ -405,11 +420,9 @@ lists</a>
           const startPoint = dashIndex * Math.floor(this.maxPoints / this.dashCount);
           const endPoint = Math.min(startPoint + Math.floor(this.maxPoints / this.dashCount), this.points.length - 1);
           
-          // Draw one continuous line segment for this dash
           this.ctx.beginPath();
           this.ctx.moveTo(this.points[startPoint].x, this.points[startPoint].y);
           
-          // Draw curve through all points in this dash segment
           for (let i = startPoint + 1; i <= endPoint; i++) {
             this.ctx.lineTo(this.points[i].x, this.points[i].y);
           }

@@ -17,18 +17,18 @@
       display: flex;
       align-items: center;  /* Center vertically */
       justify-content: center;
-      transform: translateY(-5vh); /* Reduced from -15vh to make it more centered */
-      margin-top: -1rem; /* Adjusted for thinner nav */
+      transform: translateY(-6.25vh); /* Increased from -5vh */
+      margin-top: -1.25rem; /* Increased from -1rem */
     }
     .dial-up-list {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1.65rem; /* 25% smaller */
+      gap: 2.0625rem; /* Increased from 1.65rem */
       max-width: 120%;
       margin: 0 auto;  /* Center the grid */
     }
     .dial-up-item {
-      font-size: clamp(0.675rem, 1.875vw, 0.9rem); /* Scaled down 25% */
+      font-size: clamp(0.84375rem, 2.34375vw, 1.125rem); /* Increased from clamp(0.675rem, 1.875vw, 0.9rem) */
       font-weight: normal;
       color: black;
       text-decoration: none;
@@ -42,8 +42,8 @@
     }
     .preview-image {
       position: fixed;
-      max-width: 512px;  /* Max size 512px */
-      max-height: 512px; /* Max size 512px */
+      max-width: 640px;  /* Increased from 512px */
+      max-height: 640px; /* Increased from 512px */
       width: auto;
       height: auto;
       object-fit: contain;
@@ -54,15 +54,15 @@
     }
     .back-arrow {
       position: fixed;
-      top: 20px;
-      left: 20px;
-      font-size: 24px;
+      top: 25px; /* Increased from 20px */
+      left: 25px; /* Increased from 20px */
+      font-size: 30px; /* Increased from 24px */
       color: black;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.8);
       border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 12.5px 25px; /* Increased from 10px 20px */
+      border-radius: 6.25px; /* Increased from 5px */
       display: none;
       z-index: 200000;
       transition: transform 0.2s;
@@ -73,38 +73,38 @@
     .dial-up-list-sequential {
       display: none;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.25rem; /* Increased from 1rem */
     }
     @media (max-width: 1024px) {
       .dial-up-list {
         grid-template-columns: repeat(3, 1fr); /* 3 columns on tablets */
-        gap: 1.35rem; /* 25% smaller */
+        gap: 1.6875rem; /* Increased from 1.35rem */
       }
     }
 
     @media (max-width: 768px) {
       .dial-up-list {
         grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller tablets */
-        gap: 1.125rem; /* 25% smaller */
+        gap: 1.40625rem; /* Increased from 1.125rem */
         max-width: 100%;
       }
       .content {
-        padding: 0.75rem; /* 25% smaller */
-        transform: translateY(-1.5vh); /* 25% smaller */
+        padding: 0.9375rem; /* Increased from 0.75rem */
+        transform: translateY(-1.875vh); /* Increased from -1.5vh */
       }
       .preview-image {
-        max-width: clamp(192px, 52.5vw, 300px); /* 25% smaller */
-        max-height: clamp(192px, 52.5vw, 300px); /* 25% smaller */
+        max-width: clamp(240px, 65.625vw, 375px); /* Increased from clamp(192px, 52.5vw, 300px) */
+        max-height: clamp(240px, 65.625vw, 375px); /* Increased from clamp(192px, 52.5vw, 300px) */
       }
     }
 
     @media (max-width: 480px) {
       .dial-up-list {
         grid-template-columns: 1fr; /* Single column on mobile */
-        gap: 0.75rem; /* 25% smaller */
+        gap: 0.9375rem; /* Increased from 0.75rem */
       }
       .content {
-        padding: 0.375rem; /* 25% smaller */
+        padding: 0.46875rem; /* Increased from 0.375rem */
       }
     }
 
@@ -114,8 +114,8 @@
       }
       .content {
         align-items: flex-start;
-        padding: 1.5rem; /* 25% smaller */
-        margin-top: 2rem; /* Adjusted for thinner nav */
+        padding: 1.875rem; /* Increased from 1.5rem */
+        margin-top: 2.5rem; /* Increased from 2rem */
         transform: none; /* Remove the upward shift in portrait */
       }
       .dial-up-list {
@@ -123,10 +123,10 @@
       }
       .dial-up-list-sequential {
         display: flex !important;
-        padding-left: clamp(0.75rem, 3vw, 1.5rem); /* 25% smaller */
+        padding-left: clamp(0.9375rem, 3.75vw, 1.875rem); /* Increased from clamp(0.75rem, 3vw, 1.5rem) */
       }
       .dial-up-item {
-        font-size: clamp(0.75rem, 2.25vw, 0.9rem); /* 25% smaller */
+        font-size: clamp(0.9375rem, 2.8125vw, 1.125rem); /* Increased from clamp(0.75rem, 2.25vw, 0.9rem) */
       }
     }
   </style>
