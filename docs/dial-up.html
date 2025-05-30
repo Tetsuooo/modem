@@ -11,17 +11,17 @@
       align-items: center;  /* Center vertically */
       justify-content: center;
       transform: translateY(-5vh); /* Reduced from -15vh to make it more centered */
-      margin-top: -2rem; /* Offset the nav bar height */
+      margin-top: -1rem; /* Adjusted for thinner nav */
     }
     .dial-up-list {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 2.2rem;
+      gap: 1.65rem; /* 25% smaller */
       max-width: 120%;
       margin: 0 auto;  /* Center the grid */
     }
     .dial-up-item {
-      font-size: 1.2rem;
+      font-size: clamp(0.675rem, 1.875vw, 0.9rem); /* Scaled down 25% */
       font-weight: normal;
       color: black;
       text-decoration: none;
@@ -63,40 +63,52 @@
     .back-arrow:hover {
       transform: scale(1.1);
     }
-    nav {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      padding: 1rem 0;
-      background: white;
-      position: fixed;
-      top: 0;
-      z-index: 200000;
-    }
-    nav a {
-      text-decoration: none;
-      color: black;
-      font-weight: bold;
-      text-transform: uppercase;
-      transition: color 0.3s;
-    }
-    nav a:hover {
-      color: gray;
-    }
     .dial-up-list-sequential {
       display: none;
       flex-direction: column;
       gap: 1rem;
     }
+    @media (max-width: 1024px) {
+      .dial-up-list {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns on tablets */
+        gap: 1.35rem; /* 25% smaller */
+      }
+    }
+
+    @media (max-width: 768px) {
+      .dial-up-list {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller tablets */
+        gap: 1.125rem; /* 25% smaller */
+        max-width: 100%;
+      }
+      .content {
+        padding: 0.75rem; /* 25% smaller */
+        transform: translateY(-1.5vh); /* 25% smaller */
+      }
+      .preview-image {
+        max-width: clamp(192px, 52.5vw, 300px); /* 25% smaller */
+        max-height: clamp(192px, 52.5vw, 300px); /* 25% smaller */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .dial-up-list {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: 0.75rem; /* 25% smaller */
+      }
+      .content {
+        padding: 0.375rem; /* 25% smaller */
+      }
+    }
+
     @media screen and (orientation: portrait) {
       body {
         overflow: auto; /* Enable scrolling in portrait mode */
       }
       .content {
         align-items: flex-start;
-        padding: 2rem;
-        margin-top: 4rem; /* Add more space at top in portrait */
+        padding: 1.5rem; /* 25% smaller */
+        margin-top: 2rem; /* Adjusted for thinner nav */
         transform: none; /* Remove the upward shift in portrait */
       }
       .dial-up-list {
@@ -104,7 +116,10 @@
       }
       .dial-up-list-sequential {
         display: flex !important;
-        padding-left: 2rem;
+        padding-left: clamp(0.75rem, 3vw, 1.5rem); /* 25% smaller */
+      }
+      .dial-up-item {
+        font-size: clamp(0.75rem, 2.25vw, 0.9rem); /* 25% smaller */
       }
     }</style><script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pixi-apngandgif@latest/dist/pixi-apngandgif.min.js"></script><script type="module">// Import the loadSpritesheet function and attach it to window.Framework.
     import { loadSpritesheet } from './framework.js';
@@ -215,17 +230,21 @@
                 iframe.style.zIndex = '150000';
                 // Add necessary permissions for embedded content
                 iframe.setAttribute('allow', 'autoplay; encrypted-media');
-                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation');
                 document.body.appendChild(iframe);
             }
-            iframe.src = `https://modemodemodem.xyz/${hash}`;
+            iframe.src = `https://dial-up.modemodemodem.xyz/${hash}`;
             // Add a message to the parent window that it's in an iframe
             try {
                 iframe.contentWindow.postMessage({ type: 'EMBEDDED_IN_IFRAME' }, '*');
             } catch (e) {
                 console.log('Could not send message to iframe');
             }
-            backArrow.style.display = 'block';
+            
+            // Only set style if backArrow exists
+            if (backArrow) {
+                backArrow.style.display = 'block';
+            }
 
             // Clean up all preview functionality
             removeHoverListeners();
@@ -242,7 +261,11 @@
             if (existingIframe) {
                 existingIframe.parentNode.removeChild(existingIframe);
             }
-            backArrow.style.display = 'none';
+            
+            // Only set style if backArrow exists
+            if (backArrow) {
+                backArrow.style.display = 'none';
+            }
             
             // Reinitialize preview functionality
             if (!window.preview) {
