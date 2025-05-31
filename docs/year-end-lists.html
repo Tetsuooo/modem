@@ -1,8 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: year-end lists</title><script>// Redirect to index.html if accessed directly (not within SPA)
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: year-end lists</title><script>// Only redirect if we're not already in the SPA context
+    // Check if we're the top-level window and don't have the SPA navigation
     if (window.location.pathname !== '/' && 
-        !window.location.search.includes('embedded') && 
-        window.parent === window && 
-        !document.referrer.includes(window.location.origin)) {
+        !window.location.search.includes('embedded') &&
+        !document.querySelector('nav') && 
+        window === window.top) {
       window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
     }</script><style>body {
       margin: 0;
