@@ -1,4 +1,13 @@
 <!-- src/home.html -->
+<script>
+  // Redirect to index.html if accessed directly (not within SPA)
+  if (window.location.pathname !== '/' && 
+      !window.location.search.includes('embedded') && 
+      window.parent === window && 
+      !document.referrer.includes(window.location.origin)) {
+    window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
+  }
+</script>
 <style>
   .content {
     position: fixed;
@@ -88,6 +97,9 @@
 </div>
 
 <script>
+// Set page title
+document.title = 'modem';
+
 // Clean up function to remove social icons
 window.removeHomeSocialIcons = function() {
   const existingSocialIcons = document.getElementById('home-social-icons');

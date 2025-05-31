@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>modem: support</title>
+  <script>
+    // Redirect to index.html if accessed directly (not within SPA)
+    if (window.location.pathname !== '/' && 
+        !window.location.search.includes('embedded') && 
+        window.parent === window && 
+        !document.referrer.includes(window.location.origin)) {
+      window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
+    }
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -137,7 +146,8 @@
       const today = new Date();
       const diffInDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
       const additionalNumbers = Math.floor(diffInDays / 14);
-      return 1 + additionalNumbers; // Start from show 1
+      const calculatedNumber = 1 + additionalNumbers; // Start from show 1
+      return calculatedNumber - 6; // Account for 6 skipped shows
     };
 
     // Calculate year count based on January 9th anniversaries

@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>modem: dial-up</title>
+  <script>
+    // Redirect to index.html if accessed directly (not within SPA)
+    if (window.location.pathname !== '/' && 
+        !window.location.search.includes('embedded') && 
+        window.parent === window && 
+        !document.referrer.includes(window.location.origin)) {
+      window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
+    }
+  </script>
   <style>
     body {
       margin: 0;
@@ -54,21 +63,25 @@
     }
     .back-arrow {
       position: fixed;
-      top: 25px; /* Increased from 20px */
-      left: 25px; /* Increased from 20px */
-      font-size: 30px; /* Increased from 24px */
+      top: 50px; /* Moved down from 45px */
+      right: 20px; /* Moved right from 25px */
+      font-size: 24px;
+      font-weight: bold; /* Make arrow thicker */
       color: black;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.8);
+      background: #ffff00;
       border: none;
-      padding: 12.5px 25px; /* Increased from 10px 20px */
-      border-radius: 6.25px; /* Increased from 5px */
+      padding: 6px 12px; /* Reduced from 8px 16px */
+      border-radius: 0;
       display: none;
-      z-index: 200000;
+      z-index: 999999;
       transition: transform 0.2s;
+      pointer-events: auto;
     }
-    .back-arrow:hover {
-      transform: scale(1.1);
+    .back-arrow.visible {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     .dial-up-list-sequential {
       display: none;
@@ -129,6 +142,13 @@
         font-size: clamp(0.9375rem, 2.8125vw, 1.125rem); /* Increased from clamp(0.75rem, 2.25vw, 0.9rem) */
       }
     }
+
+    /* Move arrow lower when window is taller than it is wide */
+    @media screen and (max-aspect-ratio: 1/1) {
+      .back-arrow {
+        top: 90px !important; /* Move arrow lower in portrait mode */
+      }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi-apngandgif@latest/dist/pixi-apngandgif.min.js"></script>
@@ -142,7 +162,7 @@
   </script>
 </head>
 <body>
-  <button class="back-arrow" onclick="window.location.hash = ''">← back</button>
+  <button class="back-arrow" onclick="window.location.hash = ''">←</button>
   <div class="content">
     <div class="dial-up-list">
       <a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a>
@@ -318,6 +338,9 @@
         const hash = window.location.hash;
         const backArrow = document.querySelector('.back-arrow');
         
+        console.log('showIframeForMix called with hash:', hash);
+        console.log('backArrow element:', backArrow);
+        
         if (hash && /^#mix\d+$/.test(hash)) {
             let iframe = document.getElementById('mix-iframe');
             if (!iframe) {
@@ -330,22 +353,58 @@
                 iframe.style.width = '100vw';
                 iframe.style.height = '100vh';
                 iframe.style.zIndex = '150000';
-                // Add necessary permissions for embedded content
                 iframe.setAttribute('allow', 'autoplay; encrypted-media');
                 iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation');
                 document.body.appendChild(iframe);
             }
             iframe.src = `https://dial-up.modemodemodem.xyz/${hash}`;
-            // Add a message to the parent window that it's in an iframe
-            try {
-                iframe.contentWindow.postMessage({ type: 'EMBEDDED_IN_IFRAME' }, '*');
-            } catch (e) {
-                console.log('Could not send message to iframe');
-            }
             
-            // Only set style if backArrow exists
+            // Show the back arrow with all possible methods
             if (backArrow) {
+                console.log('Showing back arrow - before:', backArrow.style.display);
                 backArrow.style.display = 'block';
+                backArrow.style.visibility = 'visible';
+                backArrow.style.opacity = '1';
+                backArrow.style.zIndex = '999999';
+                backArrow.classList.add('visible');
+                // Force a reflow
+                backArrow.offsetHeight;
+                console.log('Showing back arrow - after:', backArrow.style.display);
+                
+                // Also ensure the click handler works
+                backArrow.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Back arrow clicked!');
+                    window.location.hash = '';
+                };
+            } else {
+                console.error('Back arrow element not found!');
+                // Create it if it doesn't exist
+                const newBackArrow = document.createElement('button');
+                newBackArrow.className = 'back-arrow visible';
+                newBackArrow.innerHTML = '←';
+                newBackArrow.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 20px;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: black;
+                    cursor: pointer;
+                    background: #ffff00;
+                    border: none;
+                    padding: 4px 10px;
+                    border-radius: 0;
+                    display: block;
+                    z-index: 999999;
+                    pointer-events: auto;
+                `;
+                newBackArrow.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.hash = '';
+                };
+                document.body.appendChild(newBackArrow);
             }
 
             // Clean up all preview functionality
@@ -364,10 +423,18 @@
                 existingIframe.parentNode.removeChild(existingIframe);
             }
             
-            // Only set style if backArrow exists
+            // Hide the back arrow
             if (backArrow) {
+                console.log('Hiding back arrow');
                 backArrow.style.display = 'none';
+                backArrow.classList.remove('visible');
             }
+            // Also remove any dynamically created arrows
+            document.querySelectorAll('.back-arrow').forEach(arrow => {
+                if (arrow !== backArrow) {
+                    arrow.remove();
+                }
+            });
             
             // Reinitialize preview functionality
             if (!window.preview) {
@@ -526,6 +593,9 @@
     // Initialize hashchange listener and back button
     window.addEventListener('hashchange', showIframeForMix);
     document.addEventListener('DOMContentLoaded', showIframeForMix);
+    
+    // Also check immediately when script loads
+    showIframeForMix();
 
     const backArrow = document.querySelector('.back-arrow');
     backArrow.addEventListener('click', () => {

@@ -178,25 +178,20 @@ lists</a>
   <script>
     // Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
-      // Check for redirect parameter from 404.html
+      // Check for redirect parameter from subpages
       const urlParams = new URLSearchParams(l.search);
       const redirectPath = urlParams.get('redirect');
       
       if (redirectPath) {
-        // Clean up the URL and navigate to the intended page
-        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + 
-                        l.pathname + (l.hash || '');
+        // Clean up the URL and set up for loading the correct page
+        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/' + redirectPath;
         window.history.replaceState(null, null, cleanUrl);
-        
-        // Set the path for loading
-        setTimeout(() => {
-          loadPage(redirectPath);
-          window.history.pushState({}, '', '/' + redirectPath);
-        }, 100);
+        // Set a flag so we know to load this page after DOM loads
+        window.initialRedirectPath = redirectPath;
         return;
       }
       
-      // Original 404 handling for backwards compatibility
+      // Original 404 handling
       if (l.search[1] === '/' ) {
         var decoded = l.search.slice(1).split('&').map(function(s) { 
           return s.replace(/~and~/g, '&')
@@ -529,6 +524,23 @@ lists</a>
             window.removeHomeSocialIcons();
           }
           
+          // Clean up dial-up back arrow when leaving dial-up page
+          if (url !== 'dial-up.html' && url !== 'dial-up') {
+            const backArrow = document.querySelector('.back-arrow');
+            if (backArrow) {
+              backArrow.style.display = 'none';
+              backArrow.classList.remove('visible');
+            }
+            // Remove any dynamically created arrows
+            document.querySelectorAll('.back-arrow').forEach(arrow => {
+              arrow.remove();
+            });
+            // Clear any mix hash
+            if (window.location.hash.includes('#mix')) {
+              window.location.hash = '';
+            }
+          }
+          
           console.log(`Loading page: ${url}`);
           const fetchUrl = url.endsWith('.html') ? url : `${url}.html`;
           const response = await fetch(fetchUrl);
@@ -661,20 +673,19 @@ lists</a>
         });
       });
 
-      // Check if we're loading from a redirect first
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirectPath = urlParams.get('redirect');
-      
-      if (redirectPath) {
-        // Don't load default page if we have a redirect
-        return;
-      }
-
-      // Normal page loading logic
+      // Handle initial page load including redirected paths
       const currentPath = window.location.pathname;
       const cleanPath = currentPath.replace(/^\/|\/$/g, '');
-      const pathToLoad = cleanPath || defaultPage.replace('.html', '');
-      loadPage(pathToLoad);
+      
+      // Check if we have a redirect from a subpage
+      if (window.initialRedirectPath) {
+        loadPage(window.initialRedirectPath);
+      } else if (cleanPath && cleanPath !== '') {
+        loadPage(cleanPath);
+      } else {
+        // Load default page
+        loadPage(defaultPage.replace('.html', ''));
+      }
       
       window.addEventListener('popstate', () => {
         const existingIframe = document.getElementById('mix-iframe');

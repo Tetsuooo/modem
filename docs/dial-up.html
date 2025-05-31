@@ -1,4 +1,10 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: dial-up</title><style>body {
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: dial-up</title><script>// Redirect to index.html if accessed directly (not within SPA)
+    if (window.location.pathname !== '/' && 
+        !window.location.search.includes('embedded') && 
+        window.parent === window && 
+        !document.referrer.includes(window.location.origin)) {
+      window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
+    }</script><style>body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: linear-gradient(to bottom right, #ffffff, #f0f0f0);
@@ -47,21 +53,25 @@
     }
     .back-arrow {
       position: fixed;
-      top: 25px; /* Increased from 20px */
-      left: 25px; /* Increased from 20px */
-      font-size: 30px; /* Increased from 24px */
+      top: 50px; /* Moved down from 45px */
+      right: 20px; /* Moved right from 25px */
+      font-size: 24px;
+      font-weight: bold; /* Make arrow thicker */
       color: black;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.8);
+      background: #ffff00;
       border: none;
-      padding: 12.5px 25px; /* Increased from 10px 20px */
-      border-radius: 6.25px; /* Increased from 5px */
+      padding: 6px 12px; /* Reduced from 8px 16px */
+      border-radius: 0;
       display: none;
-      z-index: 200000;
+      z-index: 999999;
       transition: transform 0.2s;
+      pointer-events: auto;
     }
-    .back-arrow:hover {
-      transform: scale(1.1);
+    .back-arrow.visible {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     .dial-up-list-sequential {
       display: none;
@@ -121,12 +131,19 @@
       .dial-up-item {
         font-size: clamp(0.9375rem, 2.8125vw, 1.125rem); /* Increased from clamp(0.75rem, 2.25vw, 0.9rem) */
       }
+    }
+
+    /* Move arrow lower when window is taller than it is wide */
+    @media screen and (max-aspect-ratio: 1/1) {
+      .back-arrow {
+        top: 90px !important; /* Move arrow lower in portrait mode */
+      }
     }</style><script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pixi-apngandgif@latest/dist/pixi-apngandgif.min.js"></script><script type="module">// Import the loadSpritesheet function and attach it to window.Framework.
     import { loadSpritesheet } from './framework.js';
     window.Framework = { loadSpritesheet };
     // Set a ready promise so that other scripts can await this if needed.
     window.frameworkReadyPromise = Promise.resolve(window.Framework);
-    console.log("Framework loaded:", window.Framework);</script></head><body><button class="back-arrow" onclick="window.location.hash = ''">← back</button><div class="content"><div class="dial-up-list"><a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a> <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a> <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a> <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a> <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a> <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a> <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a> <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a> <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a> <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a> <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a> <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a> <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a> <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a> <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a> <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a> <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a> <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a> <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a> <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a> <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a> <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a> <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a> <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a> <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a> <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a> <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a> <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a> <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a> <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a> <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a> <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a> <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a> <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a> <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a> <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a> <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a> <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a> <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a></div><div class="dial-up-list-sequential"><a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a> <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a> <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a> <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a> <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a> <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a> <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a> <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a> <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a> <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a> <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a> <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a> <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a> <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a> <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a> <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a> <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a> <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a> <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a> <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a> <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a> <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a> <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a> <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a> <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a> <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a> <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a> <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a> <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a> <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a> <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a> <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a> <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a> <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a> <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a> <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a> <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a> <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a> <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a></div></div><script>// Make these available globally for reinitialization
+    console.log("Framework loaded:", window.Framework);</script></head><body><button class="back-arrow" onclick="window.location.hash = ''">←</button><div class="content"><div class="dial-up-list"><a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a> <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a> <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a> <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a> <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a> <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a> <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a> <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a> <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a> <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a> <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a> <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a> <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a> <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a> <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a> <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a> <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a> <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a> <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a> <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a> <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a> <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a> <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a> <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a> <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a> <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a> <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a> <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a> <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a> <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a> <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a> <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a> <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a> <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a> <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a> <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a> <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a> <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a> <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a></div><div class="dial-up-list-sequential"><a class="dial-up-item" href="dial-up#mix01">dial-up 01 /// Kuthi Jinani</a> <a class="dial-up-item" href="dial-up#mix02">dial-up 02 /// Dok-s Project</a> <a class="dial-up-item" href="dial-up#mix03">dial-up 03 /// Alley Catss</a> <a class="dial-up-item" href="dial-up#mix04">dial-up 04 /// Polonius</a> <a class="dial-up-item" href="dial-up#mix05">dial-up 05 /// Dagshenma</a> <a class="dial-up-item" href="dial-up#mix06">dial-up 06 /// 1898music</a> <a class="dial-up-item" href="dial-up#mix07">dial-up 07 /// More Eaze</a> <a class="dial-up-item" href="dial-up#mix08">dial-up 08 /// Lyy sünnetty pækkülyttö</a> <a class="dial-up-item" href="dial-up#mix09">dial-up 09 /// Dilian</a> <a class="dial-up-item" href="dial-up#mix10">dial-up 10 /// Padfut</a> <a class="dial-up-item" href="dial-up#mix11">dial-up 11 /// Scarekrow</a> <a class="dial-up-item" href="dial-up#mix12">dial-up 12 /// woopheadclrms</a> <a class="dial-up-item" href="dial-up#mix13">dial-up 13 /// O A K M I L K</a> <a class="dial-up-item" href="dial-up#mix14">dial-up 14 /// tameike</a> <a class="dial-up-item" href="dial-up#mix15">dial-up 15 /// Jonáš Gruska</a> <a class="dial-up-item" href="dial-up#mix16">dial-up 16 /// Koeosaeme</a> <a class="dial-up-item" href="dial-up#mix17">dial-up 17 /// Cobweaver</a> <a class="dial-up-item" href="dial-up#mix18">dial-up 18 /// Keitaro Tamura</a> <a class="dial-up-item" href="dial-up#mix19">dial-up 19 /// HERBARIUM</a> <a class="dial-up-item" href="dial-up#mix20">dial-up 20 /// emamouse</a> <a class="dial-up-item" href="dial-up#mix21">dial-up 21 /// Omnispore</a> <a class="dial-up-item" href="dial-up#mix22">dial-up 22 /// Shoeg</a> <a class="dial-up-item" href="dial-up#mix23">dial-up 23 /// ecology141</a> <a class="dial-up-item" href="dial-up#mix24">dial-up 24 /// YNO</a> <a class="dial-up-item" href="dial-up#mix25">dial-up 25 /// Reptilian Expo</a> <a class="dial-up-item" href="dial-up#mix26">dial-up 26 /// shane clay</a> <a class="dial-up-item" href="dial-up#mix27">dial-up 27 /// Meme Vivaldi</a> <a class="dial-up-item" href="dial-up#mix28">dial-up 28 /// goyle</a> <a class="dial-up-item" href="dial-up#mix29">dial-up 29 /// Henry Bohan</a> <a class="dial-up-item" href="dial-up#mix30">dial-up 30 /// Richard Pizzaro</a> <a class="dial-up-item" href="dial-up#mix31">dial-up 31 /// Ratkiller</a> <a class="dial-up-item" href="dial-up#mix32">dial-up 32 /// metra.vestlud</a> <a class="dial-up-item" href="dial-up#mix33">dial-up 33 /// Luke Thinnes</a> <a class="dial-up-item" href="dial-up#mix34">dial-up 34 /// UNITEDSTATESOF</a> <a class="dial-up-item" href="dial-up#mix35">dial-up 35 /// Nunuhilla</a> <a class="dial-up-item" href="dial-up#mix36">dial-up 36 /// silént phil</a> <a class="dial-up-item" href="dial-up#mix37">dial-up 37 /// coleman mummery</a> <a class="dial-up-item" href="dial-up#mix38">dial-up 38 /// tech needy</a> <a class="dial-up-item" href="dial-up#mix39">dial-up 39 /// seaketa</a></div></div><script>// Make these available globally for reinitialization
     window.assetData = null;
     window.sampleInterval = null;
     window.BASE_ASSET_PATH = 'https://m-o-d-e-m.s3.eu-central-1.amazonaws.com/assets';
@@ -216,6 +233,9 @@
         const hash = window.location.hash;
         const backArrow = document.querySelector('.back-arrow');
         
+        console.log('showIframeForMix called with hash:', hash);
+        console.log('backArrow element:', backArrow);
+        
         if (hash && /^#mix\d+$/.test(hash)) {
             let iframe = document.getElementById('mix-iframe');
             if (!iframe) {
@@ -228,22 +248,58 @@
                 iframe.style.width = '100vw';
                 iframe.style.height = '100vh';
                 iframe.style.zIndex = '150000';
-                // Add necessary permissions for embedded content
                 iframe.setAttribute('allow', 'autoplay; encrypted-media');
                 iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation');
                 document.body.appendChild(iframe);
             }
             iframe.src = `https://dial-up.modemodemodem.xyz/${hash}`;
-            // Add a message to the parent window that it's in an iframe
-            try {
-                iframe.contentWindow.postMessage({ type: 'EMBEDDED_IN_IFRAME' }, '*');
-            } catch (e) {
-                console.log('Could not send message to iframe');
-            }
             
-            // Only set style if backArrow exists
+            // Show the back arrow with all possible methods
             if (backArrow) {
+                console.log('Showing back arrow - before:', backArrow.style.display);
                 backArrow.style.display = 'block';
+                backArrow.style.visibility = 'visible';
+                backArrow.style.opacity = '1';
+                backArrow.style.zIndex = '999999';
+                backArrow.classList.add('visible');
+                // Force a reflow
+                backArrow.offsetHeight;
+                console.log('Showing back arrow - after:', backArrow.style.display);
+                
+                // Also ensure the click handler works
+                backArrow.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Back arrow clicked!');
+                    window.location.hash = '';
+                };
+            } else {
+                console.error('Back arrow element not found!');
+                // Create it if it doesn't exist
+                const newBackArrow = document.createElement('button');
+                newBackArrow.className = 'back-arrow visible';
+                newBackArrow.innerHTML = '←';
+                newBackArrow.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 20px;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: black;
+                    cursor: pointer;
+                    background: #ffff00;
+                    border: none;
+                    padding: 4px 10px;
+                    border-radius: 0;
+                    display: block;
+                    z-index: 999999;
+                    pointer-events: auto;
+                `;
+                newBackArrow.onclick = function(e) {
+                    e.preventDefault();
+                    window.location.hash = '';
+                };
+                document.body.appendChild(newBackArrow);
             }
 
             // Clean up all preview functionality
@@ -262,10 +318,18 @@
                 existingIframe.parentNode.removeChild(existingIframe);
             }
             
-            // Only set style if backArrow exists
+            // Hide the back arrow
             if (backArrow) {
+                console.log('Hiding back arrow');
                 backArrow.style.display = 'none';
+                backArrow.classList.remove('visible');
             }
+            // Also remove any dynamically created arrows
+            document.querySelectorAll('.back-arrow').forEach(arrow => {
+                if (arrow !== backArrow) {
+                    arrow.remove();
+                }
+            });
             
             // Reinitialize preview functionality
             if (!window.preview) {
@@ -424,6 +488,9 @@
     // Initialize hashchange listener and back button
     window.addEventListener('hashchange', showIframeForMix);
     document.addEventListener('DOMContentLoaded', showIframeForMix);
+    
+    // Also check immediately when script loads
+    showIframeForMix();
 
     const backArrow = document.querySelector('.back-arrow');
     backArrow.addEventListener('click', () => {

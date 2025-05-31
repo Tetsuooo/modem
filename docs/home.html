@@ -1,4 +1,10 @@
-<style>.content {
+<script>// Redirect to index.html if accessed directly (not within SPA)
+  if (window.location.pathname !== '/' && 
+      !window.location.search.includes('embedded') && 
+      window.parent === window && 
+      !document.referrer.includes(window.location.origin)) {
+    window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
+  }</script><style>.content {
     position: fixed;
     top: 45vh;
     left: 50vw;
@@ -77,7 +83,10 @@
     .social-icons a {
       font-size: 0.9rem;
     }
-  }</style><div class="content"><h1>modem</h1><p>a radio show about internet music...</p></div><script>// Clean up function to remove social icons
+  }</style><div class="content"><h1>modem</h1><p>a radio show about internet music...</p></div><script>// Set page title
+document.title = 'modem';
+
+// Clean up function to remove social icons
 window.removeHomeSocialIcons = function() {
   const existingSocialIcons = document.getElementById('home-social-icons');
   if (existingSocialIcons) {

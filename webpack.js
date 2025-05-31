@@ -18,7 +18,7 @@ module.exports = {
   entry: {}, // No JS entry needed for static site
 
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'docs'),
     clean: true
   },
 
