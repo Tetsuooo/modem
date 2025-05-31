@@ -75,8 +75,9 @@
       top: 65%; /* Moved higher from 70% */
       left: 50%;
       transform: translate(-50%, -50%);
-      max-width: 68.75%; /* Increased from 55% */
-      max-height: 68.75%; /* Increased from 55% */
+      width: 60vw; /* Use explicit width instead of max-width */
+      height: 60vh; /* Use explicit height instead of max-height */
+      object-fit: contain; /* Maintain aspect ratio */
       display: none; /* Initially hidden */
       z-index: 20; /* Lower than text */
       pointer-events: none;
@@ -135,8 +136,9 @@
         top: 50vh; /* Center vertically */
         left: 50%;
         transform: translate(-50%, -50%);
-        max-width: 112.5%; /* Increased from 90% */
-        max-height: 87.5vh; /* Increased from 70vh */
+        width: 80vw; /* Larger explicit width in portrait */
+        height: 80vh; /* Larger explicit height in portrait */
+        object-fit: contain; /* Maintain aspect ratio */
         z-index: 20; /* Lower than text */
       }
     }

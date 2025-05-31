@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="initial-path" content="home.html"><title>modem</title><style>body {
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="initial-path" content="home.html"><link rel="icon" href="assets/modem.ico" type="image/x-icon"><title>modem</title><style>body {
       margin: 0;
       font-family: Arial, sans-serif;
       overflow: hidden;
@@ -139,8 +139,27 @@
         font-size: clamp(0.65rem, 1.6vw, 0.8rem); /* Reduced font size for mobile */
         padding: clamp(0.1rem, 0.3vw, 0.15rem) clamp(0.18rem, 0.5vw, 0.25rem);
       }
-    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><script>// Handle redirect from 404.html
+    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><script>// Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
+      // Check for redirect parameter from 404.html
+      const urlParams = new URLSearchParams(l.search);
+      const redirectPath = urlParams.get('redirect');
+      
+      if (redirectPath) {
+        // Clean up the URL and navigate to the intended page
+        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + 
+                        l.pathname + (l.hash || '');
+        window.history.replaceState(null, null, cleanUrl);
+        
+        // Set the path for loading
+        setTimeout(() => {
+          loadPage(redirectPath);
+          window.history.pushState({}, '', '/' + redirectPath);
+        }, 100);
+        return;
+      }
+      
+      // Original 404 handling for backwards compatibility
       if (l.search[1] === '/' ) {
         var decoded = l.search.slice(1).split('&').map(function(s) { 
           return s.replace(/~and~/g, '&')
@@ -149,7 +168,7 @@
             l.pathname.slice(0, -1) + decoded + l.hash
         );
       }
-    }(window.location))
+    }(window.location));
 
     class SwirlyLine {
       constructor(canvas) {
@@ -564,6 +583,21 @@
             if (window.createHomeSocialIcons) {
               window.createHomeSocialIcons();
             }
+          } else if (url === 'support.html' || url === 'support') {
+            // Execute support page script when loaded
+            setTimeout(() => {
+              if (typeof updateCounts === 'function') {
+                updateCounts();
+              } else {
+                // If updateCounts function isn't available, look for and execute the script
+                const scripts = content.querySelectorAll('script');
+                scripts.forEach(script => {
+                  if (script.textContent.includes('updateCounts')) {
+                    eval(script.textContent);
+                  }
+                });
+              }
+            }, 100);
           }
 
           const pageTitle = doc.querySelector('title');
@@ -590,6 +624,16 @@
         });
       });
 
+      // Check if we're loading from a redirect first
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get('redirect');
+      
+      if (redirectPath) {
+        // Don't load default page if we have a redirect
+        return;
+      }
+
+      // Normal page loading logic
       const currentPath = window.location.pathname;
       const cleanPath = currentPath.replace(/^\/|\/$/g, '');
       const pathToLoad = cleanPath || defaultPage.replace('.html', '');

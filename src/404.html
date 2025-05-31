@@ -4,17 +4,27 @@
   <meta charset="utf-8">
   <title>modem</title>
   <script type="text/javascript">
-    // Store the current path and redirect to index.html
-    var pathSegmentsToKeep = 1;
+    // Single Page Apps for GitHub Pages
+    // Store the current path and redirect to index with the path as a parameter
+    var pathSegmentsToKeep = 0;
     var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + 
-      '/?/' + 
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
+    
+    // Extract the path we want to preserve
+    var redirectPath = l.pathname.split('/').slice(1 + pathSegmentsToKeep).join('/');
+    
+    // Remove .html extension if present
+    if (redirectPath.endsWith('.html')) {
+      redirectPath = redirectPath.slice(0, -5);
+    }
+    
+    // Build the redirect URL
+    var newUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      '/' + (redirectPath ? '?redirect=' + encodeURIComponent(redirectPath) : '') +
+      (l.search ? (redirectPath ? '&' : '?') + l.search.slice(1) : '') +
+      l.hash;
+    
+    // Redirect to the index page with the path info
+    window.location.replace(newUrl);
   </script>
 </head>
 <body>

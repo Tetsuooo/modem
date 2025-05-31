@@ -29,69 +29,83 @@
       max-width: 800px;
       padding: 2rem;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column; /* Changed to stack vertically */
+      align-items: center; /* Center items */
+      gap: 2rem; /* Add space between text and buttons */
     }
 
     .content-text {
-      max-width: 60%;
+      max-width: 100%; /* Use full width */
+      text-align: center; /* Center the text */
     }
 
-    .content-text p, .content-text ul {
-      font-size: clamp(0.75rem, 1.875vw, 0.9rem); /* Scaled down 25% */
+    .content-text p {
+      font-size: clamp(1rem, 2.5vw, 1.2rem); /* Increased from clamp(0.75rem, 1.875vw, 0.9rem) */
       color: black;
+    }
+
+    .content-text ul {
+      font-size: clamp(1rem, 2.5vw, 1.2rem); /* Increased from clamp(0.75rem, 1.875vw, 0.9rem) */
+      color: black;
+      text-align: left; /* Align bullet points to the left */
+      display: inline-block; /* Make the ul only as wide as its content */
     }
 
     .support-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      align-items: flex-start;
+      flex-direction: row; /* Horizontal layout */
+      gap: 2rem; /* Space between buttons */
+      align-items: center;
+      justify-content: center;
     }
 
     .support-button {
-      font-size: clamp(0.75rem, 2.25vw, 1.125rem); /* Scaled down 25% */
+      font-size: clamp(1.3rem, 3.5vw, 1.6rem); /* Increased from clamp(1.1rem, 3vw, 1.3rem) */
       font-weight: bold;
       color: black;
       text-decoration: none;
-      padding: 0.375rem 0.75rem; /* 25% smaller */
-      border: 2px solid black;
-      border-radius: 10px;
-      background: white;
-      transition: transform 0.3s, background-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 1rem 1.8rem; /* Increased from 0.7rem 1.4rem */
+      border: none; /* Remove border */
+      border-radius: 0; /* Remove border radius */
+      background: transparent; /* Transparent background */
+      transition: background-color 0.15s ease, box-shadow 0.15s ease; /* Faster transition */
+      box-shadow: none; /* Remove shadow */
+      text-transform: lowercase; /* Match other pages */
     }
 
     .support-button:hover {
-      transform: scale(1.1);
-      background-color: #f8f8f8;
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+      transform: none; /* Remove scale transform */
+      background: #ffff00; /* Yellow background like other pages */
+      box-shadow: 0 0 0 2px #ffff00; /* Yellow border like other pages */
     }
 
     @media (max-width: 768px) {
       .content {
         flex-direction: column;
-        gap: 1.5rem; /* 25% smaller */
-        padding: 0.75rem; /* 25% smaller */
+        gap: 1.5rem;
+        padding: 1rem; /* Increased from 0.75rem */
         width: 95%;
       }
       .content-text {
         max-width: 100%;
       }
       .support-buttons {
-        align-items: center;
+        flex-direction: column; /* Stack vertically on mobile */
+        gap: 1rem;
         width: 100%;
+        align-items: center; /* Center the buttons horizontally */
+        justify-content: center; /* Center the buttons */
       }
       .support-button {
-        width: 100%;
-        text-align: center;
-        max-width: 250px;
+        width: auto; /* Remove full width */
+        text-align: left; /* Keep text aligned left within each button */
+        max-width: none; /* Remove max-width */
       }
     }
 
     @media (max-width: 480px) {
       .content {
-        padding: 0.375rem; /* 25% smaller */
+        padding: 0.5rem; /* Increased from 0.375rem */
       }
     }
   </style>
@@ -110,30 +124,30 @@
       </ul>
     </div>
     <div class="support-buttons">
-      <a class="support-button" href="https://www.patreon.com/modemodemodem" target="_blank">>>> Patreon</a>
-      <a class="support-button" href="https://www.paypal.com/donate/?hosted_button_id=4DYJQKVKWN7WJ" target="_blank">>>> Paypal</a>
-      <a class="support-button" href="https://ko-fi.com/modemodemodem" target="_blank">>>> Ko-fi</a>
+      <a class="support-button" href="https://www.patreon.com/modemodemodem" target="_blank">&gt; Patreon &lt;</a>
+      <a class="support-button" href="https://www.paypal.com/donate/?hosted_button_id=4DYJQKVKWN7WJ" target="_blank">&gt; Paypal &lt;</a>
+      <a class="support-button" href="https://ko-fi.com/modemodemodem" target="_blank">&gt; Ko-fi &lt;</a>
     </div>
   </div>
 
   <script>
     // Calculate show count based on bi-weekly releases
     const getCurrentNumber = () => {
-      const startDate = new Date('2025-05-12');
+      const startDate = new Date('2017-01-09'); // Fixed: Use actual start date
       const today = new Date();
       const diffInDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
       const additionalNumbers = Math.floor(diffInDays / 14);
-      return 212 + additionalNumbers;
+      return 1 + additionalNumbers; // Start from show 1
     };
 
     // Calculate year count based on January 9th anniversaries
     const getCurrentYearCount = () => {
-      const startYear = 2017; // Assuming modem started in 2017 (8 years from 2025)
+      const startYear = 2017;
       const today = new Date();
       const currentYear = today.getFullYear();
       
       // Check if we've passed January 9th this year
-      const janNinth = new Date(currentYear, 0, 9); // Month is 0-indexed
+      const janNinth = new Date(currentYear, 0, 9);
       const hasPassedAnniversary = today >= janNinth;
       
       let yearsCompleted = currentYear - startYear;
@@ -141,7 +155,7 @@
         yearsCompleted -= 1;
       }
       
-      return Math.max(yearsCompleted, 0);
+      return Math.max(yearsCompleted, 1); // At least 1 year
     };
 
     // Calculate artist mix count by counting links in dial-up.html
@@ -152,7 +166,6 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
         const mixLinks = doc.querySelectorAll('a[href*="#mix"]');
-        // Count unique mixes (avoid duplicates from grid and sequential layouts)
         const uniqueMixes = new Set();
         mixLinks.forEach(link => {
           const hash = link.href.split('#')[1];
@@ -160,37 +173,15 @@
             uniqueMixes.add(hash);
           }
         });
-        return uniqueMixes.size;
+        return uniqueMixes.size || 39; // Fallback if no mixes found
       } catch (error) {
         console.error('Error fetching mix count:', error);
-        return 39; // Fallback to current count
+        return 39;
       }
     };
 
-    // Set the counts immediately
-    const showCount = getCurrentNumber();
-    const yearCount = getCurrentYearCount();
-    
-    const showCountElement = document.getElementById('show-count');
-    const yearCountElement = document.getElementById('year-count');
-    const mixCountElement = document.getElementById('mix-count');
-    
-    if (showCountElement) {
-      showCountElement.textContent = showCount;
-    }
-    if (yearCountElement) {
-      yearCountElement.textContent = yearCount;
-    }
-
-    // Set mix count asynchronously
-    getMixCount().then(mixCount => {
-      if (mixCountElement) {
-        mixCountElement.textContent = mixCount;
-      }
-    });
-
-    // Also update on DOM loaded as backup
-    document.addEventListener('DOMContentLoaded', function() {
+    // Function to update all counts
+    window.updateCounts = () => {
       const showCount = getCurrentNumber();
       const yearCount = getCurrentYearCount();
       
@@ -198,20 +189,44 @@
       const yearCountElement = document.getElementById('year-count');
       const mixCountElement = document.getElementById('mix-count');
       
+      console.log('Updating counts:', { showCount, yearCount }); // Debug log
+      
       if (showCountElement) {
         showCountElement.textContent = showCount;
+        console.log('Updated show count to:', showCount);
+      } else {
+        console.log('Show count element not found');
       }
+      
       if (yearCountElement) {
         yearCountElement.textContent = yearCount;
+        console.log('Updated year count to:', yearCount);
+      } else {
+        console.log('Year count element not found');
       }
 
-      // Update mix count again on DOM load
+      // Update mix count asynchronously
       getMixCount().then(mixCount => {
+        console.log('Mix count:', mixCount);
         if (mixCountElement) {
           mixCountElement.textContent = mixCount;
+          console.log('Updated mix count to:', mixCount);
+        } else {
+          console.log('Mix count element not found');
         }
       });
-    });
+    };
+
+    // Run immediately
+    window.updateCounts();
+
+    // Run when DOM is fully loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', window.updateCounts);
+    } else {
+      // DOM is already loaded
+      window.updateCounts();
+    }
   </script>
 </body>
 </html>

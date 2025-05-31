@@ -30,33 +30,44 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
-      padding: 2rem; /* Increased from 1.5rem */
+      padding: clamp(0.7rem, 2.5vh, 2rem); /* Increased padding */
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       text-align: center;
       z-index: 1; /* Ensure it overlays the animation */
+      max-width: 90vw; /* Increased from 85vw */
+      max-height: 80vh; /* Increased from 70vh */
+      overflow: hidden; /* Hide any overflow */
     }
     .number-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr); /* Always 10 columns */
-      gap: clamp(5px, 1vw, 10px); /* Increased from 3.75px, 0.75vw, 7.5px */
-      width: clamp(90%, 95%, 90%); /* Responsive width */
+      gap: clamp(1px, 0.2vw, 3px) clamp(5px, 1.2vw, 12px); /* Row gap (smaller) Column gap (even larger) */
+      width: 100%; /* Use full container width */
       text-align: center;
       direction: rtl;
       margin: 0 auto;
     }
     .number-grid div {
-      font-size: clamp(0.8rem, 2vw, 1rem); /* Increased from 0.6rem, 1.5vw, 0.75rem */
+      font-size: clamp(0.3rem, 1.2vw, 1rem); /* Lower minimum for very small screens */
       font-weight: bold;
       color: black;
-      padding: clamp(4px, 1vw, 8px);  /* Increased from 3px, 0.75vw, 6px */
+      padding: clamp(1px, 0.2vw, 4px); /* Reduced padding for closer spacing */
       border-radius: 0;
       transition: all 0.15s ease;
+      min-height: clamp(0.6rem, 2.2vw, 2rem); /* Lower minimum height */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .number-grid a {
-      display: block;
-      padding: inherit;
-      margin: calc(-1 * clamp(4px, 1vw, 8px)); /* Updated to match new padding */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 0; /* Remove padding from links */
+      margin: 0; /* Remove margin from links */
     }
     .number-grid div:hover {
       background: rgba(255, 255, 0, 0.8); /* More saturated and brighter yellow */
@@ -65,8 +76,8 @@
     }
     .preview-image {
       position: fixed;
-      width: clamp(200px, 60vw, 256px); /* Increased from 150px, 45vw, 192px */
-      height: clamp(200px, 60vw, 256px); /* Increased from 150px, 45vw, 192px */
+      width: clamp(150px, 25vw, 300px); /* Scale with viewport width */
+      height: clamp(150px, 25vw, 300px); /* Scale with viewport width */
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s ease;
@@ -75,23 +86,66 @@
 
     @media (max-width: 768px) {
       .radio-show {
-        padding: 1rem; /* Increased from 0.75rem */
-        width: 95%;
+        padding: clamp(0.2rem, 2vh, 1.3rem); /* Reduced minimum padding */
+        width: 98vw; /* Use more width */
         max-width: none;
+        max-height: 85vh; /* Use more height */
       }
       .number-grid {
-        grid-template-columns: repeat(10, 1fr); /* Keep 10 columns */
-        gap: 8px; /* Increased from 6px */
+        gap: clamp(0.5px, 0.15vw, 2px) clamp(3px, 0.8vw, 8px); /* Smaller row gap, larger column gap on tablets */
+      }
+      .number-grid div {
+        font-size: clamp(0.25rem, 1.6vw, 0.9rem); /* Lower minimum font size */
+        min-height: clamp(0.5rem, 3.2vw, 1.8rem); /* Lower minimum height */
       }
     }
 
     @media (max-width: 480px) {
       .radio-show {
-        padding: 0.5rem; /* Increased from 0.375rem */
+        padding: clamp(0.1rem, 1vh, 0.8rem); /* Very small minimum padding */
+        width: 99vw; /* Use almost full width */
+        max-height: 90vh; /* Use more height on mobile */
       }
       .number-grid {
-        grid-template-columns: repeat(10, 1fr); /* Keep 10 columns */
-        gap: 5px; /* Increased from 3.75px */
+        gap: clamp(0.25px, 0.1vw, 1.5px) clamp(2px, 0.5vw, 6px); /* Very small row gap, moderate column gap on mobile */
+      }
+      .number-grid div {
+        font-size: clamp(0.2rem, 2vw, 0.7rem); /* Very low minimum font size */
+        min-height: clamp(0.4rem, 4vw, 1.4rem); /* Very low minimum height */
+      }
+      .preview-image {
+        width: clamp(120px, 35vw, 250px); /* Larger preview on mobile */
+        height: clamp(120px, 35vw, 250px); /* Larger preview on mobile */
+      }
+    }
+
+    @media (orientation: portrait) {
+      .radio-show {
+        max-height: 85vh; /* Use more height in portrait */
+        padding: clamp(0.1rem, 1vh, 1rem); /* Reduce padding in portrait */
+      }
+      .number-grid {
+        gap: clamp(0.25px, 0.1vh, 2px) clamp(3px, 0.8vh, 10px); /* Scale gaps with viewport height, separate row/column */
+      }
+      .number-grid div {
+        font-size: clamp(0.2rem, 1.5vh, 0.8rem); /* Scale with viewport height, lower minimum */
+        min-height: clamp(0.4rem, 3vh, 1.5rem); /* Scale height with viewport height, lower minimum */
+      }
+    }
+
+    /* Extra small screens - emergency scaling */
+    @media (max-height: 400px) {
+      .radio-show {
+        max-height: 95vh; /* Use almost full height on very short screens */
+        padding: clamp(0.05rem, 0.5vh, 0.5rem); /* Minimal padding */
+      }
+      .number-grid {
+        gap: clamp(0.1px, 0.05vh, 1px) clamp(1.5px, 0.3vh, 4px); /* Minimal row gap, small column gap */
+      }
+      .number-grid div {
+        font-size: clamp(0.15rem, 1vh, 0.5rem); /* Very small font for short screens */
+        min-height: clamp(0.3rem, 2vh, 1rem); /* Very small height for short screens */
+        padding: clamp(0.05rem, 0.1vh, 2px); /* Minimal padding */
       }
     }
   </style>

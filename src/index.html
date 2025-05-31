@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="initial-path" content="home.html">
+  <link rel="icon" href="assets/modem.ico" type="image/x-icon">
   <title>modem</title>
   <style>
     body {
@@ -175,8 +176,27 @@ lists</a>
   </div>
 
   <script>
-    // Handle redirect from 404.html
+    // Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
+      // Check for redirect parameter from 404.html
+      const urlParams = new URLSearchParams(l.search);
+      const redirectPath = urlParams.get('redirect');
+      
+      if (redirectPath) {
+        // Clean up the URL and navigate to the intended page
+        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + 
+                        l.pathname + (l.hash || '');
+        window.history.replaceState(null, null, cleanUrl);
+        
+        // Set the path for loading
+        setTimeout(() => {
+          loadPage(redirectPath);
+          window.history.pushState({}, '', '/' + redirectPath);
+        }, 100);
+        return;
+      }
+      
+      // Original 404 handling for backwards compatibility
       if (l.search[1] === '/' ) {
         var decoded = l.search.slice(1).split('&').map(function(s) { 
           return s.replace(/~and~/g, '&')
@@ -185,7 +205,7 @@ lists</a>
             l.pathname.slice(0, -1) + decoded + l.hash
         );
       }
-    }(window.location))
+    }(window.location));
 
     class SwirlyLine {
       constructor(canvas) {
@@ -600,6 +620,21 @@ lists</a>
             if (window.createHomeSocialIcons) {
               window.createHomeSocialIcons();
             }
+          } else if (url === 'support.html' || url === 'support') {
+            // Execute support page script when loaded
+            setTimeout(() => {
+              if (typeof updateCounts === 'function') {
+                updateCounts();
+              } else {
+                // If updateCounts function isn't available, look for and execute the script
+                const scripts = content.querySelectorAll('script');
+                scripts.forEach(script => {
+                  if (script.textContent.includes('updateCounts')) {
+                    eval(script.textContent);
+                  }
+                });
+              }
+            }, 100);
           }
 
           const pageTitle = doc.querySelector('title');
@@ -626,6 +661,16 @@ lists</a>
         });
       });
 
+      // Check if we're loading from a redirect first
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get('redirect');
+      
+      if (redirectPath) {
+        // Don't load default page if we have a redirect
+        return;
+      }
+
+      // Normal page loading logic
       const currentPath = window.location.pathname;
       const cleanPath = currentPath.replace(/^\/|\/$/g, '');
       const pathToLoad = cleanPath || defaultPage.replace('.html', '');
