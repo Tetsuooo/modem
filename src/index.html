@@ -97,6 +97,10 @@
       flex-wrap: nowrap; /* Force single line */
       align-items: center; /* Center items vertically */
       min-height: clamp(20px, 2.5vw, 28px); /* Reduced height */
+      box-sizing: border-box; /* Include padding in width calculation */
+      left: 0; /* Ensure consistent positioning */
+      margin-left: calc(-1 * (100vw - 100%)); /* Compensate for scrollbar */
+      padding-left: calc(clamp(0.4rem, 1.2vw, 0.8rem) + (100vw - 100%)); /* Adjust padding for scrollbar */
     }
 
     nav a {
@@ -127,16 +131,6 @@
         font-size: clamp(0.7rem, 1.8vw, 0.85rem); /* Reduced font size for tablets */
         padding: clamp(0.12rem, 0.35vw, 0.2rem) clamp(0.2rem, 0.6vw, 0.35rem);
       }
-      
-      /* Stack multi-word navigation items with better spacing */
-      nav a[href="/radio-show"] {
-        white-space: pre-line;
-        line-height: 1.1; /* More space between lines */
-      }
-      nav a[href="/year-end-lists"] {
-        white-space: pre-line;
-        line-height: 1.1; /* More space between lines */
-      }
     }
 
     @media (max-width: 480px) {
@@ -162,10 +156,8 @@
 
   <nav>
     <a href="/home">home</a>
-    <a href="/radio-show">radio
-show</a>
-    <a href="/year-end-lists">year-end
-lists</a>
+    <a href="/radio-show">radio show</a>
+    <a href="/year-end-lists">year-end lists</a>
     <a href="/dial-up">dial-up</a>
     <a href="/shop">shop</a>
     <a href="/support">support</a>
