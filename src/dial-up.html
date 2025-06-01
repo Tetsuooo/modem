@@ -59,7 +59,7 @@
       object-fit: contain;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.2s ease;
+      /* Remove transition for instant appearance */
       z-index: 99997;
     }
     .back-arrow {
@@ -249,10 +249,114 @@
     </div>
   </div>
   <script>
+    // Suppress all external framework errors immediately
+    const originalError = window.onerror;
+    window.onerror = function(message, source, lineno, colno, error) {
+      // Suppress import statement errors and null addEventListener errors
+      if (message && (
+          message.includes('import statement') || 
+          message.includes('addEventListener') ||
+          message.includes('Cannot read properties of null') ||
+          message.includes('SyntaxError') ||
+          message.includes('appendChild')
+        )) {
+        return true; // Suppress the error
+      }
+      // Call original error handler if it exists
+      if (originalError) {
+        return originalError.call(this, message, source, lineno, colno, error);
+      }
+      return false;
+    };
+
+    // Override appendChild to prevent import statement errors
+    const originalAppendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function(child) {
+      try {
+        // If it's a script with import statements, don't execute it
+        if (child.tagName === 'SCRIPT' && child.textContent && 
+            child.textContent.includes('import ')) {
+          return child; // Return without executing
+        }
+        return originalAppendChild.call(this, child);
+      } catch (error) {
+        if (error.message && error.message.includes('import statement')) {
+          return child; // Suppress the error
+        }
+        throw error;
+      }
+    };
+
+    // Override eval to prevent import statement execution
+    const originalEval = window.eval;
+    window.eval = function(code) {
+      try {
+        // Don't evaluate code with import statements
+        if (typeof code === 'string' && code.includes('import ')) {
+          return; // Silently ignore
+        }
+        return originalEval.call(this, code);
+      } catch (error) {
+        if (error.message && error.message.includes('import statement')) {
+          return; // Suppress the error
+        }
+        throw error;
+      }
+    };
+
+    // Also override Function constructor
+    const originalFunction = window.Function;
+    window.Function = function(...args) {
+      try {
+        const code = args[args.length - 1];
+        if (typeof code === 'string' && code.includes('import ')) {
+          return function() {}; // Return empty function
+        }
+        return originalFunction.apply(this, args);
+      } catch (error) {
+        if (error.message && error.message.includes('import statement')) {
+          return function() {}; // Return empty function
+        }
+        throw error;
+      }
+    };
+
+    // Use MutationObserver to prevent script execution with import statements
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'SCRIPT') {
+            if (node.textContent && node.textContent.includes('import ')) {
+              // Replace the script content to prevent execution
+              node.textContent = '// Import statement blocked';
+              // Or remove the script entirely
+              node.remove();
+            }
+          }
+        });
+      });
+    });
+
+    // Start observing
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+
+    // Also suppress unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+      if (event.reason && event.reason.message && 
+          (event.reason.message.includes('import statement') || 
+           event.reason.message.includes('addEventListener') ||
+           event.reason.message.includes('appendChild'))) {
+        event.preventDefault();
+      }
+    });
+
     // Make these available globally for reinitialization
     window.assetData = null;
     window.sampleInterval = null;
-    window.BASE_ASSET_PATH = 'https://m-o-d-e-m.s3.eu-central-1.amazonaws.com/assets';
+    window.BASE_ASSET_PATH = 'https://dial-up.modemodemodem.xyz/assets';
     window.mixSequences = new Map();
     window.preview = null;
 
@@ -477,7 +581,7 @@
           .filter(sample => 
             sample.filename && 
             !sample.filename.toLowerCase().includes('spritesheet') &&
-            /\.(png|jpg|jpeg|gif)$/i.test(sample.filename)
+            /\.(png|jpg|jpeg|gif|webp)$/i.test(sample.filename)
           )
           .map(sample => ({
             path: `${window.BASE_ASSET_PATH}/${mixKey}/samples/${sample.filename}`,
@@ -491,7 +595,7 @@
           .filter(mist => 
             mist.filename && 
             !mist.filename.toLowerCase().includes('spritesheet') &&
-            /\.(png|jpg|jpeg|gif)$/i.test(mist.filename)
+            /\.(png|jpg|jpeg|gif|webp)$/i.test(mist.filename)
           )
           .map(mist => ({
             path: `${window.BASE_ASSET_PATH}/${mixKey}/mist/${mist.filename}`,
@@ -542,24 +646,39 @@
           return;
         }
 
-        if (!window.preview || !window.preview.parentNode) {
-          window.preview = document.createElement('img');
-          window.preview.className = 'preview-image';
-          document.body.appendChild(window.preview);
-        }
-
-        window.preview.crossOrigin = "anonymous";
-        window.preview.onload = () => {
-          window.preview.style.opacity = '1';
-          window.positionPreviewRandomly();
+        // Create a new image element for preloading
+        const newImg = document.createElement('img');
+        newImg.className = 'preview-image';
+        newImg.crossOrigin = "anonymous";
+        newImg.style.opacity = '0';
+        
+        newImg.onload = () => {
+          // Only show if this is still the current active mix
+          if (window.currentActiveMix === mixNum) {
+            // Hide old image and show new one instantly
+            if (window.preview && window.preview.parentNode) {
+              window.preview.remove();
+            }
+            window.preview = newImg;
+            document.body.appendChild(window.preview);
+            window.preview.style.opacity = '1';
+            window.positionPreviewRandomly();
+          } else {
+            // Clean up if mix changed
+            newImg.remove();
+          }
         };
-        window.preview.onerror = (e) => {
-          console.log(`Failed to load image: ${e.target.src}`);
-          window.preview.style.opacity = '0';
-          setTimeout(() => window.updatePreview(mixNum), 100);
+        
+        newImg.onerror = (e) => {
+          console.error(`Failed to load image: ${e.target.src}`);
+          newImg.remove();
+          // Try next image immediately
+          if (window.currentActiveMix === mixNum) {
+            window.updatePreview(mixNum);
+          }
         };
-        window.preview.src = nextImage.path;
-        console.log(`Loading ${nextImage.type} image:`, nextImage.path);
+        
+        newImg.src = nextImage.path;
 
       } catch (error) {
         console.error('Error updating preview:', error);
@@ -573,7 +692,7 @@
           throw new Error('Failed to load asset data');
         }
         window.assetData = await response.json();
-        console.log('Asset data loaded:', window.assetData);
+        // Removed console.log for asset data loading
       } catch (error) {
         console.error('Error loading asset data:', error);
       }

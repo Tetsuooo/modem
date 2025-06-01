@@ -225,7 +225,7 @@ lists</a>
         this.life = 0;
         this.drawingIndex = 0;    // Current dash being drawn
         this.erasingIndex = 0;    // Current dash being erased
-        this.drawDelay = 150;      // Faster drawing
+        this.drawDelay = 200;      // Faster drawing
         this.displayDelay = 1000; // How long to show complete line
         this.lastDrawTime = 0;    // Track when drawing finished
         this.erasingDelay = 150;   // Match draw speed
@@ -459,7 +459,7 @@ lists</a>
     const canvas = document.getElementById('swirlyCanvas');
     const ctx = canvas.getContext('2d');
     const lines = [];
-    const NUM_LINES = 5;
+    const NUM_LINES = 2;
     const SPAWN_DELAY = 500; // Slower initial spawning
     let lastSpawnTime = 0;
     let isInitializing = true; // Track initial state

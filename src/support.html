@@ -200,30 +200,18 @@
       const yearCountElement = document.getElementById('year-count');
       const mixCountElement = document.getElementById('mix-count');
       
-      console.log('Updating counts:', { showCount, yearCount }); // Debug log
-      
       if (showCountElement) {
         showCountElement.textContent = showCount;
-        console.log('Updated show count to:', showCount);
-      } else {
-        console.log('Show count element not found');
       }
       
       if (yearCountElement) {
         yearCountElement.textContent = yearCount;
-        console.log('Updated year count to:', yearCount);
-      } else {
-        console.log('Year count element not found');
       }
 
       // Update mix count asynchronously
       getMixCount().then(mixCount => {
-        console.log('Mix count:', mixCount);
         if (mixCountElement) {
           mixCountElement.textContent = mixCount;
-          console.log('Updated mix count to:', mixCount);
-        } else {
-          console.log('Mix count element not found');
         }
       });
     };

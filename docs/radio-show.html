@@ -147,7 +147,21 @@
         min-height: clamp(0.3rem, 2vh, 1rem); /* Very small height for short screens */
         padding: clamp(0.05rem, 0.1vh, 2px); /* Minimal padding */
       }
-    }</style></head><body><div class="content"><div class="number-grid"></div></div><script>function initializeRadioShow() {
+    }</style></head><body><div class="content"><div class="number-grid"></div></div><script>// Clean up any interference from other pages
+    function cleanupInterference() {
+      // Reset any overridden functions that might interfere
+      if (window.originalAppendChild) {
+        Node.prototype.appendChild = window.originalAppendChild;
+      }
+      if (window.originalEval) {
+        window.eval = window.originalEval;
+      }
+      if (window.originalFunction) {
+        window.Function = window.originalFunction;
+      }
+    }
+
+    function initializeRadioShow() {
       const grid = document.querySelector('.number-grid');
       if (!grid) {
         console.warn('Grid element not found');
@@ -215,7 +229,6 @@
             };
 
             const handlePreviewError = () => {
-              console.log(`Failed to load image: modem${number < 10 ? `0${number}` : number}.webp`);
               preview.style.opacity = '0';
             };
 
@@ -228,34 +241,23 @@
           grid.appendChild(div);
         }
       }
-      
-      console.log('Radio show grid initialized');
     }
+
+    // Clean up interference first
+    cleanupInterference();
 
     // Make initialization function available globally
     window.initializeRadioShow = initializeRadioShow;
 
-    // Set up mutation observer to watch for grid being added to DOM
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes) {
-          mutation.addedNodes.forEach((node) => {
-            if (node.classList && node.classList.contains('number-grid')) {
-              initializeRadioShow();
-              observer.disconnect(); // Stop observing once initialized
-            }
-          });
-        }
-      });
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    // Initialize when this script runs
+    // Force initialization multiple times to ensure it works
     initializeRadioShow();
+    
+    // Also try after a small delay
+    setTimeout(initializeRadioShow, 50);
+    setTimeout(initializeRadioShow, 200);
 
     // Also initialize when the DOM is loaded
-    document.addEventListener('DOMContentLoaded', initializeRadioShow);</script></body></html>
+    document.addEventListener('DOMContentLoaded', initializeRadioShow);
+    
+    // Force initialization when window loads
+    window.addEventListener('load', initializeRadioShow);</script></body></html>
