@@ -150,10 +150,10 @@
             uniqueMixes.add(hash);
           }
         });
-        return uniqueMixes.size || 39; // Fallback if no mixes found
+        return uniqueMixes.size || 40; // Fallback if no mixes found
       } catch (error) {
         console.error('Error fetching mix count:', error);
-        return 39;
+        return 40;
       }
     };
 
