@@ -1,6 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: shop</title><script>// Only redirect if we're not already in the SPA context
-    // Check if we're the top-level window and don't have the SPA navigation
-    if (window.location.pathname !== '/' && 
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>modem: shop</title><script>if (window.location.pathname !== '/' && 
         !window.location.search.includes('embedded') &&
         !document.querySelector('nav') && 
         window === window.top) {
@@ -16,30 +14,49 @@
       width: 100%;
       padding: 2rem;
     }
-    
-    .content h1 {
-      font-size: clamp(3rem, 12vw, 6rem); /* Increased from clamp(2.25rem, 9vw, 4.5rem) */
-      font-weight: bold;
-      margin: 0 auto;
-      color: black;
-      letter-spacing: 0.1em;
+
+    .shop-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 50px;
+      flex-wrap: wrap;
     }
-    
-    .coming-soon {
-      font-size: clamp(1rem, 3vw, 1.5rem); /* Increased from clamp(0.75rem, 2.25vw, 1.125rem) */
+
+    .shop-container a {
+      text-decoration: none;
       color: black;
-      margin: 1.5rem auto; /* 25% smaller */
-      font-style: italic;
+    }
+
+    .shop-image {
+      width: 700px; /* 👈 MUCH bigger */
+      max-width: 90vw; /* keeps it responsive */
+      height: auto;
+    }
+
+    .shop-text {
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      max-width: 400px;
+      text-align: left;
     }
 
     @media (max-width: 768px) {
       .content {
-        padding: 0.75rem; /* 25% smaller */
+        padding: 0.75rem;
+      }
+
+      .shop-container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .shop-text {
+        text-align: center;
       }
     }
 
     @media (max-width: 480px) {
       .content {
-        padding: 0.375rem; /* 25% smaller */
+        padding: 0.375rem;
       }
-    }</style></head><body><div class="content"><h1>shop</h1><p class="coming-soon">Coming Soon...</p></div></body></html>
+    }</style></head><body><div class="content"><div class="shop-container"><a href="https://modemodemodem.bandcamp.com/merch/modem-t-shirt" target="_blank"><img src="./assets/shop/tshirt.webp" alt="Modem T-Shirt" class="shop-image"> </a><a href="https://modemodemodem.bandcamp.com/merch/modem-t-shirt" target="_blank" class="shop-text">Modem T-Shirt, DTF print on 0.23kg cotton, boxy / oversized fit, 30 EUR</a></div></div></body></html>
