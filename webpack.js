@@ -48,7 +48,9 @@ module.exports = {
       patterns: [
         { from: 'src/assets', to: 'assets', noErrorOnMissing: true },
         { from: 'src/scripts', to: 'scripts', noErrorOnMissing: true },
-        { from: 'src/styles', to: 'styles', noErrorOnMissing: true }
+        { from: 'src/styles', to: 'styles', noErrorOnMissing: true },
+        // Regenerate the GitHub Pages custom-domain file on every build (prevents the domain from being dropped when docs/ is cleaned)
+        { from: 'src/CNAME', to: 'CNAME', toType: 'file', noErrorOnMissing: true }
       ]
     })
   ]

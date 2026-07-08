@@ -18,54 +18,52 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      height: 100vh;
       background: transparent; /* Transparent to show the animation */
-      overflow: hidden;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto; /* Scroll vertically when the grid is taller than the window */
     }
     .content {
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       width: 100%;
-      padding: 0;
-    }
-    .radio-show {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
-      padding: clamp(0.7rem, 2.5vh, 2rem); /* Increased padding */
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      z-index: 1; /* Ensure it overlays the animation */
-      max-width: 90vw; /* Increased from 85vw */
-      max-height: 80vh; /* Increased from 70vh */
-      overflow: hidden; /* Hide any overflow */
+      /* Top padding clears the fixed nav so the top row stays visible when scrolled up */
+      padding: 3rem 0 1.5rem;
     }
     .number-grid {
+      /* --rows is set by JS to the actual number of rows in the grid.
+         --min-cell is the smallest a cell may get: 0 on desktop (pure fit-to-screen),
+         larger on touch (below) so numbers stay big even if that means scrolling. */
+      --rows: 25;
+      --min-cell: 0px;
+      /* Tallest cell that still lets every row fit the viewport height (below the fixed nav).
+         The 1.3 leaves tasteful breathing room above/below (grid fills ~80% of the height). */
+      --fit-h: calc((100vh - 5.5rem) / (var(--rows) * 1.3));
+      /* Widest cell that still keeps all 10 columns within the viewport (never scroll sideways). */
+      --fit-w: calc((100vw - 1.5rem) / 14);
+      /* Fit both axes; on touch never shrink below the readable minimum. */
+      --cell: min(var(--fit-w), max(var(--min-cell), var(--fit-h)));
+
       display: grid;
       grid-template-columns: repeat(10, 1fr); /* Always 10 columns */
-      gap: clamp(1px, 0.2vw, 3px) clamp(5px, 1.2vw, 12px); /* Row gap (smaller) Column gap (even larger) */
-      width: 100%; /* Use full container width */
+      gap: calc(var(--cell) * 0.12) calc(var(--cell) * 0.3); /* row gap / column gap, scale with cell */
+      width: fit-content; /* Narrow grid sized to its content, centered by .content (not stretched across the screen) */
+      max-width: 100%;
       text-align: center;
       direction: rtl;
       margin: 0 auto;
     }
     .number-grid div {
-      font-size: clamp(0.3rem, 1.2vw, 1rem); /* Lower minimum for very small screens */
+      font-size: calc(var(--cell) * 0.46);
+      min-height: var(--cell);
       font-weight: bold;
       color: black;
-      padding: clamp(1px, 0.2vw, 4px); /* Reduced padding for closer spacing */
+      padding: 0 calc(var(--cell) * 0.08);
       border-radius: 0;
-      transition: all 0.15s ease;
-      min-height: clamp(0.6rem, 2.2vw, 2rem); /* Lower minimum height */
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -94,69 +92,24 @@
       z-index: 100;
     }
 
-    @media (max-width: 768px) {
-      .radio-show {
-        padding: clamp(0.2rem, 2vh, 1.3rem); /* Reduced minimum padding */
-        width: 98vw; /* Use more width */
-        max-width: none;
-        max-height: 85vh; /* Use more height */
-      }
-      .number-grid {
-        gap: clamp(0.5px, 0.15vw, 2px) clamp(3px, 0.8vw, 8px); /* Smaller row gap, larger column gap on tablets */
-      }
-      .number-grid div {
-        font-size: clamp(0.25rem, 1.6vw, 0.9rem); /* Lower minimum font size */
-        min-height: clamp(0.5rem, 3.2vw, 1.8rem); /* Lower minimum height */
-      }
-    }
-
+    /* Keep the hover cover-preview a touch larger on small screens */
     @media (max-width: 480px) {
-      .radio-show {
-        padding: clamp(0.1rem, 1vh, 0.8rem); /* Very small minimum padding */
-        width: 99vw; /* Use almost full width */
-        max-height: 90vh; /* Use more height on mobile */
-      }
-      .number-grid {
-        gap: clamp(0.25px, 0.1vw, 1.5px) clamp(2px, 0.5vw, 6px); /* Very small row gap, moderate column gap on mobile */
-      }
-      .number-grid div {
-        font-size: clamp(0.2rem, 2vw, 0.7rem); /* Very low minimum font size */
-        min-height: clamp(0.4rem, 4vw, 1.4rem); /* Very low minimum height */
-      }
       .preview-image {
-        width: clamp(120px, 35vw, 250px); /* Larger preview on mobile */
-        height: clamp(120px, 35vw, 250px); /* Larger preview on mobile */
+        width: clamp(120px, 35vw, 250px);
+        height: clamp(120px, 35vw, 250px);
       }
     }
 
-    @media (orientation: portrait) {
-      .radio-show {
-        max-height: 85vh; /* Use more height in portrait */
-        padding: clamp(0.1rem, 1vh, 1rem); /* Reduce padding in portrait */
-      }
-      .number-grid {
-        gap: clamp(0.25px, 0.1vh, 2px) clamp(3px, 0.8vh, 10px); /* Scale gaps with viewport height, separate row/column */
-      }
-      .number-grid div {
-        font-size: clamp(0.2rem, 1.5vh, 0.8rem); /* Scale with viewport height, lower minimum */
-        min-height: clamp(0.4rem, 3vh, 1.5rem); /* Scale height with viewport height, lower minimum */
-      }
+    /* Touch devices (phones/tablets): keep numbers big and readable; scroll only if they can't all fit. */
+    @media (hover: none), (pointer: coarse) {
+      body { overflow-y: auto; }
+      .number-grid { --min-cell: 2.5rem; }
+      .content { padding-top: 4.5rem; } /* clear the (larger) touch nav when scrolled to the top */
     }
 
-    /* Extra small screens - emergency scaling */
-    @media (max-height: 400px) {
-      .radio-show {
-        max-height: 95vh; /* Use almost full height on very short screens */
-        padding: clamp(0.05rem, 0.5vh, 0.5rem); /* Minimal padding */
-      }
-      .number-grid {
-        gap: clamp(0.1px, 0.05vh, 1px) clamp(1.5px, 0.3vh, 4px); /* Minimal row gap, small column gap */
-      }
-      .number-grid div {
-        font-size: clamp(0.15rem, 1vh, 0.5rem); /* Very small font for short screens */
-        min-height: clamp(0.3rem, 2vh, 1rem); /* Very small height for short screens */
-        padding: clamp(0.05rem, 0.1vh, 2px); /* Minimal padding */
-      }
+    /* Pointer devices (desktop): never scroll — the grid always scales to fit the screen neatly. */
+    @media (hover: hover) and (pointer: fine) {
+      body { overflow: hidden; }
     }
   </style>
 </head>
@@ -207,6 +160,9 @@
       const totalNumbers = getCurrentNumber();
       const numbersPerRow = 10;
       const rows = Math.ceil(totalNumbers / numbersPerRow);
+
+      // Publish the row count so the CSS can size cells to fit the viewport height
+      grid.style.setProperty('--rows', rows);
 
       // Create preview image element
       const preview = document.createElement('img');

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>modem — device / viewport test harness</title>
+<style>
+  :root { --bg:#141416; --panel:#1e1e22; --line:#333; --txt:#e8e8ea; --muted:#9a9aa2; --accent:#ffe100; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:13px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+
+  header {
+    position: sticky; top:0; z-index:10;
+    background:var(--panel); border-bottom:1px solid var(--line);
+    padding:10px 14px; display:flex; flex-wrap:wrap; gap:14px 18px; align-items:center;
+  }
+  header h1 { font-size:14px; margin:0 8px 0 0; letter-spacing:.06em; text-transform:uppercase; }
+  header h1 b { color:var(--accent); }
+  .grp { display:flex; align-items:center; gap:6px; }
+  label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  input, select, button {
+    background:#26262b; color:var(--txt); border:1px solid var(--line); border-radius:5px;
+    padding:5px 8px; font:inherit;
+  }
+  input[type=number] { width:64px; }
+  input[type=text] { width:190px; }
+  button { cursor:pointer; }
+  button:hover, .cat.active { border-color:var(--accent); }
+  .cat.active { color:var(--accent); }
+  input[type=range] { accent-color:var(--accent); width:130px; }
+  .hint { color:var(--muted); font-size:11px; max-width:100%; padding:8px 14px; border-bottom:1px solid var(--line); }
+  .hint code { color:var(--accent); }
+
+  #gallery { display:flex; flex-wrap:wrap; gap:20px; padding:20px; align-items:flex-start; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .card-head { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); }
+  .dev-name { font-weight:600; }
+  .dev-dims { color:var(--muted); font-size:11px; }
+  .ratio { color:var(--muted); font-size:10px; border:1px solid var(--line); border-radius:4px; padding:1px 5px; }
+  .spacer { flex:1; }
+  .card-head a, .card-head button { padding:2px 7px; font-size:12px; line-height:1.2; text-decoration:none; color:var(--txt); }
+  .viewport { overflow:hidden; background:#fff; }
+  .viewport iframe { border:0; display:block; transform-origin:top left; }
+  .empty { color:var(--muted); padding:40px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><b>modem</b> viewport test</h1>
+
+  <div class="grp">
+    <label>base url</label>
+    <input type="text" id="baseUrl" value="http://localhost:8085">
+  </div>
+
+  <div class="grp">
+    <label>page</label>
+    <select id="page">
+      <option value="/">home</option>
+      <option value="/radio-show">radio-show</option>
+      <option value="/year-end-lists">year-end-lists</option>
+      <option value="/dial-up">dial-up</option>
+      <option value="/shop">shop</option>
+      <option value="/support">support</option>
+    </select>
+  </div>
+
+  <div class="grp">
+    <label>show</label>
+    <button class="cat active" data-cat="phone">phones</button>
+    <button class="cat" data-cat="tablet">tablets</button>
+    <button class="cat" data-cat="desktop">desktops</button>
+    <button class="cat" data-cat="all">all</button>
+  </div>
+
+  <div class="grp">
+    <label>orient</label>
+    <button id="orient">portrait ⇄ landscape</button>
+  </div>
+
+  <div class="grp">
+    <label>zoom</label>
+    <input type="range" id="zoom" min="15" max="100" value="70">
+    <span id="zoomVal">70%</span>
+  </div>
+
+  <div class="grp">
+    <label>custom</label>
+    <input type="number" id="cw" placeholder="w" min="120" max="4000">
+    <input type="number" id="ch" placeholder="h" min="120" max="4000">
+    <button id="addCustom">add</button>
+  </div>
+
+  <button id="reload">↻ reload all</button>
+</header>
+
+<div class="hint">
+  Loads the site in real iframes at each viewport — accurate for testing <b>layout &amp; scaling</b> (media queries, vw/vh, clipping, nav fit).
+  Iframes can't emulate real finger taps, so for true touch behaviour use your browser's DevTools device mode on one frame.
+  If frames are blank, make sure the dev server is running (<code>node server.js</code>) and the <b>base url</b> matches.
+</div>
+
+<div id="gallery"></div>
+
+<script>
+  // name, w, h (defined in portrait/native), category
+  const PRESETS = [
+    ['Galaxy Fold',      280, 653, 'phone'],
+    ['iPhone SE',        375, 667, 'phone'],
+    ['iPhone 12/13/14',  390, 844, 'phone'],
+    ['Pixel 7',          412, 915, 'phone'],
+    ['iPhone 14 Pro Max',430, 932, 'phone'],
+    ['iPad Mini',        768,1024, 'tablet'],
+    ['iPad Pro 11"',     834,1194, 'tablet'],
+    ['iPad Pro 12.9"',  1024,1366, 'tablet'],
+    ['Laptop',          1280, 800, 'desktop'],
+    ['Desktop HD',      1440, 900, 'desktop'],
+    ['Full HD',         1920,1080, 'desktop'],
+    ['QHD',             2560,1440, 'desktop'],
+    ['Ultrawide',       3440,1440, 'desktop'],
+    ['Square',           900, 900, 'desktop'],
+  ];
+
+  const state = { cat:'phone', landscape:false, zoom:0.70, custom:[] };
+  const $ = s => document.querySelector(s);
+  const gallery = $('#gallery');
+
+  function frames() {
+    let list = PRESETS.map(p => ({ name:p[0], w:p[1], h:p[2], cat:p[3] }));
+    list = list.concat(state.custom);
+    if (state.cat !== 'all') list = list.filter(f => f.cat === state.cat || f.cat === 'custom');
+    return list;
+  }
+
+  function urlFor() {
+    const base = $('#baseUrl').value.replace(/\/+$/, '');
+    return base + $('#page').value;
+  }
+
+  function render() {
+    const z = state.zoom;
+    const url = urlFor();
+    const list = frames();
+    if (!list.length) { gallery.innerHTML = '<div class="empty">No frames in this category.</div>'; return; }
+    gallery.innerHTML = '';
+    list.forEach(f => {
+      const w = state.landscape ? f.h : f.w;
+      const h = state.landscape ? f.w : f.h;
+      const ratio = (w/h).toFixed(2);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="card-head">' +
+          '<span class="dev-name">'+f.name+'</span>' +
+          '<span class="dev-dims">'+w+' × '+h+'</span>' +
+          '<span class="ratio">'+ratio+'</span>' +
+          '<span class="spacer"></span>' +
+          '<button title="reload this frame">⟳</button>' +
+          '<a title="open at true size in new tab" target="_blank" href="'+url+'">↗</a>' +
+        '</div>' +
+        '<div class="viewport" style="width:'+Math.round(w*z)+'px;height:'+Math.round(h*z)+'px">' +
+          '<iframe loading="lazy" style="width:'+w+'px;height:'+h+'px;transform:scale('+z+')" src="'+url+'"></iframe>' +
+        '</div>';
+      card.querySelector('button').addEventListener('click', () => {
+        const f2 = card.querySelector('iframe'); f2.src = f2.src;
+      });
+      gallery.appendChild(card);
+    });
+  }
+
+  document.querySelectorAll('.cat').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.cat').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); state.cat = b.dataset.cat; render();
+  }));
+  $('#orient').addEventListener('click', () => { state.landscape = !state.landscape; render(); });
+  $('#zoom').addEventListener('input', e => { state.zoom = e.target.value/100; $('#zoomVal').textContent = e.target.value+'%'; render(); });
+  $('#page').addEventListener('change', render);
+  $('#baseUrl').addEventListener('change', render);
+  $('#reload').addEventListener('click', render);
+  $('#addCustom').addEventListener('click', () => {
+    const w = parseInt($('#cw').value), h = parseInt($('#ch').value);
+    if (w>=120 && h>=120) { state.custom.push({ name:'Custom', w, h, cat:'custom' }); state.cat='all';
+      document.querySelectorAll('.cat').forEach(x=>x.classList.toggle('active', x.dataset.cat==='all')); render(); }
+  });
+
+  render();
+</script>
+</body>
+</html>

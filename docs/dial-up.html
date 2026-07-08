@@ -134,6 +134,15 @@
       }
     }
 
+    /* Tablet portrait: more breathing room above the first item and below the last */
+    @media screen and (orientation: portrait) and (min-width: 700px) {
+      .content {
+        margin-top: 2.5rem;
+        padding-top: 3rem;
+        padding-bottom: 4rem;
+      }
+    }
+
     /* Move arrow lower when window is taller than it is wide */
     @media screen and (max-aspect-ratio: 1/1) {
       .back-arrow {

@@ -5,6 +5,11 @@ const app = express();
 // Serve static assets from src
 app.use(express.static(path.join(__dirname, 'src')));
 
+// Dev-only: viewport/device test harness (lives outside src/, never shipped to docs/)
+app.get('/device-test.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'device-test.html'));
+});
+
 // For all routes, serve index.html to enable client-side routing
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'src', 'index.html'));
