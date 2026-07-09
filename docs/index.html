@@ -152,13 +152,13 @@
        previews correctly in the device-test harness. Placed last so it wins on touch tablets. */
     @media (min-width: 700px) and (max-width: 1200px) {
       nav {
-        gap: clamp(0.6rem, 2.2vw, 1.6rem);
-        padding: clamp(0.35rem, 1vw, 0.6rem) clamp(0.5rem, 1.5vw, 1rem);
-        min-height: clamp(38px, 5vw, 50px);
+        gap: clamp(0.45rem, 1.7vw, 1.15rem);
+        padding: clamp(0.3rem, 0.8vw, 0.5rem) clamp(0.5rem, 1.3vw, 0.9rem);
+        min-height: clamp(32px, 4vw, 42px);
       }
       nav a {
-        font-size: clamp(1rem, 2vw, 1.25rem);
-        padding: clamp(0.3rem, 0.8vw, 0.5rem) clamp(0.35rem, 1vw, 0.55rem);
+        font-size: clamp(0.82rem, 1.6vw, 1.02rem);
+        padding: clamp(0.25rem, 0.65vw, 0.4rem) clamp(0.3rem, 0.85vw, 0.5rem);
       }
     }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><script>// Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
@@ -167,8 +167,10 @@
       const redirectPath = urlParams.get('redirect');
       
       if (redirectPath) {
-        // Clean up the URL and set up for loading the correct page
-        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/' + redirectPath;
+        // Clean up the URL and set up for loading the correct page. Keep the #hash
+        // (a deep link into the archive, e.g. /archive#modem-11) so the archive view
+        // can route straight to that show instead of the search fallback.
+        const cleanUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') + '/' + redirectPath + (l.hash || '');
         window.history.replaceState(null, null, cleanUrl);
         // Set a flag so we know to load this page after DOM loads
         window.initialRedirectPath = redirectPath;
@@ -496,7 +498,17 @@
 
       document.body.addEventListener('click', (e) => {
         const link = e.target.closest('a');
-        if (link && link.href && !link.href.startsWith(window.location.origin)) {
+        if (!link || !link.href) return;
+        // Route internal archive links (e.g. from the radio-show grid) through the
+        // SPA instead of full-reloading. The #modem-NN hash opens that show's detail.
+        const rawHref = link.getAttribute('href') || '';
+        if (rawHref.startsWith('/archive') && !link.closest('nav')) {
+          e.preventDefault();
+          history.pushState({}, '', rawHref);
+          loadPage('archive');
+          return;
+        }
+        if (!link.href.startsWith(window.location.origin)) {
           link.target = '_blank';
         }
       });
@@ -611,6 +623,17 @@
               }
             };
             initGrid();
+          } else if (url === 'archive.html' || url === 'archive') {
+            const initArchiveGrid = () => {
+              if (!document.querySelector('.modem-archive')) {
+                setTimeout(initArchiveGrid, 50);
+                return;
+              }
+              if (window.initArchive) {
+                window.initArchive();
+              }
+            };
+            initArchiveGrid();
           } else if (url === 'home.html' || url === 'home') {
             // Ensure social icons are created for home page
             if (window.createHomeSocialIcons) {
@@ -641,6 +664,9 @@
           console.error('Error loading page:', error);
         }
       }
+
+      // Expose the SPA loader so subpages (e.g. the archive back button) can route without a full reload
+      window.loadPageGlobal = loadPage;
 
       links.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -682,4 +708,699 @@
         const pathToLoad = cleanPath || defaultPage.replace('.html', '');
         loadPage(pathToLoad);
       });
-    });</script></body></html>
+    });</script><style>.modem-search { position: fixed; inset: 0; z-index: 200002; font-family: Arial, sans-serif; pointer-events: none; }
+    .modem-search[hidden] { display: none; }
+    .ms-window {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: min(400px, 92vw); height: min(78vh, 820px); box-sizing: border-box; pointer-events: auto;
+      background: #fff; border: 1px solid #000; display: flex; flex-direction: column;
+    }
+    .ms-head { display: flex; gap: 0.5rem; padding: 0.6rem; border-bottom: 1px solid #000; align-items: center; cursor: move; }
+    .ms-head #ms-input { cursor: text; }
+    #ms-input { flex: 1; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 0.95rem; font-weight: bold; padding: 0.5rem 0.6rem; border: 1px solid #000; outline: none; }
+    #ms-input:focus { background: #ffffcc; }
+    .ms-close { width: 2.1rem; height: 2.1rem; flex: none; border: 1px solid #000; background: #fff; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0; }
+    .ms-close:hover { background: #ffff00; }
+    .ms-active-tag { padding: 0.5rem 0.6rem 0; }
+    .ms-active-tag[hidden] { display: none; }
+    .ms-active-tag .active-tag-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: bold; background: #000; color: #fff; border: 1px solid #000; border-radius: 999px; padding: 0.2rem 0.35rem 0.2rem 0.7rem; }
+    .ms-active-tag .active-tag-kind { text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.06em; opacity: 0.6; }
+    .ms-active-tag .active-tag-clear { display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; flex: none; border: 0; border-radius: 999px; background: #fff; color: #000; font-size: 0.85rem; line-height: 1; cursor: pointer; padding: 0; }
+    .ms-active-tag .active-tag-clear:hover { background: #ffff00; }
+    .ms-filters { display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid #000; flex-wrap: wrap; }
+    .ms-filters button { font-family: Arial, sans-serif; font-weight: bold; text-transform: lowercase; font-size: 0.8rem; padding: 0.25rem 0.6rem; border: 1px solid #000; background: #fff; cursor: pointer; }
+    .ms-filters button:hover { background: #ffff00; }
+    .ms-filters button.active { background: #000; color: #fff; }
+    #ms-count { margin-left: auto; font-size: 0.75rem; font-weight: bold; opacity: 0.7; }
+    .ms-results { flex: 1; overflow-y: auto; padding: 0.6rem; }
+    .ms-results.archive-tracklist { display: flex; flex-direction: column; gap: 0.35rem; }
+    .ms-results.archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
+    /* result visuals (self-contained copies so they work over any page) */
+    .modem-search .track-row { display: flex; align-items: center; gap: 0.6rem; background: #fff; border: 1px solid #000; padding: 0.35rem 0.45rem; cursor: pointer; }
+    .modem-search .track-row:hover { box-shadow: 0 0 0 2px #ffff00; }
+    .modem-search .track-thumb { width: 46px; height: 46px; flex: none; object-fit: cover; background: #eee; display: block; }
+    .modem-search .track-thumb-wrap { position: relative; flex: none; width: 46px; height: 46px; }
+    .modem-search .track-thumb-wrap.play::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: #fff; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s; }
+    .modem-search .track-row:hover .track-thumb-wrap.play::after { opacity: 1; }
+    .modem-search .track-main { flex: 1; min-width: 0; }
+    .modem-search .track-title { font-weight: bold; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modem-search .track-artist { font-size: 0.76rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .modem-search .track-shows { display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-end; max-width: 38%; }
+    .modem-search .track-show { font-size: 0.68rem; font-weight: bold; text-decoration: none; text-transform: lowercase; border: 1px solid #000; border-radius: 999px; padding: 0.06rem 0.45rem; background: #fff; color: #000; white-space: nowrap; }
+    .modem-search .track-show:hover { background: #ffff00; }
+    .modem-search .track-src { flex: none; text-decoration: none; color: #000; font-weight: bold; font-size: 1rem; padding: 0 0.25rem; }
+    .modem-search .track-src:hover { color: #0645ad; }
+    .modem-search .archive-card { display: flex; flex-direction: column; background: #fff; border: 1px solid #000; overflow: hidden; cursor: pointer; text-decoration: none; color: #000; }
+    .modem-search .archive-card:hover { box-shadow: 0 0 0 2px #ffff00; }
+    .modem-search .archive-card .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; display: block; }
+    .modem-search .archive-card .card-body { padding: 0.45rem 0.5rem 0.55rem; }
+    .modem-search .archive-card .card-title { font-weight: bold; text-transform: lowercase; font-size: 0.85rem; line-height: 1.15; }
+    .modem-search .archive-card .card-meta { font-size: 0.68rem; opacity: 0.65; margin-top: 0.2rem; }
+    .modem-search .archive-empty { padding: 2rem 0; text-align: center; font-weight: bold; opacity: 0.7; }
+    @media (max-width: 600px) { .ms-window { width: 100vw; height: 100vh; height: 100dvh; top: 0; left: 0; transform: none; border: 0; } }</style><div id="modem-search" class="modem-search" hidden><div class="ms-window"><div class="ms-head"><input id="ms-input" autocomplete="off" spellcheck="false" placeholder="search tracks, artists, shows…"> <button class="ms-close" type="button" aria-label="close search">×</button></div><div id="ms-active-tag" class="ms-active-tag" hidden></div><div class="ms-filters"><button data-mode="tracks" class="active">tracks</button> <button data-mode="shows">shows</button> <button data-mode="lists">lists</button> <span id="ms-count"></span></div><div id="ms-results" class="ms-results"></div></div></div><script>(function () {
+      const overlay = document.getElementById('modem-search');
+      if (!overlay) return;
+      const input = overlay.querySelector('#ms-input');
+      const countEl = overlay.querySelector('#ms-count');
+      const activeTagEl = overlay.querySelector('#ms-active-tag');
+      const resultsEl = overlay.querySelector('#ms-results');
+      const win = overlay.querySelector('.ms-window');
+      const closeBtn = overlay.querySelector('.ms-close');
+
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const normKey = (s) => (s == null ? '' : String(s)).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+      // playable in the shuffle player only if actually played in a show (not a list-only album)
+      const canPlay = (tk) => (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
+
+      let data = null, ctx = null;
+      const state = { query: '', mode: 'tracks', tag: null };
+
+      function withData(cb) {
+        if (window.__modemData) return cb(window.__modemData);
+        fetch('/assets/modem-archive.json', { cache: 'no-cache' })
+          .then((r) => r.json())
+          .then((d) => { window.__modemData = { records: d.records || [], tracks: d.tracks || [] }; window.__modemArchive = window.__modemData.records; cb(window.__modemData); })
+          .catch((e) => console.error('search: data load failed', e));
+      }
+
+      function buildCtx(d) {
+        const bySlug = {}; d.records.forEach((r) => (bySlug[r.slug] = r));
+        return { bySlug };
+      }
+
+      function renderActiveTag() {
+        if (state.tag) {
+          activeTagEl.hidden = false;
+          activeTagEl.innerHTML = '<span class="active-tag-pill"><span class="active-tag-kind">' + (state.tag.kind === 'label' ? 'label' : 'artist') + '</span>' + esc(state.tag.name) + '<button type="button" class="active-tag-clear" aria-label="clear filter">×</button></span>';
+        } else { activeTagEl.hidden = true; activeTagEl.innerHTML = ''; }
+      }
+
+      const terms = () => { const q = state.query.trim().toLowerCase(); return q ? q.split(/\s+/) : []; };
+      const hit = (hay, ts) => ts.every((t) => hay.indexOf(t) !== -1);
+      function emptyMsg() { return '<div class="archive-empty">nothing matches ' + (state.tag ? state.tag.kind + ' “' + esc(state.tag.name) + '”' : '“' + esc(state.query) + '”') + '</div>'; }
+
+      function trackMatchesTag(tk, tag) {
+        if (tag.kind === 'artist') {
+          if (normKey(tk.artist) === normKey(tag.name)) return true;
+          return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+        }
+        // label: the track's own segment carried this label tag — not merely some
+        // other track in the same show (which is what the old show-level match did).
+        return (tk.shows || []).some((s) => (s.labels || []).some((n) => normKey(n) === normKey(tag.name)));
+      }
+
+      function trackRow(tk) {
+        // real track art only — no show-cover fallback (blank square if missing)
+        const cover = tk.artUrl || '';
+        const badges = (tk.shows || []).map((s) => '<a class="track-show" href="/archive#' + esc(s.slug) + '">' + esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>').join('');
+        const playable = canPlay(tk);
+        const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' + (cover ? '<img class="track-thumb" loading="lazy" src="' + esc(cover) + '" alt="">' : '<span class="track-thumb"></span>') + '</span>';
+        return '<div class="track-row" data-key="' + esc(tk.key) + '">' + thumb +
+          '<div class="track-main"><div class="track-title">' + esc(tk.title || '(untitled)') + '</div>' +
+          (tk.artist ? '<div class="track-artist">' + esc(tk.artist) + '</div>' : '') + '</div>' +
+          '<div class="track-shows">' + badges + '</div></div>';
+      }
+
+      function showCard(r) {
+        return '<a class="archive-card" href="/archive#' + esc(r.slug) + '">' +
+          (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
+          '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div><div class="card-meta">' + esc(r.date || '') +
+          (r.embeds && r.embeds.length ? ' · ' + r.embeds.length + ' tracks' : '') + '</div></div></a>';
+      }
+
+      function draw() {
+        const ts = terms();
+        if (state.mode === 'tracks') {
+          const tracks = data.tracks || [];
+          const filtered = tracks.filter((tk) => { if (state.tag && !trackMatchesTag(tk, state.tag)) return false; if (!ts.length) return true; return hit((tk.searchText || '').toLowerCase(), ts); });
+          countEl.textContent = filtered.length + ' / ' + tracks.length + ' tracks';
+          resultsEl.className = 'ms-results archive-tracklist';
+          resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
+        } else {
+          const type = state.mode === 'lists' ? 'list' : 'show';
+          const pool = (data.records || []).filter((r) => r.type === type);
+          const filtered = pool.filter((r) => {
+            if (state.tag) { const list = (state.tag.kind === 'label' ? r.labels : r.artists) || []; if (!list.some((x) => normKey(x.name) === normKey(state.tag.name))) return false; }
+            if (!ts.length) return true; return hit((r.searchText || '').toLowerCase(), ts);
+          });
+          countEl.textContent = filtered.length + ' / ' + pool.length + ' ' + (type === 'list' ? 'lists' : 'shows');
+          resultsEl.className = 'ms-results archive-grid';
+          resultsEl.innerHTML = filtered.length ? filtered.map(showCard).join('') : emptyMsg();
+        }
+      }
+
+      // Position the narrow window next to whatever opened it (a button / the tag
+      // bubble). Anchor on the left half → window to its right; on the right half →
+      // window rises up-left over it. No anchor → centered. Mobile → CSS full-screen.
+      // tagOpen → sit on the right, just to the LEFT of and rising ABOVE the
+      // bottom-right tag cloud, so the cloud stays visible beside it.
+      function place(anchorEl, tagOpen) {
+        const vw = innerWidth, vh = innerHeight;
+        if (vw <= 600) { win.style.left = ''; win.style.top = ''; win.style.transform = ''; return; } // full-screen on mobile (CSS)
+        const W = win.offsetWidth, H = win.offsetHeight;
+        const rect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
+        const player = document.getElementById('modem-player');
+        // sit on the right when the player is open (it prefers the left) so the two
+        // windows don't stack on top of each other
+        if (tagOpen || (player && !player.hidden)) {
+          // the tag cloud always lives bottom-right, so anchor there whatever
+          // opened the search (a chip, or the player's artist/label link)
+          const cloudW = Math.min(340, vw * 0.84);          // how far the chips extend left
+          let left = (vw - 14) - cloudW - 12 - W;             // clear the whole tag cloud to the left
+          let top = (vh - 14) - H;                            // bottom-aligned → rises upward
+          left = Math.max(8, Math.min(left, vw - W - 8));
+          top = Math.max(8, Math.min(top, vh - H - 8));
+          win.style.transform = 'none'; win.style.left = left + 'px'; win.style.top = top + 'px';
+          return;
+        }
+        if (!rect) { win.style.left = '50%'; win.style.top = '50%'; win.style.transform = 'translate(-50%,-50%)'; return; }
+        const gap = 10;
+        let left, top;
+        if (rect.left + rect.width / 2 < vw / 2) { left = rect.right + gap; top = rect.top; }
+        else { left = rect.right - W; top = rect.bottom - H; }
+        left = Math.max(8, Math.min(left, vw - W - 8));
+        top = Math.max(8, Math.min(top, vh - H - 8));
+        win.style.transform = 'none'; win.style.left = left + 'px'; win.style.top = top + 'px';
+      }
+
+      input.oninput = () => { state.query = input.value; draw(); };
+      closeBtn.onclick = () => window.modemSearch.close();
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) window.modemSearch.close(); });
+      // click outside the window closes it — but NOT when clicking the player,
+      // which floats over/beside the search while you keep browsing.
+      document.addEventListener('mousedown', (e) => {
+        if (overlay.hidden || win.contains(e.target)) return;
+        const p = document.getElementById('modem-player');
+        if (p && p.contains(e.target)) return;
+        window.modemSearch.close();
+      });
+
+      // draggable by the header (like the player); the input + close still work
+      (function () {
+        const head = win.querySelector('.ms-head');
+        let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+        function down(cx, cy, target) {
+          if (target.closest('input, button')) return false;
+          const r = win.getBoundingClientRect();
+          win.style.left = r.left + 'px'; win.style.top = r.top + 'px'; win.style.transform = 'none';
+          sx = cx; sy = cy; ox = r.left; oy = r.top; dragging = true; return true;
+        }
+        function move(cx, cy) {
+          if (!dragging) return;
+          const r = win.getBoundingClientRect();
+          let nx = ox + (cx - sx), ny = oy + (cy - sy);
+          nx = Math.max(4, Math.min(nx, innerWidth - r.width - 4));
+          ny = Math.max(4, Math.min(ny, innerHeight - r.height - 4));
+          win.style.left = nx + 'px'; win.style.top = ny + 'px';
+        }
+        head.addEventListener('mousedown', (e) => { if (down(e.clientX, e.clientY, e.target)) { e.preventDefault(); document.body.style.userSelect = 'none'; } });
+        window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+        window.addEventListener('mouseup', () => { dragging = false; document.body.style.userSelect = ''; });
+        head.addEventListener('touchstart', (e) => { const t = e.touches[0]; if (down(t.clientX, t.clientY, e.target)) e.preventDefault(); }, { passive: false });
+        window.addEventListener('touchmove', (e) => { if (dragging) { const t = e.touches[0]; move(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false });
+        window.addEventListener('touchend', () => { dragging = false; });
+      })();
+      activeTagEl.onclick = (e) => { if (e.target.closest('.active-tag-clear')) { state.tag = null; renderActiveTag(); draw(); } };
+      overlay.querySelectorAll('.ms-filters button').forEach((btn) => {
+        btn.onclick = () => { state.mode = btn.getAttribute('data-mode'); overlay.querySelectorAll('.ms-filters button').forEach((b) => b.classList.remove('active')); btn.classList.add('active'); draw(); };
+      });
+      resultsEl.onclick = (e) => {
+        const link = e.target.closest('a');
+        if (link) { const href = link.getAttribute('href') || ''; if (href.indexOf('/archive') === 0) window.modemSearch.close(); return; }
+        const row = e.target.closest('.track-row');
+        if (!row) return;
+        const tk = (data.tracks || []).find((x) => x.key === row.getAttribute('data-key'));
+        if (!tk) return;
+        // open the player where "play random track" would put it (not next to the
+        // search window); keep the search open. Falls back to the search window if
+        // that button isn't on the current page.
+        if (canPlay(tk) && window.modemPlayer) window.modemPlayer.playTrack(tk, null, document.querySelector('.modem-action[data-act="tracks"]') || win);
+        else if (tk.link) window.open(tk.link, '_blank', 'noopener');
+      };
+
+      window.modemSearch = {
+        open(initial, anchorEl) {
+          withData((d) => {
+            data = d; ctx = buildCtx(d);
+            state.query = (initial && initial.query) || '';
+            state.mode = (initial && initial.mode) || 'tracks';
+            state.tag = (initial && initial.tag) || null;
+            input.value = state.query;
+            overlay.querySelectorAll('.ms-filters button').forEach((b) => b.classList.toggle('active', b.getAttribute('data-mode') === state.mode));
+            overlay.hidden = false;
+            renderActiveTag();
+            draw();
+            place(anchorEl, !!state.tag);
+            setTimeout(() => input.focus(), 30);
+          });
+        },
+        close() { overlay.hidden = true; },
+      };
+    })();</script><style>.modem-player {
+      position: fixed; left: 1rem; top: 4.5rem; z-index: 200003;
+      width: min(420px, calc(100vw - 2rem)); box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: stretch;
+      background: transparent; border: 0; padding: 0; cursor: move; font-family: Arial, sans-serif;
+    }
+    .modem-player a, .modem-player button, .modem-player .mp-bar { cursor: pointer; }
+    .modem-player .mp-art { cursor: move; } /* artwork doubles as a drag handle */
+    .modem-player[hidden] { display: none; }
+    /* big square artwork, left-aligned, floating above the panel (no border/shadow) */
+    .mp-art-wrap { position: relative; display: block; align-self: flex-start; width: min(260px, 82%); margin-bottom: 0.55rem; z-index: 2; }
+    .mp-art { display: block; width: 100%; aspect-ratio: 1 / 1; background: #eee; text-decoration: none; }
+    .mp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mp-panel { position: relative; width: 100%; box-sizing: border-box; background: #fff; padding: 0.55rem 0.7rem 0.6rem; }
+    /* single line, ellipsis when too long → the panel never resizes to the title.
+       padding-right reserves room for the shuffle button pinned top-right of the panel */
+    .mp-title { font-weight: bold; font-size: 0.95rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 1.7rem; }
+    /* artist · album · label all on ONE line so the player never changes height */
+    .mp-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.12rem; font-size: 0.8rem; line-height: 1.35; min-height: 1.1em; }
+    .mp-artist { color: inherit; opacity: 0.8; text-decoration: none; }
+    .mp-album { opacity: 0.5; font-style: italic; color: inherit; text-decoration: none; }
+    .mp-label { color: inherit; opacity: 0.75; text-decoration: none; }
+    a.mp-artist:hover, a.mp-label:hover { text-decoration: underline; opacity: 1; color: #000; cursor: pointer; }
+    a.mp-album[href]:hover { text-decoration: underline; opacity: 0.8; cursor: pointer; }
+    .mp-artist[hidden], .mp-album[hidden], .mp-label[hidden] { display: none; }
+    /* "↗ soundcloud" pinned to the top-right corner of the artwork */
+    .mp-src {
+      position: absolute; top: 4px; right: 4px; z-index: 4;
+      font-size: 0.66rem; font-weight: bold; text-transform: lowercase; text-decoration: none; white-space: nowrap;
+      background: #fff; color: #000; border: 1.5px solid #000; border-radius: 999px; padding: 0.1rem 0.55rem;
+    }
+    .mp-src:hover { background: #ffff00; }
+    .mp-src[hidden] { display: none; }
+    /* "featured in modem NN" sits below the player, aligned right */
+    .mp-show {
+      align-self: flex-end; margin-top: 0.5rem;
+      font-size: 0.7rem; font-weight: bold; text-transform: lowercase; text-decoration: none; white-space: nowrap;
+      background: #fff; color: #000; border: 1.5px solid #000; border-radius: 999px; padding: 0.12rem 0.6rem;
+    }
+    .mp-show:hover { background: #ffff00; }
+    .mp-show[hidden] { display: none; }
+    .mp-time { text-align: right; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; margin-top: 0.45rem; }
+    .mp-bottom { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; }
+    .mp-controls { display: flex; align-items: center; gap: 0.2rem; flex: none; }
+    .mp-controls button {
+      border: 0; background: transparent; cursor: pointer; font-size: 1rem; line-height: 1; color: #000;
+      width: 1.9rem; height: 1.9rem; display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .mp-toggle { background: #fff; border: 2px solid #000; }
+    .mp-toggle:hover { background: #ffff00; }
+    /* shuffle toggle pinned to the top-right corner of the white panel */
+    .mp-shuffle { position: absolute; top: 0.4rem; right: 0.45rem; z-index: 4; width: 1.5rem; height: 1.4rem; border: 0; background: transparent; cursor: pointer; font-size: 0.95rem; line-height: 1; color: #bbb; padding: 0; }
+    .mp-shuffle.on { color: #000; background: #ffff00; }
+    /* scrubber with a distinct vertical playhead */
+    .mp-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; }
+    .mp-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
+    .mp-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; border: 0; transform: translateX(-50%); }
+    /* plain × (no circle), top-right corner */
+    .mp-close {
+      position: absolute; top: 0; right: 0; z-index: 4;
+      border: 0; background: transparent; color: #000; cursor: pointer;
+      font-size: 1.3rem; line-height: 1; padding: 0.1rem 0.35rem;
+    }
+    .mp-close:hover { color: #888; }
+    /* minimize-to-bar handle: only used on phones (see mobile media query) */
+    .mp-min { display: none; }
+    .mp-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
+
+    /* ---- full-screen "now playing" on phones ---- */
+    @media (max-width: 600px) {
+      .modem-player {
+        left: 0; top: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; height: 100dvh;
+        background: #fff; padding: 3rem 1.25rem 2rem; gap: 0.9rem; cursor: default;
+        justify-content: center;
+      }
+      .modem-player .mp-art-wrap { width: min(74vw, 42vh); align-self: center; margin: 0; }
+      .modem-player .mp-panel { position: static; width: 100%; max-width: 440px; align-self: center; padding: 0; background: transparent; }
+      .modem-player .mp-title { white-space: normal; text-align: center; padding: 0; font-size: 1.25rem; line-height: 1.25; }
+      .modem-player .mp-meta { white-space: normal; text-align: center; font-size: 0.9rem; margin-top: 0.4rem; }
+      .modem-player .mp-time { text-align: center; margin-top: 0.8rem; font-size: 0.8rem; }
+      .modem-player .mp-bottom { justify-content: center; gap: 0.8rem; margin-top: 0.4rem; }
+      .modem-player .mp-controls button { width: 2.8rem; height: 2.8rem; font-size: 1.4rem; }
+      .modem-player .mp-bar { max-width: 60vw; }
+      .modem-player .mp-shuffle { top: 0.9rem; left: 0.9rem; right: auto; width: 2rem; height: 1.9rem; font-size: 1.2rem; }
+      .modem-player .mp-close { top: 0.6rem; right: 0.9rem; font-size: 2rem; padding: 0.3rem 0.6rem; }
+      .modem-player .mp-show { align-self: center; margin-top: 1rem; font-size: 0.8rem; }
+
+      /* full-screen only: a "pull-down" handle centered at the top that
+         collapses the player into the bottom bar */
+      .modem-player .mp-min {
+        display: block; position: absolute; top: 0.3rem; left: 50%; transform: translateX(-50%);
+        z-index: 4; border: 0; background: transparent; color: #000; cursor: pointer;
+        font-size: 2.2rem; line-height: 1; padding: 0.2rem 1rem;
+      }
+      .modem-player .mp-min:hover { color: #888; }
+
+      /* ---- minimized: a slim bar pinned to the bottom of the screen ---- */
+      .modem-player.mp-mini {
+        left: 0; right: 0; bottom: 0; top: auto;
+        width: 100vw; height: auto; min-height: 56px;
+        flex-direction: row; align-items: center; justify-content: flex-start;
+        gap: 0.7rem; padding: 0.5rem 0.85rem; cursor: pointer;
+        background: #fff; border-top: 2px solid #000;
+      }
+      /* things that only belong in the full-screen view */
+      .modem-player.mp-mini .mp-min,
+      .modem-player.mp-mini .mp-close,
+      .modem-player.mp-mini .mp-src,
+      .modem-player.mp-mini .mp-show,
+      .modem-player.mp-mini .mp-shuffle,
+      .modem-player.mp-mini .mp-time,
+      .modem-player.mp-mini .mp-prev,
+      .modem-player.mp-mini .mp-album,
+      .modem-player.mp-mini .mp-label { display: none; }
+
+      .modem-player.mp-mini .mp-art-wrap { width: 44px; height: 44px; flex: none; align-self: center; margin: 0; }
+      .modem-player.mp-mini .mp-panel {
+        flex: 1; min-width: 0; max-width: none; padding: 0; background: transparent;
+        display: grid; align-items: center; gap: 0 0.6rem;
+        grid-template-columns: 1fr auto; grid-template-areas: "title controls" "meta controls";
+      }
+      .modem-player.mp-mini .mp-title { grid-area: title; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; padding: 0; }
+      .modem-player.mp-mini .mp-meta { grid-area: meta; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; margin-top: 0; }
+      .modem-player.mp-mini .mp-bottom { grid-area: controls; margin: 0; }
+      .modem-player.mp-mini .mp-controls { gap: 0.1rem; }
+      .modem-player.mp-mini .mp-controls button { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
+      /* playback progress becomes a thin line across the very top of the bar */
+      .modem-player.mp-mini .mp-bar {
+        position: absolute; top: 0; left: 0; right: 0; width: 100%; max-width: none;
+        height: 3px; border: 0; background: #e9e9e9;
+      }
+    }</style><div id="modem-player" class="modem-player" hidden><button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄</button> <button class="mp-close" type="button" aria-label="close">×</button> <span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a></span><div class="mp-panel"><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
+      const el = document.getElementById('modem-player');
+      if (!el) return;
+      const iframe = el.querySelector('.mp-hidden');
+      const artLink = el.querySelector('#mp-art');
+      const artImg = artLink.querySelector('img');
+      const titleEl = el.querySelector('.mp-title');
+      const artistEl = el.querySelector('.mp-artist');
+      const albumEl = el.querySelector('.mp-album');
+      const labelEl = el.querySelector('.mp-label');
+      const showEl = el.querySelector('#mp-show');
+      const srcEl = el.querySelector('#mp-src');
+      const bar = el.querySelector('.mp-bar');
+      const prog = el.querySelector('.mp-progress');
+      const playhead = el.querySelector('.mp-playhead');
+      const timeEl = el.querySelector('#mp-time');
+      const toggleBtn = el.querySelector('.mp-toggle');
+      const prevBtn = el.querySelector('.mp-prev');
+      const nextBtn = el.querySelector('.mp-next');
+      const closeBtn = el.querySelector('.mp-close');
+      const minBtn = el.querySelector('.mp-min');
+      const shufBtn = el.querySelector('#mp-shuffle');
+      let durationMs = 0, shuffleOn = true, wantPlaying = false;
+      const fmtT = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+      let widget = null, queue = [], idx = 0;
+      const LOAD_OPTS = { visual: false, show_comments: false, show_artwork: false, buying: false, sharing: false, download: false, hide_related: true };
+
+      function shuffleArr(a) {
+        a = a.slice();
+        for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+        return a;
+      }
+      // order a set of items: shuffled, or in show sequence (by show number, then
+      // position in that show's tracklist)
+      function order(items) {
+        return shuffleOn ? shuffleArr(items)
+          : items.slice().sort((a, b) => ((a.number || 0) - (b.number || 0)) || ((a.seg == null ? 999 : a.seg) - (b.seg == null ? 999 : b.seg)));
+      }
+      function scUrl(key) { const m = String(key || '').match(/sc:(\d+)/); return m ? 'https://api.soundcloud.com/tracks/' + m[1] : null; }
+      // the SoundCloud stream URL a track plays from: native SC by key, or a
+      // Bandcamp track with an approved `scPlay` match (numeric id or full URL).
+      function playUrlFor(t) {
+        if (t.kind === 'soundcloud') return scUrl(t.key);
+        if (t.scPlay) return /^https?:/i.test(String(t.scPlay)) ? String(t.scPlay) : 'https://api.soundcloud.com/tracks/' + t.scPlay;
+        return null;
+      }
+      // only tracks actually played in a radio show belong in the shuffle player
+      // (year-end "best releases" list embeds are albums, not show tracks)
+      function inShow(t) { return (t.shows || []).some((s) => s.type === 'show'); }
+
+      function withData(cb) {
+        if (window.__modemData) return cb(window.__modemData);
+        fetch('/assets/modem-archive.json', { cache: 'no-cache' })
+          .then((r) => r.json())
+          .then((d) => {
+            window.__modemData = { records: d.records || [], tracks: d.tracks || [] };
+            window.__modemArchive = window.__modemData.records;
+            cb(window.__modemData);
+          })
+          .catch((e) => console.error('player: data load failed', e));
+      }
+
+      function showItems(d) {
+        return d.records.filter((r) => r.soundcloud && r.soundcloud.api).map((r) => ({
+          apiUrl: r.soundcloud.api, title: r.title || ('modem ' + r.number), artist: r.date || '',
+          art: r.cover || '', kind: 'show', number: r.number, slug: r.slug,
+          srcLink: (r.soundcloud && r.soundcloud.track) || '',
+        }));
+      }
+      function trackItems(d) {
+        return d.tracks.map((t) => {
+          const url = playUrlFor(t);
+          if (!url || !inShow(t)) return null; // unplayable, or a list-only album
+          const first = (t.shows || []).find((s) => s.type === 'show') || (t.shows && t.shows[0]);
+          const isBc = t.kind === 'bandcamp';
+          return {
+            apiUrl: url, title: t.title || '(untitled)', artist: t.artist || '',
+            album: (t.album && t.album !== t.title) ? t.album : '',
+            albumUrl: t.albumUrl || '',
+            comp: !!t.comp,
+            labels: [...new Set((t.shows || []).flatMap((s) => s.labels || []))],
+            art: t.artUrl || '',
+            kind: 'track', number: first ? first.number : null, slug: first ? first.slug : null, seg: first ? first.seg : null,
+            // matched Bandcamp streams from SC but its link/label stay Bandcamp
+            srcLink: t.link || '', srcLabel: isBc ? 'bandcamp' : 'soundcloud', lockSrc: isBc,
+          };
+        }).filter(Boolean);
+      }
+
+      // point the artwork + corner pill at a URL, labelled soundcloud/bandcamp
+      let current = null;
+      function setSrc(url, label) {
+        const u = url || '';
+        artLink.setAttribute('href', u || '#');
+        if (u) { srcEl.hidden = false; srcEl.setAttribute('href', u); srcEl.textContent = '↗ ' + (label || 'soundcloud'); }
+        else { srcEl.hidden = true; }
+      }
+      // ask the widget for the real public track permalink once it's loaded —
+      // but NOT for matched Bandcamp tracks, which keep their Bandcamp link.
+      function resolvePermalink() {
+        if (current && current.lockSrc) return;
+        if (widget && widget.getCurrentSound) widget.getCurrentSound((s) => { if (s && s.permalink_url) setSrc(s.permalink_url, 'soundcloud'); });
+      }
+
+      function setProgress(frac) {
+        const pct = Math.max(0, Math.min(1, frac || 0)) * 100;
+        prog.style.width = pct + '%';
+        playhead.style.left = pct + '%';
+      }
+
+      function renderMeta(item) {
+        current = item;
+        updateMediaSession(item);
+        artImg.src = item.art || '';
+        artImg.style.visibility = item.art ? 'visible' : 'hidden';
+        titleEl.textContent = item.title || '';
+        artistEl.textContent = item.artist || '';
+        artistEl.hidden = !item.artist;
+        albumEl.textContent = item.album ? (' · ' + item.album + (item.comp ? ' (VA)' : '')) : '';
+        if (item.album && item.albumUrl) albumEl.setAttribute('href', item.albumUrl); else albumEl.removeAttribute('href');
+        albumEl.hidden = !item.album;
+        const lab = (item.labels && item.labels[0]) || '';
+        labelEl.textContent = lab ? ' · out on ' + lab : '';
+        labelEl.hidden = !lab;
+        setSrc(item.srcLink, item.srcLabel);
+        if (item.number != null) {
+          showEl.hidden = false;
+          showEl.textContent = (item.kind === 'show' ? 'modem ' : 'featured in modem ') + item.number;
+          showEl.setAttribute('href', '/archive#' + (item.slug || ''));
+        } else {
+          showEl.hidden = true;
+        }
+        setProgress(0);
+        durationMs = 0;
+        timeEl.textContent = '0:00 / –:––';
+      }
+
+      function bindWidget() {
+        widget = SC.Widget(iframe);
+        widget.bind(SC.Widget.Events.PLAY, () => { toggleBtn.textContent = '❚❚'; wantPlaying = true; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; resolvePermalink(); widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } }); });
+        widget.bind(SC.Widget.Events.PAUSE, () => { toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        widget.bind(SC.Widget.Events.FINISH, () => go(1));
+        widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
+          setProgress(e.relativePosition);
+          if (!durationMs && e.relativePosition > 0) durationMs = e.currentPosition / e.relativePosition;
+          timeEl.textContent = fmtT(e.currentPosition) + ' / ' + fmtT(durationMs);
+        });
+      }
+
+      // position the player just to the right of whatever opened it (e.g. the
+      // "play random track" button); only when it's first shown, so a dragged
+      // position isn't yanked back.
+      function placeNear(anchorEl) {
+        if (innerWidth <= 600) { el.style.left = ''; el.style.top = ''; el.style.right = ''; return; } // full-screen on mobile (CSS)
+        const search = document.getElementById('modem-search');
+        if (search && !search.hidden) { // search is open (right side) → sit on the left, out of its way
+          el.style.right = 'auto'; el.style.left = '1rem'; el.style.top = '4.5rem'; return;
+        }
+        if (!anchorEl || !anchorEl.getBoundingClientRect) return;
+        const r = anchorEl.getBoundingClientRect();
+        const w = el.offsetWidth || 420, h = el.offsetHeight || 400;
+        let left = Math.max(8, Math.min(r.right + 12, innerWidth - w - 8));
+        // sit higher: lift the player so its bottom edge lands at the anchor's top edge
+        let top = Math.max(64, Math.min(r.top - h, innerHeight - h - 8));
+        el.style.right = 'auto'; el.style.left = left + 'px'; el.style.top = top + 'px';
+      }
+
+      function start(items, startIdx, anchor) {
+        items = (items || []).filter((x) => x && x.apiUrl);
+        if (!items.length) return;
+        const wasHidden = el.hidden;
+        queue = items; idx = startIdx || 0;
+        wantPlaying = true;
+        el.hidden = false;
+        if (wasHidden && anchor) placeNear(anchor);
+        const item = queue[idx];
+        renderMeta(item);
+        if (!widget) {
+          // The iframe must already be a SoundCloud player before SC.Widget() wraps it.
+          iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(item.apiUrl) +
+            '&auto_play=true&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
+          const wait = (n) => {
+            if (window.SC && SC.Widget) bindWidget();
+            else if (n > 0) return setTimeout(() => wait(n - 1), 100);
+          };
+          wait(80);
+        } else {
+          widget.load(item.apiUrl, Object.assign({ auto_play: true }, LOAD_OPTS));
+        }
+      }
+
+      function go(delta) {
+        if (!queue.length || !widget) return;
+        idx = (idx + delta + queue.length) % queue.length;
+        wantPlaying = true;
+        renderMeta(queue[idx]);
+        widget.load(queue[idx].apiUrl, Object.assign({ auto_play: true }, LOAD_OPTS));
+      }
+
+      toggleBtn.onclick = () => { if (!widget) return; widget.isPaused((p) => { if (p) { widget.play(); wantPlaying = true; } else { widget.pause(); wantPlaying = false; } }); };
+      prevBtn.onclick = () => go(-1);
+      nextBtn.onclick = () => go(1);
+      closeBtn.onclick = () => { if (widget) widget.pause(); wantPlaying = false; el.hidden = true; el.classList.remove('mp-mini'); };
+      // phones: collapse the full-screen player into a bottom bar…
+      minBtn.onclick = () => el.classList.add('mp-mini');
+      // …and tap the bar (anywhere but the controls / scrubber) to expand it back
+      el.addEventListener('click', (e) => {
+        if (!el.classList.contains('mp-mini')) return;
+        if (e.target.closest('.mp-controls, .mp-bar')) return;
+        e.preventDefault();
+        el.classList.remove('mp-mini');
+      });
+      // clicking the artist / label opens the search filtered to that tag
+      artistEl.addEventListener('click', (e) => { e.preventDefault(); const a = current && current.artist; if (a && window.modemSearch) window.modemSearch.open({ tag: { kind: 'artist', name: a } }, el); });
+      labelEl.addEventListener('click', (e) => { e.preventDefault(); const l = current && current.labels && current.labels[0]; if (l && window.modemSearch) window.modemSearch.open({ tag: { kind: 'label', name: l } }, el); });
+      // when the tab regains focus, resume/advance if a background track stalled
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden || !widget || !wantPlaying) return;
+        widget.isPaused((p) => { if (p) widget.play(); });
+      });
+
+      // Media Session — OS/lock-screen controls + keeps the media session alive
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.setActionHandler('play', () => { if (widget) { widget.play(); wantPlaying = true; } });
+          navigator.mediaSession.setActionHandler('pause', () => { if (widget) { widget.pause(); wantPlaying = false; } });
+          navigator.mediaSession.setActionHandler('nexttrack', () => go(1));
+          navigator.mediaSession.setActionHandler('previoustrack', () => go(-1));
+        } catch (e) {}
+      }
+      function updateMediaSession(item) {
+        if (!('mediaSession' in navigator)) return;
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: item.title || '', artist: item.artist || '', album: 'modem',
+            artwork: item.art ? [{ src: item.art, sizes: '500x500' }] : [],
+          });
+        } catch (e) {}
+      }
+      shufBtn.onclick = () => {
+        shuffleOn = !shuffleOn;
+        shufBtn.classList.toggle('on', shuffleOn);
+        shufBtn.title = 'shuffle: ' + (shuffleOn ? 'on' : 'off');
+        // re-order what plays next, keeping the current track playing
+        if (queue.length) { const cur = queue[idx]; queue = order(queue); idx = Math.max(0, queue.findIndex((x) => x.apiUrl === cur.apiUrl)); }
+      };
+      bar.onclick = (e) => {
+        if (!widget) return;
+        const r = bar.getBoundingClientRect();
+        const frac = (e.clientX - r.left) / r.width;
+        setProgress(frac); // immediate feedback; PLAY_PROGRESS then keeps it in sync
+        widget.getDuration((d) => widget.seekTo(frac * d));
+      };
+      // "featured in modem NN" → open that show's detail via the SPA (no reload)
+      showEl.onclick = (e) => {
+        const href = showEl.getAttribute('href') || '';
+        if (href.indexOf('/archive') === 0 && window.loadPageGlobal) {
+          e.preventDefault();
+          history.pushState({}, '', href);
+          window.loadPageGlobal('archive');
+        }
+      };
+
+      // --- draggable: grab the panel body OR the artwork; other controls/links act normally ---
+      (function makeDraggable() {
+        let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false, moved = false;
+        function down(cx, cy, target) {
+          if (window.innerWidth <= 600) return false; // fixed full-screen / bottom bar on phones
+          if (target.closest('button, .mp-bar, iframe')) return false;
+          // links behave as links — except the artwork, which doubles as a drag handle
+          if (target.closest('a') && !target.closest('.mp-art')) return false;
+          const r = el.getBoundingClientRect();
+          el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+          el.style.right = 'auto'; el.style.bottom = 'auto';
+          sx = cx; sy = cy; ox = r.left; oy = r.top; dragging = true; moved = false;
+          return true;
+        }
+        function move(cx, cy) {
+          if (!dragging) return;
+          if (Math.abs(cx - sx) > 4 || Math.abs(cy - sy) > 4) moved = true;
+          const r = el.getBoundingClientRect();
+          let nx = ox + (cx - sx), ny = oy + (cy - sy);
+          nx = Math.max(4, Math.min(nx, window.innerWidth - r.width - 4));
+          ny = Math.max(4, Math.min(ny, window.innerHeight - r.height - 4));
+          el.style.left = nx + 'px'; el.style.top = ny + 'px';
+        }
+        el.addEventListener('mousedown', (e) => { if (down(e.clientX, e.clientY, e.target)) { e.preventDefault(); document.body.style.userSelect = 'none'; } });
+        window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+        window.addEventListener('mouseup', () => { dragging = false; document.body.style.userSelect = ''; });
+        el.addEventListener('touchstart', (e) => { const t = e.touches[0]; if (down(t.clientX, t.clientY, e.target)) e.preventDefault(); }, { passive: false });
+        window.addEventListener('touchmove', (e) => { if (dragging) { const t = e.touches[0]; move(t.clientX, t.clientY); e.preventDefault(); } }, { passive: false });
+        window.addEventListener('touchend', () => { dragging = false; });
+        // clicking the artwork opens SoundCloud only if it wasn't actually a drag
+        artLink.addEventListener('click', (e) => { if (moved) { e.preventDefault(); moved = false; } });
+      })();
+
+      window.modemPlayer = {
+        playShows(anchor) { withData((d) => start(order(showItems(d)), 0, anchor)); },
+        playTracks(anchor) { withData((d) => start(order(trackItems(d)), 0, anchor)); },
+        playTrack(tk, _list, anchor) {
+          withData((d) => {
+            const all = trackItems(d);
+            const url = tk ? playUrlFor(tk) : null;
+            if (shuffleOn) {
+              const mine = all.find((x) => x.apiUrl === url);
+              const rest = shuffleArr(all.filter((x) => x.apiUrl !== url));
+              start(mine ? [mine].concat(rest) : rest, 0, anchor);
+            } else {
+              const ordered = order(all);
+              const i = ordered.findIndex((x) => x.apiUrl === url);
+              start(ordered, i >= 0 ? i : 0, anchor);
+            }
+          });
+        },
+      };
+    })();</script></body></html>

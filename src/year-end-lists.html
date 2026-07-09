@@ -87,6 +87,8 @@
       box-shadow: 0 0 0 2px #ffff00;
       z-index: 25; /* Lower z-index for yellow highlight, behind other text */
     }
+    /* Lists mirrored into the on-site archive stay clickable but carry no
+       persistent tint (matches the radio-show grid). Hover still highlights. */
     .preview-image {
       position: fixed;
       top: 65%; /* Moved higher from 70% */
@@ -322,6 +324,28 @@
 
     // Call the function to initialize hover functionality
     initializeYearEndListsHover();
+
+    // For year-end lists we've mirrored locally, point the link at the on-site
+    // archive entry (/archive#slug) and visually mark it as available.
+    function markLocalArchiveLists() {
+      fetch('assets/modem-archive.json', { cache: 'no-cache' })
+        .then((r) => r.json())
+        .then((data) => {
+          const local = new Set(
+            (data.records || []).filter((r) => r.type === 'list').map((r) => r.slug)
+          );
+          document.querySelectorAll('.list-item[href]').forEach((a) => {
+            const slug = (a.getAttribute('href') || '').split('/').pop();
+            if (slug && local.has(slug)) {
+              a.setAttribute('href', '/archive#' + slug);
+              a.classList.add('in-archive');
+              a.title = 'open in the on-site archive';
+            }
+          });
+        })
+        .catch(() => {});
+    }
+    markLocalArchiveLists();
   </script>
 </body>
 </html>

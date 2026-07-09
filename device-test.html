@@ -59,6 +59,8 @@
       <option value="/">home</option>
       <option value="/radio-show">radio-show</option>
       <option value="/year-end-lists">year-end-lists</option>
+      <option value="/archive?embedded#modem-241">detail (show)</option>
+      <option value="/archive?embedded#best-releases-of-2025">detail (list)</option>
       <option value="/dial-up">dial-up</option>
       <option value="/shop">shop</option>
       <option value="/support">support</option>
@@ -121,7 +123,7 @@
     ['Square',           900, 900, 'desktop'],
   ];
 
-  const state = { cat:'phone', landscape:false, zoom:0.70, custom:[] };
+  const state = { cat:'phone', landscape:false, zoom:0.70, custom:[], pageOverride:null };
   const $ = s => document.querySelector(s);
   const gallery = $('#gallery');
 
@@ -134,7 +136,7 @@
 
   function urlFor() {
     const base = $('#baseUrl').value.replace(/\/+$/, '');
-    return base + $('#page').value;
+    return base + (state.pageOverride || $('#page').value);
   }
 
   function render() {
@@ -174,7 +176,7 @@
   }));
   $('#orient').addEventListener('click', () => { state.landscape = !state.landscape; render(); });
   $('#zoom').addEventListener('input', e => { state.zoom = e.target.value/100; $('#zoomVal').textContent = e.target.value+'%'; render(); });
-  $('#page').addEventListener('change', render);
+  $('#page').addEventListener('change', () => { state.pageOverride = null; render(); });
   $('#baseUrl').addEventListener('change', render);
   $('#reload').addEventListener('click', render);
   $('#addCustom').addEventListener('click', () => {
@@ -182,6 +184,16 @@
     if (w>=120 && h>=120) { state.custom.push({ name:'Custom', w, h, cat:'custom' }); state.cat='all';
       document.querySelectorAll('.cat').forEach(x=>x.classList.toggle('active', x.dataset.cat==='all')); render(); }
   });
+
+  // URL params so it can be opened pre-configured (also handy for screenshots):
+  // ?page=/radio-show&cat=phone&zoom=60&orient=landscape
+  (function () {
+    const q = new URLSearchParams(location.search);
+    if (q.get('page')) { state.pageOverride = q.get('page'); const o = [...$('#page').options].find(x => x.value === q.get('page')); if (o) $('#page').value = q.get('page'); }
+    if (q.get('cat')) { state.cat = q.get('cat'); document.querySelectorAll('.cat').forEach(x => x.classList.toggle('active', x.dataset.cat === state.cat)); }
+    if (q.get('zoom')) { state.zoom = (+q.get('zoom')) / 100; $('#zoom').value = +q.get('zoom'); $('#zoomVal').textContent = q.get('zoom') + '%'; }
+    if (q.get('orient') === 'landscape') state.landscape = true;
+  })();
 
   render();
 </script>

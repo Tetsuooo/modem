@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>modem: archive</title>
+  <script>
+    // Only redirect if we're not already in the SPA context (same guard as the other subpages)
+    if (window.location.pathname !== '/' &&
+        !window.location.search.includes('embedded') &&
+        !document.querySelector('nav') &&
+        window === window.top) {
+      // Preserve the #hash (e.g. #modem-11 or #tag=…) across the SPA redirect so a
+      // directly-visited / shared / refreshed deep link still lands on the right show.
+      window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')) + window.location.hash);
+    }
+  </script>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
+    .content { box-sizing: border-box; width: 100%; }
+
+    /* ===================== DETAIL (on-site archival page) =====================
+       Its own fixed, scrollable layer floating over the animation, with the
+       fixed nav (z 200000) still on top and clickable. */
+    .modem-detail-page {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: transparent;
+    }
+    .modem-detail-page[hidden] { display: none; }
+    .detail-inner-wrap {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 760px; /* cover stays full-width; embeds are capped via --embed-w */
+      margin: 0 auto;
+      padding: 3.75rem 1rem 6rem; /* top clears nav; bottom clears the tag bubbles */
+    }
+
+    .detail-back {
+      position: fixed;
+      top: 3.05rem;
+      left: 0.8rem;
+      z-index: 199999;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: lowercase;
+      border: 2px solid #000;
+      background: rgba(255,255,255,0.9);
+      padding: 0.3rem 0.65rem;
+      cursor: pointer;
+    }
+    .detail-back:hover { background: #ffff00; }
+
+    .detail-cover-big { width: 100%; display: block; background: #eee; }
+    /* date: right-aligned, a bit below the cover */
+    .detail-date { font-size: 1.2rem; font-weight: bold; opacity: 0.6; text-align: right; margin: 0.9rem 0 0; }
+    .detail-title {
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: bold; text-transform: lowercase;
+      margin: 0.15rem 0 1rem; line-height: 1.05; word-break: break-word;
+    }
+
+    /* ---- full-show player (hidden SoundCloud widget), matches the mini-player:
+       the whole thing sits in a big white rectangle (no outline), the time reads
+       above a thin timeline, and the play button is a plain icon (no square) ---- */
+    .sc-player {
+      display: flex; flex-direction: column;
+      background: #fff; color: #000; padding: 0.3rem 0.7rem 0.6rem; margin: 0 0 1.6rem;
+    }
+    .sc-time { text-align: right; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; margin-bottom: 0.1rem; }
+    .sc-row { display: flex; align-items: center; gap: 0.7rem; }
+    .sc-toggle {
+      width: 1.9rem; height: 1.9rem; flex: none; padding: 0;
+      border: 0; background: transparent; color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; line-height: 1; cursor: pointer;
+    }
+    .sc-toggle:hover { color: #888; }
+    .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; }
+    .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
+    .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
+    .sc-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
+
+    /* prev / next show navigation — both in the top-right corner */
+    .detail-nav {
+      position: fixed; top: 3.05rem; z-index: 199999;
+      width: 2.2rem; height: 2rem; padding: 0;
+      border: 2px solid #000; background: rgba(255,255,255,0.9); color: #000;
+      font-size: 1.2rem; font-weight: bold; line-height: 1; cursor: pointer;
+    }
+    .detail-nav:hover { background: #ffff00; }
+    .detail-nav[hidden] { display: none; }
+    .detail-nav.prev { right: 3.1rem; }
+    .detail-nav.next { right: 0.8rem; }
+
+    .detail-section-label {
+      font-weight: bold; text-transform: lowercase; font-size: 0.8rem;
+      letter-spacing: 0.03em; opacity: 0.55; margin: 1.4rem 0 0.5rem;
+    }
+
+    .modem-body { font-size: 1rem; line-height: 1.5; word-break: break-word; }
+    .modem-body p { margin: 0.4rem 0; }
+    .modem-body a { color: #0645ad; }
+    /* separation between entries: gap ABOVE each heading, tight to its own embed */
+    .modem-body .seg-marker { scroll-margin-top: 5rem; margin: 1.8rem 0 0.3rem; }
+    /* heading = stretching slashes · tag chips pinned to the right edge */
+    .modem-body .seg-marker.seg-row { display: flex; align-items: center; flex-wrap: wrap; }
+    .modem-body .seg-marker .seg-name { flex: 0 0 auto; }
+    /* real "/" characters that stretch to fill; clip ONLY the horizontal overflow
+       (overflow-x: clip leaves the vertical axis visible, so glyphs aren't cut —
+       unlike overflow: hidden, which clips both axes) */
+    .modem-body .seg-marker .seg-slashes { flex: 1 1 0; min-width: 0; overflow-x: clip; overflow-y: visible; white-space: nowrap; margin-right: 0.35rem; }
+    .modem-body .seg-marker .seg-tags { flex: 0 0 auto; white-space: nowrap; }
+    /* early-show heading: name + hyperlinked slashes on the left (kept, wraps if
+       long), the same chips pinned to the right edge — like the plain headings */
+    .modem-body .seg-marker.seg-keep { display: flex; align-items: baseline; flex-wrap: wrap; }
+    .modem-body .seg-marker.seg-keep .seg-links { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; margin-right: 0.35rem; }
+    .modem-body .seg-marker.seg-keep .seg-tags { margin-left: auto; }
+    .modem-body .seg-marker .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
+    .modem-body .seg-marker .chip:hover { background: #ffff00; }
+    /* year-end list entries: description on the left, chips pushed to the right edge,
+       with the same gap between entries as the radio-show tracklists */
+    .modem-body p.list-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem; margin: 1.8rem 0 0.3rem; }
+    .modem-body .list-desc { flex: 1 1 auto; min-width: 0; }
+    .modem-body .list-tags { flex: 0 0 auto; white-space: nowrap; }
+    .modem-body .list-tags .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
+    .modem-body .list-tags .chip:hover { background: #ffff00; }
+
+    /* all artists/labels, at the very bottom of the detail page */
+    .detail-alltags { margin: 2.5rem 0 1rem; padding-top: 1.3rem; border-top: 1px solid rgba(0,0,0,0.18); }
+    .detail-alltags .tag-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem; margin-bottom: 0.9rem; }
+    .detail-alltags .tag-label { font-weight: bold; text-transform: lowercase; opacity: 0.55; margin-right: 0.25rem; }
+    .detail-alltags .chip { cursor: pointer; }
+    .detail-alltags .chip:hover { background: #ffff00; }
+    .modem-body iframe { max-width: 100%; border: 0; margin: 0.25rem 0 1rem; }
+    /* Track embeds. The iframe boxes are identical width (measured), but the two
+       providers fill their box differently — SoundCloud stretches full-width while
+       Bandcamp's player caps its own content, so at full width they LOOK unequal.
+       Capping both to a width Bandcamp also fills makes them visually match.
+       (Tune --embed-w if Bandcamp still shows empty space.) */
+    .modem-body { --embed-w: 560px; }
+    .modem-body iframe[src*="soundcloud"],
+    .modem-body iframe[src*="bandcamp"] { display: block; width: 100%; max-width: var(--embed-w); height: 120px; }
+    .modem-body iframe[src*="bandcamp"][src*="size=small"] { height: 42px; }
+    .modem-body iframe[src*="youtube"] { width: 100%; aspect-ratio: 16 / 9; height: auto; }
+    @keyframes segflash { 0% { background: #ffff00; } 100% { background: transparent; } }
+    .seg-flash { animation: segflash 1.8s ease-out; }
+
+    .detail-source { margin-top: 1.6rem; font-size: 0.8rem; opacity: 0.7; }
+    .detail-source a { color: #0645ad; }
+
+    /* ---- frameless artists+labels: just the bubbles, collapsed, bottom-right ---- */
+    /* The toggle is pinned bottom-right and stays put; the chips open UPWARD above
+       it (absolutely positioned) so expanding never shoves the button around. */
+    .detail-tags {
+      position: fixed; right: 0.9rem; bottom: 0.9rem;
+      z-index: 199998;
+      text-align: right; background: transparent; border: 0;
+    }
+    .detail-tags[hidden] { display: none; }
+    .detail-tags > summary {
+      list-style: none; display: inline-block; cursor: pointer;
+      font-weight: bold; text-transform: lowercase; font-size: 0.8rem;
+      background: #000; color: #fff; border: 2px solid #000;
+      border-radius: 999px; padding: 0.2rem 0.7rem; user-select: none;
+    }
+    .detail-tags > summary::-webkit-details-marker { display: none; }
+    .detail-tags[open] > summary { background: #ffff00; color: #000; }
+    .detail-tags-body {
+      position: absolute; right: 0; bottom: calc(100% + 0.5rem);
+      width: min(340px, 84vw); max-height: 50vh; overflow-y: auto; text-align: right;
+    }
+    .detail-tags:not([open]) .detail-tags-body { display: none; }
+    .chip {
+      display: inline-block; font-size: 0.78rem; font-weight: bold;
+      border: 1.5px solid #000; border-radius: 999px;
+      padding: 0.12rem 0.6rem; margin: 0 0 0.35rem 0.35rem;
+      background: rgba(255,255,255,0.96); color: #000; text-decoration: none;
+    }
+    .chip.clickable { cursor: pointer; }
+    .chip.clickable:hover { background: #ffff00; }
+    .chip:not(.clickable) { opacity: 0.55; }
+    .chip.label-chip { background: rgba(224,224,255,0.96); }
+    .chip.label-chip.clickable:hover { background: #ffff00; }
+
+    /* ===================== SEARCH (hidden power-feature; not in nav) ===================== */
+    .modem-archive {
+      position: fixed; inset: 0; z-index: 150; overflow-y: auto; overflow-x: hidden;
+      background: transparent;
+    }
+    .modem-archive[hidden] { display: none; }
+    .archive-inner-wrap { box-sizing: border-box; width: 100%; max-width: 1100px; margin: 0 auto; padding: 3.75rem 1rem 3rem; }
+    .archive-controls { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,0.92); border: 2px solid #000; padding: 0.6rem 0.75rem; margin-bottom: 1rem; }
+    #archive-search { width: 100%; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 1rem; font-weight: bold; padding: 0.55rem 0.7rem; border: 2px solid #000; outline: none; }
+    #archive-search:focus { background: #ffffcc; }
+    /* active tag filter ("showing every show featuring …") */
+    .archive-active-tag { margin-top: 0.55rem; }
+    .archive-active-tag[hidden] { display: none; }
+    .active-tag-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.82rem; font-weight: bold;
+      background: #000; color: #fff; border: 2px solid #000;
+      border-radius: 999px; padding: 0.2rem 0.35rem 0.2rem 0.7rem;
+    }
+    .active-tag-kind { text-transform: uppercase; font-size: 0.62rem; letter-spacing: 0.06em; opacity: 0.6; }
+    .active-tag-clear {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 1.15rem; height: 1.15rem; flex: none;
+      border: 0; border-radius: 999px; background: #fff; color: #000;
+      font-size: 0.9rem; line-height: 1; cursor: pointer; padding: 0;
+    }
+    .active-tag-clear:hover { background: #ffff00; }
+    .archive-filters { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.55rem; flex-wrap: wrap; }
+    .archive-filters button { font-family: Arial, sans-serif; font-weight: bold; text-transform: lowercase; font-size: 0.85rem; padding: 0.3rem 0.7rem; border: 2px solid #000; background: #fff; cursor: pointer; }
+    .archive-filters button:hover { background: #ffff00; }
+    .archive-filters button.active { background: #000; color: #fff; }
+    #archive-count { margin-left: auto; font-size: 0.8rem; font-weight: bold; opacity: 0.7; }
+    .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.9rem; }
+    .archive-card { display: flex; flex-direction: column; background: rgba(255,255,255,0.92); border: 2px solid #000; overflow: hidden; cursor: pointer; text-decoration: none; color: #000; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .archive-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 3px #ffff00; }
+    .archive-card .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; display: block; }
+    .archive-card .card-body { padding: 0.55rem 0.6rem 0.7rem; }
+    .archive-card .card-title { font-weight: bold; text-transform: lowercase; font-size: 0.95rem; line-height: 1.15; }
+    .archive-card .card-meta { font-size: 0.72rem; opacity: 0.65; margin-top: 0.2rem; }
+    .archive-empty { padding: 2rem 0; text-align: center; font-weight: bold; opacity: 0.7; }
+
+    /* ---- track/album-first result list ---- */
+    .archive-tracklist { display: flex; flex-direction: column; gap: 0.4rem; }
+    .track-row {
+      display: flex; align-items: center; gap: 0.7rem;
+      background: rgba(255,255,255,0.94); border: 2px solid #000;
+      padding: 0.4rem 0.5rem; cursor: pointer;
+    }
+    .track-row:hover { box-shadow: 0 0 0 3px #ffff00; }
+    .track-thumb { width: 52px; height: 52px; flex: none; object-fit: cover; background: #eee; display: block; position: relative; }
+    .track-thumb-wrap { position: relative; flex: none; width: 52px; height: 52px; }
+    .track-thumb-wrap.play::after {
+      content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; color: #fff; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s;
+    }
+    .track-row:hover .track-thumb-wrap.play::after { opacity: 1; }
+    .track-main { flex: 1; min-width: 0; }
+    .track-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-artist { font-size: 0.8rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-shows { display: flex; gap: 0.3rem; flex-wrap: wrap; justify-content: flex-end; max-width: 42%; }
+    .track-show {
+      font-size: 0.72rem; font-weight: bold; text-decoration: none; text-transform: lowercase;
+      border: 1.5px solid #000; border-radius: 999px; padding: 0.08rem 0.5rem;
+      background: #fff; color: #000; white-space: nowrap;
+    }
+    .track-show:hover { background: #ffff00; }
+    .track-src { flex: none; text-decoration: none; color: #000; font-weight: bold; font-size: 1.05rem; padding: 0 0.3rem; }
+    .track-src:hover { color: #0645ad; }
+
+    @media (max-width: 480px) {
+      .detail-inner-wrap, .archive-inner-wrap { padding-top: 4.6rem; }
+      .detail-back { top: 3.85rem; }
+      .detail-nav { top: 3.85rem; }
+      .archive-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <!-- Detail: the on-site version of a show / year-end list -->
+    <div class="modem-detail-page" id="archive-detail-view" hidden>
+      <button class="detail-back" type="button">← back</button>
+      <button class="detail-nav prev" id="detail-prev" type="button" hidden aria-label="previous show">‹</button>
+      <button class="detail-nav next" id="detail-next" type="button" hidden aria-label="next show">›</button>
+      <div class="detail-inner-wrap"><div class="detail-page-inner"></div></div>
+      <details class="detail-tags" id="detail-tags" hidden>
+        <summary>artists &amp; labels</summary>
+        <div class="detail-tags-body"></div>
+      </details>
+    </div>
+
+    <!-- Search: kept as a hidden power-feature, reachable at /archive with no #show -->
+    <div class="modem-archive" id="archive-search-view" hidden>
+      <div class="archive-inner-wrap">
+        <div class="archive-controls">
+          <input id="archive-search" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="search tracks, artists, shows…">
+          <div id="archive-active-tag" class="archive-active-tag" hidden></div>
+          <div class="archive-filters">
+            <button data-mode="tracks" class="active">tracks</button>
+            <button data-mode="shows">shows</button>
+            <button data-mode="lists">lists</button>
+            <span id="archive-count"></span>
+          </div>
+        </div>
+        <div id="archive-results" class="archive-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  <script>
+    window.initArchive = function initArchive() {
+      const detailView = document.getElementById('archive-detail-view');
+      const searchView = document.getElementById('archive-search-view');
+      if (!detailView || !searchView) return; // markup not injected yet
+
+      const detailInner = detailView.querySelector('.detail-page-inner');
+      const tagsEl = document.getElementById('detail-tags');
+      const tagsBody = tagsEl.querySelector('.detail-tags-body');
+      const backBtn = detailView.querySelector('.detail-back');
+      const prevBtn = document.getElementById('detail-prev');
+      const nextBtn = document.getElementById('detail-next');
+      function goToSlug(slug) { if (slug) location.hash = slug; }
+      prevBtn.onclick = () => goToSlug(prevBtn.dataset.slug);
+      nextBtn.onclick = () => goToSlug(nextBtn.dataset.slug);
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
+          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      }
+      function slugFromHash() {
+        return decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
+      }
+
+      // ---- custom full-show player over a hidden SoundCloud widget ----
+      function playerMarkup(sc) {
+        if (!sc || !sc.api) return '';
+        const src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(sc.api) +
+          '&auto_play=false&buying=false&sharing=false&download=false&show_artwork=false' +
+          '&show_comments=false&show_playcount=false&visual=false&hide_related=true';
+        return '<div class="sc-player">' +
+          '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
+          '<div class="sc-row">' +
+            '<button class="sc-toggle" type="button" aria-label="play">▶</button>' +
+            '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
+          '</div>' +
+          '</div>' +
+          '<iframe class="sc-hidden" allow="autoplay" src="' + src + '"></iframe>';
+      }
+      function initPlayer() {
+        const wrap = detailInner.querySelector('.sc-player');
+        const iframe = detailInner.querySelector('.sc-hidden');
+        if (!wrap || !iframe) return;
+        const toggle = wrap.querySelector('.sc-toggle');
+        const bar = wrap.querySelector('.sc-bar');
+        const prog = wrap.querySelector('.sc-progress');
+        const playhead = wrap.querySelector('.sc-playhead');
+        const curEl = wrap.querySelector('.sc-cur');
+        const durEl = wrap.querySelector('.sc-dur');
+        const fmt = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+        const seek = (frac) => { const p = Math.max(0, Math.min(1, frac)) * 100; prog.style.width = p + '%'; playhead.style.left = p + '%'; };
+        let widget = null, durationMs = 0;
+        function ready() {
+          widget = SC.Widget(iframe);
+          widget.bind(SC.Widget.Events.READY, () => widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); }));
+          widget.bind(SC.Widget.Events.PLAY, () => { toggle.textContent = '❚❚'; });
+          widget.bind(SC.Widget.Events.PAUSE, () => { toggle.textContent = '▶'; });
+          widget.bind(SC.Widget.Events.FINISH, () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
+          widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => { seek(e.relativePosition); curEl.textContent = fmt(e.currentPosition); });
+        }
+        toggle.onclick = () => { if (widget) widget.toggle(); };
+        bar.onclick = (e) => { if (!widget || !durationMs) return; const r = bar.getBoundingClientRect(); const frac = (e.clientX - r.left) / r.width; seek(frac); widget.seekTo(frac * durationMs); };
+        (function wait(n) { if (window.SC && SC.Widget) ready(); else if (n > 0) setTimeout(() => wait(n - 1), 100); })(60);
+      }
+
+      // Turn SoundCloud's big square "visual" player into the classic horizontal
+      // one so it matches the compact Bandcamp widgets (uniform 120px, set in CSS).
+      // Bandcamp embeds are left as-authored — including the thin "small" bars,
+      // which stay 42px. The hidden full-show widget (.sc-hidden) is outside
+      // .modem-body, so it's never touched here.
+      function normalizeEmbeds(root) {
+        root.querySelectorAll('iframe').forEach((f) => {
+          const src = f.getAttribute('src') || '';
+          if (!/w\.soundcloud\.com\/player/i.test(src)) return;
+          let s = /visual=true/i.test(src)
+            ? src.replace(/visual=true/i, 'visual=false')
+            : (/visual=false/i.test(src) ? src : src + (src.indexOf('?') > -1 ? '&' : '?') + 'visual=false');
+          s = s.replace(/show_comments=true/i, 'show_comments=false')
+               .replace(/show_teaser=true/i, 'show_teaser=false');
+          // CRITICAL: hide_related=true stops SoundCloud from auto-playing an
+          // unrelated "recommended" track when the embed finishes.
+          s = /hide_related=/i.test(s) ? s.replace(/hide_related=(true|false)/i, 'hide_related=true')
+            : s + (s.indexOf('?') > -1 ? '&' : '?') + 'hide_related=true';
+          f.setAttribute('src', s);
+          f.setAttribute('height', '120'); f.setAttribute('width', '100%');
+        });
+        // Strip SoundCloud's baked-in "artist · title" caption — a bare <div>
+        // whose only links point to soundcloud.com — that sits under each embed.
+        root.querySelectorAll('div').forEach((div) => {
+          if (div.querySelector('iframe, p, div')) return;
+          const links = div.querySelectorAll('a');
+          if (links.length && Array.prototype.every.call(links, (a) => /soundcloud\.com/i.test(a.getAttribute('href') || ''))) div.remove();
+        });
+      }
+
+      // previous/next show (or list) by number, within the same type
+      function neighbors(rec, records) {
+        const same = (records || []).filter((r) => r.type === rec.type);
+        same.sort((a, b) => (a.number || 0) - (b.number || 0) || String(a.slug).localeCompare(String(b.slug)));
+        const i = same.findIndex((r) => r.slug === rec.slug);
+        return { prev: i > 0 ? same[i - 1] : null, next: i > -1 && i < same.length - 1 ? same[i + 1] : null };
+      }
+      function setNav(btn, target) {
+        if (target) { btn.hidden = false; btn.dataset.slug = target.slug; btn.title = target.title || target.slug; }
+        else { btn.hidden = true; btn.removeAttribute('data-slug'); }
+      }
+
+      // Year-end lists have no "/////" headings — each entry is a description
+      // paragraph ("Artist - Title (Label)") followed by its embed. Pull the artist
+      // (first link) + label (the trailing "(…)" link) out of it and append the same
+      // clickable search chips alongside the entry.
+      function injectListTags(body) {
+        const chip = (kind, cls, n) => '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</span>';
+        const artists = new Set(), labels = new Set();
+        [...body.querySelectorAll('p')].forEach((p) => {
+          if (p.querySelector('iframe')) return;              // skip embed paragraphs
+          const next = p.nextElementSibling;
+          if (!next || !next.querySelector('iframe')) return; // only descriptions (immediately followed by an embed)
+          const txt = (p.textContent || '').trim();
+          if (!txt) return;
+          // format is "ARTIST - TITLE (LABEL)": artist is before the first " - ";
+          // the trailing "(...)" is the label (linked OR plain text) — unless it says
+          // "self-released". "v.a."/"various artists" isn't a real artist, so skip it.
+          const firstLink = p.querySelector('a');
+          // artist = a leading artist link (some names run straight into "- title"
+          // with no space before the dash), otherwise the text before the first " - "
+          let artist;
+          if (firstLink && txt.startsWith(firstLink.textContent.trim())) artist = firstLink.textContent.trim();
+          else { const dash = txt.search(/\s[-–—]\s/); artist = dash > 0 ? txt.slice(0, dash).trim() : ''; }
+          const pm = txt.match(/\(([^()]*)\)\s*$/);
+          let label = pm ? pm[1].trim() : '';
+          if (/^self[\s-]?released$/i.test(label)) label = '';
+          let chips = '';
+          if (artist && !/^(v\.?\s?a\.?|various\s+artists?)$/i.test(artist)) { chips += chip('artist', 'artist-chip', artist); artists.add(artist); }
+          if (label && label.toLowerCase() !== artist.toLowerCase()) { chips += chip('label', 'label-chip', label); labels.add(label); }
+          if (!chips) return;
+          // description on the left, chips pushed to the right edge (like the shows, minus the slashes)
+          p.classList.add('list-row');
+          p.innerHTML = '<span class="list-desc">' + p.innerHTML + '</span><span class="list-tags">' + chips + '</span>';
+        });
+        // Stray embeds: some entries pack a 2nd (or 3rd) album under one description
+        // with no line of its own. Give each its own entry, using the resolved
+        // track's artist (from its embed) so it gets a heading + chip like the rest.
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        const byId = {};
+        tracks.forEach((t) => { const m = (t.embedSrc || '').match(/(?:album|track)=(\d+)/); if (m && !byId[m[1]]) byId[m[1]] = t; });
+        [...body.querySelectorAll('p')].forEach((p) => {
+          if (!p.querySelector('iframe')) return;
+          const prev = p.previousElementSibling;
+          if (!(prev && prev.querySelector('iframe'))) return; // it already has a description (prev isn't an embed)
+          const src = p.querySelector('iframe').getAttribute('src') || '';
+          const m = src.match(/(?:album|track)=(\d+)/);
+          const t = m ? byId[m[1]] : null;
+          if (!t || !t.artist) return;
+          const row = document.createElement('p');
+          row.className = 'list-row';
+          const desc = esc(t.artist) + ((t.album || t.title) ? ' - ' + esc(t.album || t.title) : '');
+          row.innerHTML = '<span class="list-desc">' + desc + '</span><span class="list-tags">' + chip('artist', 'artist-chip', t.artist) + '</span>';
+          p.parentNode.insertBefore(row, p);
+          artists.add(t.artist);
+        });
+        return { artists: [...artists], labels: [...labels] };
+      }
+
+      // Under each tracklist heading (the "name /////" seg-marker), drop the same
+      // artist/label chips that live in the bottom-right bubble — but only the ones
+      // for THAT track's segment — so each entry shows (and links) its own tags.
+      function injectSegTags(body, rec) {
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        const arts = {}, labs = {}; // seg → Set of names
+        const add = (m, seg, n) => { if (seg != null && n) (m[seg] = m[seg] || new Set()).add(n); };
+        (rec.artists || []).forEach((a) => add(arts, a.seg, a.name));
+        // Seed label chips from the record's own taxonomy too, so a segment whose
+        // embed died on the source's end (common in the 2015–2017 shows → the track
+        // is dropped from the index) still shows its label chip.
+        (rec.labels || []).forEach((l) => add(labs, l.seg, l.name));
+        // Artists + labels come from the (possibly admin-edited) per-track data:
+        // the artist of every track in each segment (surfacing compilation artists),
+        // and its label list — so tag edits show here immediately. For un-edited
+        // releases these equal the record's segment tags.
+        tracks.forEach((t) => (t.shows || []).forEach((s) => {
+          if (s.slug !== rec.slug) return;
+          add(arts, s.seg, t.artist);
+          (s.labels || []).forEach((l) => add(labs, s.seg, l));
+        }));
+        const chip = (kind, cls, n) => '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</span>';
+        const slashes = '<span class="seg-slashes" aria-hidden="true">' + '/'.repeat(200) + '</span>';
+        body.querySelectorAll('.seg-marker[data-seg]').forEach((p) => {
+          const seg = p.getAttribute('data-seg');
+          const a = arts[seg] ? [...arts[seg]] : [], l = labs[seg] ? [...labs[seg]] : [];
+          const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
+          const tagsHtml = chips ? '<span class="seg-tags">' + chips + '</span>' : '';
+          // Some (esp. earlier) shows tuck relevant hyperlinks INTO the slash line —
+          // NEVER destroy those. Keep the name+linked-slashes intact on the left and
+          // pin the same chips to the right edge, so these headings read like the
+          // plain ones (modem 242) while staying clickable.
+          if (p.querySelector('a')) {
+            p.classList.add('seg-keep');
+            p.innerHTML = '<span class="seg-links">' + p.innerHTML + '</span>' + tagsHtml;
+            return;
+          }
+          const raw = p.textContent || '';
+          if (!/\//.test(raw) && !chips) return;
+          // Plain "name /////" heading → drop the redundant name (the chips identify
+          // the entry) and let the slashes stretch (flex + overflow clip) so the
+          // chips sit at the right edge at any screen size — pure CSS, responsive.
+          p.classList.add('seg-row');
+          if (chips) {
+            p.innerHTML = slashes + tagsHtml;
+          } else {
+            const nm = raw.replace(/[\s/]*\/[\s/]*$/, '').trim(); // no tags → keep the name as a fallback
+            p.innerHTML = '<span class="seg-name">' + esc(nm) + '</span>' + slashes;
+          }
+        });
+      }
+
+      function renderDetail(rec, records) {
+        detailInner.innerHTML =
+          (rec.cover ? '<img class="detail-cover-big" src="' + esc(rec.cover) + '" alt="">' : '') +
+          (rec.date ? '<div class="detail-date">' + esc(rec.date) + '</div>' : '') +
+          '<div class="detail-title">' + esc(rec.title || rec.slug) + '</div>' +
+          playerMarkup(rec.soundcloud) +
+          (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
+        const body = detailInner.querySelector('.modem-body');
+        let listTags = null;
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else injectSegTags(body, rec); }
+        initPlayer();
+
+        const nb = neighbors(rec, records);
+        setNav(prevBtn, nb.prev);
+        setNav(nextBtn, nb.next);
+
+        // For lists, the bottom section is built from the per-entry descriptions
+        // (works even when the page has no artist/label taxonomy tags — e.g. 2024);
+        // shows use their taxonomy tags.
+        const useList = listTags && (listTags.artists.length || listTags.labels.length);
+        const artists = useList ? listTags.artists.map((n) => ({ name: n })) : (rec.artists || []);
+        const labels = useList ? listTags.labels.map((n) => ({ name: n })) : (rec.labels || []);
+        tagsEl.hidden = true; // the old bottom-right floating bubble is gone
+        if (artists.length || labels.length) {
+          // All the show's artist/label chips live at the very END of the page now,
+          // in clearly-labelled artists: / labels: groups. Every chip is a search
+          // entry: click it to find every show featuring that artist/label.
+          const chips = (arr, cls, kind) => arr.map((x) =>
+            '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(x.name) + '">' + esc(x.name) + '</span>'
+          ).join('');
+          const sec = document.createElement('div');
+          sec.className = 'detail-alltags';
+          sec.innerHTML =
+            (artists.length ? '<div class="tag-group"><span class="tag-label">artists:</span>' + chips(artists, 'artist-chip', 'artist') + '</div>' : '') +
+            (labels.length ? '<div class="tag-group"><span class="tag-label">labels:</span>' + chips(labels, 'label-chip', 'label') + '</div>' : '');
+          detailInner.appendChild(sec);
+        }
+
+        detailView.hidden = false;
+        searchView.hidden = true;
+        detailView.scrollTop = 0;
+        document.title = 'modem: ' + (rec.title || rec.slug);
+      }
+
+      function openTagChip(chip) {
+        const kind = chip.getAttribute('data-kind') === 'label' ? 'label' : 'artist';
+        const name = chip.getAttribute('data-name') || chip.textContent;
+        // Open the floating search overlay filtered to this tag (layers over the
+        // current page); fall back to the in-page search route if it's absent.
+        if (window.modemSearch) window.modemSearch.open({ tag: { kind: kind, name: name } }, tagsEl);
+        else location.hash = 'tag=' + kind + ':' + encodeURIComponent(name);
+      }
+      // every chip inside the detail (inline per-track + the bottom artists/labels
+      // section) opens the same tag search
+      detailInner.onclick = (e) => { const chip = e.target.closest('.chip.clickable'); if (chip) openTagChip(chip); };
+
+      backBtn.onclick = () => {
+        // These detail pages are always reached from the radio-show grid, so
+        // "back" returns there — deterministically, in a single click. Plain
+        // history.back() was unreliable here: browsing shows via the ‹ › arrows
+        // piles up #hash history entries, and backing across the hash boundary
+        // raced the archive's own hashchange handler (which re-rendered the
+        // search view), so it frequently took two clicks.
+        if (window.loadPageGlobal) {
+          window.history.pushState({}, '', '/radio-show');
+          window.loadPageGlobal('radio-show');
+        } else {
+          window.location.href = '/radio-show';
+        }
+      };
+
+      // -------- search mode (track/album-first) --------
+      // Primary index is `data.tracks` — every track/album played across all
+      // shows, deduped, each carrying a "featured in modem NN" list. `initial`
+      // seeds the view: { query } free text, { tag:{kind,name} } from a chip,
+      // or { mode:'shows'|'lists' }.
+      const normKey = (s) => (s == null ? '' : String(s)).toLowerCase()
+        .normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+
+      function renderSearch(data, initial) {
+        initial = initial || {};
+        const records = data.records || [];
+        const tracks = data.tracks || [];
+        const resultsEl = document.getElementById('archive-results');
+        const searchEl = document.getElementById('archive-search');
+        const countEl = document.getElementById('archive-count');
+        const activeTagEl = document.getElementById('archive-active-tag');
+
+        const bySlug = {};
+        records.forEach((r) => (bySlug[r.slug] = r));
+
+        const state = { query: initial.query || '', mode: initial.mode || 'tracks', tag: initial.tag || null };
+        searchEl.value = state.query;
+
+        function renderActiveTag() {
+          if (state.tag) {
+            activeTagEl.hidden = false;
+            activeTagEl.innerHTML =
+              '<span class="active-tag-pill">' +
+                '<span class="active-tag-kind">' + (state.tag.kind === 'label' ? 'label' : 'artist') + '</span>' +
+                esc(state.tag.name) +
+                '<button type="button" class="active-tag-clear" aria-label="clear filter">×</button>' +
+              '</span>';
+          } else {
+            activeTagEl.hidden = true;
+            activeTagEl.innerHTML = '';
+          }
+        }
+
+        const terms = () => { const q = state.query.trim().toLowerCase(); return q ? q.split(/\s+/) : []; };
+        const hit = (hay, ts) => ts.every((t) => hay.indexOf(t) !== -1);
+        function emptyMsg() {
+          return '<div class="archive-empty">nothing matches ' +
+            (state.tag ? state.tag.kind + ' “' + esc(state.tag.name) + '”' : '“' + esc(state.query) + '”') + '</div>';
+        }
+
+        function trackMatchesTag(tk, tag) {
+          if (tag.kind === 'artist') {
+            if (normKey(tk.artist) === normKey(tag.name)) return true;
+            return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+          }
+          // label: the track's own segment carried this label tag — not merely some
+          // other track in the same show (which is what the old show-level match did).
+          return (tk.shows || []).some((s) => (s.labels || []).some((n) => normKey(n) === normKey(tag.name)));
+        }
+
+        function trackRow(tk) {
+          const cover = tk.artUrl || ''; // real track art only; blank square if missing
+          const badges = (tk.shows || []).map((s) =>
+            '<a class="track-show" href="/archive#' + esc(s.slug) + '">' +
+            esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>'
+          ).join('');
+          const playable = (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
+          const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' +
+            (cover ? '<img class="track-thumb" loading="lazy" src="' + esc(cover) + '" alt="">' : '<span class="track-thumb"></span>') +
+            '</span>';
+          return '<div class="track-row" data-key="' + esc(tk.key) + '">' +
+            thumb +
+            '<div class="track-main">' +
+              '<div class="track-title">' + esc(tk.title || '(untitled)') + '</div>' +
+              (tk.artist ? '<div class="track-artist">' + esc(tk.artist) + '</div>' : '') +
+            '</div>' +
+            '<div class="track-shows">' + badges + '</div>' +
+          '</div>';
+        }
+
+        function showCard(r) {
+          return '<a class="archive-card" href="/archive#' + esc(r.slug) + '">' +
+            (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
+            '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div>' +
+            '<div class="card-meta">' + esc(r.date || '') +
+            (r.embeds && r.embeds.length ? ' · ' + r.embeds.length + ' tracks' : '') + '</div></div></a>';
+        }
+
+        function drawTracks() {
+          const ts = terms();
+          const filtered = tracks.filter((tk) => {
+            if (state.tag && !trackMatchesTag(tk, state.tag)) return false;
+            if (!ts.length) return true;
+            return hit((tk.searchText || '').toLowerCase(), ts);
+          });
+          countEl.textContent = filtered.length + ' / ' + tracks.length + ' tracks';
+          resultsEl.className = 'archive-tracklist';
+          resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
+        }
+
+        function drawShows() {
+          const type = state.mode === 'lists' ? 'list' : 'show';
+          const ts = terms();
+          const pool = records.filter((r) => r.type === type);
+          const filtered = pool.filter((r) => {
+            if (state.tag) {
+              const list = (state.tag.kind === 'label' ? r.labels : r.artists) || [];
+              if (!list.some((x) => normKey(x.name) === normKey(state.tag.name))) return false;
+            }
+            if (!ts.length) return true;
+            return hit((r.searchText || '').toLowerCase(), ts);
+          });
+          countEl.textContent = filtered.length + ' / ' + pool.length + ' ' + (type === 'list' ? 'lists' : 'shows');
+          resultsEl.className = 'archive-grid';
+          resultsEl.innerHTML = filtered.length ? filtered.map(showCard).join('') : emptyMsg();
+        }
+
+        function draw() { state.mode === 'tracks' ? drawTracks() : drawShows(); }
+
+        searchEl.oninput = () => { state.query = searchEl.value; draw(); };
+        activeTagEl.onclick = (e) => {
+          if (!e.target.closest('.active-tag-clear')) return;
+          state.tag = null;
+          if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+          renderActiveTag();
+          draw();
+        };
+        // click a track row → play SoundCloud tracks in the mini-player (if present),
+        // otherwise open the source; badges/source links keep their native behaviour.
+        resultsEl.onclick = (e) => {
+          if (e.target.closest('a')) return;
+          const row = e.target.closest('.track-row');
+          if (!row) return;
+          const tk = tracks.find((x) => x.key === row.getAttribute('data-key'));
+          if (!tk) return;
+          if ((tk.kind === 'soundcloud' || tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show') && window.modemPlayer) window.modemPlayer.playTrack(tk, tracks);
+          else if (tk.link) window.open(tk.link, '_blank', 'noopener');
+        };
+        searchView.querySelectorAll('.archive-filters button').forEach((btn) => {
+          btn.onclick = () => {
+            state.mode = btn.getAttribute('data-mode');
+            searchView.querySelectorAll('.archive-filters button').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            draw();
+          };
+        });
+        searchView.querySelectorAll('.archive-filters button').forEach((b) =>
+          b.classList.toggle('active', b.getAttribute('data-mode') === state.mode));
+
+        searchView.hidden = false;
+        detailView.hidden = true;
+        tagsEl.hidden = true;
+        renderActiveTag();
+        draw();
+      }
+
+      function route(data) {
+        const records = data.records || [];
+        const bySlug = {};
+        records.forEach((r) => (bySlug[r.slug] = r));
+        const raw = (location.hash || '').replace(/^#/, '');
+        if (raw.indexOf('tag=') === 0) {
+          const rest = raw.slice(4);
+          const ci = rest.indexOf(':');
+          const kind = ci > -1 && rest.slice(0, ci) === 'label' ? 'label' : 'artist';
+          const name = decodeURIComponent(ci > -1 ? rest.slice(ci + 1) : rest);
+          return renderSearch(data, { tag: { kind, name } });
+        }
+        if (raw.indexOf('q=') === 0) return renderSearch(data, { query: decodeURIComponent(raw.slice(2)) });
+        const slug = slugFromHash();
+        if (slug && bySlug[slug]) renderDetail(bySlug[slug], records);
+        else renderSearch(data, {});
+      }
+
+      function withData(cb) {
+        if (window.__modemData) return cb(window.__modemData);
+        fetch('assets/modem-archive.json', { cache: 'no-cache' })
+          .then((r) => r.json())
+          .then((data) => {
+            window.__modemData = { records: data.records || [], tracks: data.tracks || [] };
+            window.__modemArchive = window.__modemData.records; // back-compat
+            cb(window.__modemData);
+          })
+          .catch((err) => {
+            detailInner.innerHTML = '<div class="archive-empty">could not load the archive data</div>';
+            detailView.hidden = false;
+            console.error('archive load failed', err);
+          });
+      }
+
+      withData(route);
+
+      if (!window.__archiveHashBound) {
+        window.__archiveHashBound = true;
+        window.addEventListener('hashchange', () => {
+          // Only re-route while we're still on the /archive path. A browser/gesture
+          // back OUT of the archive also clears the #hash and fires this event —
+          // without the guard it would re-render the archive search view and fight
+          // the SPA's popstate handler, making back take a second click.
+          if (location.pathname.replace(/\/+$/, '') !== '/archive') return;
+          if (document.getElementById('archive-detail-view')) withData(route);
+        });
+      }
+    };
+
+    window.initArchive();
+  </script>
+</body>
+</html>

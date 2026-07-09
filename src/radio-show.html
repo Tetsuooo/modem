@@ -82,6 +82,9 @@
       transform: scale(1.2);
       box-shadow: 0 0 0 2px #ffff00; /* Sharp yellow border */
     }
+    /* Shows mirrored into the on-site archive stay clickable but carry no
+       persistent tint — with the whole run indexed, the yellow marker on every
+       cell just added noise. Hover still highlights the cell. */
     .preview-image {
       position: fixed;
       width: clamp(150px, 25vw, 300px); /* Scale with viewport width */
@@ -111,11 +114,50 @@
     @media (hover: hover) and (pointer: fine) {
       body { overflow: hidden; }
     }
+
+    /* floating white action buttons — bigger, playfully staggered to the left of the grid */
+    .modem-actions {
+      position: fixed; left: clamp(0.75rem, 4vw, 4rem); top: 50%; transform: translateY(-50%); z-index: 199998;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem;
+    }
+    .modem-action {
+      font-family: Arial, sans-serif; font-weight: bold; text-transform: lowercase;
+      font-size: clamp(0.78rem, 2.3vw, 1rem); /* scales with the screen */
+      text-decoration: none; user-select: none; cursor: pointer;
+      background: #fff; color: #000; border: 2px solid #000; border-radius: 999px;
+      padding: clamp(0.4rem, 1.3vw, 0.55rem) clamp(0.8rem, 2.6vw, 1.15rem); display: inline-flex; align-items: center; gap: 0.4rem;
+      box-shadow: 0 3px 0 #000; transition: transform 0.12s ease, background 0.12s ease;
+    }
+    .modem-actions .modem-action:nth-child(1) { transform: rotate(-3deg); }
+    .modem-actions .modem-action:nth-child(2) { margin-left: 2.4rem; transform: rotate(2.5deg); }
+    .modem-actions .modem-action:nth-child(3) { margin-left: 0.9rem; transform: rotate(-1.5deg); }
+    .modem-action:hover { background: #ffff00; transform: rotate(0deg) scale(1.06); }
+    .modem-action .mag { font-size: 1.05rem; line-height: 1; }
+
+    /* tablets: keep the staggered left column but scale it down + reduce the offset
+       so it stays inside the grid's side margin and never overlaps the numbers */
+    @media (min-width: 721px) and (max-width: 1200px) {
+      .modem-actions { left: 0.4rem; gap: 0.7rem; }
+      .modem-action { font-size: 0.74rem; padding: 0.32rem 0.72rem; box-shadow: 0 2px 0 #000; }
+      .modem-actions .modem-action:nth-child(2) { margin-left: 1rem; }
+      .modem-actions .modem-action:nth-child(3) { margin-left: 0.5rem; }
+    }
+
+    /* on phones: keep them FLOATING (no bar), just smaller and tucked bottom-left */
+    @media (max-width: 720px) {
+      .modem-actions { top: auto; bottom: 0.7rem; left: 0.7rem; right: auto; transform: none; align-items: flex-start; gap: 0.4rem; }
+      .modem-actions .modem-action { margin-left: 0 !important; transform: none !important; font-size: 0.72rem; padding: 0.3rem 0.7rem; box-shadow: 0 2px 0 #000; }
+    }
   </style>
 </head>
 <body>
   <div class="content">
     <div class="number-grid"></div>
+    <div class="modem-actions">
+      <button type="button" class="modem-action" data-act="shows">play random show</button>
+      <button type="button" class="modem-action" data-act="tracks">play random track</button>
+      <button type="button" class="modem-action" data-act="search"><span class="mag">⌕</span> search</button>
+    </div>
   </div>
 
   <script>
@@ -176,15 +218,23 @@
           const number = row * numbersPerRow + col + 1;
           if (number <= totalNumbers) {
             const link = document.createElement('a');
+            // The earliest / anniversary shows have irregular radiostudent slugs.
+            // Set data-modem to the real slug so markLocalArchiveShows() redirects
+            // them to the on-site archive like every other show; the external href
+            // stays only as a fallback for shows not yet mirrored locally.
             if (number === 1) {
               link.href = 'https://radiostudent.si/glasba/modem/modem-01-0';
+              link.dataset.modem = 'modem-01-0';
             } else if (number === 100) {
-              link.href = 'https://modemodemodem.bandcamp.com/album/bag-of-toys';
+              link.href = 'https://radiostudent.si/glasba/modem/modem-100-bag-of-toys';
+              link.dataset.modem = 'modem-100-bag-of-toys';
             } else if (number === 200) {
-              link.href = 'https://modemodemodem.bandcamp.com/album/bag-of-toys-2';
+              link.href = 'https://radiostudent.si/glasba/modem/modem-200-bag-of-toys-2';
+              link.dataset.modem = 'modem-200-bag-of-toys-2';
             } else {
               const paddedNumber = number < 10 ? `0${number}` : number;
               link.href = `https://radiostudent.si/glasba/modem/modem-${paddedNumber}`;
+              link.dataset.modem = `modem-${paddedNumber}`;
             }
             link.textContent = number;
             link.style.textDecoration = 'none';
@@ -216,6 +266,29 @@
           grid.appendChild(div);
         }
       }
+
+      // Redirect shows that already live in the local archive to their local entry
+      markLocalArchiveShows();
+    }
+
+    // For shows we've mirrored locally, point the grid link at the on-site archive
+    // entry (/archive#modem-NN) and visually mark it as available.
+    function markLocalArchiveShows() {
+      fetch('assets/modem-archive.json', { cache: 'no-cache' })
+        .then((r) => r.json())
+        .then((data) => {
+          const local = new Set(
+            (data.records || []).filter((r) => r.type === 'show').map((r) => r.slug)
+          );
+          document.querySelectorAll('.number-grid a[data-modem]').forEach((a) => {
+            if (local.has(a.dataset.modem)) {
+              a.href = '/archive#' + a.dataset.modem;
+              a.classList.add('in-archive');
+              a.title = 'open in the on-site archive';
+            }
+          });
+        })
+        .catch(() => {});
     }
 
     // Clean up interference first
@@ -236,6 +309,23 @@
     
     // Force initialization when window loads
     window.addEventListener('load', initializeRadioShow);
+
+    // Wire the floating action buttons to the persistent shuffle player
+    // (window.modemPlayer lives in the SPA shell; the "search" link routes itself).
+    (function () {
+      const acts = document.querySelector('.modem-actions');
+      if (!acts || acts.dataset.wired) return;
+      acts.dataset.wired = '1';
+      acts.addEventListener('click', (e) => {
+        const b = e.target.closest('.modem-action[data-act]');
+        if (!b) return;
+        const act = b.getAttribute('data-act');
+        if (act === 'search') { if (window.modemSearch) window.modemSearch.open(undefined, b); else window.location.href = '/archive'; return; }
+        if (!window.modemPlayer) return;
+        if (act === 'shows') window.modemPlayer.playShows(b);
+        else if (act === 'tracks') window.modemPlayer.playTracks(b);
+      });
+    })();
   </script>
 </body>
 </html>

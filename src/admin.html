@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>modem · admin</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; color: #000; }
+  header { position: sticky; top: 0; z-index: 5; background: #000; color: #fff; padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+  header b { font-size: 1rem; }
+  header .grow { flex: 1; }
+  .tab { background: #222; color: #fff; border: 2px solid #444; border-radius: 5px; padding: 0.35rem 0.8rem; font-weight: bold; cursor: pointer; }
+  .tab.active { background: #ffff00; color: #000; border-color: #ffff00; }
+  button { font-family: Arial, sans-serif; font-weight: bold; cursor: pointer; border: 2px solid #000; background: #fff; padding: 0.4rem 0.7rem; border-radius: 4px; }
+  button:hover:not(:disabled) { background: #ffff00; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  header button { border-color: #fff; background: #222; color: #fff; }
+  header button:hover:not(:disabled) { background: #ffff00; color: #000; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+  .stat { font-size: 0.85rem; opacity: 0.85; }
+  input[type=text], input[type=search], input[type=password] { font-family: Arial, sans-serif; font-size: 0.9rem; padding: 0.45rem 0.6rem; border: 2px solid #000; border-radius: 4px; }
+
+  /* gate */
+  #gate { position: fixed; inset: 0; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 50; }
+  #gate .box { background: #000; border: 2px solid #333; border-radius: 10px; padding: 2rem; width: min(360px, 90vw); text-align: center; }
+  #gate h1 { margin: 0 0 1rem; font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  #gate input { width: 100%; margin-bottom: 0.8rem; }
+  #gate button { width: 100%; border-color: #ffff00; background: #ffff00; color: #000; }
+  #gate .err { color: #ff6b6b; font-size: 0.8rem; min-height: 1.1em; }
+
+  h3 { margin: 1.4rem 0 0.5rem; font-size: 0.9rem; text-transform: lowercase; letter-spacing: 0.03em; opacity: 0.65; }
+  .cluster { background: #fff; border: 2px solid #000; border-radius: 6px; padding: 0.7rem 0.8rem; margin-bottom: 0.7rem; }
+  .cluster.possible { border-style: dashed; border-color: #9a9a9a; }
+  .maybe { font-size: 0.6rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; color: #b45309; border: 1px solid #f59e0b; border-radius: 4px; padding: 0.05rem 0.35rem; }
+  .fuzzy-head { margin: 1.5rem 0 0.5rem; font-size: 0.85rem; font-weight: bold; opacity: 0.6; }
+  .cluster .variants { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+  .variant { display: inline-flex; align-items: center; gap: 0.35rem; border: 1.5px solid #000; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.85rem; cursor: pointer; background: #fafafa; }
+  .variant.canon { background: #d1fae5; border-color: #16a34a; }
+  .variant .cnt { opacity: 0.5; font-size: 0.75rem; }
+  .cluster .row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .cluster .arrow { opacity: 0.5; }
+  .kind-badge { font-size: 0.62rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid #999; border-radius: 4px; padding: 0.05rem 0.35rem; opacity: 0.7; }
+  .hint { font-size: 0.8rem; opacity: 0.6; }
+  .merge-list { background: #fff; border: 2px solid #000; border-radius: 6px; }
+  .merge-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.7rem; border-bottom: 1px solid #eee; font-size: 0.88rem; }
+  .merge-row:last-child { border-bottom: 0; }
+  .merge-row .from { text-decoration: line-through; opacity: 0.7; }
+  .merge-row .to { font-weight: bold; }
+  .pill-btn { border: 1.5px solid #000; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.75rem; background: #fff; }
+  #tagsearch { width: 100%; margin-bottom: 0.6rem; }
+  .taglist { display: flex; flex-wrap: wrap; gap: 0.35rem; max-height: 340px; overflow-y: auto; padding: 0.3rem; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+  .taglist .variant.sel { background: #fef08a; border-color: #000; }
+  .builder { position: sticky; bottom: 0; background: #f4f4f4; padding: 0.7rem 0; border-top: 2px solid #000; margin-top: 0.6rem; }
+  .toast { position: fixed; bottom: 1rem; right: 1rem; background: #000; color: #fff; padding: 0.7rem 1rem; border-radius: 6px; z-index: 40; opacity: 0; transition: opacity 0.25s; }
+  .toast.show { opacity: 1; }
+  .savebar { position: sticky; top: 3.1rem; z-index: 4; background: #fffde7; border: 2px solid #ffd400; border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 0.8rem; display: none; align-items: center; gap: 0.8rem; }
+  .savebar.show { display: flex; }
+
+  /* soundcloud-links tab = the match-review tool embedded full-height */
+  .scpane { padding: 0; }
+  .scpane iframe { display: block; width: 100vw; height: calc(100vh - 52px); border: 0; }
+
+  /* edit-tags tab */
+  #editsearch { width: 100%; margin-bottom: 0.8rem; }
+  .editcard { background: #fff; border: 2px solid #000; border-radius: 6px; padding: 0.7rem 0.8rem; margin-bottom: 0.7rem; }
+  .editcard.edited { border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
+  .er-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .er-thumb { width: 46px; height: 46px; object-fit: cover; background: #eee; flex: none; display: block; border-radius: 3px; }
+  .er-title { font-weight: bold; word-break: break-word; }
+  .er-sub { font-size: 0.78rem; opacity: 0.6; }
+  .er-field { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
+  .er-field > label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; width: 3.2rem; flex: none; }
+  .er-artist { flex: 1 1 12rem; font-family: Arial, sans-serif; font-size: 0.9rem; padding: 0.35rem 0.5rem; border: 1.5px solid #000; border-radius: 4px; }
+  .er-labels { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
+  .er-lab { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; font-weight: bold; border: 1.5px solid #000; border-radius: 999px; padding: 0.1rem 0.2rem 0.1rem 0.6rem; background: #fafafa; }
+  .er-lab .er-rm { border: 0; background: transparent; cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0 0.25rem; color: #b91c1c; }
+  .er-addlabel { font-family: Arial, sans-serif; font-size: 0.82rem; padding: 0.25rem 0.5rem; border: 1.5px dashed #999; border-radius: 999px; min-width: 8rem; }
+  .er-actions { margin-top: 0.6rem; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="box">
+    <h1>modem · admin</h1>
+    <input id="pw" type="password" placeholder="password" autocomplete="current-password">
+    <button id="gatebtn">enter</button>
+    <div class="err" id="gateerr"></div>
+  </div>
+</div>
+
+<header hidden id="hdr">
+  <b>modem · admin</b>
+  <button class="tab active" data-tab="merge">tag merge</button>
+  <button class="tab" data-tab="edit">edit tags</button>
+  <button class="tab" data-tab="sc">soundcloud links</button>
+  <span class="grow"></span>
+  <span class="stat" id="stat"></span>
+  <button id="save" disabled>✔ save &amp; apply</button>
+</header>
+
+<div class="wrap" id="main" hidden>
+  <div class="savebar" id="savebar"><b id="pending">0</b> unsaved change(s) — <span class="hint">saved edits are re-applied on every rebuild, so they survive re-scrapes.</span></div>
+
+  <div class="tabpane" data-pane="merge">
+    <h3>suggested merges — near-identical tags found automatically</h3>
+    <div class="hint" style="margin-bottom:.6rem">Same name up to case / spacing / invisible characters / accents. Click a chip to choose which spelling to keep (green = canonical), then merge.</div>
+    <div id="suggested"></div>
+
+    <h3>build a merge manually</h3>
+    <div class="hint" style="margin-bottom:.6rem">Search and click tags that are the same artist/label, then pick the one to keep.</div>
+    <input id="tagsearch" type="search" placeholder="filter tags…">
+    <div class="taglist" id="taglist"></div>
+    <div class="builder" id="builder"></div>
+
+    <h3>active merges (<span id="mcount">0</span>)</h3>
+    <div class="merge-list" id="mergelist"></div>
+  </div>
+
+  <div class="tabpane" data-pane="edit" hidden>
+    <h3>edit a release's tags</h3>
+    <div class="hint" style="margin-bottom:.6rem">Find a release, then add / remove / rename its artist &amp; label tags. Edits apply to search and the on-page chips, and survive re-scrapes.</div>
+    <input id="editsearch" type="search" placeholder="find a release by title or artist…">
+    <div id="editresults"><div class="hint">type to find a release…</div></div>
+  </div>
+</div>
+
+<div class="tabpane scpane" data-pane="sc" hidden><iframe id="scframe" title="soundcloud match review" src="about:blank"></iframe></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SAVE_URL = '/save-overrides'; // dev server; swap for your serverless endpoint when live
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const normKey = (s) => (s == null ? '' : String(s)).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');
+
+  let ARCHIVE = null, overrides = { tagMerges: {} }, tags = { artist: {}, label: {} };
+  let selected = new Set(), canonPick = null, dirty = 0;
+  const dismissed = new Set(JSON.parse(localStorage.getItem('modem-tag-dismissed') || '[]')); // pairs marked "keep separate"
+  const dkey = (arr) => arr.slice().sort().join('||');
+  function dismiss(arr) { dismissed.add(dkey(arr)); localStorage.setItem('modem-tag-dismissed', JSON.stringify([...dismissed])); }
+  function resetDismissed() { dismissed.clear(); localStorage.removeItem('modem-tag-dismissed'); }
+
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200); }
+
+  // ---- gate (client-side first layer; real auth happens at the save endpoint) ----
+  $('#gatebtn').onclick = enter;
+  $('#pw').onkeydown = (e) => { if (e.key === 'Enter') enter(); };
+  function enter() {
+    const pw = $('#pw').value;
+    if (!pw) { $('#gateerr').textContent = 'enter the password'; return; }
+    sessionStorage.setItem('modem-admin-pw', pw);
+    $('#gate').remove(); $('#hdr').hidden = false; $('#main').hidden = false;
+    boot();
+  }
+  if (sessionStorage.getItem('modem-admin-pw')) { const g = $('#gate'); if (g) g.remove(); $('#hdr').hidden = false; $('#main').hidden = false; boot(); }
+
+  async function boot() {
+    const [a, o] = await Promise.all([
+      fetch('/assets/modem-archive.json', { cache: 'no-cache' }).then((r) => r.json()),
+      fetch('/assets/overrides.json', { cache: 'no-cache' }).then((r) => r.json()).catch(() => ({})),
+    ]);
+    ARCHIVE = a;
+    overrides = { tagMerges: (o && o.tagMerges) || {}, tagEdits: (o && o.tagEdits) || {} };
+    computeTags();
+    renderAll();
+    renderEditResults();
+    // deep-link: ?tab=edit&q=…
+    const p = new URLSearchParams(location.search);
+    if (p.get('q')) { $('#editsearch').value = p.get('q'); renderEditResults(); }
+    if (p.get('tab')) { const tb = document.querySelector('.tab[data-tab="' + p.get('tab') + '"]'); if (tb) tb.click(); }
+  }
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab[data-tab]').forEach((t) => t.onclick = () => {
+    const name = t.dataset.tab;
+    document.querySelectorAll('.tab[data-tab]').forEach((x) => x.classList.toggle('active', x === t));
+    document.querySelectorAll('.tabpane[data-pane]').forEach((p) => p.hidden = p.dataset.pane !== name);
+    $('#main').hidden = name === 'sc';           // sc pane is full-width, outside .wrap
+    if (name === 'sc') { const f = $('#scframe'); if (!f.src || f.src.endsWith('about:blank')) f.src = '/match-review'; }
+    $('#save').style.display = name === 'sc' ? 'none' : ''; // match-review has its own save
+  });
+
+  // ---- edit tags: per-release artist / label editor ----
+  const origLabelsOf = (t) => [...new Set((t.shows || []).flatMap((s) => s.labels || []))];
+  const curArtist = (t) => { const e = overrides.tagEdits[t.key]; return e && e.artist != null ? e.artist : (t.artist || ''); };
+  const curLabels = (t) => { const e = overrides.tagEdits[t.key]; return e && Array.isArray(e.labels) ? e.labels.slice() : origLabelsOf(t); };
+  const labChip = (n) => '<span class="er-lab" data-name="' + esc(n) + '">' + esc(n) + ' <button class="er-rm" title="remove">×</button></span>';
+  const trackByKey = (key) => (ARCHIVE.tracks || []).find((x) => x.key === key);
+
+  function editCard(t) {
+    const edited = !!overrides.tagEdits[t.key];
+    const shows = (t.shows || []).map((s) => s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number).join(', ');
+    return '<div class="editcard' + (edited ? ' edited' : '') + '" data-key="' + esc(t.key) + '">' +
+      '<div class="er-head">' + (t.artUrl ? '<img class="er-thumb" src="' + esc(t.artUrl) + '" alt="">' : '<span class="er-thumb"></span>') +
+        '<div class="er-meta"><div class="er-title">' + esc(t.title || '(untitled)') + '</div>' +
+        '<div class="er-sub">' + esc(shows) + (edited ? ' · <b>edited</b>' : '') + '</div></div></div>' +
+      '<div class="er-field"><label>artist</label><input class="er-artist" value="' + esc(curArtist(t)) + '"></div>' +
+      '<div class="er-field"><label>labels</label><span class="er-labels">' + curLabels(t).map(labChip).join('') + '</span>' +
+        '<input class="er-addlabel" placeholder="+ add label, Enter"></div>' +
+      '<div class="er-actions">' + (edited ? '<button class="er-reset pill-btn">reset to original</button>' : '') + '</div></div>';
+  }
+
+  function commitCard(card) {
+    const key = card.getAttribute('data-key'), t = trackByKey(key);
+    const artist = card.querySelector('.er-artist').value.trim();
+    const labels = [...card.querySelectorAll('.er-lab')].map((x) => x.getAttribute('data-name'));
+    if (t && artist === (t.artist || '') && labels.join('|') === origLabelsOf(t).join('|')) delete overrides.tagEdits[key];
+    else overrides.tagEdits[key] = { artist, labels };
+    dirty++; updateStat();
+    card.classList.toggle('edited', !!overrides.tagEdits[key]);
+    card.querySelector('.er-actions').innerHTML = overrides.tagEdits[key] ? '<button class="er-reset pill-btn">reset to original</button>' : '';
+    wireCard(card);
+  }
+
+  function wireCard(card) {
+    card.querySelectorAll('.er-rm').forEach((b) => b.onclick = () => { b.closest('.er-lab').remove(); commitCard(card); });
+    const art = card.querySelector('.er-artist'); if (art) art.onchange = () => commitCard(card);
+    const add = card.querySelector('.er-addlabel');
+    if (add) add.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const v = add.value.trim(); if (v) { card.querySelector('.er-labels').insertAdjacentHTML('beforeend', labChip(v)); add.value = ''; commitCard(card); } } };
+    const reset = card.querySelector('.er-reset');
+    if (reset) reset.onclick = () => { const key = card.getAttribute('data-key'); delete overrides.tagEdits[key]; dirty++; updateStat(); card.outerHTML = editCard(trackByKey(key)); document.querySelectorAll('.editcard').forEach(wireCard); };
+  }
+
+  function renderEditResults() {
+    const host = $('#editresults'); if (!host || !ARCHIVE) return;
+    const q = ($('#editsearch').value || '').toLowerCase().trim();
+    if (!q) { host.innerHTML = '<div class="hint">type to find a release…</div>'; return; }
+    const terms = q.split(/\s+/);
+    const hits = (ARCHIVE.tracks || []).filter((t) => {
+      const hay = ((t.title || '') + ' ' + (t.artist || '') + ' ' + (t.album || '') + ' ' + (t.shows || []).map((s) => 'modem ' + s.number).join(' ')).toLowerCase();
+      return terms.every((x) => hay.indexOf(x) !== -1);
+    }).slice(0, 30);
+    host.innerHTML = hits.length ? hits.map(editCard).join('') : '<div class="hint">no release matches “' + esc(q) + '”.</div>';
+    document.querySelectorAll('.editcard').forEach(wireCard);
+  }
+  $('#editsearch').oninput = renderEditResults;
+
+  function computeTags() {
+    tags = { artist: {}, label: {} };
+    (ARCHIVE.records || []).forEach((r) => {
+      (r.artists || []).forEach((x) => { tags.artist[x.name] = (tags.artist[x.name] || 0) + 1; });
+      (r.labels || []).forEach((x) => { tags.label[x.name] = (tags.label[x.name] || 0) + 1; });
+    });
+  }
+
+  // group names by normalized key within a kind → clusters of >1 = suggestions
+  function clustersFor(kind) {
+    const by = {};
+    Object.keys(tags[kind]).forEach((n) => { const k = normKey(n); if (!k) return; (by[k] = by[k] || []).push(n); });
+    return Object.values(by).filter((v) => v.length > 1)
+      // hide clusters already fully merged, or ones you marked "keep separate"
+      .filter((v) => new Set(v.map((n) => overrides.tagMerges[n] || n)).size > 1)
+      .filter((v) => !dismissed.has(dkey(v)))
+      .sort((a, b) => b.reduce((s, n) => s + tags[kind][n], 0) - a.reduce((s, n) => s + tags[kind][n], 0));
+  }
+
+  // Levenshtein (bounded — anything past 2 edits we treat as "far")
+  function lev(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 3;
+    const dp = Array.from({ length: a.length + 1 }, (_, i) => i);
+    for (let j = 1; j <= b.length; j++) {
+      let prev = dp[0]; dp[0] = j;
+      for (let i = 1; i <= a.length; i++) { const tmp = dp[i]; dp[i] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[i], dp[i - 1]); prev = tmp; }
+    }
+    return dp[a.length];
+  }
+  const SUFFIX = /^(records?|recordings?|rec|tapes?|editions?|music|ltd|label|sounds?|audio|productions?|prod|collective|netlabel|media|works?|inc|group)$/;
+  const COLLAB = /\s&\s|\s\/\s|\bfeat\.?\b|\bft\.?\b|\sand\s|,|\s\+\s|\svs\.?\s|\sx\s/i; // "X & Y", "X, Y", "X feat Y" = a collab, NOT a dup
+  // Looser "possible" candidates the exact-normalisation pass misses: a suffix
+  // variant ("x" vs "x records"), a containment, or a single-character typo.
+  function fuzzyGroupsFor(kind) {
+    const norm = {};
+    Object.keys(tags[kind]).forEach((n) => { const k = normKey(n); if (k) (norm[k] = norm[k] || []).push(n); });
+    const keys = Object.keys(norm).filter((k) => k.length >= 4);
+    const disp = (k) => norm[k].slice().sort((a, b) => tags[kind][b] - tags[kind][a])[0];
+    const out = [], seen = new Set();
+    for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) {
+      const a = keys[i], b = keys[j];
+      const na = disp(a), nb = disp(b);
+      const sh = a.length <= b.length ? a : b, lo = a.length <= b.length ? b : a;
+      const longer = a.length <= b.length ? nb : na; // display name of the longer one
+      let ok = false;
+      if (lo.startsWith(sh) && lo.length - sh.length <= 12 && SUFFIX.test(lo.slice(sh.length))) ok = true; // "x" vs "x records"
+      else if (sh.length >= 6 && lo.includes(sh) && !COLLAB.test(longer)) ok = true;                       // containment, but not a collab credit
+      else if (Math.min(a.length, b.length) >= 5 && lev(a, b) === 1) ok = true;                            // one typo
+      if (!ok) continue;
+      if ((overrides.tagMerges[na] || na) === (overrides.tagMerges[nb] || nb)) continue; // already merged together
+      const key = kind + ':' + [na, nb].sort().join('||');
+      if (seen.has(key) || dismissed.has([na, nb].sort().join('||'))) continue;
+      seen.add(key);
+      out.push([na, nb].sort((x, y) => tags[kind][y] - tags[kind][x]));
+    }
+    return out.sort((A, B) => (tags[kind][B[0]] + tags[kind][B[1]]) - (tags[kind][A[0]] + tags[kind][A[1]]));
+  }
+
+  function renderAll() { renderSuggested(); renderTagList(); renderBuilder(); renderMerges(); updateStat(); }
+
+  function updateStat() {
+    const nA = Object.keys(tags.artist).length, nL = Object.keys(tags.label).length;
+    $('#stat').textContent = nA + ' artists · ' + nL + ' labels · ' + Object.keys(overrides.tagMerges).length + ' merges · ' + Object.keys(overrides.tagEdits || {}).length + ' edits';
+    $('#mcount').textContent = Object.keys(overrides.tagMerges).length;
+    $('#pending').textContent = dirty;
+    $('#savebar').classList.toggle('show', dirty > 0);
+    $('#save').disabled = dirty === 0;
+  }
+
+  function clusterHtml(kind, variants, possible) {
+    const canon = variants.slice().sort((a, b) => tags[kind][b] - tags[kind][a])[0]; // default = most used
+    return '<div class="cluster' + (possible ? ' possible' : '') + '" data-kind="' + kind + '" data-canon="' + esc(canon) + '" data-pair="' + esc(variants.join('||')) + '">' +
+      '<div class="row"><span class="kind-badge">' + kind + '</span>' + (possible ? '<span class="maybe">possible</span>' : '') +
+      '<span class="variants">' + variants.map((n) =>
+        '<span class="variant' + (n === canon ? ' canon' : '') + '" data-name="' + esc(n) + '">' + esc(n) + ' <span class="cnt">' + tags[kind][n] + '</span></span>'
+      ).join('') + '</span></div>' +
+      '<div class="row" style="margin-top:.5rem"><span class="hint">keep <b class="canon-name">' + esc(canon) + '</b></span>' +
+      '<button class="do-merge">merge ' + variants.length + ' → 1</button>' +
+      ' <button class="dismiss pill-btn">keep separate</button></div></div>';
+  }
+  function renderSuggested() {
+    const host = $('#suggested');
+    let exact = '', fuzzy = '';
+    ['artist', 'label'].forEach((kind) => clustersFor(kind).forEach((v) => exact += clusterHtml(kind, v, false)));
+    ['artist', 'label'].forEach((kind) => fuzzyGroupsFor(kind).forEach((v) => fuzzy += clusterHtml(kind, v, true)));
+    const dm = dismissed.size ? '<div class="hint" style="margin:0 0 .7rem">' + dismissed.size + ' pair(s) kept separate. <button id="resetdm" class="pill-btn">show them again</button></div>' : '';
+    host.innerHTML = dm + (exact || (fuzzy ? '' : '<div class="hint">no near-duplicate tags left 🎉</div>')) +
+      (fuzzy ? '<div class="fuzzy-head">possible matches — looser guesses (suffixes / typos / containment), check each carefully</div>' + fuzzy : '');
+    const rd = document.getElementById('resetdm'); if (rd) rd.onclick = () => { resetDismissed(); renderAll(); };
+    host.querySelectorAll('.cluster').forEach((c) => {
+      c.querySelectorAll('.variant').forEach((v) => v.onclick = () => {
+        c.querySelectorAll('.variant').forEach((x) => x.classList.remove('canon'));
+        v.classList.add('canon');
+        c.setAttribute('data-canon', v.getAttribute('data-name'));
+        c.querySelector('.canon-name').textContent = v.getAttribute('data-name');
+      });
+      c.querySelector('.do-merge').onclick = () => {
+        const canon = c.getAttribute('data-canon');
+        c.querySelectorAll('.variant').forEach((v) => { const n = v.getAttribute('data-name'); if (n !== canon) addMerge(n, canon); });
+        renderAll();
+      };
+      const dz = c.querySelector('.dismiss');
+      if (dz) dz.onclick = () => { dismiss(c.getAttribute('data-pair').split('||')); renderAll(); };
+    });
+  }
+
+  function renderTagList() {
+    const q = ($('#tagsearch').value || '').toLowerCase();
+    const all = [];
+    ['artist', 'label'].forEach((kind) => Object.keys(tags[kind]).forEach((n) => all.push({ n, kind, c: tags[kind][n] })));
+    all.sort((a, b) => b.c - a.c);
+    const host = $('#taglist');
+    host.innerHTML = all.filter((t) => !q || t.n.toLowerCase().includes(q)).slice(0, 400).map((t) =>
+      '<span class="variant' + (selected.has(t.n) ? ' sel' : '') + '" data-name="' + esc(t.n) + '"><span class="kind-badge">' + t.kind[0] + '</span>' + esc(t.n) + ' <span class="cnt">' + t.c + '</span></span>'
+    ).join('') || '<span class="hint">no tags match.</span>';
+    host.querySelectorAll('.variant').forEach((v) => v.onclick = () => {
+      const n = v.getAttribute('data-name');
+      if (selected.has(n)) selected.delete(n); else selected.add(n);
+      if (canonPick && !selected.has(canonPick)) canonPick = null;
+      renderTagList(); renderBuilder();
+    });
+  }
+
+  function renderBuilder() {
+    const host = $('#builder');
+    const arr = [...selected];
+    if (arr.length < 2) { host.innerHTML = arr.length === 1 ? '<span class="hint">pick at least one more tag to merge with “' + esc(arr[0]) + '”.</span>' : '<span class="hint">select tags above to build a merge.</span>'; return; }
+    if (!canonPick || !selected.has(canonPick)) canonPick = arr[0];
+    host.innerHTML = '<div class="row" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">' +
+      '<span class="hint">merge:</span>' +
+      arr.map((n) => '<span class="variant' + (n === canonPick ? ' canon' : '') + '" data-name="' + esc(n) + '">' + esc(n) + '</span>').join('') +
+      '<span class="hint">→ keep <b>' + esc(canonPick) + '</b></span>' +
+      '<button id="do-manual">merge</button> <button id="clear-sel" class="pill-btn">clear</button></div>';
+    host.querySelectorAll('.variant').forEach((v) => v.onclick = () => { canonPick = v.getAttribute('data-name'); renderBuilder(); });
+    $('#do-manual').onclick = () => { arr.forEach((n) => { if (n !== canonPick) addMerge(n, canonPick); }); selected.clear(); canonPick = null; renderAll(); };
+    $('#clear-sel').onclick = () => { selected.clear(); canonPick = null; renderTagList(); renderBuilder(); };
+  }
+
+  function renderMerges() {
+    const host = $('#mergelist');
+    const keys = Object.keys(overrides.tagMerges);
+    if (!keys.length) { host.innerHTML = '<div class="merge-row hint">no merges yet.</div>'; return; }
+    host.innerHTML = keys.map((from) =>
+      '<div class="merge-row"><span class="from">' + esc(from) + '</span><span class="arrow">→</span><span class="to">' + esc(overrides.tagMerges[from]) + '</span>' +
+      '<span class="grow" style="flex:1"></span><button class="pill-btn undo" data-from="' + esc(from) + '">undo</button></div>'
+    ).join('');
+    host.querySelectorAll('.undo').forEach((b) => b.onclick = () => { delete overrides.tagMerges[b.getAttribute('data-from')]; dirty++; renderAll(); });
+  }
+
+  function addMerge(from, to) { if (from === to) return; overrides.tagMerges[from] = to; dirty++; }
+
+  $('#tagsearch').oninput = renderTagList;
+
+  $('#save').onclick = async () => {
+    const btn = $('#save'); btn.disabled = true; const orig = btn.textContent; btn.textContent = 'saving…';
+    try {
+      const r = await fetch(SAVE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: sessionStorage.getItem('modem-admin-pw'), overrides }) });
+      const j = await r.json();
+      if (j.ok) { dirty = 0; btn.textContent = '✔ applied'; toast('saved & applied — reload the site to see merged tags'); await boot(); }
+      else { btn.textContent = '✗ error'; toast('save failed: ' + (j.error || r.status)); }
+    } catch (e) { btn.textContent = '✗ error'; toast('could not reach save endpoint'); }
+    setTimeout(() => { btn.textContent = orig; updateStat(); }, 2500);
+  };
+</script>
+</body>
+</html>

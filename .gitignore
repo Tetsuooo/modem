@@ -1,2 +1,8 @@
 node_modules
 dist
+scripts/.cache
+# regenerable dev-tool working files (find-sc-matches.js / gen-review.js output)
+scripts/sc-match-candidates.json
+scripts/sc-match-review.html
+# scratch build logs
+scratch_*.log
