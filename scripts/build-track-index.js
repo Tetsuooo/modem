@@ -361,7 +361,14 @@ function embedsWithSegments(bodyHtml) {
   // with the show's cover and nothing to play, so they don't belong in the index.
   const all = [...index.values()];
   const dropped = all.filter((t) => !t.artist && !t.artUrl && !t.link);
-  const tracks = all.filter((t) => t.artist || t.artUrl || t.link).map((t) => {
+  // YouTube embeds are only indexed when they're an actual music video — i.e. the clip
+  // was curated into a "best videos of ..." list. Everywhere else YouTube embeds are
+  // asides (game/software timelapses, previews, one-off links) that only add noise to
+  // search + segment tags. They still render in the show body; they're just not tracks.
+  const isVideoList = (slug) => /best-videos-of/i.test(slug || '');
+  const isNonMusicYt = (t) => t.kind === 'youtube' && !(t.shows || []).some((s) => isVideoList(s.slug));
+  const droppedYt = all.filter((t) => (t.artist || t.artUrl || t.link) && isNonMusicYt(t));
+  const tracks = all.filter((t) => (t.artist || t.artUrl || t.link) && !isNonMusicYt(t)).map((t) => {
     // fall back to the curator's tracklist label when a real title is missing
     if (!t.title) {
       const s = t.shows.find((x) => x.segLabel);
@@ -380,6 +387,7 @@ function embedsWithSegments(bodyHtml) {
     return t;
   });
   if (dropped.length) console.log('  dropped ' + dropped.length + ' unresolvable embeds: ' + dropped.map((t) => t.key).join(', '));
+  if (droppedYt.length) console.log('  dropped ' + droppedYt.length + ' non-music YouTube embeds (not in any best-videos list)');
 
   // stable, readable order: by artist then title (locale-aware, symbols last)
   tracks.sort((a, b) => {
