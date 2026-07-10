@@ -331,7 +331,11 @@
       const root = document.documentElement;
       const acts = document.querySelector('.modem-actions');
       const nav = document.querySelector('nav');
-      if (window.innerWidth <= 720) {
+      // matchMedia (CSS viewport), NOT innerWidth: on Android innerWidth can read the
+      // expanded ~1090px layout viewport, so `innerWidth <= 720` goes false and this
+      // whole mobile branch is skipped — the button bar never gets measured and the
+      // fixed CSS fallback reserve is too short, so the buttons overlap the grid.
+      if (window.matchMedia('(max-width: 720px)').matches) {
         // Nudge the grid UP a touch: take SHIFT px off the top reserve and add it to
         // the bottom. The available height (top+bottom sum) is unchanged, so the cells
         // keep their size — only the centered grid's position slides up by SHIFT.
