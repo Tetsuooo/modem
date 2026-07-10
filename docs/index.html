@@ -542,7 +542,11 @@
           
           console.log(`Loading page: ${url}`);
           const fetchUrl = url.endsWith('.html') ? url : `${url}.html`;
-          const response = await fetch(fetchUrl);
+          // Revalidate against the server (ETag) so a deploy's updated page fragments
+          // aren't masked by an aggressive mobile-browser HTTP cache — otherwise the
+          // shell (index.html) can be new while a fetched fragment (archive.html) is
+          // stale, e.g. missing the text-size-adjust fix → "subpage opens too big".
+          const response = await fetch(fetchUrl, { cache: 'no-cache' });
           if (!response.ok) {
             throw new Error(`Failed to load ${fetchUrl}`);
           }
@@ -1271,8 +1275,8 @@
         el.hidden = false;
         if (wasHidden && anchor) placeNear(anchor);
         const item = queue[idx];
-        renderMeta(item);
         if (!widget) {
+          renderMeta(item);
           // The iframe must already be a SoundCloud player before SC.Widget() wraps it.
           iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(item.apiUrl) +
             '&auto_play=true&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
@@ -1282,16 +1286,33 @@
           };
           wait(80);
         } else {
-          widget.load(item.apiUrl, Object.assign({ auto_play: true }, LOAD_OPTS));
+          loadAndPlay(item);
         }
+      }
+
+      // Load a track and start it. On mobile, widget.load({auto_play:true}) usually
+      // does NOT begin playback — the play fires after the async load, past the tap's
+      // activation window, so the track loads but sits paused (and the old button
+      // state looks "stuck"). Loading and then calling widget.play() in the load
+      // CALLBACK (track now ready, audio element already unlocked by the first tap)
+      // is what actually starts it. We also reset the button to ▶ until PLAY fires,
+      // so if autoplay is still blocked the user sees an honest tap-to-play, not a
+      // frozen ❚❚.
+      function loadAndPlay(item) {
+        wantPlaying = true;
+        playing = false;
+        toggleBtn.textContent = '▶';
+        renderMeta(item);
+        widget.load(item.apiUrl, Object.assign({}, LOAD_OPTS, {
+          auto_play: true,
+          callback: function () { if (wantPlaying && widget) widget.play(); },
+        }));
       }
 
       function go(delta) {
         if (!queue.length || !widget) return;
         idx = (idx + delta + queue.length) % queue.length;
-        wantPlaying = true;
-        renderMeta(queue[idx]);
-        widget.load(queue[idx].apiUrl, Object.assign({ auto_play: true }, LOAD_OPTS));
+        loadAndPlay(queue[idx]);
       }
 
       // Pre-warm the SoundCloud widget on the user's FIRST interaction with the page.
@@ -1385,6 +1406,10 @@
           e.preventDefault();
           history.pushState({}, '', href);
           window.loadPageGlobal('archive');
+          // On phones the player is full-screen and would hide the show you just
+          // opened — collapse it to the bottom bar so you land straight on the
+          // subpage. Desktop/tablet keep the player as-is (it doesn't cover the page).
+          if (window.innerWidth <= 600) el.classList.add('mp-mini');
         }
       };
 
