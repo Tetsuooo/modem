@@ -588,6 +588,27 @@
         }
       });
 
+      // If the layout viewport got stuck WIDER than the visual/client width (the
+      // Android "oversized subpage" bug — inner 1090 vs client 384), re-assert the
+      // viewport meta to force it back to device-width. Cheap no-op when not expanded.
+      function fixViewportIfExpanded() {
+        if (window.innerWidth > document.documentElement.clientWidth + 2) {
+          const old = document.querySelector('meta[name="viewport"]');
+          if (old && old.parentNode) old.parentNode.removeChild(old);
+          const m = document.createElement('meta');
+          m.setAttribute('name', 'viewport');
+          m.setAttribute('content', 'width=device-width, initial-scale=1');
+          document.head.appendChild(m);
+        }
+      }
+      // Re-check across a few frames — the expansion can appear a beat after render
+      // (async embeds / layout settling).
+      function resetViewportSoon() {
+        requestAnimationFrame(fixViewportIfExpanded);
+        setTimeout(fixViewportIfExpanded, 120);
+        setTimeout(fixViewportIfExpanded, 450);
+      }
+
       async function loadPage(url) {
         try {
           // Clean up home page social icons before loading new page
@@ -653,6 +674,11 @@
             }
             content.appendChild(newScript);
           });
+
+          // Android sometimes leaves the layout viewport stuck at a wide
+          // desktop-fallback width after a navigation, rendering the just-loaded
+          // subpage oversized (inner ≫ clientWidth). Snap it back to device-width.
+          resetViewportSoon();
 
           if (url === 'year-end-lists.html' || url === 'year-end-lists') {
             initializeYearEndListsHover();

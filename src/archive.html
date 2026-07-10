@@ -116,7 +116,10 @@
     /* real "/" characters that stretch to fill; clip ONLY the horizontal overflow
        (overflow-x: clip leaves the vertical axis visible, so glyphs aren't cut —
        unlike overflow: hidden, which clips both axes) */
-    .modem-body .seg-marker .seg-slashes { flex: 1 1 0; min-width: 0; overflow-x: clip; overflow-y: visible; white-space: nowrap; margin-right: 0.35rem; }
+    /* contain: inline-size makes the element's width independent of its (very long,
+       nowrap) slash content, so the 1000px+ text can never transiently overflow and
+       push the layout viewport wide (which rendered subpages oversized on Android). */
+    .modem-body .seg-marker .seg-slashes { flex: 1 1 0; min-width: 0; overflow: hidden; contain: inline-size; white-space: nowrap; margin-right: 0.35rem; }
     .modem-body .seg-marker .seg-tags { flex: 0 0 auto; white-space: nowrap; }
     /* early-show heading: name + hyperlinked slashes on the left (kept, wraps if
        long), the same chips pinned to the right edge — like the plain headings */
