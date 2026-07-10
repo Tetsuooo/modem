@@ -344,24 +344,28 @@
       });
     })();
 
-    // On phones the action buttons are a fixed bottom bar; reserve exactly its real
-    // height (which varies with wrapping / safe-area / font size) below the grid so
-    // it can never overlay the bottom row. On wider screens the buttons are a side
-    // column, so clear the override and fall back to the CSS default reserve.
-    function syncBottomReserve() {
-      const acts = document.querySelector('.modem-actions');
+    // Reserve EXACTLY the fixed nav's height at the top and the button-bar's height
+    // at the bottom, so the grid centers in the true free space between them — no
+    // wasted top buffer (grid was sitting too low) and never overlapping the buttons.
+    // Measured, so it's robust to font-boosting / safe-area / wrapping. On wider
+    // screens the buttons are a side column, so clear the overrides (CSS defaults).
+    function syncReserves() {
       const root = document.documentElement;
-      if (acts && window.innerWidth <= 720) {
-        root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12) + 'px');
+      const acts = document.querySelector('.modem-actions');
+      const nav = document.querySelector('nav');
+      if (window.innerWidth <= 720) {
+        if (nav) root.style.setProperty('--reserve-top', (Math.ceil(nav.getBoundingClientRect().bottom) + 8) + 'px');
+        if (acts) root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12) + 'px');
       } else {
+        root.style.removeProperty('--reserve-top');
         root.style.removeProperty('--reserve-bottom');
       }
     }
-    window.addEventListener('load', syncBottomReserve);
-    window.addEventListener('resize', syncBottomReserve);
-    window.addEventListener('orientationchange', syncBottomReserve);
-    syncBottomReserve();
-    setTimeout(syncBottomReserve, 300); // re-measure once fonts/layout settle
+    window.addEventListener('load', syncReserves);
+    window.addEventListener('resize', syncReserves);
+    window.addEventListener('orientationchange', syncReserves);
+    syncReserves();
+    setTimeout(syncReserves, 300); // re-measure once fonts/layout settle
   </script>
 </body>
 </html>
