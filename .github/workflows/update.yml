@@ -1,0 +1,67 @@
+name: modem — auto-update & deploy
+
+# Three ways this runs:
+#   • schedule  — twice a week, poll the podcast feed and scrape any new shows
+#   • dispatch  — manual "Run workflow" button (also good for a first cold run)
+#   • push      — rebuild docs/ whenever src/ changes (so pushing source auto-deploys)
+on:
+  schedule:
+    - cron: '23 7 * * 1,4'   # Mon & Thu 07:23 UTC — shows are bi-weekly; this catches them within days
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: write            # needed to commit the rebuilt docs/ + new show data
+
+concurrency:
+  group: modem-update
+  cancel-in-progress: false  # never interrupt a scrape/commit mid-flight
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Persist the scrape/resolve cache between runs so build-track-index only
+      # fetches genuinely new embeds. restore-keys pulls the most recent cache;
+      # a fresh key each run saves the updated one.
+      - name: Cache scrape/resolve data
+        uses: actions/cache@v4
+        with:
+          path: scripts/.cache
+          key: modem-cache-${{ github.run_id }}
+          restore-keys: |
+            modem-cache-
+
+      # Only on schedule/dispatch: check the feed and scrape new shows through the
+      # full pipeline. On a plain push we just rebuild docs/ from the current source.
+      - name: Check feed & scrape new shows
+        if: github.event_name != 'push'
+        run: node scripts/auto-update.js
+
+      - name: Build docs/
+        run: npm run build
+
+      - name: Commit & push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed — skipping commit."
+          else
+            git commit -m "Auto-update: new shows + rebuild [skip ci]"
+            git push
+          fi

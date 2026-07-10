@@ -15,6 +15,7 @@
     }
   </script>
   <style>
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* no iOS text auto-inflation */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -141,14 +142,21 @@
   </div>
 
   <script>
-    // Calculate show count based on bi-weekly releases
-    const getCurrentNumber = () => {
-      const startDate = new Date('2017-01-09'); // Fixed: Use actual start date
-      const today = new Date();
-      const diffInDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      const additionalNumbers = Math.floor(diffInDays / 14);
-      const calculatedNumber = 1 + additionalNumbers; // Start from show 1
-      return calculatedNumber - 6; // Account for 6 skipped shows
+    // Show count = the highest show number actually in the archive. This is the
+    // source of truth (auto-updates as new shows are scraped in), so it's always
+    // exact — unlike the old bi-weekly date formula, which drifted a week whenever
+    // a show skipped. Falls back to a rough bi-weekly estimate only if offline.
+    const getShowCount = async () => {
+      try {
+        const res = await fetch('./assets/modem-archive.json', { cache: 'no-cache' });
+        const data = await res.json();
+        const nums = (data.records || [])
+          .filter((r) => r.type === 'show' && typeof r.number === 'number')
+          .map((r) => r.number);
+        if (nums.length) return Math.max(...nums);
+      } catch (e) { /* fall through to the offline estimate */ }
+      const days = Math.floor((Date.now() - new Date('2017-01-09')) / (1000 * 60 * 60 * 24));
+      return 1 + Math.floor(days / 14) - 6;
     };
 
     // Calculate year count based on January 9th anniversaries
@@ -193,23 +201,22 @@
 
     // Function to update all counts
     window.updateCounts = () => {
-      const showCount = getCurrentNumber();
-      const yearCount = getCurrentYearCount();
-      
-      const showCountElement = document.getElementById('show-count');
       const yearCountElement = document.getElementById('year-count');
-      const mixCountElement = document.getElementById('mix-count');
-      
-      if (showCountElement) {
-        showCountElement.textContent = showCount;
-      }
-      
       if (yearCountElement) {
-        yearCountElement.textContent = yearCount;
+        yearCountElement.textContent = getCurrentYearCount();
       }
+
+      // Show count comes from the archive data (async, always accurate)
+      getShowCount().then(showCount => {
+        const showCountElement = document.getElementById('show-count');
+        if (showCountElement && showCount != null) {
+          showCountElement.textContent = showCount;
+        }
+      });
 
       // Update mix count asynchronously
       getMixCount().then(mixCount => {
+        const mixCountElement = document.getElementById('mix-count');
         if (mixCountElement) {
           mixCountElement.textContent = mixCount;
         }

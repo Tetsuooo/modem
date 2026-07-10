@@ -76,6 +76,19 @@ function youtubeId(src) {
   );
 }
 
+// The track key is derivable from the src ALONE (no network) — this lets us reuse
+// metadata already resolved in a previous build (carried forward in data.tracks)
+// instead of re-fetching every embed. Must mirror the `key` each resolver builds.
+function keyOf(src, kind) {
+  if (kind === 'bandcamp') {
+    const { albumId, trackId } = bandcampIds(src);
+    return (albumId || trackId) ? 'bc:' + (albumId || '-') + ':' + (trackId || '-') : null;
+  }
+  if (kind === 'soundcloud') { const id = soundcloudId(src); return id ? 'sc:' + id : null; }
+  if (kind === 'youtube') { const id = youtubeId(src); return id ? 'yt:' + id : null; }
+  return null;
+}
+
 // A Bandcamp release is a COMPILATION when the label/curator uploaded it under
 // one name so every track's `artist` is that name and the real artist hides in
 // the title as "Artist - Track". Detect it by an explicit V/A marker, or by all
@@ -244,6 +257,23 @@ function embedsWithSegments(bodyHtml) {
   const index = new Map(); // key → track entry
   let liveHits = 0;
   let processed = 0;
+  let reused = 0;
+
+  // Incremental: reuse metadata already resolved in a previous build (the scraper
+  // carries the old data.tracks forward), so we only hit the network for genuinely
+  // NEW embeds. Keeps CI fast AND safe — a rate-limited re-fetch can never drop a
+  // track that was already resolved. `--fresh` bypasses this and re-resolves all.
+  const carried = new Map();
+  if (!FRESH) {
+    for (const t of data.tracks || []) {
+      if (t && t.key && (t.title || t.artist || t.artUrl || t.link)) {
+        carried.set(t.key, {
+          key: t.key, kind: t.kind, title: t.title, artist: t.artist, artUrl: t.artUrl,
+          link: t.link, duration: t.duration, album: t.album, albumUrl: t.albumUrl, comp: t.comp,
+        });
+      }
+    }
+  }
 
   for (const rec of data.records) {
     const segLabels = rec.segments || [];
@@ -251,15 +281,21 @@ function embedsWithSegments(bodyHtml) {
       const kind = kindOf(src);
       if (!kind) continue;
       processed++;
-      const live = { hit: false };
-      let meta =
-        kind === 'bandcamp' ? resolveBandcamp(src, live)
-        : kind === 'soundcloud' ? resolveSoundcloud(src, live)
-        : resolveYoutube(src, live);
-      if (!meta) meta = { key: kind + ':' + src, kind };
-      if (live.hit) {
-        liveHits++;
-        await sleep(450); // be polite on real fetches only
+      const key = keyOf(src, kind);
+      let meta = key ? carried.get(key) : null;
+      if (meta) {
+        reused++; // metadata already known from a previous build — no network
+      } else {
+        const live = { hit: false };
+        meta =
+          kind === 'bandcamp' ? resolveBandcamp(src, live)
+          : kind === 'soundcloud' ? resolveSoundcloud(src, live)
+          : resolveYoutube(src, live);
+        if (!meta) meta = { key: kind + ':' + src, kind };
+        if (live.hit) {
+          liveHits++;
+          await sleep(450); // be polite on real fetches only
+        }
       }
 
       const segLabel = seg != null && segLabels[seg] != null ? segLabels[seg] : null;
@@ -366,6 +402,6 @@ function embedsWithSegments(bodyHtml) {
   console.log(
     '\nWrote ' + tracks.length + ' unique tracks (' + withTitle + ' titled, ' +
       withArtist + ' with artist, ' + withArt + ' with art) from ' + processed +
-      ' embeds, ' + liveHits + ' live fetches → ' + path.relative(ROOT, FILE)
+      ' embeds, ' + reused + ' reused, ' + liveHits + ' live fetches → ' + path.relative(ROOT, FILE)
   );
 })();

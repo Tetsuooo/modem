@@ -5,7 +5,8 @@
         !document.querySelector('nav') && 
         window === window.top) {
       window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
-    }</script><style>body {
+    }</script><style>html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* no iOS text auto-inflation */
+    body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: transparent; /* Transparent to show the animation */

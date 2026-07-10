@@ -7,6 +7,9 @@
   <link rel="icon" href="assets/modem.ico" type="image/x-icon">
   <title>modem</title>
   <style>
+    /* stop iOS Safari from auto-inflating text on mobile (the "super oversized"
+       show pages) — desktop/emulators don't do this, only real iOS does. */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -1120,11 +1123,14 @@
       /* full-screen only: a "pull-down" handle centered at the top that
          collapses the player into the bottom bar */
       .modem-player .mp-min {
-        display: block; position: absolute; top: 0.3rem; left: 50%; transform: translateX(-50%);
-        z-index: 4; border: 0; background: transparent; color: #000; cursor: pointer;
-        font-size: 2.2rem; line-height: 1; padding: 0.2rem 1rem;
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        position: absolute; top: 0.7rem; left: 50%; transform: translateX(-50%);
+        z-index: 4; cursor: pointer;
+        border: 1.5px solid #000; border-radius: 999px; background: #fff; color: #000;
+        font-size: 0.9rem; font-weight: bold; text-transform: lowercase; line-height: 1;
+        padding: 0.5rem 1.1rem;
       }
-      .modem-player .mp-min:hover { color: #888; }
+      .modem-player .mp-min:hover { background: #ffff00; color: #000; }
 
       /* ---- minimized: a slim bar pinned to the bottom of the screen ---- */
       .modem-player.mp-mini {
@@ -1164,7 +1170,7 @@
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
-    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄</button>
+    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄ minimize</button>
     <button class="mp-close" type="button" aria-label="close">×</button>
     <span class="mp-art-wrap">
       <a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a>
@@ -1212,7 +1218,7 @@
       const closeBtn = el.querySelector('.mp-close');
       const minBtn = el.querySelector('.mp-min');
       const shufBtn = el.querySelector('#mp-shuffle');
-      let durationMs = 0, shuffleOn = true, wantPlaying = false;
+      let durationMs = 0, shuffleOn = true, wantPlaying = false, playing = false;
       const fmtT = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
       let widget = null, queue = [], idx = 0;
@@ -1329,9 +1335,10 @@
       }
 
       function bindWidget() {
+        if (widget) return;                    // never bind twice (warm + start can race)
         widget = SC.Widget(iframe);
-        widget.bind(SC.Widget.Events.PLAY, () => { toggleBtn.textContent = '❚❚'; wantPlaying = true; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; resolvePermalink(); widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } }); });
-        widget.bind(SC.Widget.Events.PAUSE, () => { toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        widget.bind(SC.Widget.Events.PLAY, () => { playing = true; toggleBtn.textContent = '❚❚'; wantPlaying = true; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; resolvePermalink(); widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } }); });
+        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
         widget.bind(SC.Widget.Events.FINISH, () => go(1));
         widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
           setProgress(e.relativePosition);
@@ -1390,16 +1397,46 @@
         widget.load(queue[idx].apiUrl, Object.assign({ auto_play: true }, LOAD_OPTS));
       }
 
-      toggleBtn.onclick = () => { if (!widget) return; widget.isPaused((p) => { if (p) { widget.play(); wantPlaying = true; } else { widget.pause(); wantPlaying = false; } }); };
+      // Pre-warm the SoundCloud widget on the user's FIRST interaction with the page.
+      // Mobile browsers only start audio when play/load is called synchronously inside
+      // a user gesture on an ALREADY-BOUND widget — so building the iframe lazily at
+      // play-time means the first random track can't auto-start (autoplay blocked until
+      // the widget exists). Warming binds the widget (silent, hidden, auto_play:false)
+      // AND loads the archive data early, so by the time a play button is tapped both
+      // withData() and start() run synchronously in that tap → the first track plays.
+      let warmed = false;
+      function warmWidget() {
+        if (warmed || widget) return;
+        warmed = true;
+        withData((d) => {
+          if (widget) return;
+          const seed = trackItems(d).concat(showItems(d)).find((x) => x && x.apiUrl);
+          if (!seed) return;
+          iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(seed.apiUrl) +
+            '&auto_play=false&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
+          const wait = (n) => { if (window.SC && SC.Widget) bindWidget(); else if (n > 0) setTimeout(() => wait(n - 1), 100); };
+          wait(80);
+        });
+      }
+      ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
+        window.addEventListener(ev, warmWidget, { once: true, passive: true }));
+
+      // Call play()/pause() SYNCHRONOUSLY inside the tap — do NOT wait on an async
+      // isPaused() round-trip first, or mobile browsers drop the user-activation and
+      // silently block the audio. `playing` is kept in sync by the PLAY/PAUSE events.
+      toggleBtn.onclick = () => { if (!widget) return; if (playing) { widget.pause(); wantPlaying = false; } else { widget.play(); wantPlaying = true; } };
       prevBtn.onclick = () => go(-1);
       nextBtn.onclick = () => go(1);
       closeBtn.onclick = () => { if (widget) widget.pause(); wantPlaying = false; el.hidden = true; el.classList.remove('mp-mini'); };
       // phones: collapse the full-screen player into a bottom bar…
-      minBtn.onclick = () => el.classList.add('mp-mini');
+      // stopPropagation is CRITICAL: without it this click bubbles to the el
+      // handler below, which — seeing mp-mini now set — instantly expands it back
+      // (so minimize appeared to do nothing).
+      minBtn.onclick = (e) => { e.stopPropagation(); el.classList.add('mp-mini'); };
       // …and tap the bar (anywhere but the controls / scrubber) to expand it back
       el.addEventListener('click', (e) => {
         if (!el.classList.contains('mp-mini')) return;
-        if (e.target.closest('.mp-controls, .mp-bar')) return;
+        if (e.target.closest('.mp-controls, .mp-bar, .mp-min, .mp-close')) return;
         e.preventDefault();
         el.classList.remove('mp-mini');
       });

@@ -6,7 +6,10 @@
       // Preserve the #hash (e.g. #modem-11 or #tag=…) across the SPA redirect so a
       // directly-visited / shared / refreshed deep link still lands on the right show.
       window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')) + window.location.hash);
-    }</script><style>body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
+    }</script><style>/* stop iOS Safari auto-inflating text on mobile (the "super oversized" show
+       pages) — only real iOS does this, which is why emulators don't reproduce it. */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
     .content { box-sizing: border-box; width: 100%; }
 
     /* ===================== DETAIL (on-site archival page) =====================
@@ -137,6 +140,9 @@
     .modem-body iframe[src*="bandcamp"] { display: block; width: 100%; max-width: var(--embed-w); height: 120px; }
     .modem-body iframe[src*="bandcamp"][src*="size=small"] { height: 42px; }
     .modem-body iframe[src*="youtube"] { width: 100%; aspect-ratio: 16 / 9; height: auto; }
+    /* Buffer + subtle hairline between the music tracklist and the trailing
+       YouTube "video" section (the appended Drupal video field). */
+    .modem-body .modem-video-divider { margin: 3.25rem 0 2.25rem; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.18); }
     @keyframes segflash { 0% { background: #ffff00; } 100% { background: transparent; } }
     .seg-flash { animation: segflash 1.8s ease-out; }
 
@@ -345,6 +351,60 @@
         });
       }
 
+      // The 2020–2023 shows repeat every SoundCloud embed's "artist · title" as a
+      // hyperlink caption in the <p> right beneath the player (radiostudent's own
+      // markup). Once the player renders, that caption is pure redundancy — drop it.
+      // BUT only when the track is LIVE: a dead track's embed is a blank grey box,
+      // and then the caption is the sole surviving record of what was there (~26% of
+      // show embeds are dead source-side), so those stay. Liveness = the track id is
+      // present in data.tracks (build-track-index drops embeds whose oEmbed 404s).
+      function stripRedundantScCaptions(body) {
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        const liveScIds = new Set(
+          tracks.filter((t) => t.kind === 'soundcloud' && t.key)
+                .map((t) => String(t.key).replace(/^sc:/, ''))
+        );
+        // A caption <p>: no embed, ≥1 link, EVERY link points to soundcloud.com, and
+        // the only text outside the links is separators (·, -, /, whitespace).
+        const isScCaption = (el) => {
+          if (!el || el.tagName !== 'P' || el.querySelector('iframe')) return false;
+          const links = el.querySelectorAll('a');
+          if (!links.length) return false;
+          if (!Array.prototype.every.call(links, (a) => /soundcloud\.com/i.test(a.getAttribute('href') || ''))) return false;
+          const clone = el.cloneNode(true);
+          clone.querySelectorAll('a').forEach((a) => a.remove());
+          return (clone.textContent || '').replace(/[\s·|/\\,.–—-]+/g, '') === '';
+        };
+        body.querySelectorAll('iframe').forEach((f) => {
+          const id = ((f.getAttribute('src') || '').match(/tracks\/(\d+)/) || [])[1];
+          if (!id || !liveScIds.has(id)) return;         // not a live SC track → keep any caption
+          const p = f.closest('p') || f.parentElement;
+          const cap = p && p.nextElementSibling;
+          if (isScCaption(cap)) cap.remove();
+        });
+      }
+
+      // The Drupal "video" field's YouTube clips are appended after the whole music
+      // tracklist, so they read as a trailing "video" section. Set it apart from the
+      // music embeds with a little breathing room + a subtle hairline. Boundary = the
+      // first YouTube embed with no music (SoundCloud/Bandcamp) embed after it.
+      function separateVideoSection(body) {
+        const embeds = Array.prototype.slice.call(body.querySelectorAll('iframe'));
+        if (!embeds.length) return;
+        const isYT = (f) => /youtube\.com|youtu\.be/i.test(f.getAttribute('src') || '');
+        const isMusic = (f) => /soundcloud\.com\/player|bandcamp\.com/i.test(f.getAttribute('src') || '');
+        let lastMusic = -1;
+        embeds.forEach((f, i) => { if (isMusic(f)) lastMusic = i; });
+        if (lastMusic < 0) return;                       // no music embeds → nothing to divide
+        const firstVid = embeds.find((f, i) => i > lastMusic && isYT(f));
+        if (!firstVid) return;                           // no trailing video section
+        const p = firstVid.closest('p') || firstVid.parentElement;
+        if (!p || !p.parentNode) return;
+        const hr = document.createElement('div');
+        hr.className = 'modem-video-divider';
+        p.parentNode.insertBefore(hr, p);
+      }
+
       // previous/next show (or list) by number, within the same type
       function neighbors(rec, records) {
         const same = (records || []).filter((r) => r.type === rec.type);
@@ -475,7 +535,7 @@
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
         const body = detailInner.querySelector('.modem-body');
         let listTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else injectSegTags(body, rec); }
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { stripRedundantScCaptions(body); separateVideoSection(body); injectSegTags(body, rec); } }
         initPlayer();
 
         const nb = neighbors(rec, records);

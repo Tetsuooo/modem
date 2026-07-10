@@ -17,9 +17,14 @@ const fs = require('fs');
 const path = require('path');
 
 const CAND = path.join(__dirname, 'sc-match-candidates.json');
+const APPROVALS = path.join(__dirname, 'approvals.json');
 const OUT = path.join(__dirname, 'sc-match-review.html');
 
 const all = JSON.parse(fs.readFileSync(CAND, 'utf8'));
+// Embed the committed approvals so the page ALWAYS seeds from them — otherwise a
+// stale tab (loaded before a file-side change like auto-confirm-matches.js) would
+// POST an incomplete set to /save-approvals and clobber those decisions.
+const fileApprovals = fs.existsSync(APPROVALS) ? JSON.parse(fs.readFileSync(APPROVALS, 'utf8')) : {};
 // Show every Bandcamp track so a match can be picked OR pasted in manually.
 // Order: review (real decisions) → auto (pre-approved) → weak/none (mostly for
 // pasting a link you found yourself).
@@ -100,7 +105,11 @@ const html = `<!doctype html>
   const DATA = ${JSON.stringify(data)};
   const COUNTS = ${JSON.stringify(counts)};
   const KEY = 'modem-sc-approvals-v1';
-  const approvals = JSON.parse(localStorage.getItem(KEY) || '{}');
+  const FILE_APPROVALS = ${JSON.stringify(fileApprovals)};
+  // Start from the committed approvals.json, then let THIS browser's localStorage
+  // edits win on top. Guarantees file-side decisions (auto-confirms) are never lost
+  // when the page saves back.
+  const approvals = Object.assign({}, FILE_APPROVALS, JSON.parse(localStorage.getItem(KEY) || '{}'));
   // pre-approve the airtight "auto" tier (user can still override)
   DATA.forEach((o) => { if (o.tier === 'auto' && !(o.key in approvals)) approvals[o.key] = o.suggest; });
   let mode = 'todo', idx = 0, query = ''; // 'todo' = undecided queue, 'done' = decided backlog

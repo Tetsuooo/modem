@@ -5,13 +5,26 @@
         !document.querySelector('nav') && 
         window === window.top) {
       window.location.replace('/?redirect=' + encodeURIComponent(window.location.pathname.replace(/^\/|\.html$/g, '')));
-    }</script><style>body {
+    }</script><style>html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* no iOS text auto-inflation */
+    :root {
+      /* ---- radio-show grid layout knobs — ALL adjustable, no magic px ----
+         Lower --grid-fill-v or --grid-cols-fit ⇒ bigger cells (grid fills more of
+         the screen). The reserves are the breathing room that clears the nav / the
+         mobile button bar; keep them in rem so they scale with the base font. */
+      --reserve-top: 5rem;       /* clears the fixed nav at the top */
+      --reserve-bottom: 1.5rem;  /* breathing room below the grid */
+      --reserve-side: 1.5rem;    /* left/right breathing room */
+      --grid-fill-v: 1.2;        /* vertical density — was 1.3; lower = bigger */
+      --grid-cols-fit: 13;       /* width divisor: 10 cols + column-gaps + margin (fit-h usually binds anyway) */
+    }
+    body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: transparent; /* Transparent to show the animation */
       min-height: 100vh;
-      overflow-x: hidden;
-      overflow-y: auto; /* Scroll vertically when the grid is taller than the window */
+      /* The grid always scales to fit the viewport (see --cell), so nothing ever
+         overflows — no scroll bar on ANY device (this is what the Surface Pro needs). */
+      overflow: hidden;
     }
     .content {
       box-sizing: border-box;
@@ -20,21 +33,20 @@
       justify-content: center;
       min-height: 100vh;
       width: 100%;
-      /* Top padding clears the fixed nav so the top row stays visible when scrolled up */
-      padding: 3rem 0 1.5rem;
+      /* padding matches the reserves so the centered grid clears the nav + bottom bar */
+      padding: var(--reserve-top) var(--reserve-side) var(--reserve-bottom);
     }
     .number-grid {
       /* --rows is set by JS to the actual number of rows in the grid.
-         --min-cell is the smallest a cell may get: 0 on desktop (pure fit-to-screen),
-         larger on touch (below) so numbers stay big even if that means scrolling. */
+         --min-cell is a readability FLOOR: 0 = pure fit-to-screen (never scrolls).
+         Raise it only if you'd rather keep numbers big AND accept a scroll bar. */
       --rows: 25;
       --min-cell: 0px;
-      /* Tallest cell that still lets every row fit the viewport height (below the fixed nav).
-         The 1.3 leaves tasteful breathing room above/below (grid fills ~80% of the height). */
-      --fit-h: calc((100vh - 5.5rem) / (var(--rows) * 1.3));
-      /* Widest cell that still keeps all 10 columns within the viewport (never scroll sideways). */
-      --fit-w: calc((100vw - 1.5rem) / 14);
-      /* Fit both axes; on touch never shrink below the readable minimum. */
+      /* Tallest cell that still lets every row fit the height between the reserves. */
+      --fit-h: calc((100vh - var(--reserve-top) - var(--reserve-bottom)) / (var(--rows) * var(--grid-fill-v)));
+      /* Widest cell that still keeps all 10 columns within the viewport width. */
+      --fit-w: calc((100vw - var(--reserve-side) * 2) / var(--grid-cols-fit));
+      /* Fit both axes; never below the readable floor. */
       --cell: min(var(--fit-w), max(var(--min-cell), var(--fit-h)));
 
       display: grid;
@@ -93,17 +105,9 @@
       }
     }
 
-    /* Touch devices (phones/tablets): keep numbers big and readable; scroll only if they can't all fit. */
-    @media (hover: none), (pointer: coarse) {
-      body { overflow-y: auto; }
-      .number-grid { --min-cell: 2.5rem; }
-      .content { padding-top: 4.5rem; } /* clear the (larger) touch nav when scrolled to the top */
-    }
-
-    /* Pointer devices (desktop): never scroll — the grid always scales to fit the screen neatly. */
-    @media (hover: hover) and (pointer: fine) {
-      body { overflow: hidden; }
-    }
+    /* Fit-to-screen is now universal (no pointer-type branching) — a big touch
+       screen like the Surface Pro scales to fit exactly like a desktop, instead of
+       being forced to oversized cells that overflow into a scroll bar. */
 
     /* floating white action buttons — bigger, playfully staggered to the left of the grid */
     .modem-actions {
@@ -133,10 +137,19 @@
       .modem-actions .modem-action:nth-child(3) { margin-left: 0.5rem; }
     }
 
-    /* on phones: keep them FLOATING (no bar), just smaller and tucked bottom-left */
+    /* on phones: the three buttons become a centered row pinned to the very bottom;
+       the grid reserves room for them (--reserve-bottom) so they never overlay it. */
     @media (max-width: 720px) {
-      .modem-actions { top: auto; bottom: 0.7rem; left: 0.7rem; right: auto; transform: none; align-items: flex-start; gap: 0.4rem; }
-      .modem-actions .modem-action { margin-left: 0 !important; transform: none !important; font-size: 0.72rem; padding: 0.3rem 0.7rem; box-shadow: 0 2px 0 #000; }
+      :root { --reserve-bottom: 3.6rem; }
+      .modem-actions {
+        top: auto; bottom: 0; left: 0; right: 0; transform: none;
+        flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center;
+        gap: 0.4rem; padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+      }
+      .modem-actions .modem-action {
+        margin-left: 0 !important; transform: none !important;
+        font-size: 0.64rem; padding: 0.3rem 0.62rem; box-shadow: 0 2px 0 #000;
+      }
     }</style></head><body><div class="content"><div class="number-grid"></div><div class="modem-actions"><button type="button" class="modem-action" data-act="shows">play random show</button> <button type="button" class="modem-action" data-act="tracks">play random track</button> <button type="button" class="modem-action" data-act="search"><span class="mag">⌕</span> search</button></div></div><script>// Clean up any interference from other pages
     function cleanupInterference() {
       // Reset any overridden functions that might interfere
