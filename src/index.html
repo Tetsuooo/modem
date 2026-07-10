@@ -1109,9 +1109,14 @@
     @media (max-width: 600px) {
       .modem-player {
         left: 0; top: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; height: 100dvh;
-        background: #fff; padding: 3rem 1.25rem 2rem; gap: 0.9rem; cursor: default;
+        background: #fff; padding: 2rem 1.25rem 1.25rem; gap: 0.9rem; cursor: default;
         justify-content: center;
       }
+      /* flexible spacers pull the ARTWORK toward the vertical middle (more room above
+         than below) so the controls flow beneath a centered cover — instead of the
+         whole block sitting high with a big empty gap at the bottom. Not in mini mode. */
+      .modem-player:not(.mp-mini)::before { content: ''; flex: 2.4 1 0; min-height: 0; }
+      .modem-player:not(.mp-mini)::after  { content: ''; flex: 1 1 0; min-height: 0; }
       .modem-player .mp-art-wrap { width: min(74vw, 42vh); align-self: center; margin: 0; }
       .modem-player .mp-panel { position: static; width: 100%; max-width: 440px; align-self: center; padding: 0; background: transparent; }
       .modem-player .mp-title { white-space: normal; text-align: center; padding: 0; font-size: 1.25rem; line-height: 1.25; }
