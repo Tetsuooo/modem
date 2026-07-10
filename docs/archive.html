@@ -117,8 +117,10 @@
     /* name-stripped: the linked slash runs sit at content width, a filler slash run
        stretches out to the chips. Links blend in as plain slashes but stay clickable. */
     .modem-body .seg-marker.seg-keep .seg-links { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; }
-    .modem-body .seg-marker.seg-keep .seg-links a { color: inherit; text-decoration: none; }
-    .modem-body .seg-marker.seg-keep .seg-links a:hover { text-decoration: underline; }
+    /* linked slash-runs blend in (same black) but keep a faint underline so they're
+       discoverable/tappable — including on mobile, where there's no hover. */
+    .modem-body .seg-marker.seg-keep .seg-links a { color: inherit; text-decoration: underline; text-decoration-color: rgba(0,0,0,0.4); text-underline-offset: 2px; }
+    .modem-body .seg-marker.seg-keep .seg-links a:hover { text-decoration-color: #000; }
     .modem-body .seg-marker.seg-keep .seg-tags { margin-left: 0; }
     .modem-body .seg-marker .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
     .modem-body .seg-marker .chip:hover { background: #ffff00; }
