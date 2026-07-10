@@ -204,6 +204,14 @@
       preview.className = 'preview-image';
       document.body.appendChild(preview);
 
+      // The "Bag of Toys" anniversary specials (100, 200) are compilations released
+      // on Bandcamp — those grid numbers link straight to the album (external), not
+      // the on-site archive page.
+      const BANDCAMP_DIRECT = {
+        100: 'https://modemodemodem.bandcamp.com/album/bag-of-toys',
+        200: 'https://modemodemodem.bandcamp.com/album/bag-of-toys-2',
+      };
+
       // Fill grid row by row, starting from the bottom
       for (let row = rows - 1; row >= 0; row--) {
         for (let col = 0; col < numbersPerRow; col++) {
@@ -219,11 +227,21 @@
             else slug = 'modem-' + (number < 10 ? `0${number}` : number);
             link.dataset.modem = slug;
             link.dataset.ext = 'https://radiostudent.si/glasba/modem/' + slug;
-            // DEFAULT to the on-site archive so tapping a number never races
-            // markLocalArchiveShows() to the external site (the old default sent you
-            // to radiostudent until a 5MB re-fetch finished). markLocalArchiveShows()
-            // now only DOWNGRADES a not-yet-mirrored show back to its radiostudent url.
-            link.href = '/' + slug;
+            if (BANDCAMP_DIRECT[number]) {
+              // 100 / 200 → straight to the Bandcamp compilation (opens externally).
+              // data-direct pins it so markLocalArchiveShows() leaves it alone.
+              link.href = BANDCAMP_DIRECT[number];
+              link.target = '_blank';
+              link.rel = 'noopener';
+              link.dataset.direct = '1';
+              link.title = 'listen to the compilation on Bandcamp';
+            } else {
+              // DEFAULT to the on-site archive so tapping a number never races
+              // markLocalArchiveShows() to the external site (the old default sent you
+              // to radiostudent until a 5MB re-fetch finished). markLocalArchiveShows()
+              // now only DOWNGRADES a not-yet-mirrored show back to its radiostudent url.
+              link.href = '/' + slug;
+            }
             link.textContent = number;
             link.style.textDecoration = 'none';
             link.style.color = 'black';
@@ -267,6 +285,7 @@
           (data.records || []).filter((r) => r.type === 'show').map((r) => r.slug)
         );
         document.querySelectorAll('.number-grid a[data-modem]').forEach((a) => {
+          if (a.dataset.direct) return; // 100/200 pinned to their Bandcamp compilation
           if (local.has(a.dataset.modem)) {
             a.href = '/' + a.dataset.modem;
             a.classList.add('in-archive');
