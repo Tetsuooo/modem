@@ -150,7 +150,10 @@
     /* on phones: the three buttons become a centered row pinned to the very bottom;
        the grid reserves room for them (--reserve-bottom) so they never overlay it. */
     @media (max-width: 720px) {
-      :root { --reserve-bottom: 3.6rem; }
+      /* less clearance up top (mobile nav is short), more down bottom for the button
+         bar; JS (syncBottomReserve) then refines --reserve-bottom to the bar's real
+         measured height so it never overlays the grid's bottom row. */
+      :root { --reserve-top: 4rem; --reserve-bottom: 4.5rem; }
       .modem-actions {
         top: auto; bottom: 0; left: 0; right: 0; transform: none;
         flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center;
@@ -339,6 +342,25 @@
         else if (act === 'tracks') window.modemPlayer.playTracks(b);
       });
     })();
+
+    // On phones the action buttons are a fixed bottom bar; reserve exactly its real
+    // height (which varies with wrapping / safe-area / font size) below the grid so
+    // it can never overlay the bottom row. On wider screens the buttons are a side
+    // column, so clear the override and fall back to the CSS default reserve.
+    function syncBottomReserve() {
+      const acts = document.querySelector('.modem-actions');
+      const root = document.documentElement;
+      if (acts && window.innerWidth <= 720) {
+        root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12) + 'px');
+      } else {
+        root.style.removeProperty('--reserve-bottom');
+      }
+    }
+    window.addEventListener('load', syncBottomReserve);
+    window.addEventListener('resize', syncBottomReserve);
+    window.addEventListener('orientationchange', syncBottomReserve);
+    syncBottomReserve();
+    setTimeout(syncBottomReserve, 300); // re-measure once fonts/layout settle
   </script>
 </body>
 </html>
