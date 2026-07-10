@@ -1404,6 +1404,11 @@
         const href = showEl.getAttribute('href') || '';
         if (href.indexOf('/archive') === 0 && window.loadPageGlobal) {
           e.preventDefault();
+          // stopPropagation is CRITICAL: without it this click bubbles to the el
+          // handler below which, seeing mp-mini now set, instantly expands it back
+          // (so the player never minimized). Also avoids a duplicate loadPage from
+          // the shell's link interceptor.
+          e.stopPropagation();
           history.pushState({}, '', href);
           window.loadPageGlobal('archive');
           // On phones the player is full-screen and would hide the show you just
