@@ -271,7 +271,13 @@
       const backBtn = detailView.querySelector('.detail-back');
       const prevBtn = document.getElementById('detail-prev');
       const nextBtn = document.getElementById('detail-next');
-      function goToSlug(slug) { if (slug) location.hash = slug; }
+      function goToSlug(slug) {
+        if (!slug) return;
+        // Clean path URL (/modem-142); re-route in place. The shell's popstate
+        // handler re-routes when the user navigates back across these entries.
+        history.pushState({}, '', '/' + slug);
+        withData(route);
+      }
       prevBtn.onclick = () => goToSlug(prevBtn.dataset.slug);
       nextBtn.onclick = () => goToSlug(nextBtn.dataset.slug);
 
@@ -281,6 +287,12 @@
       }
       function slugFromHash() {
         return decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
+      }
+      // Clean-URL slug taken straight from the path (/modem-142 → "modem-142").
+      // "archive" (the bare search route) is not a record slug.
+      function slugFromPath() {
+        const p = decodeURIComponent(location.pathname || '').replace(/^\/|\/$/g, '').trim();
+        return (p && p !== 'archive') ? p : '';
       }
 
       // ---- custom full-show player over a hidden SoundCloud widget ----
@@ -579,7 +591,7 @@
         // Open the floating search overlay filtered to this tag (layers over the
         // current page); fall back to the in-page search route if it's absent.
         if (window.modemSearch) window.modemSearch.open({ tag: { kind: kind, name: name } }, tagsEl);
-        else location.hash = 'tag=' + kind + ':' + encodeURIComponent(name);
+        else { history.pushState({}, '', '/archive'); location.hash = 'tag=' + kind + ':' + encodeURIComponent(name); }
       }
       // every chip inside the detail (inline per-track + the bottom artists/labels
       // section) opens the same tag search
@@ -658,7 +670,7 @@
         function trackRow(tk) {
           const cover = tk.artUrl || ''; // real track art only; blank square if missing
           const badges = (tk.shows || []).map((s) =>
-            '<a class="track-show" href="/archive#' + esc(s.slug) + '">' +
+            '<a class="track-show" href="/' + esc(s.slug) + '">' +
             esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>'
           ).join('');
           const playable = (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
@@ -676,7 +688,7 @@
         }
 
         function showCard(r) {
-          return '<a class="archive-card" href="/archive#' + esc(r.slug) + '">' +
+          return '<a class="archive-card" href="/' + esc(r.slug) + '">' +
             (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
             '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div>' +
             '<div class="card-meta">' + esc(r.date || '') +
@@ -764,7 +776,7 @@
           return renderSearch(data, { tag: { kind, name } });
         }
         if (raw.indexOf('q=') === 0) return renderSearch(data, { query: decodeURIComponent(raw.slice(2)) });
-        const slug = slugFromHash();
+        const slug = slugFromPath() || slugFromHash();
         if (slug && bySlug[slug]) renderDetail(bySlug[slug], records);
         else renderSearch(data, {});
       }
@@ -786,6 +798,9 @@
       }
 
       withData(route);
+      // Let the shell re-route this already-mounted fragment from the current path
+      // (detail↔detail nav, popstate) without re-fetching/re-injecting it.
+      window.routeArchive = function () { withData(route); };
 
       if (!window.__archiveHashBound) {
         window.__archiveHashBound = true;

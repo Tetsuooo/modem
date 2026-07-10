@@ -333,7 +333,7 @@
     initializeYearEndListsHover();
 
     // For year-end lists we've mirrored locally, point the link at the on-site
-    // archive entry (/archive#slug) and visually mark it as available.
+    // archive entry (clean URL /slug) and visually mark it as available.
     function markLocalArchiveLists() {
       fetch('assets/modem-archive.json', { cache: 'no-cache' })
         .then((r) => r.json())
@@ -344,7 +344,7 @@
           document.querySelectorAll('.list-item[href]').forEach((a) => {
             const slug = (a.getAttribute('href') || '').split('/').pop();
             if (slug && local.has(slug)) {
-              a.setAttribute('href', '/archive#' + slug);
+              a.setAttribute('href', '/' + slug);
               a.classList.add('in-archive');
               a.title = 'open in the on-site archive';
             }

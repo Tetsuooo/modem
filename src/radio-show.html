@@ -247,7 +247,7 @@
             // markLocalArchiveShows() to the external site (the old default sent you
             // to radiostudent until a 5MB re-fetch finished). markLocalArchiveShows()
             // now only DOWNGRADES a not-yet-mirrored show back to its radiostudent url.
-            link.href = '/archive#' + slug;
+            link.href = '/' + slug;
             link.textContent = number;
             link.style.textDecoration = 'none';
             link.style.color = 'black';
@@ -284,7 +284,7 @@
     }
 
     // For shows we've mirrored locally, point the grid link at the on-site archive
-    // entry (/archive#modem-NN) and visually mark it as available.
+    // entry (clean URL /modem-NN) and visually mark it as available.
     function markLocalArchiveShows() {
       const apply = (data) => {
         const local = new Set(
@@ -292,7 +292,7 @@
         );
         document.querySelectorAll('.number-grid a[data-modem]').forEach((a) => {
           if (local.has(a.dataset.modem)) {
-            a.href = '/archive#' + a.dataset.modem;
+            a.href = '/' + a.dataset.modem;
             a.classList.add('in-archive');
             a.title = 'open in the on-site archive';
           } else if (a.dataset.ext) {

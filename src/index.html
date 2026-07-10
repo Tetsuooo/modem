@@ -571,16 +571,44 @@
       const links = document.querySelectorAll('nav a');
       const defaultPage = 'home.html';
 
+      // ---- Path-based routing --------------------------------------------------
+      // Known page fragments; EVERY other path segment is an archive record slug
+      // (e.g. /modem-142, /best-releases-of-2024-0). A slug loads the archive
+      // fragment, whose own router then reads the slug from location.pathname and
+      // renders that detail. Back-compat: legacy /archive#slug still resolves via
+      // archive.html's slugFromHash().
+      const PAGES = new Set(['home', 'radio-show', 'year-end-lists', 'dial-up', 'shop', 'support', 'archive', 'admin']);
+      function routeSegment(seg) {
+        seg = (seg || '').replace(/^\/|\/$/g, '');
+        if (!seg) return loadPage(defaultPage.replace('.html', ''));
+        if (PAGES.has(seg)) return loadPage(seg);
+        return loadArchiveSlug(seg);
+      }
+      function loadArchiveSlug() {
+        // If the archive fragment is already mounted, just re-route it from the
+        // current path (no re-fetch / no flash); otherwise mount it and let its
+        // own router pick the slug up from location.pathname.
+        if (document.querySelector('.modem-archive') && window.routeArchive) {
+          window.routeArchive();
+          return Promise.resolve();
+        }
+        return loadPage('archive');
+      }
+      window.routeSegmentGlobal = routeSegment;
+
       document.body.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (!link || !link.href) return;
         // Route internal archive links (e.g. from the radio-show grid) through the
         // SPA instead of full-reloading. The #modem-NN hash opens that show's detail.
         const rawHref = link.getAttribute('href') || '';
-        if (rawHref.startsWith('/archive') && !link.closest('nav')) {
+        // Root-relative internal links ("/modem-142", "/best-labels-of-2023",
+        // "/support"…) route through the SPA. Nav has its own handler; links with a
+        // "#" (legacy /archive#slug, dial-up #mix) and absolute/external URLs pass through.
+        if (rawHref.charAt(0) === '/' && rawHref.charAt(1) !== '/' && rawHref.indexOf('#') < 0 && !link.closest('nav')) {
           e.preventDefault();
           history.pushState({}, '', rawHref);
-          loadPage('archive');
+          routeSegment(rawHref);
           return;
         }
         if (!link.href.startsWith(window.location.origin)) {
@@ -794,9 +822,9 @@
       
       // Check if we have a redirect from a subpage
       if (window.initialRedirectPath) {
-        loadPage(window.initialRedirectPath);
-      } else if (cleanPath && cleanPath !== '') {
-        loadPage(cleanPath);
+        routeSegment(window.initialRedirectPath);
+      } else if (cleanPath) {
+        routeSegment(cleanPath);
       } else {
         // Load default page
         loadPage(defaultPage.replace('.html', ''));
@@ -808,10 +836,7 @@
           existingIframe.parentNode.removeChild(existingIframe);
         }
         
-        const currentPath = window.location.pathname;
-        const cleanPath = currentPath.replace(/^\/|\/$/g, '');
-        const pathToLoad = cleanPath || defaultPage.replace('.html', '');
-        loadPage(pathToLoad);
+        routeSegment(window.location.pathname);
       });
     });
   </script>
@@ -946,7 +971,7 @@
       function trackRow(tk) {
         // real track art only — no show-cover fallback (blank square if missing)
         const cover = tk.artUrl || '';
-        const badges = (tk.shows || []).map((s) => '<a class="track-show" href="/archive#' + esc(s.slug) + '">' + esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>').join('');
+        const badges = (tk.shows || []).map((s) => '<a class="track-show" href="/' + esc(s.slug) + '">' + esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>').join('');
         const playable = canPlay(tk);
         const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' + (cover ? '<img class="track-thumb" loading="lazy" src="' + esc(cover) + '" alt="">' : '<span class="track-thumb"></span>') + '</span>';
         return '<div class="track-row" data-key="' + esc(tk.key) + '">' + thumb +
@@ -956,7 +981,7 @@
       }
 
       function showCard(r) {
-        return '<a class="archive-card" href="/archive#' + esc(r.slug) + '">' +
+        return '<a class="archive-card" href="/' + esc(r.slug) + '">' +
           (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
           '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div><div class="card-meta">' + esc(r.date || '') +
           (r.embeds && r.embeds.length ? ' · ' + r.embeds.length + ' tracks' : '') + '</div></div></a>';
@@ -1062,9 +1087,11 @@
         const link = e.target.closest('a');
         if (link) {
           const href = link.getAttribute('href') || '';
-          if (href.indexOf('/archive') === 0) {
+          // internal archive links are now root-relative slugs ("/modem-142"); the
+          // shell's body handler does the actual routing — here we just close the
+          // overlay and (on phones) collapse the player so it doesn't cover the show.
+          if (href.charAt(0) === '/' && href.indexOf('#') < 0) {
             window.modemSearch.close();
-            // phones: the full-screen player would cover the show we're opening
             const mp = document.getElementById('modem-player');
             if (mp && !mp.hidden && window.matchMedia('(max-width: 600px)').matches) mp.classList.add('mp-mini');
           }
@@ -1420,7 +1447,7 @@
         if (item.number != null) {
           showEl.hidden = false;
           showEl.textContent = (item.kind === 'show' ? 'modem ' : 'featured in modem ') + item.number;
-          showEl.setAttribute('href', '/archive#' + (item.slug || ''));
+          showEl.setAttribute('href', '/' + (item.slug || ''));
         } else {
           showEl.hidden = true;
         }
@@ -1604,15 +1631,15 @@
       // "featured in modem NN" → open that show's detail via the SPA (no reload)
       showEl.onclick = (e) => {
         const href = showEl.getAttribute('href') || '';
-        if (href.indexOf('/archive') === 0 && window.loadPageGlobal) {
+        if (href.charAt(0) === '/' && window.routeSegmentGlobal) {
           e.preventDefault();
           // stopPropagation is CRITICAL: without it this click bubbles to the el
           // handler below which, seeing mp-mini now set, instantly expands it back
-          // (so the player never minimized). Also avoids a duplicate loadPage from
+          // (so the player never minimized). Also avoids a duplicate route from
           // the shell's link interceptor.
           e.stopPropagation();
           history.pushState({}, '', href);
-          window.loadPageGlobal('archive');
+          window.routeSegmentGlobal(href);
           // On phones the player is full-screen and would hide the show you just
           // opened — collapse it to the bottom bar so you land straight on the
           // subpage. Desktop/tablet keep the player as-is (it doesn't cover the page).
