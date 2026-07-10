@@ -332,8 +332,12 @@
       const acts = document.querySelector('.modem-actions');
       const nav = document.querySelector('nav');
       if (window.innerWidth <= 720) {
-        if (nav) root.style.setProperty('--reserve-top', (Math.ceil(nav.getBoundingClientRect().bottom) + 8) + 'px');
-        if (acts) root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12) + 'px');
+        // Nudge the grid UP a touch: take SHIFT px off the top reserve and add it to
+        // the bottom. The available height (top+bottom sum) is unchanged, so the cells
+        // keep their size — only the centered grid's position slides up by SHIFT.
+        const SHIFT = 22;
+        if (nav) root.style.setProperty('--reserve-top', Math.max(8, Math.ceil(nav.getBoundingClientRect().bottom) + 8 - SHIFT) + 'px');
+        if (acts) root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12 + SHIFT) + 'px');
       } else {
         root.style.removeProperty('--reserve-top');
         root.style.removeProperty('--reserve-bottom');
