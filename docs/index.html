@@ -989,7 +989,16 @@
       });
       resultsEl.onclick = (e) => {
         const link = e.target.closest('a');
-        if (link) { const href = link.getAttribute('href') || ''; if (href.indexOf('/archive') === 0) window.modemSearch.close(); return; }
+        if (link) {
+          const href = link.getAttribute('href') || '';
+          if (href.indexOf('/archive') === 0) {
+            window.modemSearch.close();
+            // phones: the full-screen player would cover the show we're opening
+            const mp = document.getElementById('modem-player');
+            if (mp && !mp.hidden && window.innerWidth <= 600) mp.classList.add('mp-mini');
+          }
+          return;
+        }
         const row = e.target.closest('.track-row');
         if (!row) return;
         const tk = (data.tracks || []).find((x) => x.key === row.getAttribute('data-key'));
@@ -1429,9 +1438,17 @@
         e.preventDefault();
         el.classList.remove('mp-mini');
       });
-      // clicking the artist / label opens the search filtered to that tag
-      artistEl.addEventListener('click', (e) => { e.preventDefault(); const a = current && current.artist; if (a && window.modemSearch) window.modemSearch.open({ tag: { kind: 'artist', name: a } }, el); });
-      labelEl.addEventListener('click', (e) => { e.preventDefault(); const l = current && current.labels && current.labels[0]; if (l && window.modemSearch) window.modemSearch.open({ tag: { kind: 'label', name: l } }, el); });
+      // clicking the artist / label opens the search filtered to that tag.
+      // On phones the full-screen player sits ON TOP of the search overlay (higher
+      // z-index), so collapse it to the bottom bar first — same reason "featured in
+      // modem NN" minimizes. stopPropagation keeps this click from bubbling to el's
+      // tap-to-expand handler, which (seeing mp-mini just set) would instantly undo it.
+      function openSearchFromPlayer(tag) {
+        if (window.modemSearch) window.modemSearch.open({ tag: tag }, el);
+        if (window.innerWidth <= 600) el.classList.add('mp-mini');
+      }
+      artistEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const a = current && current.artist; if (a) openSearchFromPlayer({ kind: 'artist', name: a }); });
+      labelEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const l = current && current.labels && current.labels[0]; if (l) openSearchFromPlayer({ kind: 'label', name: l }); });
       // when the tab regains focus, resume/advance if a background track stalled
       document.addEventListener('visibilitychange', () => {
         if (document.hidden || !widget || !wantPlaying) return;
