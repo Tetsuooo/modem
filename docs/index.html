@@ -1101,8 +1101,10 @@
       .modem-player:not(.mp-mini)::after  { content: ''; flex: 1 1 0; min-height: 0; }
       .modem-player .mp-art-wrap { width: min(74vw, 42vh); align-self: center; margin: 0; }
       .modem-player .mp-panel { position: static; width: 100%; max-width: 440px; align-self: center; padding: 0; background: transparent; }
-      .modem-player .mp-title { white-space: normal; text-align: center; padding: 0; font-size: 1.25rem; line-height: 1.25; }
-      .modem-player .mp-meta { white-space: normal; text-align: center; font-size: 0.9rem; margin-top: 0.4rem; }
+      /* single-line + ellipsis so a long title/artist never wraps to 2 lines and
+         shoves everything below it up/down (keeps every control in a fixed spot). */
+      .modem-player .mp-title { display: block; width: 100%; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; padding: 0 0.6rem; font-size: 1.25rem; line-height: 1.4; }
+      .modem-player .mp-meta { display: block; width: 100%; box-sizing: border-box; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; padding: 0 0.6rem; font-size: 0.9rem; margin-top: 0.4rem; }
       .modem-player .mp-time { text-align: center; margin-top: 0.8rem; font-size: 0.8rem; }
       /* Apple-Music-style: a full-width timeline on its own line, the big transport
          controls on a SEPARATE line below it, and the shuffle floating just above the
@@ -1114,9 +1116,11 @@
       .modem-player .mp-bar { order: 1; flex: none; width: 100%; max-width: 100%; height: 5px; }
       .modem-player .mp-controls { order: 2; gap: 1.9rem; }
       .modem-player .mp-controls button { width: 3.2rem; height: 3.2rem; font-size: 1.75rem; }
+      /* shuffle sits on the SAME line as the transport controls, at the right edge
+         (back/play/next stay centered via their own row). */
       .modem-player .mp-shuffle {
-        position: absolute; top: -1.75rem; right: 0.1rem; left: auto; z-index: 4;
-        width: 2rem; height: 1.7rem; font-size: 1.15rem;
+        position: absolute; bottom: 0.75rem; right: 0.5rem; top: auto; left: auto; z-index: 4;
+        width: 2.2rem; height: 2.2rem; font-size: 1.25rem;
       }
       .modem-player .mp-close { top: 0.5rem; right: 0.8rem; font-size: 2rem; padding: 0.2rem 0.55rem; }
       .modem-player .mp-show { align-self: center; margin-top: 1.3rem; font-size: 0.8rem; }
