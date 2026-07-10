@@ -167,7 +167,19 @@
         font-size: clamp(0.82rem, 1.6vw, 1.02rem);
         padding: clamp(0.25rem, 0.65vw, 0.4rem) clamp(0.3rem, 0.85vw, 0.5rem);
       }
-    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><script>// Handle redirect from 404.html for GitHub Pages SPA
+    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><div id="__vpdbg" style="position:fixed;left:4px;top:56px;z-index:2147483647;background:rgba(255,255,0,.95);color:#000;font:12px/1.35 monospace;padding:4px 6px;pointer-events:none;white-space:pre;display:none;border:1px solid #000"></div><script>(function(){
+      if (location.search.indexOf('dbg') < 0 && location.hash.indexOf('dbg') < 0) return;
+      var d = document.getElementById('__vpdbg'); d.style.display = 'block';
+      function upd(){
+        var vv = window.visualViewport;
+        d.textContent =
+          'scale ' + (vv ? vv.scale.toFixed(3) : '?') + ' | vvW ' + (vv ? Math.round(vv.width) : '?') + '\n' +
+          'inner ' + window.innerWidth + ' | client ' + document.documentElement.clientWidth + '\n' +
+          'dpr ' + window.devicePixelRatio + ' | ' + location.pathname;
+      }
+      setInterval(upd, 250); upd();
+      if (window.visualViewport) { visualViewport.addEventListener('resize', upd); visualViewport.addEventListener('scroll', upd); }
+    })();</script><script>// Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
       // Check for redirect parameter from subpages
       const urlParams = new URLSearchParams(l.search);
@@ -1045,7 +1057,7 @@
       /* flexible spacers pull the ARTWORK toward the vertical middle (more room above
          than below) so the controls flow beneath a centered cover — instead of the
          whole block sitting high with a big empty gap at the bottom. Not in mini mode. */
-      .modem-player:not(.mp-mini)::before { content: ''; flex: 2.4 1 0; min-height: 0; }
+      .modem-player:not(.mp-mini)::before { content: ''; flex: 3.6 1 0; min-height: 0; }
       .modem-player:not(.mp-mini)::after  { content: ''; flex: 1 1 0; min-height: 0; }
       .modem-player .mp-art-wrap { width: min(74vw, 42vh); align-self: center; margin: 0; }
       .modem-player .mp-panel { position: static; width: 100%; max-width: 440px; align-self: center; padding: 0; background: transparent; }
@@ -1059,17 +1071,14 @@
       .modem-player .mp-close { top: 0.6rem; right: 0.9rem; font-size: 2rem; padding: 0.3rem 0.6rem; }
       .modem-player .mp-show { align-self: center; margin-top: 1rem; font-size: 0.8rem; }
 
-      /* full-screen only: a "pull-down" handle centered at the top that
-         collapses the player into the bottom bar */
+      /* full-screen only: a bare down-chevron at top-center that collapses the
+         player into the bottom bar (points down = drops down to the bar). */
       .modem-player .mp-min {
-        display: inline-flex; align-items: center; gap: 0.35rem;
-        position: absolute; top: 0.7rem; left: 50%; transform: translateX(-50%);
-        z-index: 4; cursor: pointer;
-        border: 1.5px solid #000; border-radius: 999px; background: #fff; color: #000;
-        font-size: 0.9rem; font-weight: bold; text-transform: lowercase; line-height: 1;
-        padding: 0.5rem 1.1rem;
+        display: block; position: absolute; top: 0.25rem; left: 50%; transform: translateX(-50%);
+        z-index: 4; cursor: pointer; border: 0; background: transparent; color: #000;
+        font-size: 2.4rem; line-height: 1; padding: 0.15rem 1.6rem;
       }
-      .modem-player .mp-min:hover { background: #ffff00; color: #000; }
+      .modem-player .mp-min:hover { color: #888; }
 
       /* ---- minimized: a slim bar pinned to the bottom of the screen ---- */
       .modem-player.mp-mini {
@@ -1106,7 +1115,7 @@
         position: absolute; top: 0; left: 0; right: 0; width: 100%; max-width: none;
         height: 3px; border: 0; background: #e9e9e9;
       }
-    }</style><div id="modem-player" class="modem-player" hidden><button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄ minimize</button> <button class="mp-close" type="button" aria-label="close">×</button> <span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a></span><div class="mp-panel"><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
+    }</style><div id="modem-player" class="modem-player" hidden><button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄</button> <button class="mp-close" type="button" aria-label="close">×</button> <span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a></span><div class="mp-panel"><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
       const el = document.getElementById('modem-player');
       if (!el) return;
       const iframe = el.querySelector('.mp-hidden');

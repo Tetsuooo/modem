@@ -201,6 +201,25 @@
     <!-- Content will be loaded here -->
   </div>
 
+  <!-- TEMP diagnostic: add ?dbg to the URL (e.g. /?dbg=1) to show live viewport
+       metrics; invisible to normal visitors. Remove once the zoom bug is solved. -->
+  <div id="__vpdbg" style="position:fixed;left:4px;top:56px;z-index:2147483647;background:rgba(255,255,0,.95);color:#000;font:12px/1.35 monospace;padding:4px 6px;pointer-events:none;white-space:pre;display:none;border:1px solid #000"></div>
+  <script>
+    (function(){
+      if (location.search.indexOf('dbg') < 0 && location.hash.indexOf('dbg') < 0) return;
+      var d = document.getElementById('__vpdbg'); d.style.display = 'block';
+      function upd(){
+        var vv = window.visualViewport;
+        d.textContent =
+          'scale ' + (vv ? vv.scale.toFixed(3) : '?') + ' | vvW ' + (vv ? Math.round(vv.width) : '?') + '\n' +
+          'inner ' + window.innerWidth + ' | client ' + document.documentElement.clientWidth + '\n' +
+          'dpr ' + window.devicePixelRatio + ' | ' + location.pathname;
+      }
+      setInterval(upd, 250); upd();
+      if (window.visualViewport) { visualViewport.addEventListener('resize', upd); visualViewport.addEventListener('scroll', upd); }
+    })();
+  </script>
+
   <script>
     // Handle redirect from 404.html for GitHub Pages SPA
     (function(l) {
@@ -1119,7 +1138,7 @@
       /* flexible spacers pull the ARTWORK toward the vertical middle (more room above
          than below) so the controls flow beneath a centered cover — instead of the
          whole block sitting high with a big empty gap at the bottom. Not in mini mode. */
-      .modem-player:not(.mp-mini)::before { content: ''; flex: 2.4 1 0; min-height: 0; }
+      .modem-player:not(.mp-mini)::before { content: ''; flex: 3.6 1 0; min-height: 0; }
       .modem-player:not(.mp-mini)::after  { content: ''; flex: 1 1 0; min-height: 0; }
       .modem-player .mp-art-wrap { width: min(74vw, 42vh); align-self: center; margin: 0; }
       .modem-player .mp-panel { position: static; width: 100%; max-width: 440px; align-self: center; padding: 0; background: transparent; }
@@ -1133,17 +1152,14 @@
       .modem-player .mp-close { top: 0.6rem; right: 0.9rem; font-size: 2rem; padding: 0.3rem 0.6rem; }
       .modem-player .mp-show { align-self: center; margin-top: 1rem; font-size: 0.8rem; }
 
-      /* full-screen only: a "pull-down" handle centered at the top that
-         collapses the player into the bottom bar */
+      /* full-screen only: a bare down-chevron at top-center that collapses the
+         player into the bottom bar (points down = drops down to the bar). */
       .modem-player .mp-min {
-        display: inline-flex; align-items: center; gap: 0.35rem;
-        position: absolute; top: 0.7rem; left: 50%; transform: translateX(-50%);
-        z-index: 4; cursor: pointer;
-        border: 1.5px solid #000; border-radius: 999px; background: #fff; color: #000;
-        font-size: 0.9rem; font-weight: bold; text-transform: lowercase; line-height: 1;
-        padding: 0.5rem 1.1rem;
+        display: block; position: absolute; top: 0.25rem; left: 50%; transform: translateX(-50%);
+        z-index: 4; cursor: pointer; border: 0; background: transparent; color: #000;
+        font-size: 2.4rem; line-height: 1; padding: 0.15rem 1.6rem;
       }
-      .modem-player .mp-min:hover { background: #ffff00; color: #000; }
+      .modem-player .mp-min:hover { color: #888; }
 
       /* ---- minimized: a slim bar pinned to the bottom of the screen ---- */
       .modem-player.mp-mini {
@@ -1183,7 +1199,7 @@
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
-    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄ minimize</button>
+    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄</button>
     <button class="mp-close" type="button" aria-label="close">×</button>
     <span class="mp-art-wrap">
       <a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a>
