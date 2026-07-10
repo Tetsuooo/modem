@@ -97,8 +97,8 @@
     }
     .detail-nav:hover { background: #ffff00; }
     .detail-nav[hidden] { display: none; }
-    .detail-nav.prev { right: 3.1rem; }
-    .detail-nav.next { right: 0.8rem; }
+    .detail-nav.prev { right: 3.7rem; }
+    .detail-nav.next { right: 1.4rem; }
 
     .detail-section-label {
       font-weight: bold; text-transform: lowercase; font-size: 0.8rem;
@@ -568,9 +568,20 @@
         }));
         const chip = (kind, cls, n) => '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</span>';
         const slashes = '<span class="seg-slashes" aria-hidden="true">' + '/'.repeat(200) + '</span>';
+        // Same entity styled two ways collapses to one key (strip case / spacing /
+        // styling punctuation) — used to drop a label chip that just restates the artist.
+        const hardKey = (s) => (s == null ? '' : String(s)).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[\s._*|~^;:`'"()\[\]\-]/g, '');
         body.querySelectorAll('.seg-marker[data-seg]').forEach((p) => {
           const seg = p.getAttribute('data-seg');
-          const a = arts[seg] ? [...arts[seg]] : [], l = labs[seg] ? [...labs[seg]] : [];
+          const a = arts[seg] ? [...arts[seg]] : [];
+          let l = labs[seg] ? [...labs[seg]] : [];
+          // Self-released tracks tag the same name as BOTH artist and label, rendering
+          // two near-identical chips side by side (e.g. "MIND CLUB" + "Mind Club"). Drop
+          // the redundant label chip — the artist chip already identifies the entity.
+          if (a.length && l.length) {
+            const aKeys = new Set(a.map(hardKey));
+            l = l.filter((n) => !aKeys.has(hardKey(n)));
+          }
           const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
           const tagsHtml = chips ? '<span class="seg-tags">' + chips + '</span>' : '';
           // Some (esp. earlier) shows tuck relevant hyperlinks INTO the slash line —
