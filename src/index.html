@@ -961,7 +961,11 @@
       function trackMatchesTag(tk, tag) {
         if (tag.kind === 'artist') {
           if (normKey(tk.artist) === normKey(tag.name)) return true;
-          return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+          // Segment-heading fallback ONLY for tracks with no artist of their own.
+          // Otherwise a foreign track mis-grouped under an artist's heading (e.g. an
+          // unheaded clip trailing OAKMILK's section) would falsely match that artist.
+          if (!tk.artist) return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+          return false;
         }
         // label: the track's own segment carried this label tag — not merely some
         // other track in the same show (which is what the old show-level match did).

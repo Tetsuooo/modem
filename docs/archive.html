@@ -505,9 +505,17 @@
         // the artist of every track in each segment (surfacing compilation artists),
         // and its label list — so tag edits show here immediately. For un-edited
         // releases these equal the record's segment tags.
+        // Segments that already name an artist via the record's own taxonomy (the heading).
+        const artistHeadingSegs = new Set((rec.artists || []).filter((a) => a.seg != null && a.name).map((a) => String(a.seg)));
         tracks.forEach((t) => (t.shows || []).forEach((s) => {
           if (s.slug !== rec.slug) return;
-          add(arts, s.seg, t.artist);
+          // Surface a track's own artist as a chip ONLY when the segment has no artist
+          // heading of its own — i.e. compilation / label / untagged segments (this is
+          // what shows the various artists on a VA release). For an artist-headed
+          // segment, trust the heading, so a foreign track mis-grouped under it can't
+          // inject a wrong artist chip (e.g. a "BCAA system" clip trailing OAKMILK's
+          // section in modem-157).
+          if (!artistHeadingSegs.has(String(s.seg))) add(arts, s.seg, t.artist);
           (s.labels || []).forEach((l) => add(labs, s.seg, l));
         }));
         const chip = (kind, cls, n) => '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</span>';
@@ -660,7 +668,11 @@
         function trackMatchesTag(tk, tag) {
           if (tag.kind === 'artist') {
             if (normKey(tk.artist) === normKey(tag.name)) return true;
-            return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+            // Segment-heading fallback ONLY for tracks with no artist of their own.
+            // Otherwise a foreign track mis-grouped under an artist's heading (e.g. an
+            // unheaded clip trailing OAKMILK's section) would falsely match that artist.
+            if (!tk.artist) return (tk.shows || []).some((s) => normKey(s.segLabel) === normKey(tag.name));
+            return false;
           }
           // label: the track's own segment carried this label tag — not merely some
           // other track in the same show (which is what the old show-level match did).
