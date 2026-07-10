@@ -1066,7 +1066,7 @@
             window.modemSearch.close();
             // phones: the full-screen player would cover the show we're opening
             const mp = document.getElementById('modem-player');
-            if (mp && !mp.hidden && window.innerWidth <= 600) mp.classList.add('mp-mini');
+            if (mp && !mp.hidden && window.matchMedia('(max-width: 600px)').matches) mp.classList.add('mp-mini');
           }
           return;
         }
@@ -1094,7 +1094,9 @@
             renderActiveTag();
             draw();
             place(anchorEl, !!state.tag);
-            setTimeout(() => input.focus(), 30);
+            // Don't auto-focus on phones: it pops the on-screen keyboard even when you
+            // opened search by tapping an artist/label tag (you want to browse, not type).
+            if (!window.matchMedia('(max-width: 600px)').matches) setTimeout(() => input.focus(), 30);
           });
         },
         close() { overlay.hidden = true; },
@@ -1444,7 +1446,7 @@
       // "play random track" button); only when it's first shown, so a dragged
       // position isn't yanked back.
       function placeNear(anchorEl) {
-        if (innerWidth <= 600) { el.style.left = ''; el.style.top = ''; el.style.right = ''; return; } // full-screen on mobile (CSS)
+        if (window.matchMedia('(max-width: 600px)').matches) { el.style.left = ''; el.style.top = ''; el.style.right = ''; return; } // full-screen on mobile (CSS)
         const search = document.getElementById('modem-search');
         if (search && !search.hidden) { // search is open (right side) → sit on the left, out of its way
           el.style.right = 'auto'; el.style.left = '1rem'; el.style.top = '4.5rem'; return;
@@ -1557,7 +1559,7 @@
       // tap-to-expand handler, which (seeing mp-mini just set) would instantly undo it.
       function openSearchFromPlayer(tag) {
         if (window.modemSearch) window.modemSearch.open({ tag: tag }, el);
-        if (window.innerWidth <= 600) el.classList.add('mp-mini');
+        if (window.matchMedia('(max-width: 600px)').matches) el.classList.add('mp-mini');
       }
       artistEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const a = current && current.artist; if (a) openSearchFromPlayer({ kind: 'artist', name: a }); });
       labelEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const l = current && current.labels && current.labels[0]; if (l) openSearchFromPlayer({ kind: 'label', name: l }); });
@@ -1614,7 +1616,7 @@
           // On phones the player is full-screen and would hide the show you just
           // opened — collapse it to the bottom bar so you land straight on the
           // subpage. Desktop/tablet keep the player as-is (it doesn't cover the page).
-          if (window.innerWidth <= 600) el.classList.add('mp-mini');
+          if (window.matchMedia('(max-width: 600px)').matches) el.classList.add('mp-mini');
         }
       };
 
@@ -1622,7 +1624,7 @@
       (function makeDraggable() {
         let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false, moved = false;
         function down(cx, cy, target) {
-          if (window.innerWidth <= 600) return false; // fixed full-screen / bottom bar on phones
+          if (window.matchMedia('(max-width: 600px)').matches) return false; // fixed full-screen / bottom bar on phones
           if (target.closest('button, .mp-bar, iframe')) return false;
           // links behave as links — except the artwork, which doubles as a drag handle
           if (target.closest('a') && !target.closest('.mp-art')) return false;
