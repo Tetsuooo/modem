@@ -1,6 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="initial-path" content="home.html"><link rel="icon" href="assets/modem.ico" type="image/x-icon"><title>modem</title><style>/* stop iOS Safari from auto-inflating text on mobile (the "super oversized"
        show pages) — desktop/emulators don't do this, only real iOS does. */
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    /* disable accidental double-tap-zoom (tapping small grid numbers twice zoomed
+       the page in, and the zoom carried into the SPA-navigated subpage). Keeps
+       pinch-zoom + panning; also removes the 300ms tap delay. */
+    html, body { touch-action: manipulation; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;

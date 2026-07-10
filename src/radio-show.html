@@ -16,6 +16,7 @@
   </script>
   <style>
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* no iOS text auto-inflation */
+    html, body { touch-action: manipulation; } /* no accidental double-tap-zoom on the number grid */
     :root {
       /* ---- radio-show grid layout knobs — ALL adjustable, no magic px ----
          Lower --grid-fill-v or --grid-cols-fit ⇒ bigger cells (grid fills more of

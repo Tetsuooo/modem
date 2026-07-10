@@ -10,6 +10,10 @@
     /* stop iOS Safari from auto-inflating text on mobile (the "super oversized"
        show pages) — desktop/emulators don't do this, only real iOS does. */
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    /* disable accidental double-tap-zoom (tapping small grid numbers twice zoomed
+       the page in, and the zoom carried into the SPA-navigated subpage). Keeps
+       pinch-zoom + panning; also removes the 300ms tap delay. */
+    html, body { touch-action: manipulation; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
