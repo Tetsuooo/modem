@@ -113,9 +113,13 @@
     .modem-body .seg-marker .seg-tags { flex: 0 0 auto; white-space: nowrap; }
     /* early-show heading: name + hyperlinked slashes on the left (kept, wraps if
        long), the same chips pinned to the right edge — like the plain headings */
-    .modem-body .seg-marker.seg-keep { display: flex; align-items: baseline; flex-wrap: wrap; }
-    .modem-body .seg-marker.seg-keep .seg-links { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; margin-right: 0.35rem; }
-    .modem-body .seg-marker.seg-keep .seg-tags { margin-left: auto; }
+    .modem-body .seg-marker.seg-keep { display: flex; align-items: center; flex-wrap: wrap; }
+    /* name-stripped: the linked slash runs sit at content width, a filler slash run
+       stretches out to the chips. Links blend in as plain slashes but stay clickable. */
+    .modem-body .seg-marker.seg-keep .seg-links { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; }
+    .modem-body .seg-marker.seg-keep .seg-links a { color: inherit; text-decoration: none; }
+    .modem-body .seg-marker.seg-keep .seg-links a:hover { text-decoration: underline; }
+    .modem-body .seg-marker.seg-keep .seg-tags { margin-left: 0; }
     .modem-body .seg-marker .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
     .modem-body .seg-marker .chip:hover { background: #ffff00; }
     /* year-end list entries: description on the left, chips pushed to the right edge,
@@ -536,13 +540,21 @@
           }
           const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
           const tagsHtml = chips ? '<span class="seg-tags">' + chips + '</span>' : '';
-          // Some (esp. earlier) shows tuck relevant hyperlinks INTO the slash line —
-          // NEVER destroy those. Keep the name+linked-slashes intact on the left and
-          // pin the same chips to the right edge, so these headings read like the
-          // plain ones (modem 242) while staying clickable.
+          // Early shows tuck the artist's real music links (soundcloud/bandcamp/…) INTO
+          // the slash run — keep those. But drop the leading NAME and extend the slashes
+          // out to the chips, so these read exactly like the recent "///// [chips]"
+          // headings (universal formatting). The links survive (styled to blend in as
+          // plain slashes, still clickable); a filler slash run stretches to the chips.
           if (p.querySelector('a')) {
             p.classList.add('seg-keep');
-            p.innerHTML = '<span class="seg-links">' + p.innerHTML + '</span>' + tagsHtml;
+            for (const node of [...p.childNodes]) {
+              if (node.nodeType === 3) {                                  // leading text node
+                if (node.textContent.indexOf('/') === -1) { p.removeChild(node); continue; } // pure name → remove
+                node.textContent = node.textContent.replace(/^[^/]*/, '');                    // strip name, keep slashes
+              }
+              break;                                                      // reached first slash / first <a> → name gone
+            }
+            p.innerHTML = '<span class="seg-links">' + p.innerHTML + '</span>' + slashes + tagsHtml;
             return;
           }
           const raw = p.textContent || '';
