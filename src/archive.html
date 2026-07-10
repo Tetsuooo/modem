@@ -577,6 +577,37 @@
         // Same entity styled two ways collapses to one key (strip case / spacing /
         // styling punctuation) — used to drop a label chip that just restates the artist.
         const hardKey = (s) => (s == null ? '' : String(s)).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[\s._*|~^;:`'"()\[\]\-]/g, '');
+        // --- Normalize inconsistent source headings (e.g. modem-195) -------------------
+        // Some shows write an artist BOTH as a plain <p>name</p> line AND a
+        // <p>name /////</p> seg-marker (name shows twice), or as ONLY a plain line the
+        // scraper never tied to a slash-heading (seg=null → renders as a bare name). Make
+        // them uniform: (1) drop a plain <p> that just duplicates the seg-marker right
+        // after it; (2) promote a bare <p> whose whole text matches a known artist/label
+        // tag into the same "///// [chip]" format.
+        (function normalizeHeadings() {
+          const nameKey = (el) => hardKey((el.textContent || '').replace(/\/+/g, ' '));
+          const segMarkers = [...body.querySelectorAll('.seg-marker[data-seg]')];
+          const segKeys = new Set(segMarkers.map(nameKey));
+          segMarkers.forEach((seg) => {
+            const prev = seg.previousElementSibling;
+            const k = nameKey(seg);
+            if (k && prev && prev.tagName === 'P' && !prev.classList.contains('seg-marker') &&
+                !prev.querySelector('iframe') && nameKey(prev) === k) prev.remove();
+          });
+          const taxo = {};
+          (rec.labels || []).forEach((l) => { const k = hardKey(l.name); if (k && !taxo[k]) taxo[k] = { name: l.name, kind: 'label' }; });
+          (rec.artists || []).forEach((a) => { const k = hardKey(a.name); if (k && !taxo[k]) taxo[k] = { name: a.name, kind: 'artist' }; });
+          [...body.querySelectorAll('p')].forEach((p) => {
+            if (p.classList.contains('seg-marker') || p.querySelector('iframe, a')) return;
+            const txt = (p.textContent || '').trim();
+            if (!txt || txt.length > 60) return;
+            const k = hardKey(txt);
+            const t = taxo[k];
+            if (!t || segKeys.has(k)) return;                 // unknown, or already a real heading
+            p.className = 'seg-marker seg-row';
+            p.innerHTML = slashes + '<span class="seg-tags">' + chip(t.kind, t.kind === 'label' ? 'label-chip' : 'artist-chip', t.name) + '</span>';
+          });
+        })();
         body.querySelectorAll('.seg-marker[data-seg]').forEach((p) => {
           const seg = p.getAttribute('data-seg');
           const a = arts[seg] ? [...arts[seg]] : [];
