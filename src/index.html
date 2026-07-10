@@ -1185,19 +1185,28 @@
       .modem-player .mp-title { white-space: normal; text-align: center; padding: 0; font-size: 1.25rem; line-height: 1.25; }
       .modem-player .mp-meta { white-space: normal; text-align: center; font-size: 0.9rem; margin-top: 0.4rem; }
       .modem-player .mp-time { text-align: center; margin-top: 0.8rem; font-size: 0.8rem; }
-      .modem-player .mp-bottom { justify-content: center; gap: 0.8rem; margin-top: 0.4rem; }
-      .modem-player .mp-controls button { width: 2.8rem; height: 2.8rem; font-size: 1.4rem; }
-      .modem-player .mp-bar { max-width: 60vw; }
-      .modem-player .mp-shuffle { top: 0.9rem; left: 0.9rem; right: auto; width: 2rem; height: 1.9rem; font-size: 1.2rem; }
-      .modem-player .mp-close { top: 0.6rem; right: 0.9rem; font-size: 2rem; padding: 0.3rem 0.6rem; }
-      .modem-player .mp-show { align-self: center; margin-top: 1rem; font-size: 0.8rem; }
+      /* Apple-Music-style: a full-width timeline on its own line, the big transport
+         controls on a SEPARATE line below it, and the shuffle floating just above the
+         right end of the timeline. */
+      .modem-player .mp-bottom {
+        flex-direction: column; align-items: center; justify-content: center;
+        gap: 1.6rem; margin-top: 2.1rem; width: 100%; position: relative;
+      }
+      .modem-player .mp-bar { order: 1; flex: none; width: 100%; max-width: 100%; height: 5px; }
+      .modem-player .mp-controls { order: 2; gap: 1.9rem; }
+      .modem-player .mp-controls button { width: 3.2rem; height: 3.2rem; font-size: 1.75rem; }
+      .modem-player .mp-shuffle {
+        position: absolute; top: -1.75rem; right: 0.1rem; left: auto; z-index: 4;
+        width: 2rem; height: 1.7rem; font-size: 1.15rem;
+      }
+      .modem-player .mp-close { top: 0.5rem; right: 0.8rem; font-size: 2rem; padding: 0.2rem 0.55rem; }
+      .modem-player .mp-show { align-self: center; margin-top: 1.3rem; font-size: 0.8rem; }
 
-      /* full-screen only: a bare down-chevron at top-center that collapses the
-         player into the bottom bar (points down = drops down to the bar). */
+      /* minimize: a minus at the TOP-LEFT — pairs with the × close at the top-right */
       .modem-player .mp-min {
-        display: block; position: absolute; top: 0.25rem; left: 50%; transform: translateX(-50%);
+        display: block; position: absolute; top: 0.3rem; left: 0.75rem; transform: none;
         z-index: 4; cursor: pointer; border: 0; background: transparent; color: #000;
-        font-size: 2.4rem; line-height: 1; padding: 0.15rem 1.6rem;
+        font-size: 2.4rem; line-height: 1; padding: 0 0.4rem;
       }
       .modem-player .mp-min:hover { color: #888; }
 
@@ -1239,14 +1248,13 @@
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
-    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">⌄</button>
+    <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button>
     <button class="mp-close" type="button" aria-label="close">×</button>
     <span class="mp-art-wrap">
       <a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a>
       <a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a>
     </span>
     <div class="mp-panel">
-      <button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button>
       <div class="mp-title"></div>
       <div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div>
       <div class="mp-time" id="mp-time">0:00 / –:––</div>
@@ -1257,6 +1265,9 @@
           <button class="mp-next" type="button" aria-label="next">⏭</button>
         </div>
         <div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div>
+        <!-- shuffle: absolute top-right of the panel on desktop; on mobile it becomes
+             a static item in this row, next to the scrubber (see mobile CSS) -->
+        <button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button>
       </div>
     </div>
     <a class="mp-show" id="mp-show"></a>

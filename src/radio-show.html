@@ -236,23 +236,18 @@
           if (number <= totalNumbers) {
             const link = document.createElement('a');
             // The earliest / anniversary shows have irregular radiostudent slugs.
-            // Set data-modem to the real slug so markLocalArchiveShows() redirects
-            // them to the on-site archive like every other show; the external href
-            // stays only as a fallback for shows not yet mirrored locally.
-            if (number === 1) {
-              link.href = 'https://radiostudent.si/glasba/modem/modem-01-0';
-              link.dataset.modem = 'modem-01-0';
-            } else if (number === 100) {
-              link.href = 'https://radiostudent.si/glasba/modem/modem-100-bag-of-toys';
-              link.dataset.modem = 'modem-100-bag-of-toys';
-            } else if (number === 200) {
-              link.href = 'https://radiostudent.si/glasba/modem/modem-200-bag-of-toys-2';
-              link.dataset.modem = 'modem-200-bag-of-toys-2';
-            } else {
-              const paddedNumber = number < 10 ? `0${number}` : number;
-              link.href = `https://radiostudent.si/glasba/modem/modem-${paddedNumber}`;
-              link.dataset.modem = `modem-${paddedNumber}`;
-            }
+            let slug;
+            if (number === 1) slug = 'modem-01-0';
+            else if (number === 100) slug = 'modem-100-bag-of-toys';
+            else if (number === 200) slug = 'modem-200-bag-of-toys-2';
+            else slug = 'modem-' + (number < 10 ? `0${number}` : number);
+            link.dataset.modem = slug;
+            link.dataset.ext = 'https://radiostudent.si/glasba/modem/' + slug;
+            // DEFAULT to the on-site archive so tapping a number never races
+            // markLocalArchiveShows() to the external site (the old default sent you
+            // to radiostudent until a 5MB re-fetch finished). markLocalArchiveShows()
+            // now only DOWNGRADES a not-yet-mirrored show back to its radiostudent url.
+            link.href = '/archive#' + slug;
             link.textContent = number;
             link.style.textDecoration = 'none';
             link.style.color = 'black';
@@ -291,20 +286,27 @@
     // For shows we've mirrored locally, point the grid link at the on-site archive
     // entry (/archive#modem-NN) and visually mark it as available.
     function markLocalArchiveShows() {
-      fetch('assets/modem-archive.json', { cache: 'no-cache' })
+      const apply = (data) => {
+        const local = new Set(
+          (data.records || []).filter((r) => r.type === 'show').map((r) => r.slug)
+        );
+        document.querySelectorAll('.number-grid a[data-modem]').forEach((a) => {
+          if (local.has(a.dataset.modem)) {
+            a.href = '/archive#' + a.dataset.modem;
+            a.classList.add('in-archive');
+            a.title = 'open in the on-site archive';
+          } else if (a.dataset.ext) {
+            a.href = a.dataset.ext; // not mirrored locally yet → radiostudent fallback
+            a.classList.remove('in-archive');
+          }
+        });
+      };
+      // Prefer the data the SPA already loaded (instant, no 5MB re-fetch); only fetch
+      // as a fallback. Either way the links already default to the on-site archive.
+      if (window.__modemData && window.__modemData.records) return apply(window.__modemData);
+      fetch('assets/modem-archive.json')
         .then((r) => r.json())
-        .then((data) => {
-          const local = new Set(
-            (data.records || []).filter((r) => r.type === 'show').map((r) => r.slug)
-          );
-          document.querySelectorAll('.number-grid a[data-modem]').forEach((a) => {
-            if (local.has(a.dataset.modem)) {
-              a.href = '/archive#' + a.dataset.modem;
-              a.classList.add('in-archive');
-              a.title = 'open in the on-site archive';
-            }
-          });
-        })
+        .then(apply)
         .catch(() => {});
     }
 
