@@ -158,6 +158,15 @@ document.title = 'modem';
   // converts the area ratio to a linear-size ratio. The safety cap only
   // matters for an unusually oblong logo that would otherwise overflow the
   // box at this scale.
+  // A floor on the factor formula alone can't reach a ~10:1 spread: the single
+  // biggest logo (1454x819) is natively 11.4x wider than the single smallest
+  // (128x46), so even a completely FLAT factor (no correlation at all) still
+  // produces an 11.4:1 gap between those two — any correlation on top of that
+  // only widens it further. So the tail is handled separately: MIN_FILL_FRAC
+  // guarantees a logo's longer edge (as a fraction of the box) never drops
+  // below a floor, pulling in only the few most extreme outliers without
+  // touching the formula's correlation for everything else.
+  const MIN_FILL_FRAC = 0.09;
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
@@ -167,7 +176,13 @@ document.title = 'modem';
     const factor = 0.78 + 0.12 * nativeRatio;
     const capScale = Math.min(box.width / nw, box.height / nh);
     const scale = Math.min(refScale * factor, capScale);
-    return { w: nw * scale, h: nh * scale };
+    let w = nw * scale, h = nh * scale;
+    const fillFrac = Math.max(w / box.width, h / box.height);
+    if (fillFrac < MIN_FILL_FRAC) {
+      const bump = MIN_FILL_FRAC / fillFrac;
+      w *= bump; h *= bump;
+    }
+    return { w, h };
   }
 
   let queue = shuffled(DIMS.map((_, i) => i));
