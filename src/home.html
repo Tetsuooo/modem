@@ -153,17 +153,18 @@ document.title = 'modem';
   // proportional to that image's own size, so it silently cancelled the native-
   // size signal back out — a tiny image got a proportionally huge base scale,
   // making the final sizes correlate with aspect ratio more than actual size).
-  // factor 0.7 (smallest) .. 1 (the biggest logo, which fills the box exactly,
-  // same as before) — sqrt() converts the area ratio to a linear-size ratio.
-  // The safety cap only matters for an unusually oblong logo that would
-  // otherwise overflow the box at this scale.
+  // factor 0.78 (smallest) .. 0.9 (the biggest logo — no longer fills the box
+  // edge to edge, so even the max size reads a bit more restrained) — sqrt()
+  // converts the area ratio to a linear-size ratio. The safety cap only
+  // matters for an unusually oblong logo that would otherwise overflow the
+  // box at this scale.
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
     const [refW, refH] = DIMS[maxAreaIdx];
     const refScale = Math.min(box.width / refW, box.height / refH);
     const nativeRatio = Math.sqrt((nw * nh) / maxArea);
-    const factor = 0.7 + 0.3 * nativeRatio;
+    const factor = 0.78 + 0.12 * nativeRatio;
     const capScale = Math.min(box.width / nw, box.height / nh);
     const scale = Math.min(refScale * factor, capScale);
     return { w: nw * scale, h: nh * scale };
