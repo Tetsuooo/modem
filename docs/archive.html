@@ -380,45 +380,31 @@
           f.setAttribute('src', s);
           f.setAttribute('height', '120'); f.setAttribute('width', '100%');
         });
-        // Strip SoundCloud's baked-in "artist · title" caption — a bare <div>
-        // whose only links point to soundcloud.com — that sits under each embed.
-        root.querySelectorAll('div').forEach((div) => {
-          if (div.querySelector('iframe, p, div')) return;
-          const links = div.querySelectorAll('a');
-          if (links.length && Array.prototype.every.call(links, (a) => /soundcloud\.com/i.test(a.getAttribute('href') || ''))) div.remove();
-        });
-      }
-
-      // The 2020–2023 shows repeat every SoundCloud embed's "artist · title" as a
-      // hyperlink caption in the <p> right beneath the player (radiostudent's own
-      // markup). Once the player renders, that caption is pure redundancy — drop it.
-      // BUT only when the track is LIVE: a dead track's embed is a blank grey box,
-      // and then the caption is the sole surviving record of what was there (~26% of
-      // show embeds are dead source-side), so those stay. Liveness = the track id is
-      // present in data.tracks (build-track-index drops embeds whose oEmbed 404s).
-      function stripRedundantScCaptions(body) {
-        const tracks = (window.__modemData && window.__modemData.tracks) || [];
-        const liveScIds = new Set(
-          tracks.filter((t) => t.kind === 'soundcloud' && t.key)
-                .map((t) => String(t.key).replace(/^sc:/, ''))
-        );
-        // A caption <p>: no embed, ≥1 link, EVERY link points to soundcloud.com, and
-        // the only text outside the links is separators (·, -, /, whitespace).
-        const isScCaption = (el) => {
-          if (!el || el.tagName !== 'P' || el.querySelector('iframe')) return false;
-          const links = el.querySelectorAll('a');
-          if (!links.length) return false;
-          if (!Array.prototype.every.call(links, (a) => /soundcloud\.com/i.test(a.getAttribute('href') || ''))) return false;
-          const clone = el.cloneNode(true);
+        // radiostudent's own markup repeats every SoundCloud embed's "artist · title"
+        // as a hyperlink caption right beneath the player — a bare <p> or <div> (format
+        // varies by scrape era) whose only links point to soundcloud.com. Once the
+        // player itself renders, that's pure redundant clutter — drop it unconditionally
+        // (including when the track is dead/blocked and the box shows nothing: a stray
+        // caption with no player above it reads as broken, not helpful). BUT first stash
+        // the track-specific link (not just the artist profile) onto the iframe as a
+        // data attribute — watchForBlockedEmbeds() reuses it to point a blocked-embed
+        // fallback at the exact track instead of the artist's general SC page.
+        root.querySelectorAll('iframe').forEach((f) => {
+          if (!/w\.soundcloud\.com\/player/i.test(f.getAttribute('src') || '')) return;
+          const holder = f.closest('p') || f.parentElement;
+          const cap = holder && holder.nextElementSibling;
+          if (!cap || (cap.tagName !== 'P' && cap.tagName !== 'DIV') || cap.querySelector('iframe')) return;
+          const links = Array.prototype.slice.call(cap.querySelectorAll('a'));
+          if (!links.length || !links.every((a) => /soundcloud\.com/i.test(a.getAttribute('href') || ''))) return;
+          const clone = cap.cloneNode(true);
           clone.querySelectorAll('a').forEach((a) => a.remove());
-          return (clone.textContent || '').replace(/[\s·|/\\,.–—-]+/g, '') === '';
-        };
-        body.querySelectorAll('iframe').forEach((f) => {
-          const id = ((f.getAttribute('src') || '').match(/tracks\/(\d+)/) || [])[1];
-          if (!id || !liveScIds.has(id)) return;         // not a live SC track → keep any caption
-          const p = f.closest('p') || f.parentElement;
-          const cap = p && p.nextElementSibling;
-          if (isScCaption(cap)) cap.remove();
+          if ((clone.textContent || '').replace(/[\s·|/\\,.–—-]+/g, '') !== '') return; // real prose, not a bare caption
+          // The track-page link has a deeper path (/artist/track-slug) than a bare
+          // profile link (/artist); prefer it, falling back to whatever's there.
+          const trackLink = links.find((a) => /soundcloud\.com\/[^/?#]+\/[^/?#]+/i.test(a.getAttribute('href') || '')) || links[links.length - 1];
+          f.dataset.scLink = trackLink.getAttribute('href') || '';
+          if (links[0]) f.dataset.scArtist = (links[0].textContent || '').trim();
+          cap.remove();
         });
       }
 
@@ -430,17 +416,27 @@
       // any iframe with no real size is presumed cosmetically hidden; (2) in parallel,
       // bind the SoundCloud Widget API's READY event per iframe (same mechanism the
       // full-show player uses) — if it never fires, the request itself was blocked.
-      // Either signal swaps that embed for a plain link (via data.tracks, which
-      // stores the SoundCloud author/track it resolved to) so a blocked visitor gets
-      // something clickable instead of dead space. Only meaningful for LIVE tracks —
-      // a dead track's blank box is a real 404, not a blocking artifact, and already
-      // has its own caption handling above.
+      // Either signal swaps that embed for a plain link so a blocked visitor gets
+      // something clickable instead of dead space — preferring the exact track link
+      // normalizeEmbeds() stashed from the (now-removed) baked-in caption, falling
+      // back to data.tracks' resolved artist page for the rare embed with no caption.
+      // Only meaningful for LIVE tracks — a dead track's blank box is a real 404, not
+      // a blocking artifact, and (like every embed now) already lost its caption.
       function watchForBlockedEmbeds(body) {
         const tracks = (window.__modemData && window.__modemData.tracks) || [];
         const liveById = new Map(
           tracks.filter((t) => t.kind === 'soundcloud' && t.key && t.link)
                 .map((t) => [String(t.key).replace(/^sc:/, ''), t])
         );
+        // Mirrors build-track-index.js's soundcloudId(): decode the url= param once,
+        // then take the first run of 5+ digits — robust to both the plain
+        // "tracks/<id>" src format and newer doubly-encoded URN srcs
+        // ("tracks/soundcloud%253Atracks%253A<id>"), where a literal "tracks/(\d+)"
+        // match fails.
+        function scTrackId(src) {
+          const u = decodeURIComponent(((src || '').match(/[?&]url=([^&]+)/) || [])[1] || '');
+          return (u.match(/(\d{5,})/) || [])[1] || null;
+        }
         const frames = Array.prototype.filter.call(
           body.querySelectorAll('iframe'),
           (f) => /w\.soundcloud\.com\/player/i.test(f.getAttribute('src') || '')
@@ -449,13 +445,18 @@
         function showFallbackFor(f) {
           if (f.dataset.fallbackShown) return;
           f.dataset.fallbackShown = '1';
-          const id = ((f.getAttribute('src') || '').match(/tracks\/(\d+)/) || [])[1];
-          const tk = id && liveById.get(id);
-          if (!tk) return;
+          let href = f.dataset.scLink || null;
+          let label = f.dataset.scArtist || null;
+          if (!href) {
+            const id = scTrackId(f.getAttribute('src'));
+            const tk = id && liveById.get(id);
+            if (tk) { href = tk.link; label = tk.artist; }
+          }
+          if (!href) return;
           const a = document.createElement('a');
           a.className = 'embed-fallback show';
-          a.href = tk.link; a.target = '_blank'; a.rel = 'noopener';
-          a.textContent = '↗ ' + (tk.artist ? tk.artist + ' ' : '') + 'on soundcloud';
+          a.href = href; a.target = '_blank'; a.rel = 'noopener';
+          a.textContent = '↗ ' + (label ? label + ' ' : '') + 'on soundcloud';
           (f.closest('p') || f).insertAdjacentElement('afterend', a);
         }
         setTimeout(() => {
@@ -685,7 +686,7 @@
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
         const body = detailInner.querySelector('.modem-body');
         let listTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { stripRedundantScCaptions(body); separateVideoSection(body); injectSegTags(body, rec); watchForBlockedEmbeds(body); } }
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); injectSegTags(body, rec); watchForBlockedEmbeds(body); } }
         initPlayer();
 
         const nb = neighbors(rec, records);
