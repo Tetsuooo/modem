@@ -35,8 +35,8 @@
      match — see sizeLogo() for the exact scale. image-rendering:pixelated keeps
      any up/downscaling crisp (no bicubic smoothing). */
   .modem-logo-slide {
-    width: clamp(14rem, 58vw, 29rem);
-    height: clamp(11rem, 46vw, 23rem);
+    width: clamp(19rem, 78vw, 39rem);
+    height: clamp(15rem, 62vw, 31rem);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,7 +130,9 @@ document.title = 'modem';
   const urls = DIMS.map((_, i) => '/assets/modem_logos/modem_logo_' + (i + 1) + '.webp');
   urls.forEach((u) => { const img = new Image(); img.src = u; }); // preload
 
-  const maxArea = Math.max.apply(null, DIMS.map(([w, h]) => w * h));
+  let maxAreaIdx = 0;
+  DIMS.forEach((d, i) => { if (d[0] * d[1] > DIMS[maxAreaIdx][0] * DIMS[maxAreaIdx][1]) maxAreaIdx = i; });
+  const maxArea = DIMS[maxAreaIdx][0] * DIMS[maxAreaIdx][1];
 
   function shuffled(arr) {
     const a = arr.slice();
@@ -144,19 +146,26 @@ document.title = 'modem';
   const slideEl = document.querySelector('.modem-logo-slide');
   const imgEl = document.getElementById('modem-logo-img');
 
-  // Scale = "fill the box" scale (like object-fit:contain) x a dampening factor
-  // between 0.5 (same size regardless of native resolution — the old behavior)
-  // and 1 (fully proportional to native resolution). Landing on 0.5 + 0.5*ratio
-  // means the biggest logo still fully fills the box as before, and the
-  // smallest ones shrink to roughly half their "equal size" footprint rather
-  // than all the way down to their true (sometimes tiny) native proportion.
+  // Size relative to native AREA, blended with equal-fill so nothing goes
+  // microscopic. Critically, the base "fill" scale is computed ONCE from the
+  // single biggest-area logo — not per-image from each logo's own dimensions
+  // (that was the earlier bug: a per-image contain-fit scale is inversely
+  // proportional to that image's own size, so it silently cancelled the native-
+  // size signal back out — a tiny image got a proportionally huge base scale,
+  // making the final sizes correlate with aspect ratio more than actual size).
+  // factor 0.55 (smallest) .. 1 (the biggest logo, which fills the box exactly,
+  // same as before) — sqrt() converts the area ratio to a linear-size ratio.
+  // The safety cap only matters for an unusually oblong logo that would
+  // otherwise overflow the box at this scale.
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
-    const containScale = Math.min(box.width / nw, box.height / nh);
+    const [refW, refH] = DIMS[maxAreaIdx];
+    const refScale = Math.min(box.width / refW, box.height / refH);
     const nativeRatio = Math.sqrt((nw * nh) / maxArea);
-    const factor = 0.5 + 0.5 * nativeRatio;
-    const scale = containScale * factor;
+    const factor = 0.55 + 0.45 * nativeRatio;
+    const capScale = Math.min(box.width / nw, box.height / nh);
+    const scale = Math.min(refScale * factor, capScale);
     return { w: nw * scale, h: nh * scale };
   }
 
