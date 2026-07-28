@@ -1442,16 +1442,17 @@
         if (search && !search.hidden) { // search is open (right side) → sit on the left, out of its way
           el.style.right = 'auto'; el.style.left = '1rem'; el.style.top = '4.5rem'; return;
         }
-        // 'left' sentinel: same standard spot regardless of where the trigger sits
-        // on the page — used by a show page's embed play buttons, since those can
-        // be anywhere in a long tracklist and shouldn't drag the player around
-        // with them the way "play random track"'s fixed-position button can. Not
-        // the same as the "search is open" spot above — this instead matches
-        // where "play random track" itself actually lands (measured empirically:
-        // its button's own placeNear() math resolves to ~17.5rem/4rem at a
-        // typical desktop viewport, since the button sits low enough on the page
-        // that the top clamp usually binds anyway).
-        if (anchorEl === 'left') { el.style.right = 'auto'; el.style.left = '17.5rem'; el.style.top = '4rem'; return; }
+        // 'left' sentinel: same standard-ish spot regardless of where the trigger
+        // sits on the page — used by a show page's embed play buttons, since those
+        // can be anywhere in a long tracklist and shouldn't drag the player around
+        // with them the way "play random track"'s fixed-position button can.
+        // Proportional (vw/vh), not a fixed px/rem value, so it scales with the
+        // window instead of landing disproportionately close to/far from the edge
+        // on very small or very large screens — clamped so it still stays
+        // reasonable at the extremes. Started from where "play random track"
+        // itself actually lands (measured empirically at ~17.5rem/4rem on a
+        // typical desktop width), nudged a bit lower/righter from there.
+        if (anchorEl === 'left') { el.style.right = 'auto'; el.style.left = 'clamp(14rem, 23vw, 32rem)'; el.style.top = 'clamp(4rem, 12vh, 9rem)'; return; }
         if (!anchorEl || !anchorEl.getBoundingClientRect) return;
         const r = anchorEl.getBoundingClientRect();
         const w = el.offsetWidth || 420, h = el.offsetHeight || 400;
