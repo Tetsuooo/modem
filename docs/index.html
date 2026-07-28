@@ -878,15 +878,19 @@
         return pool.reduce((max, s) => Math.max(max, parseShowDate(s.date)), 0);
       }
 
-      // A Bandcamp year-end list often embeds a whole album (key "bc:<albumId>:-",
-      // no track chosen) while a numbered show separately played one specific track
-      // off that same album (key "bc:<albumId>:<trackId>") — same release, two index
-      // entries. When exactly one such pair shares an album, fold the list-only
-      // entry's badges onto the specific-track one and drop the duplicate, so search
-      // shows a single hit tagged with both "modem NN" and "best releases of YYYY"
-      // (same as when a show and a list happen to embed the identical track). Left
-      // alone when an album has more than one specific-track sibling — then it's
-      // ambiguous which one the list's whole-album pick corresponds to.
+      // A year-end "best releases" list is a list of RELEASES, not individual
+      // tracks — whatever it embeds (the whole album, key "bc:<albumId>:-", OR one
+      // particular track off it, key "bc:<albumId>:<trackId>") is just there to say
+      // "this release made the list," not to single out that one embed as distinct
+      // content. That release is already separately indexed via whatever track(s) a
+      // numbered show actually played off the same album. So an entry whose ONLY
+      // appearances are in year-end lists (never an actual show) should never be its
+      // own search hit: fold its badge onto every track from that album that IS
+      // featured in a show (all of them, if a show played several — e.g. a
+      // compilation) and drop the list-only entry. Only exception: if an album's
+      // list-only entries have NO show-track sibling at all (the release was named
+      // on a list but never actually played in a show), there's nothing to fold
+      // onto, so they stay visible as the sole record of that release.
       function dedupeAlbumTracks(tracks) {
         const byAlbum = new Map();
         tracks.forEach((t) => {
@@ -897,19 +901,20 @@
           byAlbum.get(id).push(t);
         });
         const drop = new Set();
-        const mergedShows = new Map();
+        const extraShows = new Map();
         byAlbum.forEach((group) => {
-          if (group.length < 2) return;
-          const wholeAlbum = group.filter((t) => /:-$/.test(t.key));
-          const specific = group.filter((t) => !/:-$/.test(t.key));
-          if (wholeAlbum.length === 1 && specific.length === 1) {
-            drop.add(wholeAlbum[0]);
-            mergedShows.set(specific[0], (specific[0].shows || []).concat(wholeAlbum[0].shows || []));
-          }
+          const listOnly = group.filter((t) => (t.shows || []).length && (t.shows || []).every((s) => s.type === 'list'));
+          if (!listOnly.length) return;
+          const showTracks = group.filter((t) => !listOnly.includes(t) && (t.shows || []).some((s) => s.type === 'show'));
+          if (!showTracks.length) return; // nothing to fold onto — keep the list entries visible
+          listOnly.forEach((lo) => {
+            drop.add(lo);
+            showTracks.forEach((st) => extraShows.set(st, (extraShows.get(st) || []).concat(lo.shows || [])));
+          });
         });
         if (!drop.size) return tracks;
         return tracks.filter((t) => !drop.has(t))
-          .map((t) => (mergedShows.has(t) ? Object.assign({}, t, { shows: mergedShows.get(t) }) : t));
+          .map((t) => (extraShows.has(t) ? Object.assign({}, t, { shows: (t.shows || []).concat(extraShows.get(t)) }) : t));
       }
 
       let data = null, ctx = null, searchTracks = [];
