@@ -1182,13 +1182,15 @@
     .mp-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; }
     .mp-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .mp-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; border: 0; transform: translateX(-50%); }
-    /* plain × (no circle), top-right corner */
+    /* plain × (no circle), pinned to the artwork's top-left corner (the
+       "↗ soundcloud" pill already owns top-right) — nested inside .mp-art-wrap
+       now instead of floating at the far edge of the whole (wider) panel. */
     .mp-close {
-      position: absolute; top: 0; right: 0; z-index: 4;
-      border: 0; background: transparent; color: #000; cursor: pointer;
+      position: absolute; top: 4px; left: 4px; z-index: 4;
+      border: 0; background: transparent; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,0.7), 0 0 1px rgba(0,0,0,0.9); cursor: pointer;
       font-size: 1.3rem; line-height: 1; padding: 0.1rem 0.35rem;
     }
-    .mp-close:hover { color: #888; }
+    .mp-close:hover { color: #ffff00; }
     /* minimize-to-bar handle: only used on phones (see mobile media query) */
     .mp-min { display: none; }
     .mp-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
@@ -1228,12 +1230,18 @@
         position: absolute; bottom: 0.75rem; right: 0.5rem; top: auto; left: auto; z-index: 4;
         width: 2.2rem; height: 2.2rem; font-size: 1.25rem;
       }
-      .modem-player .mp-close { top: 0.5rem; right: 0.8rem; font-size: 2rem; padding: 0.2rem 0.55rem; }
+      /* Both now live inside .mp-art-wrap (small, centered mid-screen on mobile)
+         but should stay pinned to the SCREEN corners here, same as before —
+         position:fixed escapes the nested DOM position (still relative to the
+         viewport regardless of ancestry, since nothing between here and the
+         viewport applies a transform). */
+      .modem-player .mp-close { position: fixed; top: 0.5rem; right: 0.8rem; left: auto; color: #000; text-shadow: none; font-size: 2rem; padding: 0.2rem 0.55rem; }
+      .modem-player .mp-close:hover { color: #888; }
       .modem-player .mp-show { align-self: center; margin-top: 1.3rem; font-size: 0.8rem; }
 
       /* minimize: a minus at the TOP-LEFT — pairs with the × close at the top-right */
       .modem-player .mp-min {
-        display: block; position: absolute; top: 0.3rem; left: 0.75rem; transform: none;
+        display: block; position: fixed; top: 0.3rem; left: 0.75rem; transform: none;
         z-index: 4; cursor: pointer; border: 0; background: transparent; color: #000;
         font-size: 2.4rem; line-height: 1; padding: 0 0.4rem;
       }
@@ -1274,7 +1282,7 @@
         position: absolute; top: 0; left: 0; right: 0; width: 100%; max-width: none;
         height: 3px; border: 0; background: #e9e9e9;
       }
-    }</style><div id="modem-player" class="modem-player" hidden><button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button> <span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
+    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
       const el = document.getElementById('modem-player');
       if (!el) return;
       const iframe = el.querySelector('.mp-hidden');
