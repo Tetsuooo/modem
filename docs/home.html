@@ -30,8 +30,17 @@
      match — see sizeLogo() for the exact scale. image-rendering:pixelated keeps
      any up/downscaling crisp (no bicubic smoothing). */
   .modem-logo-slide {
-    width: clamp(22.25rem, 92vw, 46rem);
-    height: clamp(17.5rem, 73vw, 36.5rem);
+    /* Width stays purely vw-driven (that part already correlated fine) but
+       the rem ceiling is raised so big screens keep growing instead of
+       plateauing. Height used to ALSO be vw-driven, which under-used a
+       tall-but-narrow phone's actual vertical room (common — many phones are
+       20:9+) — not really correlated to that device's screen. Switched height
+       to vh, minus a fixed reserve for the nav bar + bottom social-icon row
+       (~5rem combined) so it uses available vertical space directly without
+       running into either of them; verified against the same nav/social
+       overlap check used when this box was first sized. */
+    width: clamp(18.5rem, 92vw, 90rem);
+    height: clamp(15rem, calc(58vh - 5rem), 71.5rem);
     display: flex;
     align-items: center;
     justify-content: center;
