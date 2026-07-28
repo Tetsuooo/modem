@@ -183,8 +183,8 @@ document.title = 'modem';
   // ~3.78:1 in practice. This value is tuned against the actual rendered
   // long-edge across all 108 logos (see the scratch verification script) to
   // land the real max/min ratio at 3.0, not just the formula's nominal one.
-  const MAX_FILL_FRAC = 0.75;
-  const MIN_FILL_FRAC = 0.3152;
+  const MAX_FILL_FRAC = 0.85;
+  const MIN_FILL_FRAC = 0.2125;
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
@@ -195,7 +195,18 @@ document.title = 'modem';
     const capScale = Math.min(box.width / nw, box.height / nh);
     const scale = Math.min(refScale * factor, capScale);
     let w = nw * scale, h = nh * scale;
-    const fillFrac = Math.max(w / box.width, h / box.height);
+    // Fraction is measured against the box's GEOMETRIC MEAN (sqrt(w*h)), not
+    // against box.width/box.height separately. The box's own aspect ratio now
+    // varies by device (width tracks vw, height tracks vh minus a fixed
+    // reserve — they're no longer proportional the way they were when both
+    // were purely vw-driven), so measuring each axis against ITS OWN box
+    // dimension made the spread ratio swing wildly between phone and desktop
+    // (4:1 on desktop measured as low as ~1.9:1 on some phones, purely from
+    // box-shape differences, not any change in the logos). The geometric mean
+    // is a single shape-independent reference, so the ratio holds regardless
+    // of box aspect ratio.
+    const boxRef = Math.sqrt(box.width * box.height);
+    const fillFrac = Math.max(w, h) / boxRef;
     if (fillFrac > MAX_FILL_FRAC) {
       const shrink = MAX_FILL_FRAC / fillFrac;
       w *= shrink; h *= shrink;
@@ -203,6 +214,11 @@ document.title = 'modem';
       const bump = MIN_FILL_FRAC / fillFrac;
       w *= bump; h *= bump;
     }
+    // Final safety net: an unusually wide/tall BOX (not logo) means the
+    // geometric-mean reference above can, in principle, still push a logo
+    // past the box's SHORTER axis — clamp back to the box no matter what.
+    const overflowGuard = Math.min(1, box.width / w, box.height / h);
+    if (overflowGuard < 1) { w *= overflowGuard; h *= overflowGuard; }
     return { w, h };
   }
 
