@@ -207,20 +207,27 @@ document.title = 'modem';
   }
 
   let queue = shuffled(DIMS.map((_, i) => i));
-  window.__modemLogoSlideTimer = setInterval(() => {
-    if (!document.getElementById('modem-logo-img')) { window.stopModemLogoSlideshow(); return; }
+  let timer = null;
+
+  function tick() {
+    if (!document.getElementById('modem-logo-img')) { stop(); return; }
     if (!queue.length) queue = shuffled(DIMS.map((_, i) => i));
     const idx = queue.pop();
     const { w, h } = sizeFor(idx);
     imgEl.style.width = w + 'px';
     imgEl.style.height = h + 'px';
     imgEl.src = urls[idx];
-  }, INTERVAL_MS);
-})();
+  }
+  function start() { if (!timer) timer = setInterval(tick, INTERVAL_MS); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
 
-window.stopModemLogoSlideshow = function () {
-  if (window.__modemLogoSlideTimer) { clearInterval(window.__modemLogoSlideTimer); window.__modemLogoSlideTimer = null; }
-};
+  start();
+  // Click the logo to pause/resume the slideshow on the current frame.
+  slideEl.style.cursor = 'pointer';
+  slideEl.addEventListener('click', () => { if (timer) stop(); else start(); });
+
+  window.stopModemLogoSlideshow = stop;
+})();
 
 // Clean up function to remove social icons
 window.removeHomeSocialIcons = function() {
