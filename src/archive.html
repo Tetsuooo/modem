@@ -465,15 +465,20 @@
       // bind the SoundCloud Widget API's READY event per iframe (same mechanism the
       // full-show player uses) — if it never fires, the request itself was blocked.
       // Either signal swaps that embed for a plain link so a blocked visitor gets
-      // something clickable instead of dead space — preferring the exact track link
-      // normalizeEmbeds() stashed from the (now-removed) baked-in caption, falling
-      // back to data.tracks' resolved artist page for the rare embed with no caption.
-      // Only meaningful for LIVE tracks — a dead track's blank box is a real 404, not
-      // a blocking artifact, and (like every embed now) already lost its caption.
+      // something clickable instead of dead space — labelled "track title by
+      // artist" when both are known, using data.tracks' resolved metadata (from
+      // SoundCloud's own oEmbed response, so title and artist are already split
+      // cleanly) rather than the scraped caption text, which sometimes only had
+      // one link/name (e.g. an early-format caption with no separate title link)
+      // and would otherwise show the artist name twice. The link target still
+      // prefers the exact track URL normalizeEmbeds() stashed from the caption
+      // over data.tracks' artist-profile link. Only meaningful for LIVE tracks —
+      // a dead track's blank box is a real 404, not a blocking artifact, and
+      // (like every embed now) already lost its caption.
       function watchForBlockedEmbeds(body) {
         const tracks = (window.__modemData && window.__modemData.tracks) || [];
         const liveById = new Map(
-          tracks.filter((t) => t.kind === 'soundcloud' && t.key && t.link)
+          tracks.filter((t) => t.kind === 'soundcloud' && t.key)
                 .map((t) => [String(t.key).replace(/^sc:/, ''), t])
         );
         // Mirrors build-track-index.js's soundcloudId(): decode the url= param once,
@@ -493,14 +498,17 @@
         function showFallbackFor(f) {
           if (f.dataset.fallbackShown) return;
           f.dataset.fallbackShown = '1';
-          let href = f.dataset.scLink || null;
-          let label = f.dataset.scArtist || null;
-          if (!href) {
-            const id = scTrackId(f.getAttribute('src'));
-            const tk = id && liveById.get(id);
-            if (tk) { href = tk.link; label = tk.artist; }
-          }
+          const id = scTrackId(f.getAttribute('src'));
+          const tk = id && liveById.get(id);
+          const href = f.dataset.scLink || (tk && tk.link) || null;
           if (!href) return;
+          const title = (tk && tk.title) || null;
+          const artist = (tk && tk.artist) || f.dataset.scArtist || null;
+          // "title by artist" when both are known and actually different (a
+          // caption with only one link/name would otherwise repeat itself).
+          let label = null;
+          if (title && artist && title.trim().toLowerCase() !== artist.trim().toLowerCase()) label = title + ' by ' + artist;
+          else label = title || artist || null;
           const a = document.createElement('a');
           a.className = 'embed-fallback show';
           a.href = href; a.target = '_blank'; a.rel = 'noopener';
