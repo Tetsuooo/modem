@@ -153,19 +153,29 @@ document.title = 'modem';
   // proportional to that image's own size, so it silently cancelled the native-
   // size signal back out — a tiny image got a proportionally huge base scale,
   // making the final sizes correlate with aspect ratio more than actual size).
-  // factor 0.65 (smallest) .. 0.75 (the biggest logo — pulled in further so it
-  // no longer optically "pops" against the rest) — sqrt() converts the area
-  // ratio to a linear-size ratio. The safety cap only matters for an unusually
-  // oblong logo that would otherwise overflow the box at this scale.
-  // A floor on the factor formula alone can't reach a ~7:1 spread: the single
-  // biggest logo (1454x819) is natively 11.4x wider than the single smallest
-  // (128x46), so even a completely FLAT factor (no correlation at all) still
-  // produces an 11.4:1 gap between those two — any correlation on top of that
-  // only widens it further. So the tail is handled separately: MIN_FILL_FRAC
-  // guarantees a logo's longer edge (as a fraction of the box) never drops
-  // below a floor, pulling in only the few most extreme outliers without
-  // touching the formula's correlation for everything else.
-  const MIN_FILL_FRAC = 0.107;
+  // factor 0.65 (smallest) .. 0.75 (biggest by AREA) — sqrt() converts the
+  // area ratio to a linear-size ratio. The safety cap only matters for an
+  // unusually oblong logo that would otherwise overflow the box at this scale.
+  //
+  // Area isn't the same as rendered size once aspect ratios differ: logo #52
+  // (1820x528) has less native AREA than the #2 reference (1454x819) but is
+  // considerably WIDER, so the same area-based factor renders it bigger than
+  // the "biggest" reference — the factor curve alone can't guarantee a hard
+  // ratio across 108 varied aspect ratios. So MIN_FILL_FRAC / MAX_FILL_FRAC
+  // hard-clamp every logo's longer edge (as a fraction of the box) into
+  // [MIN, MAX], guaranteeing the MAX/MIN spread ratio by construction
+  // regardless of which specific logo ends up biggest/smallest. At a tight
+  // 3:1 ratio most of the set sits at one clamp or the other; only logos
+  // whose native area falls between the two reference points show any
+  // formula-driven variation.
+  // NOTE: MIN isn't simply MAX/3 — the tightest floor case and the ceiling
+  // case bind on different box axes (one width-constrained, one
+  // height-constrained), and the box isn't square, so a naive MAX/3 measured
+  // ~3.78:1 in practice. This value is tuned against the actual rendered
+  // long-edge across all 108 logos (see the scratch verification script) to
+  // land the real max/min ratio at 3.0, not just the formula's nominal one.
+  const MAX_FILL_FRAC = 0.75;
+  const MIN_FILL_FRAC = 0.3152;
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
@@ -177,7 +187,10 @@ document.title = 'modem';
     const scale = Math.min(refScale * factor, capScale);
     let w = nw * scale, h = nh * scale;
     const fillFrac = Math.max(w / box.width, h / box.height);
-    if (fillFrac < MIN_FILL_FRAC) {
+    if (fillFrac > MAX_FILL_FRAC) {
+      const shrink = MAX_FILL_FRAC / fillFrac;
+      w *= shrink; h *= shrink;
+    } else if (fillFrac < MIN_FILL_FRAC) {
       const bump = MIN_FILL_FRAC / fillFrac;
       w *= bump; h *= bump;
     }
