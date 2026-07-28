@@ -643,6 +643,11 @@
           if (window.removeHomeSocialIcons) {
             window.removeHomeSocialIcons();
           }
+          // Stop the home page's logo slideshow timer so it doesn't keep running
+          // (and repainting a detached <img>) after navigating away
+          if (window.stopModemLogoSlideshow) {
+            window.stopModemLogoSlideshow();
+          }
           
           // Clean up dial-up back arrow when leaving dial-up page
           if (url !== 'dial-up.html' && url !== 'dial-up') {

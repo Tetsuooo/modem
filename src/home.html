@@ -14,7 +14,7 @@
     position: fixed;
     top: 45vh;
     left: 50vw;
-    transform: translate(-50%, -50%) scaleY(3);
+    transform: translate(-50%, -50%);
     text-align: center;
     z-index: 2;
     background: transparent;
@@ -26,22 +26,34 @@
     justify-content: center;
   }
 
-  .content h1 {
-    font-size: clamp(3.6rem, 14.4vw, 7.2rem);
-    font-weight: bold;
-    margin: 0 auto;
-    color: black;
-    letter-spacing: 0.1em;
-    line-height: 0.9;
+  /* Occupies roughly the same footprint the "modem" title + subtitle used to
+     (same clamp() shape as their old font-size clamps, scaled up by the ratio
+     between the title's rendered box and its font-size — see the sizing note in
+     the slideshow script below). object-fit:contain preserves each logo's own
+     aspect ratio (letterboxed within the box, never cropped or stretched), and
+     image-rendering:pixelated keeps the up/downscaling crisp (no bicubic
+     smoothing). */
+  .modem-logo-slide {
+    width: clamp(14rem, 58vw, 29rem);
+    height: clamp(11rem, 46vw, 23rem);
+  }
+  .modem-logo-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: -webkit-optimize-contrast;
   }
 
-  .content p {
-    font-size: clamp(0.675rem, 2.7vw, 1.35rem);
-    color: black;
-    margin: 0.005em 0 0 0;
-    font-weight: bold;
-    font-style: normal;
-    line-height: 0.9;
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .social-icons {
@@ -93,13 +105,47 @@
 </style>
 
 <div class="content">
-  <h1>modem</h1>
-  <p>a radio show about internet music...</p>
+  <div class="modem-logo-slide">
+    <img id="modem-logo-img" src="/assets/modem_logos/modem_logo_1.webp" alt="modem">
+  </div>
+  <h1 class="sr-only">modem</h1>
+  <p class="sr-only">a radio show about internet music...</p>
 </div>
 
 <script>
 // Set page title
 document.title = 'modem';
+
+// Randomised, fast-cycling slideshow of the modem logo variants in place of the
+// old "modem" title. A shuffled queue (not a plain random pick per tick) so the
+// same logo never appears twice in a row, refilled + reshuffled once exhausted.
+(function () {
+  const LOGO_COUNT = 108;
+  const INTERVAL_MS = 150;
+  const urls = Array.from({ length: LOGO_COUNT }, (_, i) => '/assets/modem_logos/modem_logo_' + (i + 1) + '.webp');
+  urls.forEach((u) => { const img = new Image(); img.src = u; }); // preload
+
+  function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let queue = shuffled(urls);
+  const imgEl = document.getElementById('modem-logo-img');
+  window.__modemLogoSlideTimer = setInterval(() => {
+    if (!document.getElementById('modem-logo-img')) { window.stopModemLogoSlideshow(); return; }
+    if (!queue.length) queue = shuffled(urls);
+    imgEl.src = queue.pop();
+  }, INTERVAL_MS);
+})();
+
+window.stopModemLogoSlideshow = function () {
+  if (window.__modemLogoSlideTimer) { clearInterval(window.__modemLogoSlideTimer); window.__modemLogoSlideTimer = null; }
+};
 
 // Clean up function to remove social icons
 window.removeHomeSocialIcons = function() {
