@@ -1557,8 +1557,13 @@
         // 'left' sentinel: same standard spot regardless of where the trigger sits
         // on the page — used by a show page's embed play buttons, since those can
         // be anywhere in a long tracklist and shouldn't drag the player around
-        // with them the way "play random track"'s fixed-position button can.
-        if (anchorEl === 'left') { el.style.right = 'auto'; el.style.left = '1rem'; el.style.top = '4.5rem'; return; }
+        // with them the way "play random track"'s fixed-position button can. Not
+        // the same as the "search is open" spot above — this instead matches
+        // where "play random track" itself actually lands (measured empirically:
+        // its button's own placeNear() math resolves to ~17.5rem/4rem at a
+        // typical desktop viewport, since the button sits low enough on the page
+        // that the top clamp usually binds anyway).
+        if (anchorEl === 'left') { el.style.right = 'auto'; el.style.left = '17.5rem'; el.style.top = '4rem'; return; }
         if (!anchorEl || !anchorEl.getBoundingClientRect) return;
         const r = anchorEl.getBoundingClientRect();
         const w = el.offsetWidth || 420, h = el.offsetHeight || 400;
