@@ -169,15 +169,16 @@
     .modem-body .embed-fallback.show { display: block; }
     /* "play in the modem player" button, sitting beside a playable track's embed
        (see addPlayButtons()) — the row becomes flex so the button doesn't overlap
-       the widget; the iframe still shrinks to leave it room (default flex-shrink). */
-    .modem-body p.embed-row { display: flex; align-items: center; gap: 0.5rem; }
+       the widget; the iframe still shrinks to leave it room (default flex-shrink).
+       Top-aligned (not centered) so the button sits up by the embed's top-right,
+       not floating at its vertical middle. */
+    .modem-body p.embed-row { display: flex; align-items: flex-start; gap: 0.4rem; }
     .embed-play {
-      flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%;
-      border: 1.5px solid #000; background: #fff; color: #000; cursor: pointer;
-      font-size: 0.7rem; line-height: 1; padding: 0 0 0 0.12rem;
+      flex: none; border: 0; background: transparent; color: #000; cursor: pointer;
+      font-size: 1.8rem; line-height: 1; padding: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .embed-play:hover { background: #ffff00; }
+    .embed-play:hover { color: #888; }
     /* Buffer + subtle hairline between the music tracklist and the trailing
        YouTube "video" section (the appended Drupal video field). */
     .modem-body .modem-video-divider { margin: 3.25rem 0 2.25rem; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.18); }
