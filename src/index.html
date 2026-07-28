@@ -931,7 +931,49 @@
       // playable in the shuffle player only if actually played in a show (not a list-only album)
       const canPlay = (tk) => (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
 
-      let data = null, ctx = null;
+      // radiostudent's short date format, "D. M. YYYY" — used both to sort search
+      // results by recency and to pick a track's most recent appearance.
+      function parseShowDate(s) {
+        const m = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(s || '');
+        return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0;
+      }
+      const latestShowDate = (tk) => (tk.shows || []).reduce((max, s) => Math.max(max, parseShowDate(s.date)), 0);
+
+      // A Bandcamp year-end list often embeds a whole album (key "bc:<albumId>:-",
+      // no track chosen) while a numbered show separately played one specific track
+      // off that same album (key "bc:<albumId>:<trackId>") — same release, two index
+      // entries. When exactly one such pair shares an album, fold the list-only
+      // entry's badges onto the specific-track one and drop the duplicate, so search
+      // shows a single hit tagged with both "modem NN" and "best releases of YYYY"
+      // (same as when a show and a list happen to embed the identical track). Left
+      // alone when an album has more than one specific-track sibling — then it's
+      // ambiguous which one the list's whole-album pick corresponds to.
+      function dedupeAlbumTracks(tracks) {
+        const byAlbum = new Map();
+        tracks.forEach((t) => {
+          const m = /^bc:(\d+):/.exec(t.key || '');
+          if (!m) return;
+          const id = m[1];
+          if (!byAlbum.has(id)) byAlbum.set(id, []);
+          byAlbum.get(id).push(t);
+        });
+        const drop = new Set();
+        const mergedShows = new Map();
+        byAlbum.forEach((group) => {
+          if (group.length < 2) return;
+          const wholeAlbum = group.filter((t) => /:-$/.test(t.key));
+          const specific = group.filter((t) => !/:-$/.test(t.key));
+          if (wholeAlbum.length === 1 && specific.length === 1) {
+            drop.add(wholeAlbum[0]);
+            mergedShows.set(specific[0], (specific[0].shows || []).concat(wholeAlbum[0].shows || []));
+          }
+        });
+        if (!drop.size) return tracks;
+        return tracks.filter((t) => !drop.has(t))
+          .map((t) => (mergedShows.has(t) ? Object.assign({}, t, { shows: mergedShows.get(t) }) : t));
+      }
+
+      let data = null, ctx = null, searchTracks = [];
       const state = { query: '', mode: 'tracks', tag: null };
 
       function withData(cb) {
@@ -994,8 +1036,10 @@
       function draw() {
         const ts = terms();
         if (state.mode === 'tracks') {
-          const tracks = data.tracks || [];
-          const filtered = tracks.filter((tk) => { if (state.tag && !trackMatchesTag(tk, state.tag)) return false; if (!ts.length) return true; return hit((tk.searchText || '').toLowerCase(), ts); });
+          const tracks = searchTracks;
+          const filtered = tracks
+            .filter((tk) => { if (state.tag && !trackMatchesTag(tk, state.tag)) return false; if (!ts.length) return true; return hit((tk.searchText || '').toLowerCase(), ts); })
+            .sort((a, b) => latestShowDate(b) - latestShowDate(a));
           countEl.textContent = filtered.length + ' / ' + tracks.length + ' tracks';
           resultsEl.className = 'ms-results archive-tracklist';
           resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
@@ -1115,7 +1159,7 @@
       window.modemSearch = {
         open(initial, anchorEl) {
           withData((d) => {
-            data = d; ctx = buildCtx(d);
+            data = d; ctx = buildCtx(d); searchTracks = dedupeAlbumTracks(d.tracks || []);
             state.query = (initial && initial.query) || '';
             state.mode = (initial && initial.mode) || 'tracks';
             state.tag = (initial && initial.tag) || null;
