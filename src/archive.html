@@ -87,6 +87,10 @@
     .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
     .sc-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
+    /* Shown only if the SoundCloud widget never confirms it loaded (typically an
+       ad/tracker blocker on the visitor's end) — see initPlayer()'s showFallback(). */
+    .sc-fallback { display: none; color: #000; font-weight: bold; text-transform: lowercase; font-size: 0.95rem; text-decoration: underline; margin: 0 0 1.6rem; }
+    .sc-fallback.show { display: inline-block; }
 
     /* prev / next show navigation — both in the top-right corner */
     .detail-nav {
@@ -159,6 +163,10 @@
     .modem-body iframe[src*="bandcamp"] { display: block; width: 100%; max-width: var(--embed-w); height: 120px; }
     .modem-body iframe[src*="bandcamp"][src*="size=small"] { height: 42px; }
     .modem-body iframe[src*="youtube"] { width: 100%; aspect-ratio: 16 / 9; height: auto; }
+    /* Shown only next to a SoundCloud embed that never gains real size (blocked
+       client-side) — see watchForBlockedEmbeds(). */
+    .modem-body .embed-fallback { display: none; font-size: 0.85rem; margin: -0.7rem 0 1rem; }
+    .modem-body .embed-fallback.show { display: block; }
     /* Buffer + subtle hairline between the music tracklist and the trailing
        YouTube "video" section (the appended Drupal video field). */
     .modem-body .modem-video-divider { margin: 3.25rem 0 2.25rem; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.18); }
@@ -362,11 +370,13 @@
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
           '</div>' +
           '</div>' +
+          (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">&#8599; listen on soundcloud</a>' : '') +
           '<iframe class="sc-hidden" allow="autoplay" src="' + src + '"></iframe>';
       }
       function initPlayer() {
         const wrap = detailInner.querySelector('.sc-player');
         const iframe = detailInner.querySelector('.sc-hidden');
+        const fallback = detailInner.querySelector('.sc-fallback');
         if (!wrap || !iframe) return;
         const toggle = wrap.querySelector('.sc-toggle');
         const bar = wrap.querySelector('.sc-bar');
@@ -376,10 +386,17 @@
         const durEl = wrap.querySelector('.sc-dur');
         const fmt = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
         const seek = (frac) => { const p = Math.max(0, Math.min(1, frac)) * 100; prog.style.width = p + '%'; playhead.style.left = p + '%'; };
-        let widget = null, durationMs = 0;
+        // The widget script/iframe are on soundcloud.com, which trackers/ad blockers
+        // sometimes block outright. If the widget never confirms it's actually ready
+        // (script never loads, or loads but the iframe navigation itself was blocked),
+        // swap the dead player for a plain link instead of leaving a button that does
+        // nothing. Any successful signal (below) cancels this.
+        let widget = null, durationMs = 0, readyTimer = null;
+        function showFallback() { wrap.style.display = 'none'; if (fallback) fallback.classList.add('show'); }
         function ready() {
           widget = SC.Widget(iframe);
-          widget.bind(SC.Widget.Events.READY, () => widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); }));
+          readyTimer = setTimeout(showFallback, 6000);
+          widget.bind(SC.Widget.Events.READY, () => { clearTimeout(readyTimer); widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); }); });
           widget.bind(SC.Widget.Events.PLAY, () => { toggle.textContent = '❚❚'; });
           widget.bind(SC.Widget.Events.PAUSE, () => { toggle.textContent = '▶'; });
           widget.bind(SC.Widget.Events.FINISH, () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
@@ -387,7 +404,7 @@
         }
         toggle.onclick = () => { if (widget) widget.toggle(); };
         bar.onclick = (e) => { if (!widget || !durationMs) return; const r = bar.getBoundingClientRect(); const frac = (e.clientX - r.left) / r.width; seek(frac); widget.seekTo(frac * durationMs); };
-        (function wait(n) { if (window.SC && SC.Widget) ready(); else if (n > 0) setTimeout(() => wait(n - 1), 100); })(60);
+        (function wait(n) { if (window.SC && SC.Widget) ready(); else if (n > 0) setTimeout(() => wait(n - 1), 100); else showFallback(); })(60);
       }
 
       // Turn SoundCloud's big square "visual" player into the classic horizontal
@@ -451,6 +468,60 @@
           const cap = p && p.nextElementSibling;
           if (isScCaption(cap)) cap.remove();
         });
+      }
+
+      // A client-side blocker (ad blocker / tracking protection) can defeat a
+      // SoundCloud embed two different ways — a cosmetic CSS rule that collapses it
+      // to zero size (box never renders) while the network request still succeeds,
+      // OR a network-level block of soundcloud.com/sndcdn.com that leaves the box
+      // full-sized but permanently empty inside. Catch both: (1) after a short delay,
+      // any iframe with no real size is presumed cosmetically hidden; (2) in parallel,
+      // bind the SoundCloud Widget API's READY event per iframe (same mechanism the
+      // full-show player uses) — if it never fires, the request itself was blocked.
+      // Either signal swaps that embed for a plain link (via data.tracks, which
+      // stores the SoundCloud author/track it resolved to) so a blocked visitor gets
+      // something clickable instead of dead space. Only meaningful for LIVE tracks —
+      // a dead track's blank box is a real 404, not a blocking artifact, and already
+      // has its own caption handling above.
+      function watchForBlockedEmbeds(body) {
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        const liveById = new Map(
+          tracks.filter((t) => t.kind === 'soundcloud' && t.key && t.link)
+                .map((t) => [String(t.key).replace(/^sc:/, ''), t])
+        );
+        const frames = Array.prototype.filter.call(
+          body.querySelectorAll('iframe'),
+          (f) => /w\.soundcloud\.com\/player/i.test(f.getAttribute('src') || '')
+        );
+        if (!frames.length) return;
+        function showFallbackFor(f) {
+          if (f.dataset.fallbackShown) return;
+          f.dataset.fallbackShown = '1';
+          const id = ((f.getAttribute('src') || '').match(/tracks\/(\d+)/) || [])[1];
+          const tk = id && liveById.get(id);
+          if (!tk) return;
+          const a = document.createElement('a');
+          a.className = 'embed-fallback show';
+          a.href = tk.link; a.target = '_blank'; a.rel = 'noopener';
+          a.textContent = '↗ ' + (tk.artist ? tk.artist + ' ' : '') + 'on soundcloud';
+          (f.closest('p') || f).insertAdjacentElement('afterend', a);
+        }
+        setTimeout(() => {
+          frames.forEach((f) => { if (f.offsetWidth === 0 || f.offsetHeight === 0) showFallbackFor(f); });
+        }, 1500);
+        (function wait(n) {
+          if (window.SC && SC.Widget) {
+            frames.forEach((f) => {
+              const widget = SC.Widget(f);
+              const t = setTimeout(() => showFallbackFor(f), 6000);
+              widget.bind(SC.Widget.Events.READY, () => clearTimeout(t));
+            });
+          } else if (n > 0) {
+            setTimeout(() => wait(n - 1), 100);
+          } else {
+            frames.forEach(showFallbackFor); // the widget API itself never loaded — blocked
+          }
+        })(60);
       }
 
       // The Drupal "video" field's YouTube clips are appended after the whole music
@@ -662,7 +733,7 @@
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
         const body = detailInner.querySelector('.modem-body');
         let listTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { stripRedundantScCaptions(body); separateVideoSection(body); injectSegTags(body, rec); } }
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { stripRedundantScCaptions(body); separateVideoSection(body); injectSegTags(body, rec); watchForBlockedEmbeds(body); } }
         initPlayer();
 
         const nb = neighbors(rec, records);
