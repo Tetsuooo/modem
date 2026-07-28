@@ -18,6 +18,13 @@
        the page in, and the zoom carried into the SPA-navigated subpage). Keeps
        pinch-zoom + panning; also removes the 300ms tap delay. */
     html, body { touch-action: manipulation; }
+    /* .cloud (below) is position:absolute inside a position:fixed wrapper —
+       browsers can still let its oversized/animated children expand the
+       DOCUMENT's (html, not just body) scrollable area, even with body's own
+       overflow:hidden below, since that rule doesn't reach the root element.
+       That produced a genuine second native scrollbar stacked next to a show
+       page's own intentional inner one. */
+    html { overflow: hidden; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
