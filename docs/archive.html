@@ -157,6 +157,17 @@
        client-side) — see watchForBlockedEmbeds(). */
     .modem-body .embed-fallback { display: none; font-size: 0.85rem; margin: -0.7rem 0 1rem; }
     .modem-body .embed-fallback.show { display: block; }
+    /* "play in the modem player" button, sitting beside a playable track's embed
+       (see addPlayButtons()) — the row becomes flex so the button doesn't overlap
+       the widget; the iframe still shrinks to leave it room (default flex-shrink). */
+    .modem-body p.embed-row { display: flex; align-items: center; gap: 0.5rem; }
+    .embed-play {
+      flex: none; width: 1.9rem; height: 1.9rem; border-radius: 50%;
+      border: 1.5px solid #000; background: #fff; color: #000; cursor: pointer;
+      font-size: 0.7rem; line-height: 1; padding: 0 0 0 0.12rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .embed-play:hover { background: #ffff00; }
     /* Buffer + subtle hairline between the music tracklist and the trailing
        YouTube "video" section (the appended Drupal video field). */
     .modem-body .modem-video-divider { margin: 3.25rem 0 2.25rem; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.18); }
@@ -335,6 +346,24 @@
       // search tool. Writes overrides.json's "segEdits" (see apply-overrides.js);
       // a different axis from /admin's "tagEdits" (per-track, not per-segment). ----
       function isAdmin() { return !!localStorage.getItem('modem-admin-pw'); }
+
+      // ---- shared track-identity lookups (embed src → data.tracks[] key) ----
+      // Mirrors build-track-index.js's soundcloudId(): decode the url= param once,
+      // then take the first run of 5+ digits — robust to both the plain
+      // "tracks/<id>" src format and newer doubly-encoded URN srcs
+      // ("tracks/soundcloud%253Atracks%253A<id>"), where a literal "tracks/(\d+)"
+      // match fails.
+      function scTrackId(src) {
+        const u = decodeURIComponent(((src || '').match(/[?&]url=([^&]+)/) || [])[1] || '');
+        return (u.match(/(\d{5,})/) || [])[1] || null;
+      }
+      // Mirrors build-track-index.js's keyOf() for Bandcamp: "bc:<albumId>:<trackId>",
+      // "-" standing in for whichever half isn't present in this particular embed.
+      function bcTrackKey(src) {
+        const alb = ((src || '').match(/album=(\d+)/) || [])[1] || null;
+        const trk = ((src || '').match(/track=(\d+)/) || [])[1] || null;
+        return (alb || trk) ? 'bc:' + (alb || '-') + ':' + (trk || '-') : null;
+      }
       const segEditKey = (slug, seg) => slug + '::' + seg;
       const segEditState = {}; // segEditKey → { artists: [...], labels: [...] } while a pencil is open
 
@@ -574,15 +603,6 @@
           tracks.filter((t) => t.kind === 'soundcloud' && t.key)
                 .map((t) => [String(t.key).replace(/^sc:/, ''), t])
         );
-        // Mirrors build-track-index.js's soundcloudId(): decode the url= param once,
-        // then take the first run of 5+ digits — robust to both the plain
-        // "tracks/<id>" src format and newer doubly-encoded URN srcs
-        // ("tracks/soundcloud%253Atracks%253A<id>"), where a literal "tracks/(\d+)"
-        // match fails.
-        function scTrackId(src) {
-          const u = decodeURIComponent(((src || '').match(/[?&]url=([^&]+)/) || [])[1] || '');
-          return (u.match(/(\d{5,})/) || [])[1] || null;
-        }
         const frames = Array.prototype.filter.call(
           body.querySelectorAll('iframe'),
           (f) => /w\.soundcloud\.com\/player/i.test(f.getAttribute('src') || '')
@@ -624,6 +644,40 @@
             frames.forEach(showFallbackFor); // the widget API itself never loaded — blocked
           }
         })(60);
+      }
+
+      // A small "▶" next to every track embed (working or blocked) that's playable
+      // in the site's own mini-player — an alternative to fiddling with the inline
+      // widget, or the only way to actually hear a blocked one without leaving the
+      // page. Same playability rule the search/shuffle player already uses: a
+      // SoundCloud embed, or a Bandcamp embed with an approved SoundCloud match
+      // (scPlay), and actually featured in a show (not a year-end list's whole-album
+      // pick). Uses window.modemPlayer — the same shuffle mini-player the radio-show
+      // page's "play random track" button drives.
+      function addPlayButtons(body) {
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        const byKey = new Map(tracks.map((t) => [t.key, t]));
+        const canPlayHere = (tk) => (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
+        body.querySelectorAll('iframe').forEach((f) => {
+          const src = f.getAttribute('src') || '';
+          let key = null;
+          if (/w\.soundcloud\.com\/player/i.test(src)) { const id = scTrackId(src); key = id ? 'sc:' + id : null; }
+          else if (/bandcamp\.com\/EmbeddedPlayer/i.test(src)) key = bcTrackKey(src);
+          if (!key) return;
+          const tk = byKey.get(key);
+          if (!tk || !canPlayHere(tk)) return;
+          const holder = f.closest('p') || f.parentElement;
+          if (!holder || holder.querySelector('.embed-play')) return;
+          holder.classList.add('embed-row');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'embed-play';
+          btn.title = 'play in the modem player';
+          btn.setAttribute('aria-label', 'play in the modem player');
+          btn.textContent = '▶';
+          btn.onclick = () => { if (window.modemPlayer) window.modemPlayer.playTrack(tk, null, btn); };
+          holder.appendChild(btn);
+        });
       }
 
       // The Drupal "video" field's YouTube clips are appended after the whole music
@@ -845,7 +899,7 @@
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
         const body = detailInner.querySelector('.modem-body');
         let listTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); injectSegTags(body, rec); watchForBlockedEmbeds(body); } }
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); injectSegTags(body, rec); addPlayButtons(body); watchForBlockedEmbeds(body); } }
         initPlayer();
 
         const nb = neighbors(rec, records);
