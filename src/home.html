@@ -29,19 +29,20 @@
   /* Occupies roughly the same footprint the "modem" title + subtitle used to
      (same clamp() shape as their old font-size clamps, scaled up by the ratio
      between the title's rendered box and its font-size — see the sizing note in
-     the slideshow script below). object-fit:contain preserves each logo's own
-     aspect ratio (letterboxed within the box, never cropped or stretched), and
-     image-rendering:pixelated keeps the up/downscaling crisp (no bicubic
-     smoothing). */
+     the slideshow script below). This is the MAX area a logo can fill; the
+     script below sizes each <img> in px (not 100%/object-fit) so a logo that's
+     natively much smaller than the others renders smaller too, not blown up to
+     match — see sizeLogo() for the exact scale. image-rendering:pixelated keeps
+     any up/downscaling crisp (no bicubic smoothing). */
   .modem-logo-slide {
     width: clamp(14rem, 58vw, 29rem);
     height: clamp(11rem, 46vw, 23rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .modem-logo-slide img {
     display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
     image-rendering: pixelated;
     image-rendering: -webkit-optimize-contrast;
   }
@@ -120,10 +121,16 @@ document.title = 'modem';
 // old "modem" title. A shuffled queue (not a plain random pick per tick) so the
 // same logo never appears twice in a row, refilled + reshuffled once exhausted.
 (function () {
-  const LOGO_COUNT = 108;
   const INTERVAL_MS = 150;
-  const urls = Array.from({ length: LOGO_COUNT }, (_, i) => '/assets/modem_logos/modem_logo_' + (i + 1) + '.webp');
+  // Each logo's native pixel size (modem_logo_1..108, in order) — used to size
+  // it down from "fill the box" so a logo that's natively much smaller than the
+  // others still reads as smaller, not blown up to match. Not a straight scale
+  // to native resolution (some are tiny, e.g. 127x52) — see sizeFor() below.
+  const DIMS = [[1148,396],[1454,819],[612,100],[164,82],[176,219],[214,69],[296,48],[542,84],[440,178],[905,411],[275,325],[423,107],[204,83],[263,96],[206,118],[788,58],[790,407],[390,102],[353,104],[175,175],[232,68],[205,103],[744,163],[176,63],[205,92],[450,375],[518,278],[697,392],[352,89],[298,121],[506,301],[755,277],[917,189],[517,218],[1190,670],[408,89],[274,272],[142,49],[151,76],[155,109],[171,51],[196,68],[434,173],[589,336],[187,67],[186,81],[275,97],[288,84],[349,152],[533,97],[442,45],[1820,528],[552,122],[178,72],[380,108],[141,57],[198,196],[193,80],[258,84],[340,94],[461,292],[692,166],[378,83],[299,60],[298,42],[651,142],[669,95],[402,202],[418,146],[248,48],[981,415],[994,419],[315,193],[158,131],[719,245],[269,96],[332,114],[233,175],[203,73],[170,42],[223,96],[128,46],[714,143],[331,384],[287,58],[192,145],[349,71],[603,126],[373,52],[127,52],[225,106],[376,161],[774,413],[580,101],[200,101],[314,43],[626,165],[494,213],[904,418],[229,81],[357,85],[288,65],[1371,277],[746,150],[657,56],[657,82],[212,123],[277,74]];
+  const urls = DIMS.map((_, i) => '/assets/modem_logos/modem_logo_' + (i + 1) + '.webp');
   urls.forEach((u) => { const img = new Image(); img.src = u; }); // preload
+
+  const maxArea = Math.max.apply(null, DIMS.map(([w, h]) => w * h));
 
   function shuffled(arr) {
     const a = arr.slice();
@@ -134,12 +141,34 @@ document.title = 'modem';
     return a;
   }
 
-  let queue = shuffled(urls);
+  const slideEl = document.querySelector('.modem-logo-slide');
   const imgEl = document.getElementById('modem-logo-img');
+
+  // Scale = "fill the box" scale (like object-fit:contain) x a dampening factor
+  // between 0.5 (same size regardless of native resolution — the old behavior)
+  // and 1 (fully proportional to native resolution). Landing on 0.5 + 0.5*ratio
+  // means the biggest logo still fully fills the box as before, and the
+  // smallest ones shrink to roughly half their "equal size" footprint rather
+  // than all the way down to their true (sometimes tiny) native proportion.
+  function sizeFor(idx) {
+    const [nw, nh] = DIMS[idx];
+    const box = slideEl.getBoundingClientRect();
+    const containScale = Math.min(box.width / nw, box.height / nh);
+    const nativeRatio = Math.sqrt((nw * nh) / maxArea);
+    const factor = 0.5 + 0.5 * nativeRatio;
+    const scale = containScale * factor;
+    return { w: nw * scale, h: nh * scale };
+  }
+
+  let queue = shuffled(DIMS.map((_, i) => i));
   window.__modemLogoSlideTimer = setInterval(() => {
     if (!document.getElementById('modem-logo-img')) { window.stopModemLogoSlideshow(); return; }
-    if (!queue.length) queue = shuffled(urls);
-    imgEl.src = queue.pop();
+    if (!queue.length) queue = shuffled(DIMS.map((_, i) => i));
+    const idx = queue.pop();
+    const { w, h } = sizeFor(idx);
+    imgEl.style.width = w + 'px';
+    imgEl.style.height = h + 'px';
+    imgEl.src = urls[idx];
   }, INTERVAL_MS);
 })();
 
