@@ -937,7 +937,17 @@
         const m = /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/.exec(s || '');
         return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0;
       }
-      const latestShowDate = (tk) => (tk.shows || []).reduce((max, s) => Math.max(max, parseShowDate(s.date)), 0);
+      // A track tagged with BOTH a numbered show and a year-end list (the list is
+      // usually published well after the show aired, e.g. Dec 2023 vs. an earlier
+      // 2023 show) should sort by when it actually AIRED, not the list's publish
+      // date — otherwise an earlier show jumps ahead of a later one just because it
+      // also made a year-end list. Only fall back to a list's date for track that
+      // has no show appearance at all (a pure list-only pick).
+      function latestShowDate(tk) {
+        const shows = (tk.shows || []).filter((s) => s.type === 'show');
+        const pool = shows.length ? shows : (tk.shows || []);
+        return pool.reduce((max, s) => Math.max(max, parseShowDate(s.date)), 0);
+      }
 
       // A Bandcamp year-end list often embeds a whole album (key "bc:<albumId>:-",
       // no track chosen) while a numbered show separately played one specific track
