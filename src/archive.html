@@ -210,6 +210,35 @@
     .chip.label-chip { background: rgba(224,224,255,0.96); }
     .chip.label-chip.clickable:hover { background: #ffff00; }
 
+    /* ---- inline segment-tag editor (logged-in admin only) ---- */
+    .seg-edit-pencil {
+      border: 1.5px dashed rgba(0,0,0,0.35); border-radius: 999px; background: transparent;
+      color: rgba(0,0,0,0.45); cursor: pointer; font-size: 0.72rem; line-height: 1;
+      padding: 0.14rem 0.4rem; margin: 0 0 0.35rem 0.35rem; vertical-align: middle;
+    }
+    .seg-edit-pencil:hover { color: #000; border-color: #000; background: #ffff00; }
+    .seg-editor { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    .seg-edit-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.2rem; }
+    .seg-edit-label { font-size: 0.68rem; font-weight: bold; text-transform: lowercase; opacity: 0.5; margin-right: 0.15rem; }
+    .seg-edit-chip {
+      display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; font-weight: bold;
+      border: 1.5px solid #000; border-radius: 999px; padding: 0.1rem 0.15rem 0.1rem 0.6rem;
+      background: rgba(255,255,255,0.96); color: #000;
+    }
+    .seg-edit-rm { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0 0.3rem; }
+    .seg-edit-rm:hover { color: #b91c1c; }
+    .seg-edit-add {
+      font-family: Arial, sans-serif; font-size: 0.78rem; border: 1.5px dashed rgba(0,0,0,0.35); border-radius: 999px;
+      padding: 0.12rem 0.55rem; width: 9rem; background: transparent;
+    }
+    .seg-edit-add:focus { outline: none; border-color: #000; border-style: solid; }
+    .seg-edit-done {
+      border: 1.5px solid #000; border-radius: 999px; background: #fff; color: #000; cursor: pointer;
+      font-size: 0.72rem; font-weight: bold; text-transform: lowercase; padding: 0.12rem 0.6rem;
+    }
+    .seg-edit-done:hover { background: #ffff00; }
+    .seg-edit-status { font-size: 0.68rem; opacity: 0.6; white-space: nowrap; }
+
     /* ===================== SEARCH (hidden power-feature; not in nav) ===================== */
     .modem-archive {
       position: fixed; inset: 0; z-index: 150; overflow-y: auto; overflow-x: hidden;
@@ -346,6 +375,118 @@
       function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
           ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      }
+
+      // ---- inline segment-tag editing (logged in via /admin, password saved to
+      // localStorage there) — lets an admin fix a segment heading's artist/label
+      // chips directly on a show page, instead of only via the /admin per-track
+      // search tool. Writes overrides.json's "segEdits" (see apply-overrides.js);
+      // a different axis from /admin's "tagEdits" (per-track, not per-segment). ----
+      function isAdmin() { return !!localStorage.getItem('modem-admin-pw'); }
+      const segEditKey = (slug, seg) => slug + '::' + seg;
+      const segEditState = {}; // segEditKey → { artists: [...], labels: [...] } while a pencil is open
+
+      // Fetch the CURRENT overrides.json fresh (not a stale copy from page load)
+      // before merging in this one change, so two edits made close together don't
+      // clobber each other by overwriting with an outdated snapshot — the same
+      // hazard the match-review approvals flow hit earlier (see approvals.json).
+      async function saveSegEdit(slug, seg, artists, labels) {
+        const res = await fetch('/assets/overrides.json', { cache: 'no-cache' });
+        const current = res.ok ? await res.json() : {};
+        const overrides = {
+          tagMerges: current.tagMerges || {},
+          tagEdits: current.tagEdits || {},
+          segEdits: current.segEdits || {},
+        };
+        overrides.segEdits[slug] = overrides.segEdits[slug] || {};
+        overrides.segEdits[slug][seg] = { artists, labels };
+        const r = await fetch('/save-overrides', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: localStorage.getItem('modem-admin-pw'), overrides }),
+        });
+        const j = await r.json().catch(() => ({ ok: false, error: 'bad response' }));
+        if (!j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      }
+
+      function segEditChip(name, kind) {
+        return '<span class="seg-edit-chip" data-name="' + esc(name) + '">' + esc(name) +
+          '<button type="button" class="seg-edit-rm" data-kind="' + kind + '" title="remove">&times;</button></span>';
+      }
+      function segEditGroupHtml(label, kind, names) {
+        return '<span class="seg-edit-group">' +
+          '<span class="seg-edit-label">' + label + '</span>' +
+          names.map((n) => segEditChip(n, kind)).join('') +
+          '<input type="text" class="seg-edit-add" data-kind="' + kind + '" placeholder="+ add, Enter">' +
+          '</span>';
+      }
+      function renderSegEditor(slug, seg) {
+        const st = segEditState[segEditKey(slug, seg)];
+        return '<span class="seg-editor" data-slug="' + esc(slug) + '" data-seg="' + esc(seg) + '">' +
+          segEditGroupHtml('artists:', 'artist', st.artists) +
+          segEditGroupHtml('labels:', 'label', st.labels) +
+          '<button type="button" class="seg-edit-done">done</button>' +
+          '<span class="seg-edit-status"></span>' +
+          '</span>';
+      }
+      function findSegEditor(slug, seg) {
+        return detailInner.querySelector('.seg-editor[data-slug="' + CSS.escape(slug) + '"][data-seg="' + CSS.escape(seg) + '"]');
+      }
+      function openSegEditor(pencil) {
+        const slug = pencil.getAttribute('data-slug'), seg = pencil.getAttribute('data-seg');
+        const wrap = pencil.closest('.seg-tags');
+        if (!wrap) return null;
+        const artists = [...wrap.querySelectorAll('.chip.artist-chip')].map((c) => c.getAttribute('data-name'));
+        const labels = [...wrap.querySelectorAll('.chip.label-chip')].map((c) => c.getAttribute('data-name'));
+        segEditState[segEditKey(slug, seg)] = { artists, labels };
+        wrap.outerHTML = renderSegEditor(slug, seg);
+        return findSegEditor(slug, seg);
+      }
+      function closeSegEditor(editor, rec) {
+        // Re-run the normal (non-edit) chip render for just this one segment,
+        // pulling from the just-edited state — avoids reloading the whole page.
+        const slug = editor.getAttribute('data-slug'), seg = editor.getAttribute('data-seg');
+        const st = segEditState[segEditKey(slug, seg)];
+        rec.artists = (rec.artists || []).filter((a) => String(a.seg) !== seg);
+        rec.labels = (rec.labels || []).filter((l) => String(l.seg) !== seg);
+        st.artists.forEach((n) => rec.artists.push({ name: n, url: null, seg: Number(seg) }));
+        st.labels.forEach((n) => rec.labels.push({ name: n, url: null, seg: Number(seg) }));
+        const body = detailInner.querySelector('.modem-body');
+        if (body) injectSegTags(body, rec);
+      }
+      function wireSegEditor(editor, rec) {
+        const slug = editor.getAttribute('data-slug'), seg = editor.getAttribute('data-seg');
+        const st = segEditState[segEditKey(slug, seg)];
+        const statusEl = editor.querySelector('.seg-edit-status');
+        function persist() {
+          statusEl.textContent = 'saving…';
+          saveSegEdit(slug, seg, st.artists, st.labels)
+            .then(() => { statusEl.textContent = 'saved'; setTimeout(() => { if (statusEl.isConnected) statusEl.textContent = ''; }, 1500); })
+            .catch((e) => { statusEl.textContent = 'save failed: ' + e.message; });
+        }
+        editor.querySelectorAll('.seg-edit-rm').forEach((btn) => btn.onclick = () => {
+          const name = btn.closest('.seg-edit-chip').getAttribute('data-name');
+          const kind = btn.getAttribute('data-kind');
+          const arr = kind === 'label' ? st.labels : st.artists;
+          const i = arr.indexOf(name);
+          if (i > -1) arr.splice(i, 1);
+          editor.outerHTML = renderSegEditor(slug, seg);
+          wireSegEditor(findSegEditor(slug, seg), rec);
+          persist();
+        });
+        editor.querySelectorAll('.seg-edit-add').forEach((inp) => inp.onkeydown = (e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          const v = inp.value.trim();
+          if (!v) return;
+          const kind = inp.getAttribute('data-kind');
+          const arr = kind === 'label' ? st.labels : st.artists;
+          if (!arr.includes(v)) arr.push(v);
+          editor.outerHTML = renderSegEditor(slug, seg);
+          wireSegEditor(findSegEditor(slug, seg), rec);
+          persist();
+        });
+        const done = editor.querySelector('.seg-edit-done');
+        if (done) done.onclick = () => closeSegEditor(editor, rec);
       }
       function slugFromHash() {
         return decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
@@ -700,7 +841,15 @@
             l = l.filter((n) => !aKeys.has(hardKey(n)));
           }
           const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
-          const tagsHtml = chips ? '<span class="seg-tags">' + chips + '</span>' : '';
+          // Logged-in admin (see isAdmin()) gets a pencil on every real heading, even
+          // a chip-less one, so a segment the scraper never tagged can be fixed here
+          // instead of only via the separate /admin per-track search tool.
+          const pencil = isAdmin()
+            ? '<button type="button" class="seg-edit-pencil" data-slug="' + esc(rec.slug) + '" data-seg="' + esc(seg) + '" title="edit tags">&#9998;</button>'
+            : '';
+          const tagsHtml = (chips || pencil)
+            ? '<span class="seg-tags" data-slug="' + esc(rec.slug) + '" data-seg="' + esc(seg) + '">' + chips + pencil + '</span>'
+            : '';
           // Early shows tuck the artist's real music links (soundcloud/bandcamp/…) INTO
           // the slash run — keep those. But drop the leading NAME and extend the slashes
           // out to the chips, so these read exactly like the recent "///// [chips]"
@@ -719,12 +868,12 @@
             return;
           }
           const raw = p.textContent || '';
-          if (!/\//.test(raw) && !chips) return;
+          if (!/\//.test(raw) && !chips && !pencil) return;
           // Plain "name /////" heading → drop the redundant name (the chips identify
           // the entry) and let the slashes stretch (flex + overflow clip) so the
           // chips sit at the right edge at any screen size — pure CSS, responsive.
           p.classList.add('seg-row');
-          if (chips) {
+          if (chips || pencil) {
             p.innerHTML = slashes + tagsHtml;
           } else {
             const nm = raw.replace(/[\s/]*\/[\s/]*$/, '').trim(); // no tags → keep the name as a fallback
@@ -733,7 +882,9 @@
         });
       }
 
+      let currentDetailRec = null; // for the seg-editor click handler below, which needs the live rec object
       function renderDetail(rec, records) {
+        currentDetailRec = rec;
         detailInner.innerHTML =
           (rec.cover ? '<img class="detail-cover-big" src="' + esc(rec.cover) + '" alt="">' : '') +
           (rec.date ? '<div class="detail-date">' + esc(rec.date) + '</div>' : '') +
@@ -787,7 +938,13 @@
       }
       // every chip inside the detail (inline per-track + the bottom artists/labels
       // section) opens the same tag search
-      detailInner.onclick = (e) => { const chip = e.target.closest('.chip.clickable'); if (chip) openTagChip(chip); };
+      detailInner.onclick = (e) => {
+        const pencil = e.target.closest('.seg-edit-pencil');
+        if (pencil) { const editor = openSegEditor(pencil); if (editor) wireSegEditor(editor, currentDetailRec); return; }
+        if (e.target.closest('.seg-editor')) return; // clicks inside the editor (chips, inputs) are handled by wireSegEditor
+        const chip = e.target.closest('.chip.clickable');
+        if (chip) openTagChip(chip);
+      };
 
       backBtn.onclick = () => {
         // These detail pages are always reached from the radio-show grid, so

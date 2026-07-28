@@ -97,6 +97,7 @@
   <span class="grow"></span>
   <span class="stat" id="stat"></span>
   <button id="save" disabled>✔ save &amp; apply</button>
+  <button id="logout" title="forget the saved password on this browser">log out</button>
 </header>
 
 <div class="wrap" id="main" hidden>
@@ -150,11 +151,12 @@
   function enter() {
     const pw = $('#pw').value;
     if (!pw) { $('#gateerr').textContent = 'enter the password'; return; }
-    sessionStorage.setItem('modem-admin-pw', pw);
+    localStorage.setItem('modem-admin-pw', pw); // persists across visits — also unlocks inline editing on show pages
     $('#gate').remove(); $('#hdr').hidden = false; $('#main').hidden = false;
     boot();
   }
-  if (sessionStorage.getItem('modem-admin-pw')) { const g = $('#gate'); if (g) g.remove(); $('#hdr').hidden = false; $('#main').hidden = false; boot(); }
+  if (localStorage.getItem('modem-admin-pw')) { const g = $('#gate'); if (g) g.remove(); $('#hdr').hidden = false; $('#main').hidden = false; boot(); }
+  $('#logout').onclick = () => { localStorage.removeItem('modem-admin-pw'); location.reload(); };
 
   async function boot() {
     const [a, o] = await Promise.all([
@@ -162,7 +164,10 @@
       fetch('/assets/overrides.json', { cache: 'no-cache' }).then((r) => r.json()).catch(() => ({})),
     ]);
     ARCHIVE = a;
-    overrides = { tagMerges: (o && o.tagMerges) || {}, tagEdits: (o && o.tagEdits) || {} };
+    // Carry segEdits through unchanged even though this page never creates them —
+    // they're written by the inline editor on show pages, and dropping the field
+    // here would silently wipe them out the next time this page saves.
+    overrides = { tagMerges: (o && o.tagMerges) || {}, tagEdits: (o && o.tagEdits) || {}, segEdits: (o && o.segEdits) || {} };
     computeTags();
     renderAll();
     renderEditResults();
@@ -394,7 +399,7 @@
     const btn = $('#save'); btn.disabled = true; const orig = btn.textContent; btn.textContent = 'saving…';
     try {
       const r = await fetch(SAVE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: sessionStorage.getItem('modem-admin-pw'), overrides }) });
+        body: JSON.stringify({ password: localStorage.getItem('modem-admin-pw'), overrides }) });
       const j = await r.json();
       if (j.ok) { dirty = 0; btn.textContent = '✔ applied'; toast('saved & applied — reload the site to see merged tags'); await boot(); }
       else { btn.textContent = '✗ error'; toast('save failed: ' + (j.error || r.status)); }
