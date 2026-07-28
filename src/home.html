@@ -35,8 +35,8 @@
      match — see sizeLogo() for the exact scale. image-rendering:pixelated keeps
      any up/downscaling crisp (no bicubic smoothing). */
   .modem-logo-slide {
-    width: clamp(19rem, 78vw, 39rem);
-    height: clamp(15rem, 62vw, 31rem);
+    width: clamp(21rem, 87vw, 43.5rem);
+    height: clamp(16.5rem, 69vw, 34.5rem);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -153,7 +153,7 @@ document.title = 'modem';
   // proportional to that image's own size, so it silently cancelled the native-
   // size signal back out — a tiny image got a proportionally huge base scale,
   // making the final sizes correlate with aspect ratio more than actual size).
-  // factor 0.55 (smallest) .. 1 (the biggest logo, which fills the box exactly,
+  // factor 0.7 (smallest) .. 1 (the biggest logo, which fills the box exactly,
   // same as before) — sqrt() converts the area ratio to a linear-size ratio.
   // The safety cap only matters for an unusually oblong logo that would
   // otherwise overflow the box at this scale.
@@ -163,7 +163,7 @@ document.title = 'modem';
     const [refW, refH] = DIMS[maxAreaIdx];
     const refScale = Math.min(box.width / refW, box.height / refH);
     const nativeRatio = Math.sqrt((nw * nh) / maxArea);
-    const factor = 0.55 + 0.45 * nativeRatio;
+    const factor = 0.7 + 0.3 * nativeRatio;
     const capScale = Math.min(box.width / nw, box.height / nh);
     const scale = Math.min(refScale * factor, capScale);
     return { w: nw * scale, h: nh * scale };
