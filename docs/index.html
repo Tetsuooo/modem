@@ -198,7 +198,24 @@
         font-size: clamp(0.82rem, 1.6vw, 1.02rem);
         padding: clamp(0.25rem, 0.65vw, 0.4rem) clamp(0.3rem, 0.85vw, 0.5rem);
       }
-    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><div id="content"></div><div id="__vpdbg" style="position:fixed;left:4px;top:56px;z-index:2147483647;background:rgba(255,255,0,.95);color:#000;font:12px/1.35 monospace;padding:4px 6px;pointer-events:none;white-space:pre;display:none;border:1px solid #000"></div><script>(function(){
+    }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><script>// Expose nav's real rendered height as --nav-h so fixed full-viewport
+    // overlays (show detail / search) can stop their own top edge there
+    // instead of running full-height behind nav's translucent background.
+    // Nav's height is responsive (clamp()s + can wrap to 2 lines on narrow
+    // screens), so this is measured, not assumed.
+    (function () {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      const update = () => {
+        document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
+      };
+      update();
+      if (window.ResizeObserver) {
+        new ResizeObserver(update).observe(nav);
+      } else {
+        window.addEventListener('resize', update);
+      }
+    })();</script><div id="content"></div><div id="__vpdbg" style="position:fixed;left:4px;top:56px;z-index:2147483647;background:rgba(255,255,0,.95);color:#000;font:12px/1.35 monospace;padding:4px 6px;pointer-events:none;white-space:pre;display:none;border:1px solid #000"></div><script>(function(){
       if (location.search.indexOf('dbg') < 0 && location.hash.indexOf('dbg') < 0) return;
       var d = document.getElementById('__vpdbg'); d.style.display = 'block';
       function upd(){
@@ -654,7 +671,18 @@
               window.location.hash = '';
             }
           }
-          
+
+          // radio-show.html / dial-up.html create their hover-preview cover image
+          // (the big floating cover you get from hovering/tapping a show number) via
+          // document.body.appendChild — a sibling of #content, not inside it — so the
+          // content.innerHTML swap below never touches it. It only fades via opacity,
+          // never removes itself, and on touch devices mouseleave often never fires
+          // after tapping straight to a nav link, so it can get stuck visible and
+          // float over whatever page loads next. Strip any stray one on every nav.
+          document.querySelectorAll('.preview-image').forEach((img) => {
+            if (!content.contains(img)) img.remove();
+          });
+
           console.log(`Loading page: ${url}`);
           const fetchUrl = url.endsWith('.html') ? url : `${url}.html`;
           // Revalidate against the server (ETag) so a deploy's updated page fragments

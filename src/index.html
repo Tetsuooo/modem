@@ -227,6 +227,26 @@
     <a href="/shop">shop</a>
     <a href="/support">support</a>
   </nav>
+  <script>
+    // Expose nav's real rendered height as --nav-h so fixed full-viewport
+    // overlays (show detail / search) can stop their own top edge there
+    // instead of running full-height behind nav's translucent background.
+    // Nav's height is responsive (clamp()s + can wrap to 2 lines on narrow
+    // screens), so this is measured, not assumed.
+    (function () {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      const update = () => {
+        document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
+      };
+      update();
+      if (window.ResizeObserver) {
+        new ResizeObserver(update).observe(nav);
+      } else {
+        window.addEventListener('resize', update);
+      }
+    })();
+  </script>
 
   <div id="content">
     <!-- Content will be loaded here -->
@@ -696,7 +716,18 @@
               window.location.hash = '';
             }
           }
-          
+
+          // radio-show.html / dial-up.html create their hover-preview cover image
+          // (the big floating cover you get from hovering/tapping a show number) via
+          // document.body.appendChild — a sibling of #content, not inside it — so the
+          // content.innerHTML swap below never touches it. It only fades via opacity,
+          // never removes itself, and on touch devices mouseleave often never fires
+          // after tapping straight to a nav link, so it can get stuck visible and
+          // float over whatever page loads next. Strip any stray one on every nav.
+          document.querySelectorAll('.preview-image').forEach((img) => {
+            if (!content.contains(img)) img.remove();
+          });
+
           console.log(`Loading page: ${url}`);
           const fetchUrl = url.endsWith('.html') ? url : `${url}.html`;
           // Revalidate against the server (ETag) so a deploy's updated page fragments

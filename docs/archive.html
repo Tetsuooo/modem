@@ -30,7 +30,11 @@
        fixed nav (z 200000) still on top and clickable. */
     .modem-detail-page {
       position: fixed;
-      inset: 0;
+      /* top stops at the nav's real (JS-measured, see index.html) height instead
+         of inset:0's 0 — otherwise this box's own scrollbar track ran full-height
+         and showed through nav's translucent background. */
+      top: var(--nav-h, 0px);
+      right: 0; bottom: 0; left: 0;
       z-index: 150;
       overflow-y: auto;
       overflow-x: hidden;
@@ -43,7 +47,10 @@
       width: 100%;
       max-width: 760px; /* cover stays full-width; embeds are capped via --embed-w */
       margin: 0 auto;
-      padding: 3.75rem 1rem 6rem; /* top clears nav; bottom clears the tag bubbles */
+      /* padding-top used to be the sole thing clearing nav (container ran full-height
+         behind it); now the container itself already stops below nav, so subtract
+         --nav-h back out to keep the content sitting at the same visual position. */
+      padding: max(0px, calc(3.75rem - var(--nav-h, 0px))) 1rem 6rem;
     }
 
     .detail-back {
@@ -257,11 +264,12 @@
 
     /* ===================== SEARCH (hidden power-feature; not in nav) ===================== */
     .modem-archive {
-      position: fixed; inset: 0; z-index: 150; overflow-y: auto; overflow-x: hidden;
+      position: fixed; top: var(--nav-h, 0px); right: 0; bottom: 0; left: 0;
+      z-index: 150; overflow-y: auto; overflow-x: hidden;
       background: transparent;
     }
     .modem-archive[hidden] { display: none; }
-    .archive-inner-wrap { box-sizing: border-box; width: 100%; max-width: 1100px; margin: 0 auto; padding: 3.75rem 1rem 3rem; }
+    .archive-inner-wrap { box-sizing: border-box; width: 100%; max-width: 1100px; margin: 0 auto; padding: max(0px, calc(3.75rem - var(--nav-h, 0px))) 1rem 3rem; }
     .archive-controls { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,0.92); border: 2px solid #000; padding: 0.6rem 0.75rem; margin-bottom: 1rem; }
     #archive-search { width: 100%; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 1rem; font-weight: bold; padding: 0.55rem 0.7rem; border: 2px solid #000; outline: none; }
     #archive-search:focus { background: #ffffcc; }
@@ -325,7 +333,7 @@
     .track-src:hover { color: #0645ad; }
 
     @media (max-width: 480px) {
-      .detail-inner-wrap, .archive-inner-wrap { padding-top: 4.6rem; }
+      .detail-inner-wrap, .archive-inner-wrap { padding-top: max(0px, calc(4.6rem - var(--nav-h, 0px))); }
       .detail-back { top: 3.85rem; }
       .detail-nav { top: 3.85rem; }
       .archive-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
