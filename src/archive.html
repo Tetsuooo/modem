@@ -271,6 +271,18 @@
     }
     .seg-edit-done:hover { background: #ffff00; }
     .seg-edit-status { font-size: 0.68rem; opacity: 0.6; white-space: nowrap; }
+    .seg-edit-chip-name { cursor: pointer; }
+    .seg-edit-chip-name:hover { text-decoration: underline; text-decoration-style: dotted; }
+    .seg-edit-add-btn {
+      border: 1.5px solid #000; border-radius: 999px; background: #fff; color: #000; cursor: pointer;
+      font-size: 0.78rem; font-weight: bold; line-height: 1; padding: 0.1rem 0.45rem;
+    }
+    .seg-edit-add-btn:hover { background: #ffff00; }
+    .seg-edit-rename {
+      font-family: Arial, sans-serif; font-size: 0.78rem; font-weight: bold; border: 1.5px solid #000; border-radius: 999px;
+      padding: 0.1rem 0.55rem; width: 9rem; background: #fff;
+    }
+    .seg-edit-rename:focus { outline: none; }
 
     /* ===================== SEARCH (hidden power-feature; not in nav) ===================== */
     .modem-archive {
@@ -460,15 +472,43 @@
         if (!j.ok) throw new Error(j.error || ('HTTP ' + r.status));
       }
 
+      // Every known artist/label name across the whole archive, for the add/rename
+      // fields' <datalist> suggestions — typing "Boy" should surface the existing
+      // "Boy Lucid" instead of an admin accidentally creating a near-duplicate
+      // fragmented variant (the same problem tagMerges cleans up after the fact).
+      let cachedTagNames = { artist: null, label: null };
+      function allTagNames(kind) {
+        if (cachedTagNames[kind]) return cachedTagNames[kind];
+        const set = new Set();
+        ((window.__modemData && window.__modemData.records) || []).forEach((r) => {
+          (kind === 'label' ? r.labels : r.artists || []).forEach((t) => { if (t && t.name) set.add(t.name); });
+        });
+        const list = [...set].sort((a, b) => a.localeCompare(b));
+        cachedTagNames[kind] = list;
+        return list;
+      }
+      const segEditListId = (kind) => 'seg-edit-' + kind + '-list';
+      function ensureTagDatalists() {
+        ['artist', 'label'].forEach((kind) => {
+          const id = segEditListId(kind);
+          if (document.getElementById(id)) return;
+          const dl = document.createElement('datalist');
+          dl.id = id;
+          dl.innerHTML = allTagNames(kind).map((n) => '<option value="' + esc(n) + '">').join('');
+          document.body.appendChild(dl);
+        });
+      }
       function segEditChip(name, kind) {
-        return '<span class="seg-edit-chip" data-name="' + esc(name) + '">' + esc(name) +
+        return '<span class="seg-edit-chip" data-name="' + esc(name) + '">' +
+          '<span class="seg-edit-chip-name" data-kind="' + kind + '" title="click to rename">' + esc(name) + '</span>' +
           '<button type="button" class="seg-edit-rm" data-kind="' + kind + '" title="remove">&times;</button></span>';
       }
       function segEditGroupHtml(label, kind, names) {
         return '<span class="seg-edit-group">' +
           '<span class="seg-edit-label">' + label + '</span>' +
           names.map((n) => segEditChip(n, kind)).join('') +
-          '<input type="text" class="seg-edit-add" data-kind="' + kind + '" placeholder="+ add, Enter">' +
+          '<input type="text" class="seg-edit-add" data-kind="' + kind + '" list="' + segEditListId(kind) + '" placeholder="+ add, Enter">' +
+          '<button type="button" class="seg-edit-add-btn" data-kind="' + kind + '" title="add">+</button>' +
           '</span>';
       }
       function renderSegEditor(slug, seg) {
@@ -490,6 +530,7 @@
         const artists = [...wrap.querySelectorAll('.chip.artist-chip')].map((c) => c.getAttribute('data-name'));
         const labels = [...wrap.querySelectorAll('.chip.label-chip')].map((c) => c.getAttribute('data-name'));
         segEditState[segEditKey(slug, seg)] = { artists, labels };
+        ensureTagDatalists();
         wrap.outerHTML = renderSegEditor(slug, seg);
         return findSegEditor(slug, seg);
       }
@@ -545,9 +586,7 @@
           wireSegEditor(findSegEditor(slug, seg), rec);
           persist();
         });
-        editor.querySelectorAll('.seg-edit-add').forEach((inp) => inp.onkeydown = (e) => {
-          if (e.key !== 'Enter') return;
-          e.preventDefault();
+        function commitAdd(inp) {
           const v = inp.value.trim();
           if (!v) return;
           const kind = inp.getAttribute('data-kind');
@@ -556,6 +595,63 @@
           editor.outerHTML = renderSegEditor(slug, seg);
           wireSegEditor(findSegEditor(slug, seg), rec);
           persist();
+        }
+        // Enter-to-add and an explicit "+" button both commit the same way — the
+        // button is a safety net in case Enter-key handling ever misses (browser
+        // quirk, IME composition, focus landing somewhere unexpected) with no
+        // visible error, which is exactly what made a real add look like "nothing
+        // happens" even though remove/save were both working underneath.
+        editor.querySelectorAll('.seg-edit-add').forEach((inp) => inp.onkeydown = (e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          commitAdd(inp);
+        });
+        editor.querySelectorAll('.seg-edit-add-btn').forEach((btn) => btn.onclick = () => {
+          const inp = btn.closest('.seg-edit-group').querySelector('.seg-edit-add');
+          if (inp) commitAdd(inp);
+        });
+        // Click a chip's name to rename it in place (swap to a text input,
+        // pre-filled, same datalist suggestions as the add field).
+        editor.querySelectorAll('.seg-edit-chip-name').forEach((nameEl) => nameEl.onclick = () => {
+          const chip = nameEl.closest('.seg-edit-chip');
+          const oldName = chip.getAttribute('data-name');
+          const kind = nameEl.getAttribute('data-kind');
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'seg-edit-rename';
+          input.value = oldName;
+          input.setAttribute('list', segEditListId(kind));
+          chip.replaceWith(input);
+          input.focus();
+          input.select();
+          // Commit/cancel run directly off the keydown, not off a subsequent blur —
+          // calling .blur() programmatically and waiting for the blur event to fire
+          // proved unreliable (in some environments — including automated testing
+          // here — a not-really-OS-focused input's blur event just never arrives).
+          // blur is kept only as a secondary fallback for "clicked away without
+          // pressing Enter"; the `done` guard stops it from double-firing after
+          // Enter/Escape already committed synchronously.
+          let done = false;
+          const rerender = () => { editor.outerHTML = renderSegEditor(slug, seg); wireSegEditor(findSegEditor(slug, seg), rec); };
+          const commit = (v) => {
+            if (done) return;
+            done = true;
+            const arr = kind === 'label' ? st.labels : st.artists;
+            const i = arr.indexOf(oldName);
+            if (i > -1) { if (v) arr[i] = v; else arr.splice(i, 1); } // renamed to empty = remove
+            rerender();
+            if (v !== oldName) persist();
+          };
+          const cancel = () => {
+            if (done) return;
+            done = true;
+            rerender();
+          };
+          input.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(input.value.trim()); }
+            else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+          };
+          input.onblur = () => commit(input.value.trim());
         });
         const done = editor.querySelector('.seg-edit-done');
         if (done) done.onclick = () => closeSegEditor(editor, rec);
