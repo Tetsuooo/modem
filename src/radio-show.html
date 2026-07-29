@@ -313,7 +313,6 @@
           if (local.has(a.dataset.modem)) {
             a.href = '/' + a.dataset.modem;
             a.classList.add('in-archive');
-            a.title = 'open in the on-site archive';
           } else if (a.dataset.ext) {
             a.href = a.dataset.ext; // not mirrored locally yet → radiostudent fallback
             a.classList.remove('in-archive');
