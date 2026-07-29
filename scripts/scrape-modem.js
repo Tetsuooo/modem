@@ -62,10 +62,11 @@ const SLUG_OVERRIDES = {
 };
 // SoundCloud track slug quirks — independent of radiostudent's own slugs above,
 // and not always consistent even with each other ("modemNN" here has no hyphen,
-// unlike the site's own "modem-NN"). #1 genuinely has no valid track ("This
-// track was not found" on soundcloud.com/modemodemodem/01 — checked directly,
-// not just a guessed-URL 404), so it's correctly absent, not an override target.
+// unlike the site's own "modem-NN"). #1's real slug is "01a1", not "01" — the
+// plain "01" guess 404s (that's what the earlier "This track was not found"
+// check hit), but the actual upload lives at the "a1" suffix.
 const SC_SLUG_OVERRIDES = {
+  1: '01a1',
   224: 'modem224',
   230: 'modem230',
 };
