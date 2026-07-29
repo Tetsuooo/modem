@@ -78,17 +78,26 @@
     }
 
     /* ---- full-show player (hidden SoundCloud widget), matches the mini-player:
-       the whole thing sits in a big white rectangle (no outline), the time reads
-       above a thin timeline, and the play button is a plain icon (no square) ---- */
+       the whole thing sits in a big white rectangle (no outline), and the play
+       button is a plain icon (no square) ---- */
     .sc-player {
-      display: flex; flex-direction: column;
-      background: #fff; color: #000; padding: 0.3rem 0.7rem 0.6rem; margin: 0 0 1.6rem;
+      position: relative; display: flex; align-items: center;
+      background: #fff; color: #000; padding: 0.7rem; margin: 0 0 1.6rem; min-height: 3.9rem;
     }
-    /* Right-padded to clear .sc-popout's own column (width + the row's gap) so
-       the time sits above the BAR's right edge specifically, not the row's full
-       width (which would put it over the popout button instead). */
-    .sc-time { text-align: right; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; margin: 0.65rem 0 0.15rem; padding-right: 2.1rem; }
-    .sc-row { display: flex; align-items: center; gap: 0.5rem; }
+    /* Time + pop-out live in the top-right corner, OUTSIDE the normal flow —
+       .sc-row (play button + timeline) is .sc-player's only flow child, so
+       align-items:center above centers it in the box's full height instead of
+       being pushed down by a time/pop-out row stacked above it. */
+    .sc-time { position: absolute; top: 0.55rem; right: 2.3rem; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sc-popout {
+      position: absolute; top: 0.45rem; right: 0.5rem;
+      width: 1.4rem; height: 1.4rem; padding: 0;
+      border: 0; background: transparent; color: rgba(0, 0, 0, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; line-height: 1; cursor: pointer;
+    }
+    .sc-popout:hover { color: #000; }
+    .sc-row { display: flex; align-items: center; gap: 0.7rem; width: 100%; }
     .sc-toggle {
       width: 2.6rem; height: 2.6rem; flex: none; padding: 0;
       border: 0; background: transparent; color: #000;
@@ -96,16 +105,6 @@
       font-size: 1.5rem; line-height: 1; cursor: pointer;
     }
     .sc-toggle:hover { color: #888; }
-    /* Smaller than .sc-toggle on purpose (a secondary action, not the primary
-       control) — .sc-bar picks up the freed width instead of it going to a
-       second big empty-looking button. */
-    .sc-popout {
-      width: 1.6rem; height: 1.6rem; flex: none; padding: 0;
-      border: 0; background: transparent; color: rgba(0, 0, 0, 0.45);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; line-height: 1; cursor: pointer;
-    }
-    .sc-popout:hover { color: #000; }
     .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; }
     .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
@@ -822,10 +821,10 @@
           '&show_comments=false&show_playcount=false&visual=false&hide_related=true';
         return '<div class="sc-player">' +
           '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
+          '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">&#8599;</button>' +
           '<div class="sc-row">' +
             '<button class="sc-toggle" type="button" aria-label="play">▶</button>' +
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
-            '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">&#8599;</button>' +
           '</div>' +
           '</div>' +
           (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">&#8599; listen on soundcloud</a>' : '') +
