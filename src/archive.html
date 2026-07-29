@@ -92,7 +92,7 @@
        button is a plain icon (no square) ---- */
     .sc-player {
       position: relative; display: flex; align-items: center;
-      background: #fff; color: #000; padding: 0.55rem 0.7rem; margin: 0 0 2.2rem;
+      background: #fff; color: #000; padding: 0.55rem 0.7rem; margin: 0 0 3rem;
     }
     /* Time + pop-out live in the top-right corner, OUTSIDE the normal flow —
        .sc-row (play button + timeline) is .sc-player's only flow child, so
@@ -107,9 +107,10 @@
       font-size: 1.15rem; line-height: 1; cursor: pointer;
     }
     .sc-popout:hover { color: #000; }
-    /* Right-padded to stay clear of the .sc-time/.sc-popout corner overlay
-       above — without this .sc-bar (flex:1) runs underneath both of them. */
-    .sc-row { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding-right: 6.7rem; }
+    /* Right-padded just enough to stop level with .sc-time's own right edge
+       (not its full width, and well short of .sc-popout further right still) —
+       .sc-bar reaches the last time digit, not the corner overlay's left edge. */
+    .sc-row { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding-right: 2.2rem; }
     .sc-toggle {
       width: 2.6rem; height: 2.6rem; flex: none; padding: 0;
       border: 0; background: transparent; color: #000;
