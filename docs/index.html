@@ -14,14 +14,30 @@
        DOCUMENT's (html, not just body) scrollable area, even with body's own
        overflow:hidden below, since that rule doesn't reach the root element.
        That produced a genuine second native scrollbar stacked next to a show
-       page's own intentional inner one. */
+       page's own intentional inner one. Scoped to non-scrolling pages only —
+       year-end-lists/dial-up (portrait) get html.doc-scroll (set in loadPage)
+       since they rely on the document itself scrolling. */
     html { overflow: hidden; }
+    html.doc-scroll { overflow: auto; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       overflow: hidden;
       background: white;
     }
+
+    /* Custom scrollbar: thickness scales with viewport width instead of the
+       browser's fixed default (measured ~15px on Windows/Chrome regardless of
+       screen size). 0.293vw lands at ~7.5px — half of that default — on a 2K-wide
+       (2560px) display, then scales down/up for other sizes within a sane range.
+       Firefox only exposes "thin"/"auto"/"none" (no arbitrary width), so it gets
+       a static thin bar rather than the same granular scaling. */
+    :root { --sb-w: clamp(3px, 0.293vw, 9px); }
+    ::-webkit-scrollbar { width: var(--sb-w); height: var(--sb-w); }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.35); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.6); }
+    * { scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.35) transparent; }
 
     .background-animation {
       position: fixed;
@@ -604,6 +620,14 @@
 
       async function loadPage(url) {
         try {
+          // year-end-lists and dial-up want the actual document to scroll in
+          // portrait (their own body/height rules rely on that); every other
+          // page relies on html's overflow:hidden (see below) to stop .cloud
+          // from opening a second scrollbar. Toggle it per-route since it's
+          // one shared <html> across the whole SPA.
+          const DOC_SCROLL_PAGES = new Set(['year-end-lists', 'dial-up']);
+          document.documentElement.classList.toggle('doc-scroll', DOC_SCROLL_PAGES.has(url.replace(/\.html$/, '')));
+
           // Clean up home page social icons before loading new page
           if (window.removeHomeSocialIcons) {
             window.removeHomeSocialIcons();

@@ -12,6 +12,19 @@
     body { margin: 0; font-family: Arial, sans-serif; background: transparent; }
     .content { box-sizing: border-box; width: 100%; }
 
+    /* Custom scrollbar: thickness scales with viewport width instead of the
+       browser's fixed default (measured ~15px on Windows/Chrome regardless of
+       screen size). 0.293vw lands at ~7.5px — half of that default — on a 2K-wide
+       (2560px) display, then scales down/up for other sizes within a sane range.
+       Firefox only exposes "thin"/"auto"/"none" (no arbitrary width), so it gets
+       a static thin bar rather than the same granular scaling. */
+    :root { --sb-w: clamp(3px, 0.293vw, 9px); }
+    ::-webkit-scrollbar { width: var(--sb-w); height: var(--sb-w); }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.35); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.6); }
+    * { scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.35) transparent; }
+
     /* ===================== DETAIL (on-site archival page) =====================
        Its own fixed, scrollable layer floating over the animation, with the
        fixed nav (z 200000) still on top and clickable. */
