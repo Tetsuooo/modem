@@ -56,6 +56,15 @@ const SLUG_OVERRIDES = {
   100: 'modem-100-bag-of-toys',
   200: 'modem-200-bag-of-toys-2',
 };
+// SoundCloud track slug quirks — independent of radiostudent's own slugs above,
+// and not always consistent even with each other ("modemNN" here has no hyphen,
+// unlike the site's own "modem-NN"). #1 genuinely has no valid track ("This
+// track was not found" on soundcloud.com/modemodemodem/01 — checked directly,
+// not just a guessed-URL 404), so it's correctly absent, not an override target.
+const SC_SLUG_OVERRIDES = {
+  224: 'modem224',
+  230: 'modem230',
+};
 function showSlug(n) {
   if (SLUG_OVERRIDES[n]) return SLUG_OVERRIDES[n];
   if (n <= 9) return `modem-0${n}`;
@@ -395,11 +404,15 @@ async function ensureCoverArt(records) {
 // Resolve & verify the full-show SoundCloud player via oEmbed.
 function resolveSoundcloud(number, live) {
   if (!number) return null;
-  const trackUrl = `${SC_USER}/modem-${pad(number)}`;
+  const scSlug = SC_SLUG_OVERRIDES[number] || 'modem-' + pad(number);
+  const trackUrl = `${SC_USER}/${scSlug}`;
   const oembed = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(trackUrl)}`;
   let res;
   try {
-    res = cachedCurl(`sc-modem-${pad(number)}.json`, oembed, live);
+    // Cache key follows the actual slug (not just the number) so a stale
+    // cached failure from the old guessed URL can't mask a fixed override —
+    // it just becomes an orphaned, ignored cache file instead.
+    res = cachedCurl(`sc-${scSlug}.json`, oembed, live);
   } catch (e) {
     return null;
   }
