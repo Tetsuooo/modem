@@ -224,6 +224,10 @@
             if (number === 1) slug = 'modem-01-0';
             else if (number === 100) slug = 'modem-100-bag-of-toys';
             else if (number === 200) slug = 'modem-200-bag-of-toys-2';
+            // radiostudent's own stray duplicate of #179 sits at the unsuffixed
+            // "modem-180"; the real #180 landed at "-0" (see scrape-modem.js's
+            // matching SLUG_OVERRIDES entry).
+            else if (number === 180) slug = 'modem-180-0';
             else slug = 'modem-' + (number < 10 ? `0${number}` : number);
             link.dataset.modem = slug;
             link.dataset.ext = 'https://radiostudent.si/glasba/modem/' + slug;
