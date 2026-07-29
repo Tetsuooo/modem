@@ -55,6 +55,10 @@ const SLUG_OVERRIDES = {
   1: 'modem-01-0',
   100: 'modem-100-bag-of-toys',
   200: 'modem-200-bag-of-toys-2',
+  // The unsuffixed "modem-180" is radiostudent's own stray duplicate of #179
+  // (same title/date/mp3, wrong canonical) — the real #180 page landed at
+  // "-0" when Drupal auto-suffixed the second "modem-180" it was given.
+  180: 'modem-180-0',
 };
 // SoundCloud track slug quirks — independent of radiostudent's own slugs above,
 // and not always consistent even with each other ("modemNN" here has no hyphen,
