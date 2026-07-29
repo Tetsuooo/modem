@@ -1085,6 +1085,10 @@
       function trackMatchesTag(tk, tag) {
         if (tag.kind === 'artist') {
           if (normKey(tk.artist) === normKey(tag.name)) return true;
+          // A collab credit (tk.artist "Kuthi Jin & Talpah") carries every credited
+          // name here too, so searching either one alone still finds the track —
+          // tk.artist itself stays a single joined display string.
+          if (Array.isArray(tk.artists) && tk.artists.some((n) => normKey(n) === normKey(tag.name))) return true;
           // Segment-heading fallback ONLY for tracks with no artist of their own.
           // Otherwise a foreign track mis-grouped under an artist's heading (e.g. an
           // unheaded clip trailing OAKMILK's section) would falsely match that artist.

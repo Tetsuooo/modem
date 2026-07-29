@@ -190,6 +190,19 @@
       display: flex; align-items: center; justify-content: center;
     }
     .embed-play:hover { color: #888; }
+    /* Per-track edit pencil (sits next to .embed-play, admin-only) — fixes one
+       specific track's OWN artist/labels (data.tracks[], via tagEdits), unlike
+       the segment-heading pencil (rec.artists/labels for the whole heading,
+       ambiguous when several tracks share one heading — see track-editor.js
+       comment further down for why both exist). */
+    .track-edit-pencil {
+      flex: none; border: 1.5px solid rgba(0,0,0,0.3); border-radius: 999px; background: transparent;
+      color: rgba(0,0,0,0.55); cursor: pointer; font-size: 0.75rem; line-height: 1;
+      padding: 0.14rem 0.4rem; align-self: flex-start; margin-top: 0.15rem;
+    }
+    .track-edit-pencil:hover { color: #000; border-color: #000; background: #ffff00; }
+    .track-editor-host { margin: -0.6rem 0 1rem; }
+    .track-editor-host .seg-editor { display: flex; }
     /* Buffer + subtle hairline between the music tracklist and the trailing
        YouTube "video" section (the appended Drupal video field). */
     .modem-body .modem-video-divider { margin: 3.25rem 0 2.25rem; border: 0; border-top: 1px solid rgba(0, 0, 0, 0.18); }
@@ -620,6 +633,157 @@
         const done = editor.querySelector('.seg-edit-done');
         if (done) done.onclick = () => closeSegEditor(editor, rec);
       }
+
+      // ---- Per-track editor: fixes ONE specific track's own artist/labels -----
+      // (data.tracks[], via tagEdits) — unlike the segment-heading editor above
+      // (rec.artists/labels, via segEdits), which is ambiguous whenever more than
+      // one track shares a heading (a compilation segment), since a segment-level
+      // edit has no way to say which name belongs to which of several tracks.
+      // The chips here are NOT displayed anywhere new — the segment heading keeps
+      // showing exactly what it already shows; this only records which of those
+      // names (or any other known tag) this specific track's own data should
+      // carry, so search/the mini-player find it correctly.
+      const trackEditState = {}; // track key → { artists: [...], labels: [...] } while open
+      async function saveTrackEdit(key, artists, labels) {
+        const res = await fetch('/assets/overrides.json', { cache: 'no-cache' });
+        const current = res.ok ? await res.json() : {};
+        const overrides = {
+          tagMerges: current.tagMerges || {},
+          tagEdits: current.tagEdits || {},
+          segEdits: current.segEdits || {},
+        };
+        overrides.tagEdits[key] = { artist: artists.join(' & '), artists, labels };
+        const r = await fetch('/save-overrides', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: localStorage.getItem('modem-admin-pw'), overrides }),
+        });
+        const j = await r.json().catch(() => ({ ok: false, error: 'bad response' }));
+        if (!j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      }
+      function renderTrackEditor(key) {
+        const st = trackEditState[key];
+        return '<span class="seg-editor track-editor" data-track-key="' + esc(key) + '">' +
+          segEditGroupHtml('artists:', 'artist', st.artists) +
+          segEditGroupHtml('labels:', 'label', st.labels) +
+          '<button type="button" class="seg-edit-done">done</button>' +
+          '<span class="seg-edit-status"></span>' +
+          '</span>';
+      }
+      function findTrackEditor(key) {
+        return detailInner.querySelector('.track-editor[data-track-key="' + CSS.escape(key) + '"]');
+      }
+      function openTrackEditor(pencil) {
+        const key = pencil.getAttribute('data-track-key');
+        const wrap = pencil.closest('.embed-row');
+        if (!wrap || findTrackEditor(key)) return null; // already open
+        const tk = ((window.__modemData && window.__modemData.tracks) || []).find((t) => t.key === key);
+        if (!tk) return null;
+        const artists = (Array.isArray(tk.artists) && tk.artists.length) ? tk.artists.slice() : (tk.artist ? [tk.artist] : []);
+        const show = (tk.shows || []).find((s) => currentDetailRec && s.slug === currentDetailRec.slug) || (tk.shows || [])[0];
+        const labels = (show && show.labels) ? show.labels.slice() : [];
+        trackEditState[key] = { artists, labels };
+        ensureTagDatalists();
+        const host = document.createElement('div');
+        host.className = 'track-editor-host';
+        host.innerHTML = renderTrackEditor(key);
+        wrap.parentNode.insertBefore(host, wrap.nextSibling);
+        return findTrackEditor(key);
+      }
+      function closeTrackEditor(editor) {
+        const host = editor.closest('.track-editor-host');
+        if (host) host.remove();
+      }
+      function wireTrackEditor(editor) {
+        const key = editor.getAttribute('data-track-key');
+        const st = trackEditState[key];
+        function liveStatusEl() {
+          const live = findTrackEditor(key);
+          return live ? live.querySelector('.seg-edit-status') : null;
+        }
+        function persist() {
+          const s0 = liveStatusEl();
+          if (s0) s0.textContent = 'saving…';
+          saveTrackEdit(key, st.artists, st.labels)
+            .then(() => {
+              const s1 = liveStatusEl();
+              if (s1) { s1.textContent = 'saved'; setTimeout(() => { if (s1.isConnected) s1.textContent = ''; }, 1500); }
+            })
+            .catch((e) => {
+              const s2 = liveStatusEl();
+              if (s2) s2.textContent = 'save failed: ' + e.message;
+            });
+        }
+        function rerenderInPlace() {
+          const host = editor.closest('.track-editor-host');
+          host.innerHTML = renderTrackEditor(key);
+          wireTrackEditor(findTrackEditor(key));
+        }
+        editor.querySelectorAll('.seg-edit-add').forEach((inp) => wireDeferredDatalist(inp));
+        editor.querySelectorAll('.seg-edit-rm').forEach((btn) => btn.onclick = () => {
+          const name = btn.closest('.seg-edit-chip').getAttribute('data-name');
+          const kind = btn.getAttribute('data-kind');
+          const arr = kind === 'label' ? st.labels : st.artists;
+          const i = arr.indexOf(name);
+          if (i > -1) arr.splice(i, 1);
+          rerenderInPlace();
+          persist();
+        });
+        function commitAdd(inp) {
+          const v = inp.value.trim();
+          if (!v) return;
+          const kind = inp.getAttribute('data-kind');
+          const arr = kind === 'label' ? st.labels : st.artists;
+          if (!arr.includes(v)) arr.push(v);
+          rerenderInPlace();
+          persist();
+        }
+        editor.querySelectorAll('.seg-edit-add').forEach((inp) => inp.onkeydown = (e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          commitAdd(inp);
+        });
+        editor.querySelectorAll('.seg-edit-add-btn').forEach((btn) => btn.onclick = () => {
+          const inp = btn.closest('.seg-edit-group').querySelector('.seg-edit-add');
+          if (inp) commitAdd(inp);
+        });
+        editor.querySelectorAll('.seg-edit-chip-name').forEach((nameEl) => nameEl.onclick = () => {
+          const chip = nameEl.closest('.seg-edit-chip');
+          const oldName = chip.getAttribute('data-name');
+          const kind = nameEl.getAttribute('data-kind');
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'seg-edit-rename';
+          input.value = oldName;
+          input.dataset.list = segEditListId(kind);
+          chip.replaceWith(input);
+          wireDeferredDatalist(input);
+          input.focus();
+          input.select();
+          let done = false;
+          const commit = (v) => {
+            if (done) return;
+            done = true;
+            const arr = kind === 'label' ? st.labels : st.artists;
+            const i = arr.indexOf(oldName);
+            if (i > -1) { if (v) arr[i] = v; else arr.splice(i, 1); }
+            rerenderInPlace();
+            if (v !== oldName) persist();
+          };
+          const cancel = () => {
+            if (done) return;
+            done = true;
+            rerenderInPlace();
+          };
+          input.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(input.value.trim()); }
+            else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+          };
+          input.onblur = () => commit(input.value.trim());
+        });
+        const done = editor.querySelector('.seg-edit-done');
+        if (done) done.onclick = () => closeTrackEditor(editor);
+      }
+
       function slugFromHash() {
         return decodeURIComponent((location.hash || '').replace(/^#/, '')).trim();
       }
@@ -831,6 +995,7 @@
         const tracks = (window.__modemData && window.__modemData.tracks) || [];
         const byKey = new Map(tracks.map((t) => [t.key, t]));
         const canPlayHere = (tk) => (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
+        const admin = isAdmin();
         body.querySelectorAll('iframe').forEach((f) => {
           const src = f.getAttribute('src') || '';
           let key = null;
@@ -838,7 +1003,9 @@
           else if (/bandcamp\.com\/EmbeddedPlayer/i.test(src)) key = bcTrackKey(src);
           if (!key) return;
           const tk = byKey.get(key);
-          if (!tk || !canPlayHere(tk)) return;
+          if (!tk) return;
+          const playable = canPlayHere(tk);
+          if (!playable && !admin) return; // nothing to attach here otherwise
           if (f.dataset.hasPlayBtn) return;
           f.dataset.hasPlayBtn = '1';
           // Wrap just THIS iframe (not its parent <p>) — radiostudent's own markup
@@ -850,14 +1017,26 @@
           wrap.className = 'embed-row';
           f.parentNode.insertBefore(wrap, f);
           wrap.appendChild(f);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'embed-play';
-          btn.title = 'play in the modem player';
-          btn.setAttribute('aria-label', 'play in the modem player');
-          btn.textContent = '▶';
-          btn.onclick = () => { if (window.modemPlayer) window.modemPlayer.playTrack(tk, null, 'left'); };
-          wrap.appendChild(btn);
+          if (playable) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'embed-play';
+            btn.title = 'play in the modem player';
+            btn.setAttribute('aria-label', 'play in the modem player');
+            btn.textContent = '▶';
+            btn.onclick = () => { if (window.modemPlayer) window.modemPlayer.playTrack(tk, null, 'left'); };
+            wrap.appendChild(btn);
+          }
+          if (admin) {
+            const pencil = document.createElement('button');
+            pencil.type = 'button';
+            pencil.className = 'track-edit-pencil';
+            pencil.title = "edit this track's own tags";
+            pencil.setAttribute('aria-label', "edit this track's own tags");
+            pencil.dataset.trackKey = tk.key;
+            pencil.innerHTML = '&#9998;';
+            wrap.appendChild(pencil);
+          }
         });
       }
 
@@ -1137,7 +1316,11 @@
       detailInner.onclick = (e) => {
         const pencil = e.target.closest('.seg-edit-pencil');
         if (pencil) { const editor = openSegEditor(pencil); if (editor) wireSegEditor(editor, currentDetailRec); return; }
-        if (e.target.closest('.seg-editor')) return; // clicks inside the editor (chips, inputs) are handled by wireSegEditor
+        const trackPencil = e.target.closest('.track-edit-pencil');
+        if (trackPencil) { const editor = openTrackEditor(trackPencil); if (editor) wireTrackEditor(editor); return; }
+        // .track-editor carries the .seg-editor class too, so this also covers clicks
+        // inside it — both editors' own chips/inputs are handled by their wire*Editor.
+        if (e.target.closest('.seg-editor')) return;
         const chip = e.target.closest('.chip.clickable');
         if (chip) openTagChip(chip);
       };
