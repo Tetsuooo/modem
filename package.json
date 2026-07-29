@@ -43,6 +43,7 @@
     "periodic-function": "^1.1.4",
     "pixi-apngandgif": "^1.0.0",
     "pixi.js": "^8.7.0",
+    "sharp": "^0.33.5",
     "webpack-merge": "^4.2.2"
   }
 }
