@@ -198,6 +198,16 @@
       "labels": [
         "surf"
       ]
+    },
+    "bc:3081369973:20566609": {
+      "artist": "jjjacob & bod [包家巷]",
+      "artists": [
+        "jjjacob",
+        "bod [包家巷]"
+      ],
+      "labels": [
+        "katharsis"
+      ]
     }
   },
   "segEdits": {
@@ -247,6 +257,19 @@
         ],
         "labels": [
           "surf"
+        ]
+      }
+    },
+    "modem-180-0": {
+      "14": {
+        "artists": [
+          "Bungalovv",
+          "jjjacob",
+          "bod [包家巷]",
+          "stella fortuna"
+        ],
+        "labels": [
+          "katharsis"
         ]
       }
     }
