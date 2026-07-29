@@ -206,23 +206,41 @@ document.title = 'modem';
 
   let queue = shuffled(DIMS.map((_, i) => i));
   let timer = null;
+  let running = false;
 
-  function tick() {
+  // Decode the next frame fully OFFSCREEN before touching the visible <img> at
+  // all — size and content must change together in the same paint. Setting
+  // .style.width/height then .src (the old approach) applies the NEW logo's
+  // box to whatever's still ON SCREEN, because src assignment doesn't repaint
+  // until the browser finishes decoding — for the bigger logos (some are
+  // 1820x819) that decode can take a beat, so the previous frame briefly gets
+  // stretched into the new dimensions before snapping right. That's exactly
+  // the "sticks on one logo, stretched, then repairs itself" symptom: it's not
+  // stuck, it's a new logo's SIZE painted a beat before its PIXELS.
+  async function tick() {
+    if (!running) return;
     if (!document.getElementById('modem-logo-img')) { stop(); return; }
     if (!queue.length) queue = shuffled(DIMS.map((_, i) => i));
     const idx = queue.pop();
+    const pre = new Image();
+    pre.src = urls[idx];
+    try { await pre.decode(); } catch (e) {}
+    if (!running) return; // stopped while this frame was decoding
     const { w, h } = sizeFor(idx);
     imgEl.style.width = w + 'px';
     imgEl.style.height = h + 'px';
     imgEl.src = urls[idx];
+    // Self-scheduling (not setInterval) so a slow decode delays the NEXT
+    // frame instead of letting ticks pile up and race each other.
+    timer = setTimeout(tick, INTERVAL_MS);
   }
-  function start() { if (!timer) timer = setInterval(tick, INTERVAL_MS); }
-  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function start() { if (!running) { running = true; tick(); } }
+  function stop() { running = false; if (timer) { clearTimeout(timer); timer = null; } }
 
   start();
   // Click the logo to pause/resume the slideshow on the current frame.
   slideEl.style.cursor = 'pointer';
-  slideEl.addEventListener('click', () => { if (timer) stop(); else start(); });
+  slideEl.addEventListener('click', () => { if (running) stop(); else start(); });
 
   window.stopModemLogoSlideshow = stop;
 })();
