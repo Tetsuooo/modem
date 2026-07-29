@@ -502,18 +502,38 @@
         rec.labels = (rec.labels || []).filter((l) => String(l.seg) !== seg);
         st.artists.forEach((n) => rec.artists.push({ name: n, url: null, seg: Number(seg) }));
         st.labels.forEach((n) => rec.labels.push({ name: n, url: null, seg: Number(seg) }));
+        // Mark this segment as admin-edited so injectSegTags suppresses the per-track
+        // fallback even when cleared to zero chips (matches apply-overrides.js's
+        // server-side r.segEditedSegs, so the in-session render and a fresh reload agree).
+        rec.segEditedSegs = rec.segEditedSegs || [];
+        if (!rec.segEditedSegs.includes(Number(seg))) rec.segEditedSegs.push(Number(seg));
         const body = detailInner.querySelector('.modem-body');
         if (body) injectSegTags(body, rec);
       }
       function wireSegEditor(editor, rec) {
         const slug = editor.getAttribute('data-slug'), seg = editor.getAttribute('data-seg');
         const st = segEditState[segEditKey(slug, seg)];
-        const statusEl = editor.querySelector('.seg-edit-status');
+        // Look the status element up FRESH every time rather than closing over the
+        // one that exists right now — every add/remove replaces the editor's whole
+        // outerHTML (see below), which detaches this element from the document, so a
+        // captured reference silently stops being visible after the very first edit
+        // even though later saves keep succeeding (status just never updates again).
+        function liveStatusEl() {
+          const live = findSegEditor(slug, seg);
+          return live ? live.querySelector('.seg-edit-status') : null;
+        }
         function persist() {
-          statusEl.textContent = 'saving…';
+          const s0 = liveStatusEl();
+          if (s0) s0.textContent = 'saving…';
           saveSegEdit(slug, seg, st.artists, st.labels)
-            .then(() => { statusEl.textContent = 'saved'; setTimeout(() => { if (statusEl.isConnected) statusEl.textContent = ''; }, 1500); })
-            .catch((e) => { statusEl.textContent = 'save failed: ' + e.message; });
+            .then(() => {
+              const s1 = liveStatusEl();
+              if (s1) { s1.textContent = 'saved'; setTimeout(() => { if (s1.isConnected) s1.textContent = ''; }, 1500); }
+            })
+            .catch((e) => {
+              const s2 = liveStatusEl();
+              if (s2) s2.textContent = 'save failed: ' + e.message;
+            });
         }
         editor.querySelectorAll('.seg-edit-rm').forEach((btn) => btn.onclick = () => {
           const name = btn.closest('.seg-edit-chip').getAttribute('data-name');
@@ -889,8 +909,17 @@
         // releases these equal the record's segment tags.
         // Segments that already name an artist via the record's own taxonomy (the heading).
         const artistHeadingSegs = new Set((rec.artists || []).filter((a) => a.seg != null && a.name).map((a) => String(a.seg)));
+        // Segments an admin has explicitly edited via the inline seg editor — suppress
+        // the per-track fallback below entirely for these, even if the admin cleared a
+        // segment down to zero chips. Without this, clearing a segment (or replacing a
+        // wrong track-sourced artist with nothing while only setting a label) just makes
+        // the fallback re-inject the same wrong value right back, so the edit never
+        // visibly sticks (e.g. modem-199 seg 2's "Boy Lucid" track was mis-tagged with
+        // artist "Ostara" — its actual label — from the Bandcamp embed).
+        const editedSegs = new Set((rec.segEditedSegs || []).map(String));
         tracks.forEach((t) => (t.shows || []).forEach((s) => {
           if (s.slug !== rec.slug) return;
+          if (editedSegs.has(String(s.seg))) return;
           // Surface a track's own artist as a chip ONLY when the segment has no artist
           // heading of its own — i.e. compilation / label / untagged segments (this is
           // what shows the various artists on a VA release). For an artist-headed
