@@ -184,9 +184,16 @@
     .modem-body iframe[src*="bandcamp"][src*="size=small"] { height: 42px; }
     .modem-body iframe[src*="youtube"] { width: 100%; aspect-ratio: 16 / 9; height: auto; }
     /* Shown only next to a SoundCloud embed that never gains real size (blocked
-       client-side) — see watchForBlockedEmbeds(). */
-    .modem-body .embed-fallback { display: none; font-size: 0.85rem; margin: -0.7rem 0 1rem; }
-    .modem-body .embed-fallback.show { display: block; }
+       client-side) — see watchForBlockedEmbeds(). Its own play/edit buttons (if
+       any — see addPlayButtons()) move in here too, to the link's right, rather
+       than being left stranded next to the now-invisible collapsed iframe. */
+    .modem-body .embed-fallback { display: none; align-items: center; gap: 0.5rem; margin: -0.7rem 0 1rem; }
+    .modem-body .embed-fallback.show { display: flex; }
+    .embed-fallback-link { font-size: 0.85rem; }
+    /* .embed-play's own margin-top nudges it down against a normal embed's top
+       edge (see below) — here it's already vertically centered against the
+       link's own line, so that nudge would just push it off-center. */
+    .embed-fallback .embed-play { margin-top: 0; }
     /* "play in the modem player" button, sitting beside a playable track's embed
        (see addPlayButtons()) — a wrapper SPAN scoped to just this one iframe (not
        its parent <p>, which can hold more than one embed back to back — flexing
@@ -196,7 +203,7 @@
     .modem-body .embed-row { display: flex; align-items: flex-start; gap: 0.4rem; }
     .embed-play {
       flex: none; border: 0; background: transparent; color: #000; cursor: pointer;
-      font-size: 1.3rem; line-height: 1; padding: 0;
+      font-size: 1.1rem; line-height: 1; padding: 0; margin-top: 0.65rem;
       display: flex; align-items: center; justify-content: center;
     }
     .embed-play:hover { color: #888; }
@@ -1008,10 +1015,19 @@
           if (title && artist && title.trim().toLowerCase() !== artist.trim().toLowerCase()) label = title + ' by ' + artist;
           else label = title || artist || null;
           const a = document.createElement('a');
-          a.className = 'embed-fallback show';
+          a.className = 'embed-fallback-link';
           a.href = href; a.target = '_blank'; a.rel = 'noopener';
           a.textContent = '↗ ' + (label ? label + ' ' : '') + 'on soundcloud';
-          (f.closest('p') || f).insertAdjacentElement('afterend', a);
+          const row = document.createElement('span');
+          row.className = 'embed-fallback show';
+          row.appendChild(a);
+          // Move (not clone, so their click handlers survive) this iframe's own
+          // play/edit buttons — see addPlayButtons() — into the fallback row,
+          // to the link's right, instead of leaving them stranded next to what's
+          // now an invisible, collapsed iframe.
+          const embedRow = f.closest('.embed-row');
+          if (embedRow) embedRow.querySelectorAll('.embed-play, .track-edit-pencil').forEach((btn) => row.appendChild(btn));
+          (f.closest('p') || f).insertAdjacentElement('afterend', row);
         }
         setTimeout(() => {
           frames.forEach((f) => { if (f.offsetWidth === 0 || f.offsetHeight === 0) showFallbackFor(f); });
