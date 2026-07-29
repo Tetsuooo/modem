@@ -120,7 +120,135 @@
     "Être Peintre": "Maitre Peintre",
     "melos han-tani": "Sean Han Tani",
     "ToupeMapeto aka\"thugkia\"$$$": "ToupeMapeto",
-    "JPN Kasai": "Jap Kasai"
+    "JPN Kasai": "Jap Kasai",
+    "s!p!d!": ", s!p!d!",
+    "dj bobo1": "DJ Bobo1",
+    "𝑓.": "/f",
+    "lockbox777": "Lockbox",
+    "Kuthi Jinani": "Kuthi Jin",
+    "食品まつり a​.​k​.​a FOODMAN": "FOODMAN",
+    "Magic Dok-s Project": "dok-s project",
+    "scarekrow": "scarecrow",
+    "tau contrib (τ:contrb)": "tau contrib",
+    "silént phl": "Silent Phil",
+    "Ludwig Wndinger": "Ludwig Wandinger",
+    "Snuffed Scarekrow": "scarekrow",
+    "Terroriba": "terrorriba",
+    "kensho n.": "Kensho Nakamura",
+    "death's dynamic shroud.wmv": "death's dynamic shroud",
+    "kintama nostalgia": "kintama nostalgia research",
+    "TYPHONIAN HIGHLIFE FEATURING CORUM": "Typhonian Highlife",
+    "yesendow (ﺃᦓ ꪻꫝꫀ) FKA 𝓢𝓾𝓶99 ⊂◉‿◉つ": "yesendow**(ﺃᦓ ꪻꫝꫀ)",
+    "jape daw 4": "jape daw 3",
+    "Monopoly Child Star Searchers": "Star Searchers",
+    "b.michael": "b.michaael",
+    "τ:contrb": "tau contrib (τ:contrb)",
+    "Rorshac": "Rorschac",
+    "Šop Records": "Records",
+    "Lost Dogs": "Lost Dogs Entertainment",
+    "Xquisite Releases": "xquisite",
+    "wnodiarwb": "wnoadiarwb",
+    "Xquisite nihil": "xquisite",
+    "Warm Winters": "warm winters ltd.",
+    "Tingo Tongo": "Tingo Tongo Tapes",
+    "Oxtail Recordings": "Oxtail",
+    "forumforum": "formforum",
+    "Onmyodo": "Onmyodo Cassette",
+    "And Options": "&Options",
+    "Ente": "Ente Tapes",
+    "Conjunktival": "Conjuktival",
+    "Trilogy Tapes": "The Trilogy Tapes",
+    "Eternal Dragonz": "Eternal Dragons",
+    "Urubu": "Urubu Tapes"
   },
-  "tagEdits": {}
+  "tagEdits": {
+    "bc:565587585:983361818": {
+      "artist": "Chickenmilk dot com & ANTHEM",
+      "artists": [
+        "Chickenmilk dot com",
+        "ANTHEM"
+      ],
+      "labels": [
+        "Transatlantic"
+      ]
+    },
+    "bc:1827334507:2908147707": {
+      "artist": "Yem Gel",
+      "artists": [
+        "Yem Gel"
+      ],
+      "labels": [
+        "surf"
+      ]
+    },
+    "bc:1827334507:1220882212": {
+      "artist": "Gibby(-Dj)",
+      "artists": [
+        "Gibby(-Dj)"
+      ],
+      "labels": [
+        "surf"
+      ]
+    },
+    "bc:1827334507:1620842366": {
+      "artist": "Toiret Status",
+      "artists": [
+        "Toiret Status"
+      ],
+      "labels": [
+        "surf"
+      ]
+    }
+  },
+  "segEdits": {
+    "modem-126": {
+      "1": {
+        "artists": [],
+        "labels": []
+      }
+    },
+    "modem-199": {
+      "2": {
+        "artists": [
+          "Boy Lucid"
+        ],
+        "labels": [
+          "Ostara"
+        ]
+      },
+      "9": {
+        "artists": [
+          "Kuthi Jin",
+          "Talpah"
+        ],
+        "labels": [
+          "Clam"
+        ]
+      },
+      "12": {
+        "artists": [
+          "monker178",
+          "windowseeker",
+          "Chickenmilk dot com",
+          "ANTHEM"
+        ],
+        "labels": [
+          "Transatlantic"
+        ]
+      }
+    },
+    "modem-92": {
+      "5": {
+        "artists": [
+          "jr/.?bst",
+          "Yem Gel",
+          "Gibby(-Dj)",
+          "Toiret Status"
+        ],
+        "labels": [
+          "surf"
+        ]
+      }
+    }
+  }
 }
