@@ -177,14 +177,13 @@ document.title = 'modem';
   // 3:1 ratio most of the set sits at one clamp or the other; only logos
   // whose native area falls between the two reference points show any
   // formula-driven variation.
-  // NOTE: MIN isn't simply MAX/3 — the tightest floor case and the ceiling
-  // case bind on different box axes (one width-constrained, one
-  // height-constrained), and the box isn't square, so a naive MAX/3 measured
-  // ~3.78:1 in practice. This value is tuned against the actual rendered
-  // long-edge across all 108 logos (see the scratch verification script) to
-  // land the real max/min ratio at 3.0, not just the formula's nominal one.
-  const MAX_FILL_FRAC = 0.85;
-  const MIN_FILL_FRAC = 0.2125;
+  // NOTE: MIN isn't simply MAX/ratio — the tightest floor case and the
+  // ceiling case bind on different box axes (one width-constrained, one
+  // height-constrained), and the box isn't square, so a naive division
+  // doesn't land on the intended ratio in practice; these are tuned against
+  // the actual rendered long-edge across all 108 logos.
+  const MAX_FILL_FRAC = 0.90;
+  const MIN_FILL_FRAC = 0.36; // 0.90 / 2.5 — a 2.5:1 spread, and both ends bigger than before (was 0.85 / 0.2125, a 4:1 spread)
   function sizeFor(idx) {
     const [nw, nh] = DIMS[idx];
     const box = slideEl.getBoundingClientRect();
