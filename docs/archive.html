@@ -450,6 +450,16 @@
           document.body.appendChild(dl);
         });
       }
+      // Attaching `list` up front makes Chrome pop the FULL ~2500-name dropdown the
+      // instant the field is focused, before the admin has typed anything to filter
+      // by — not useful, just noisy. Leave `list` off until there's actually text to
+      // match against, so suggestions only ever appear once the admin starts typing.
+      function wireDeferredDatalist(inp) {
+        inp.addEventListener('input', () => {
+          if (inp.value.trim()) inp.setAttribute('list', inp.dataset.list);
+          else inp.removeAttribute('list');
+        });
+      }
       function segEditChip(name, kind) {
         return '<span class="seg-edit-chip" data-name="' + esc(name) + '">' +
           '<span class="seg-edit-chip-name" data-kind="' + kind + '" title="click to rename">' + esc(name) + '</span>' +
@@ -459,7 +469,7 @@
         return '<span class="seg-edit-group">' +
           '<span class="seg-edit-label">' + label + '</span>' +
           names.map((n) => segEditChip(n, kind)).join('') +
-          '<input type="text" class="seg-edit-add" data-kind="' + kind + '" list="' + segEditListId(kind) + '" placeholder="+ add, Enter">' +
+          '<input type="text" class="seg-edit-add" data-kind="' + kind + '" data-list="' + segEditListId(kind) + '" placeholder="+ add, Enter">' +
           '<button type="button" class="seg-edit-add-btn" data-kind="' + kind + '" title="add">+</button>' +
           '</span>';
       }
@@ -528,6 +538,7 @@
               if (s2) s2.textContent = 'save failed: ' + e.message;
             });
         }
+        editor.querySelectorAll('.seg-edit-add').forEach((inp) => wireDeferredDatalist(inp));
         editor.querySelectorAll('.seg-edit-rm').forEach((btn) => btn.onclick = () => {
           const name = btn.closest('.seg-edit-chip').getAttribute('data-name');
           const kind = btn.getAttribute('data-kind');
@@ -572,8 +583,9 @@
           input.type = 'text';
           input.className = 'seg-edit-rename';
           input.value = oldName;
-          input.setAttribute('list', segEditListId(kind));
+          input.dataset.list = segEditListId(kind);
           chip.replaceWith(input);
+          wireDeferredDatalist(input);
           input.focus();
           input.select();
           // Commit/cancel run directly off the keydown, not off a subsequent blur —
