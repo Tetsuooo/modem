@@ -1280,6 +1280,20 @@
             l = l.filter((n) => !aKeys.has(hardKey(n)));
           }
           const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
+          // Source pages occasionally repeat a heading twice back-to-back with
+          // nothing in between — e.g. modem-208's raw HTML has
+          // <p data-seg="5">zeromandia, rené /////</p> immediately followed by
+          // <p data-seg="6">zeromandia /////</p> right before the actual track,
+          // no embed between them. The first one never gets any tags (nothing to
+          // attribute) AND has nothing playable under it either — the very next
+          // thing in the DOM is just the next heading — so it only ever renders
+          // as a bare, confusing "/////" line with no chips and nothing to click
+          // beyond an empty pencil. Drop it outright; not admin-gated, since a
+          // regular visitor sees the same dead line.
+          if (!chips && p.nextElementSibling && p.nextElementSibling.classList.contains('seg-marker')) {
+            p.remove();
+            return;
+          }
           // Logged-in admin (see isAdmin()) gets a pencil on every real heading, even
           // a chip-less one, so a segment the scraper never tagged can be fixed here
           // instead of only via the separate /admin per-track search tool.
