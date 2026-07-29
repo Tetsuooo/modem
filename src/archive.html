@@ -94,15 +94,25 @@
       display: flex; flex-direction: column;
       background: #fff; color: #000; padding: 0.3rem 0.7rem 0.6rem; margin: 0 0 1.6rem;
     }
-    .sc-time { text-align: right; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; margin-bottom: 0.1rem; }
+    .sc-time { text-align: right; font-size: 0.7rem; color: #aaa; font-variant-numeric: tabular-nums; white-space: nowrap; margin: 0.35rem 0 0.1rem; }
     .sc-row { display: flex; align-items: center; gap: 0.7rem; }
     .sc-toggle {
-      width: 1.9rem; height: 1.9rem; flex: none; padding: 0;
+      width: 2.6rem; height: 2.6rem; flex: none; padding: 0;
       border: 0; background: transparent; color: #000;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; line-height: 1; cursor: pointer;
+      font-size: 1.5rem; line-height: 1; cursor: pointer;
     }
     .sc-toggle:hover { color: #888; }
+    /* .sc-popout mirrors .sc-toggle's footprint on the row's other end, purely so
+       .sc-bar (flex:1 between them) sits truly centered rather than skewed right
+       by the toggle's own width — it just happens to also be useful there. */
+    .sc-popout {
+      width: 2.6rem; height: 2.6rem; flex: none; padding: 0;
+      border: 0; background: transparent; color: rgba(0, 0, 0, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; line-height: 1; cursor: pointer;
+    }
+    .sc-popout:hover { color: #000; }
     .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; }
     .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
@@ -860,6 +870,7 @@
           '<div class="sc-row">' +
             '<button class="sc-toggle" type="button" aria-label="play">▶</button>' +
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
+            '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">&#8599;</button>' +
           '</div>' +
           '</div>' +
           (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">&#8599; listen on soundcloud</a>' : '') +
@@ -888,7 +899,7 @@
         // track that works fine a couple seconds later. Both timeouts are also more
         // generous than the tracklist-embed check (10s here vs. that one's 6s) since
         // this is a single widget, not up to a dozen on the page at once.
-        let widget = null, durationMs = 0, readyTimer = null;
+        let widget = null, durationMs = 0, readyTimer = null, currentPositionMs = 0;
         function showFallback() { wrap.style.display = 'none'; if (fallback) fallback.classList.add('show'); }
         function restoreFromFallback() { wrap.style.display = ''; if (fallback) fallback.classList.remove('show'); }
         function ready() {
@@ -902,10 +913,16 @@
           widget.bind(SC.Widget.Events.PLAY, () => { toggle.textContent = '❚❚'; });
           widget.bind(SC.Widget.Events.PAUSE, () => { toggle.textContent = '▶'; });
           widget.bind(SC.Widget.Events.FINISH, () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
-          widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => { seek(e.relativePosition); curEl.textContent = fmt(e.currentPosition); });
+          widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => { seek(e.relativePosition); curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition; });
         }
         toggle.onclick = () => { if (widget) widget.toggle(); };
         bar.onclick = (e) => { if (!widget || !durationMs) return; const r = bar.getBoundingClientRect(); const frac = (e.clientX - r.left) / r.width; seek(frac); widget.seekTo(frac * durationMs); };
+        const popout = wrap.querySelector('.sc-popout');
+        if (popout) popout.onclick = () => {
+          if (!window.modemPlayer || !currentDetailRec) return;
+          if (widget) widget.pause(); // avoid two copies playing over each other
+          window.modemPlayer.playShow(currentDetailRec, 'left', currentPositionMs);
+        };
         (function wait(n) {
           if (window.SC && SC.Widget) { ready(); return; }
           if (n > 0) { setTimeout(() => wait(n - 1), 100); return; }

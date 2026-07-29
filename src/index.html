@@ -1486,6 +1486,11 @@
       const fmtT = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
       let widget = null, queue = [], idx = 0;
+      // Set by start()'s optional seekMs (see playShow) and consumed by the very
+      // next PLAY event — lets "continue this show in the popup player" (the
+      // show-page player's pop-out button) hand off mid-track instead of
+      // restarting from 0:00.
+      let pendingSeekMs = null;
       const LOAD_OPTS = { visual: false, show_comments: false, show_artwork: false, buying: false, sharing: false, download: false, hide_related: true };
 
       function shuffleArr(a) {
@@ -1601,7 +1606,13 @@
       function bindWidget() {
         if (widget) return;                    // never bind twice (warm + start can race)
         widget = SC.Widget(iframe);
-        widget.bind(SC.Widget.Events.PLAY, () => { playing = true; toggleBtn.textContent = '❚❚'; wantPlaying = true; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; resolvePermalink(); widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } }); });
+        widget.bind(SC.Widget.Events.PLAY, () => {
+          playing = true; toggleBtn.textContent = '❚❚'; wantPlaying = true;
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+          resolvePermalink();
+          widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
+          if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
+        });
         widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
         widget.bind(SC.Widget.Events.FINISH, () => go(1));
         widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
@@ -1640,11 +1651,12 @@
         el.style.right = 'auto'; el.style.left = left + 'px'; el.style.top = top + 'px';
       }
 
-      function start(items, startIdx, anchor) {
+      function start(items, startIdx, anchor, seekMs) {
         items = (items || []).filter((x) => x && x.apiUrl);
         if (!items.length) return;
         const wasHidden = el.hidden;
         queue = items; idx = startIdx || 0;
+        pendingSeekMs = (typeof seekMs === 'number' && seekMs > 0) ? seekMs : null;
         wantPlaying = true;
         el.hidden = false;
         if (wasHidden && anchor) placeNear(anchor);
@@ -1848,6 +1860,26 @@
               const ordered = order(all);
               const i = ordered.findIndex((x) => x.apiUrl === url);
               start(ordered, i >= 0 ? i : 0, anchor);
+            }
+          });
+        },
+        // Pop the show page's own inline player out into this floating one —
+        // seekMs (optional) carries over its current playback position so it's a
+        // genuine handoff, not a restart. Shuffle-aware like playTrack: with
+        // shuffle on, the rest of the queue is still shuffled, just seeded with
+        // this show first instead of losing your place entirely.
+        playShow(rec, anchor, seekMs) {
+          withData((d) => {
+            const all = showItems(d);
+            const url = rec && rec.soundcloud ? rec.soundcloud.api : null;
+            if (shuffleOn) {
+              const mine = all.find((x) => x.apiUrl === url);
+              const rest = shuffleArr(all.filter((x) => x.apiUrl !== url));
+              start(mine ? [mine].concat(rest) : rest, 0, anchor, seekMs);
+            } else {
+              const ordered = order(all);
+              const i = ordered.findIndex((x) => x.apiUrl === url);
+              start(ordered, i >= 0 ? i : 0, anchor, seekMs);
             }
           });
         },
