@@ -1334,6 +1334,24 @@
             if (k && prev && prev.tagName === 'P' && !prev.classList.contains('seg-marker') &&
                 !prev.querySelector('iframe') && nameKey(prev) === k) prev.remove();
           });
+          // A duplicate heading can also end up as loose TRAILING text merged onto the
+          // end of an EARLIER <p> that already holds real embeds — e.g. modem-205's
+          // "bugtech" compilation <p> (5 Bandcamp iframes) ends with a stray
+          // "egoseed ///…" text node right before the real egoseed seg-marker (a
+          // source/scrape artifact, not our markup). The pass above skips any <p>
+          // containing an <iframe> on purpose (never touch real embed content), so
+          // that trailing fragment survives as a bare, unstyled "name /////" line with
+          // no chip — looking like a duplicate of the proper pill heading right under
+          // it. Strip ONLY that trailing text node when it duplicates the very next
+          // seg-marker's name; the embeds themselves are untouched.
+          segMarkers.forEach((seg) => {
+            const prev = seg.previousElementSibling;
+            const k = nameKey(seg);
+            if (!k || !prev || prev.tagName !== 'P' || prev.classList.contains('seg-marker')) return;
+            const last = prev.lastChild;
+            if (!last || last.nodeType !== 3 || !/\/{3,}/.test(last.textContent)) return;
+            if (nameKey({ textContent: last.textContent }) === k) prev.removeChild(last);
+          });
           const taxo = {};
           (rec.labels || []).forEach((l) => { const k = hardKey(l.name); if (k && !taxo[k]) taxo[k] = { name: l.name, kind: 'label' }; });
           (rec.artists || []).forEach((a) => { const k = hardKey(a.name); if (k && !taxo[k]) taxo[k] = { name: a.name, kind: 'artist' }; });

@@ -208,6 +208,51 @@
       "labels": [
         "katharsis"
       ]
+    },
+    "bc:1136046565:2773791191": {
+      "artist": "flower⚘mountain⛰castle⛫",
+      "artists": [
+        "flower⚘mountain⛰castle⛫"
+      ],
+      "labels": [
+        "bugtech"
+      ]
+    },
+    "bc:1136046565:2758267981": {
+      "artist": "Swords2",
+      "artists": [
+        "Swords2"
+      ],
+      "labels": [
+        "bugtech"
+      ]
+    },
+    "bc:1136046565:741514351": {
+      "artist": "Timid Floor",
+      "artists": [
+        "Timid Floor"
+      ],
+      "labels": [
+        "bugtech"
+      ]
+    },
+    "bc:1136046565:678240289": {
+      "artist": "stupid picture",
+      "artists": [
+        "stupid picture"
+      ],
+      "labels": [
+        "bugtech"
+      ]
+    },
+    "bc:1136046565:1965969563": {
+      "artist": "raf shermen",
+      "artists": [
+        "raf shermen"
+      ],
+      "labels": [
+        "bugtech"
+      ]
     }
   },
   "segEdits": {
@@ -270,6 +315,20 @@
         ],
         "labels": [
           "katharsis"
+        ]
+      }
+    },
+    "modem-205": {
+      "3": {
+        "artists": [
+          "flowermountaincastle",
+          "Swords2",
+          "Timid Floor",
+          "stupid picture",
+          "raf shermen"
+        ],
+        "labels": [
+          "bugtech"
         ]
       }
     }
