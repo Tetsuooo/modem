@@ -174,6 +174,11 @@
     .modem-body .seg-marker.seg-keep .seg-tags { margin-left: 0; }
     .modem-body .seg-marker .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
     .modem-body .seg-marker .chip:hover { background: #ffff00; }
+    /* Play trigger(s) moved from beside the embed to the front of the heading bar
+       (see addPlayButtons()) — a packed multi-track segment gets one per track,
+       in order, so the whole row is playable without scanning down to the embeds. */
+    .modem-body .seg-marker .seg-play-buttons { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.3rem; margin-right: 0.5rem; }
+    .modem-body .seg-marker .seg-play-buttons .embed-play { margin-top: 0; }
     /* year-end list entries: description on the left, chips pushed to the right edge,
        with the same gap between entries as the radio-show tracklists */
     .modem-body p.list-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem; margin: 1.8rem 0 0.3rem; }
@@ -1140,6 +1145,21 @@
         const byKey = new Map(tracks.map((t) => [t.key, t]));
         const canPlayHere = (tk) => (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
         const admin = isAdmin();
+        // The nearest real heading an embed's <p> belongs to: walk backward through
+        // siblings (past any other embeds/credit lines packed into the same segment)
+        // until a seg-marker turns up. Stops at a plain, un-promoted heading line
+        // instead of skipping past it to an unrelated earlier marker — that only
+        // happens on the handful of old/placeholder pages left as-is, where the
+        // button just stays beside the embed (the pre-existing behavior).
+        const findOwnMarker = (p) => {
+          let node = p && p.previousElementSibling;
+          while (node) {
+            if (node.classList && node.classList.contains('seg-marker')) return node;
+            if (node.tagName === 'P' && !node.querySelector('iframe, a, div')) return null;
+            node = node.previousElementSibling;
+          }
+          return null;
+        };
         body.querySelectorAll('iframe').forEach((f) => {
           const src = f.getAttribute('src') || '';
           let key = null;
@@ -1169,7 +1189,18 @@
             btn.setAttribute('aria-label', 'play in the modem player');
             btn.textContent = '▶';
             btn.onclick = () => { if (window.modemPlayer) window.modemPlayer.playTrack(tk, null, 'left'); };
-            wrap.appendChild(btn);
+            const marker = findOwnMarker(wrap.parentElement);
+            if (marker) {
+              let group = marker.querySelector(':scope > .seg-play-buttons');
+              if (!group) {
+                group = document.createElement('span');
+                group.className = 'seg-play-buttons';
+                marker.insertBefore(group, marker.firstChild);
+              }
+              group.appendChild(btn);
+            } else {
+              wrap.appendChild(btn);
+            }
           }
           if (admin) {
             const pencil = document.createElement('button');
@@ -1300,16 +1331,40 @@
         // visibly sticks (e.g. modem-199 seg 2's "Boy Lucid" track was mis-tagged with
         // artist "Ostara" — its actual label — from the Bandcamp embed).
         const editedSegs = new Set((rec.segEditedSegs || []).map(String));
+        // A segment counts as a genuine one-block various-artists compilation —
+        // e.g. modem-205's bugtech, 5 Bandcamp iframes packed into ONE <p> right
+        // after its marker — only when multiple embeds are physically packed
+        // into that SAME <p>. Counting by how many tracks share a seg NUMBER
+        // isn't safe: modem-224's "smile gang" heading is followed by 6 MORE
+        // tracks, each in its OWN separate <p>, each preceded by its own
+        // (unmarked — the scraper never generated their markers) name line;
+        // every one of them ends up recorded with the same seg number purely
+        // because they land nearest to "smile gang"'s marker, not because
+        // they're actually compiled together. Surfacing all 7 names onto one
+        // heading would be wrong — each of those needs its own heading, a
+        // separate fix, not this one. Packed-<p> multi-iframe blocks are the
+        // only case this guard should loosen for.
+        const packedSegs = new Set();
+        body.querySelectorAll('.seg-marker[data-seg]').forEach((marker) => {
+          const sib = marker.nextElementSibling;
+          if (sib && sib.querySelectorAll('iframe').length > 1) packedSegs.add(marker.getAttribute('data-seg'));
+        });
         tracks.forEach((t) => (t.shows || []).forEach((s) => {
           if (s.slug !== rec.slug) return;
           if (editedSegs.has(String(s.seg))) return;
-          // Surface a track's own artist as a chip ONLY when the segment has no artist
-          // heading of its own — i.e. compilation / label / untagged segments (this is
-          // what shows the various artists on a VA release). For an artist-headed
-          // segment, trust the heading, so a foreign track mis-grouped under it can't
-          // inject a wrong artist chip (e.g. a "BCAA system" clip trailing OAKMILK's
-          // section in modem-157).
-          if (!artistHeadingSegs.has(String(s.seg))) add(arts, s.seg, t.artist);
+          // Surface a track's own artist as a chip when the segment has no artist
+          // heading of its own (compilation / label / untagged segments — this is
+          // what shows the various artists on a VA release), OR when the segment's
+          // own <p> visibly packs multiple embeds together — every track in a
+          // packed block deserves its own chip, not just the first. A single track
+          // sharing a named heading's seg number stays suppressed; that's the
+          // "foreign clip mis-grouped under a real heading" case this guard exists
+          // for (modem-157's BCAA/OAKMILK mixup).
+          // "Various Artists" is a Bandcamp/SoundCloud compilation placeholder, not
+          // a real name (e.g. modem-59 seg 9's SPA tracks) — never surface it as a
+          // chip, same as the list view already does for search/tag pages.
+          const isPlaceholderArtist = /^(v\.?\s?a\.?|various\s+artists?)$/i.test(String(t.artist || '').trim());
+          if (!isPlaceholderArtist && (!artistHeadingSegs.has(String(s.seg)) || packedSegs.has(String(s.seg)))) add(arts, s.seg, t.artist);
           (s.labels || []).forEach((l) => add(labs, s.seg, l));
         }));
         const chip = (kind, cls, n) => '<span class="chip ' + cls + ' clickable" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</span>';
@@ -1352,6 +1407,31 @@
             if (!last || last.nodeType !== 3 || !/\/{3,}/.test(last.textContent)) return;
             if (nameKey({ textContent: last.textContent }) === k) prev.removeChild(last);
           });
+          // A third shape of the same artifact: trailing text whose name doesn't
+          // match the NEXT marker (the pass above), because it isn't heading a new
+          // segment at all — it's restating the name of the segment it's already
+          // IN. E.g. modem-216's Eco Futurism Corporation compilation heads off a
+          // blank marker (<p data-seg="12"></p>) whose chips already include
+          // "Eco Futurism Corporation" (from the per-track label data below it);
+          // the raw scrape also glued a redundant "Eco Futurism Corporation ///…"
+          // fragment onto the tail of that same segment's first embed <p>. Strip
+          // it only when the fragment's name matches a chip its OWN nearest
+          // preceding marker already carries — so it never touches a fragment
+          // that's the only trace of a genuinely untagged track (left as a bare
+          // fallback heading instead, same as before).
+          [...body.querySelectorAll('p')].forEach((p) => {
+            if (!p.querySelector('iframe')) return;
+            const last = p.lastChild;
+            if (!last || last.nodeType !== 3 || !/\/{3,}/.test(last.textContent)) return;
+            const k = nameKey({ textContent: last.textContent });
+            if (!k) return;
+            let marker = p.previousElementSibling;
+            while (marker && !marker.classList.contains('seg-marker')) marker = marker.previousElementSibling;
+            if (!marker) return;
+            const ownSeg = marker.getAttribute('data-seg');
+            const ownNames = [...(arts[ownSeg] || []), ...(labs[ownSeg] || [])].map(hardKey);
+            if (ownNames.includes(k)) p.removeChild(last);
+          });
           const taxo = {};
           (rec.labels || []).forEach((l) => { const k = hardKey(l.name); if (k && !taxo[k]) taxo[k] = { name: l.name, kind: 'label' }; });
           (rec.artists || []).forEach((a) => { const k = hardKey(a.name); if (k && !taxo[k]) taxo[k] = { name: a.name, kind: 'artist' }; });
@@ -1368,8 +1448,38 @@
         })();
         body.querySelectorAll('.seg-marker[data-seg]').forEach((p) => {
           const seg = p.getAttribute('data-seg');
-          const a = arts[seg] ? [...arts[seg]] : [];
+          let a = arts[seg] ? [...arts[seg]] : [];
           let l = labs[seg] ? [...labs[seg]] : [];
+          // Now that a segment can pull artist chips from several tracks (the
+          // multi-track compilation case above), the same person can show up
+          // twice under slightly different spellings — a clean official name
+          // from rec.artists next to a messier one resolved off a Bandcamp/SC
+          // embed, e.g. modem-243's "daniel drabek" + "daniel drabek music", or
+          // just a case variant like modem-129's "Ruoh" + "RUOH". Collapse a
+          // later name into an earlier one when one hardKey is a prefix of the
+          // other (insertion order already puts the record's own clean name
+          // first) — but leave clearly different credits alone, e.g. modem-210's
+          // "serpuline" next to the collab credit "wifi & serpuline" stays as two.
+          if (a.length > 1) {
+            const kept = [];
+            const keptKeys = [];
+            a.forEach((n) => {
+              const k = hardKey(n);
+              // Guard against two false-positive traps in prefix matching: an
+              // empty key (a name that's ALL punctuation, e.g. "---__--____",
+              // hardKeys to '' — and '' is a "prefix" of every string) would
+              // swallow every other chip in the segment; a short key (e.g. "5"
+              // or "nic") can coincidentally prefix a longer, unrelated name
+              // ("500", "Nico Niquo"). Require both keys non-trivial in length
+              // before treating a prefix relationship as the same entity.
+              const isDup = keptKeys.some((kk) => kk === k ||
+                (k.length >= 4 && kk.length >= 4 && (kk.indexOf(k) === 0 || k.indexOf(kk) === 0)));
+              if (isDup) return;
+              kept.push(n);
+              keptKeys.push(k);
+            });
+            a = kept;
+          }
           // Self-released tracks tag the same name as BOTH artist and label, rendering
           // two near-identical chips side by side (e.g. "MIND CLUB" + "Mind Club"). Drop
           // the redundant label chip — the artist chip already identifies the entity.
@@ -1382,13 +1492,21 @@
           // nothing in between — e.g. modem-208's raw HTML has
           // <p data-seg="5">zeromandia, rené /////</p> immediately followed by
           // <p data-seg="6">zeromandia /////</p> right before the actual track,
-          // no embed between them. The first one never gets any tags (nothing to
-          // attribute) AND has nothing playable under it either — the very next
-          // thing in the DOM is just the next heading — so it only ever renders
-          // as a bare, confusing "/////" line with no chips and nothing to click
-          // beyond an empty pencil. Drop it outright; not admin-gated, since a
-          // regular visitor sees the same dead line.
-          if (!chips && p.nextElementSibling && p.nextElementSibling.classList.contains('seg-marker')) {
+          // no embed between them. That first marker has nothing playable under
+          // it — the very next thing in the DOM is just the next heading — so
+          // whatever it collected (its own heading name, or a track-fallback chip
+          // that landed here by scrape accident rather than on the marker with
+          // the real embed, e.g. modem-203's stray "goo2" heading and modem-205's
+          // blank marker ahead of the bugtech compilation) really belongs to the
+          // segment that follows, since that's the one with actual content.
+          // Merge its chips forward onto the next marker's bucket (so nothing
+          // is lost, just relocated to where the pill will render once instead
+          // of twice), then drop it outright; not admin-gated, since a regular
+          // visitor sees the same dead/duplicate line either way.
+          if (p.nextElementSibling && p.nextElementSibling.classList.contains('seg-marker')) {
+            const nextSeg = p.nextElementSibling.getAttribute('data-seg');
+            if (a.length) { arts[nextSeg] = arts[nextSeg] || new Set(); a.forEach((n) => arts[nextSeg].add(n)); }
+            if (l.length) { labs[nextSeg] = labs[nextSeg] || new Set(); l.forEach((n) => labs[nextSeg].add(n)); }
             p.remove();
             return;
           }
