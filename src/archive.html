@@ -1012,6 +1012,18 @@
       // which stay 42px. The hidden full-show widget (.sc-hidden) is outside
       // .modem-body, so it's never touched here.
       function normalizeEmbeds(root) {
+        // Radiostudent's editor leaves a long "~~~~~~…" divider (hundreds of
+        // literal tildes, likely a stray horizontal-rule convention that never
+        // got converted to markup) trailing right after the last embed on ~30
+        // shows — pure decorative noise, not part of any track's name or
+        // credit. Strip a long tilde run wherever a <p>'s last text child ends
+        // in one, dropping the node entirely if that's all it contained.
+        root.querySelectorAll('p').forEach((p) => {
+          const last = p.lastChild;
+          if (!last || last.nodeType !== 3 || !/~{8,}/.test(last.textContent)) return;
+          last.textContent = last.textContent.replace(/~{8,}/g, '');
+          if (!last.textContent.trim()) p.removeChild(last);
+        });
         root.querySelectorAll('iframe').forEach((f) => {
           const src = f.getAttribute('src') || '';
           if (!/w\.soundcloud\.com\/player/i.test(src)) return;
@@ -1310,6 +1322,23 @@
       // for THAT track's segment — so each entry shows (and links) its own tags.
       function injectSegTags(body, rec) {
         const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        // Every name that ends up as a chip anywhere on the page, seg-marker or
+        // not — returned to renderDetail for the bottom "all tags" summary,
+        // which otherwise reads rec.artists/rec.labels directly and misses
+        // anything that only ever got a chip via the per-track fallback below
+        // (e.g. modem-238: 18 of its 20 segments have no rec.artists/labels
+        // entry of their own at all — every one of those artists comes from
+        // the track's OWN data, not the record's taxonomy — so the summary
+        // silently showed only the 2 segments an admin had edited, looking
+        // like editing had wiped the rest, when really they were never there).
+        const allArtists = new Set(), allLabels = new Set();
+        // Seed with the record's own taxonomy first (includes entries with no
+        // seg at all, e.g. a bare-heading-promoted name — see normalizeHeadings
+        // below — which never passes through the per-marker loop that adds the
+        // fallback names below it) so the aggregate only ever gains coverage,
+        // never loses any name the old rec.artists/rec.labels-only version had.
+        (rec.artists || []).forEach((a) => { if (a.name) allArtists.add(a.name); });
+        (rec.labels || []).forEach((l) => { if (l.name) allLabels.add(l.name); });
         const arts = {}, labs = {}; // seg → Set of names
         const add = (m, seg, n) => { if (seg != null && n) (m[seg] = m[seg] || new Set()).add(n); };
         (rec.artists || []).forEach((a) => add(arts, a.seg, a.name));
@@ -1487,6 +1516,8 @@
             const aKeys = new Set(a.map(hardKey));
             l = l.filter((n) => !aKeys.has(hardKey(n)));
           }
+          a.forEach((n) => allArtists.add(n));
+          l.forEach((n) => allLabels.add(n));
           const chips = a.map((n) => chip('artist', 'artist-chip', n)).join('') + l.map((n) => chip('label', 'label-chip', n)).join('');
           // Source pages occasionally repeat a heading twice back-to-back with
           // nothing in between — e.g. modem-208's raw HTML has
@@ -1549,6 +1580,7 @@
             p.innerHTML = '<span class="seg-name">' + esc(nm) + '</span>' + slashes;
           }
         });
+        return { artists: [...allArtists], labels: [...allLabels] };
       }
 
       let currentDetailRec = null; // for the seg-editor click handler below, which needs the live rec object
@@ -1561,8 +1593,8 @@
           playerMarkup(rec.soundcloud, rec.mp3) +
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
         const body = detailInner.querySelector('.modem-body');
-        let listTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); injectSegTags(body, rec); addPlayButtons(body); watchForBlockedEmbeds(body); } }
+        let listTags = null, segTags = null;
+        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); segTags = injectSegTags(body, rec); addPlayButtons(body); watchForBlockedEmbeds(body); } }
         initPlayer();
 
         const nb = neighbors(rec, records);
@@ -1571,10 +1603,13 @@
 
         // For lists, the bottom section is built from the per-entry descriptions
         // (works even when the page has no artist/label taxonomy tags — e.g. 2024);
-        // shows use their taxonomy tags.
+        // shows use segTags — every name that actually got a chip somewhere on
+        // the page, including ones that only ever came from a track's own data
+        // (see injectSegTags's allArtists/allLabels comment) rather than
+        // rec.artists/rec.labels directly, which is missing exactly those.
         const useList = listTags && (listTags.artists.length || listTags.labels.length);
-        const artists = useList ? listTags.artists.map((n) => ({ name: n })) : (rec.artists || []);
-        const labels = useList ? listTags.labels.map((n) => ({ name: n })) : (rec.labels || []);
+        const artists = useList ? listTags.artists.map((n) => ({ name: n })) : (segTags ? segTags.artists.map((n) => ({ name: n })) : (rec.artists || []));
+        const labels = useList ? listTags.labels.map((n) => ({ name: n })) : (segTags ? segTags.labels.map((n) => ({ name: n })) : (rec.labels || []));
         tagsEl.hidden = true; // the old bottom-right floating bubble is gone
         if (artists.length || labels.length) {
           // All the show's artist/label chips live at the very END of the page now,

@@ -1598,6 +1598,26 @@
           "Orange Milk"
         ]
       }
+    },
+    "modem-45": {
+      "0": {
+        "artists": [
+          "FOODMAN"
+        ],
+        "labels": [
+          "Sun Ark"
+        ]
+      }
+    },
+    "modem-243": {
+      "15": {
+        "artists": [
+          "Otto Taimela"
+        ],
+        "labels": [
+          "Cudighi"
+        ]
+      }
     }
   }
 }
