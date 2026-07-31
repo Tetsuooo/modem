@@ -911,13 +911,9 @@
     .ms-active-tag .active-tag-clear { display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; flex: none; border: 0; border-radius: 999px; background: #fff; color: #000; font-size: 0.85rem; line-height: 1; cursor: pointer; padding: 0; }
     .ms-active-tag .active-tag-clear:hover { background: #ffff00; }
     .ms-filters { display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid #000; flex-wrap: wrap; }
-    .ms-filters button { font-family: Arial, sans-serif; font-weight: bold; text-transform: lowercase; font-size: 0.8rem; padding: 0.25rem 0.6rem; border: 1px solid #000; background: #fff; cursor: pointer; }
-    .ms-filters button:hover { background: #ffff00; }
-    .ms-filters button.active { background: #000; color: #fff; }
     #ms-count { margin-left: auto; font-size: 0.75rem; font-weight: bold; opacity: 0.7; }
     .ms-results { flex: 1; overflow-y: auto; padding: 0.6rem; }
     .ms-results.archive-tracklist { display: flex; flex-direction: column; gap: 0.35rem; }
-    .ms-results.archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
     /* result visuals (self-contained copies so they work over any page) */
     .modem-search .track-row { display: flex; align-items: center; gap: 0.6rem; background: #fff; border: 1px solid #000; padding: 0.35rem 0.45rem; cursor: pointer; }
     .modem-search .track-row:hover { box-shadow: 0 0 0 2px #ffff00; }
@@ -933,14 +929,8 @@
     .modem-search .track-show:hover { background: #ffff00; }
     .modem-search .track-src { flex: none; text-decoration: none; color: #000; font-weight: bold; font-size: 1rem; padding: 0 0.25rem; }
     .modem-search .track-src:hover { color: #0645ad; }
-    .modem-search .archive-card { display: flex; flex-direction: column; background: #fff; border: 1px solid #000; overflow: hidden; cursor: pointer; text-decoration: none; color: #000; }
-    .modem-search .archive-card:hover { box-shadow: 0 0 0 2px #ffff00; }
-    .modem-search .archive-card .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; display: block; }
-    .modem-search .archive-card .card-body { padding: 0.45rem 0.5rem 0.55rem; }
-    .modem-search .archive-card .card-title { font-weight: bold; text-transform: lowercase; font-size: 0.85rem; line-height: 1.15; }
-    .modem-search .archive-card .card-meta { font-size: 0.68rem; opacity: 0.65; margin-top: 0.2rem; }
     .modem-search .archive-empty { padding: 2rem 0; text-align: center; font-weight: bold; opacity: 0.7; }
-    @media (max-width: 600px) { .ms-window { width: 100vw; height: 100vh; height: 100dvh; top: 0; left: 0; transform: none; border: 0; } }</style><div id="modem-search" class="modem-search" hidden><div class="ms-window"><div class="ms-head"><input id="ms-input" autocomplete="off" spellcheck="false" placeholder="search tracks, artists, shows…"> <button class="ms-close" type="button" aria-label="close search">×</button></div><div id="ms-active-tag" class="ms-active-tag" hidden></div><div class="ms-filters"><button data-mode="tracks" class="active">tracks</button> <button data-mode="shows">shows</button> <button data-mode="lists">lists</button> <span id="ms-count"></span></div><div id="ms-results" class="ms-results"></div></div></div><script>(function () {
+    @media (max-width: 600px) { .ms-window { width: 100vw; height: 100vh; height: 100dvh; top: 0; left: 0; transform: none; border: 0; } }</style><div id="modem-search" class="modem-search" hidden><div class="ms-window"><div class="ms-head"><input id="ms-input" autocomplete="off" spellcheck="false" placeholder="search tracks, artists, shows…"> <button class="ms-close" type="button" aria-label="close search">×</button></div><div id="ms-active-tag" class="ms-active-tag" hidden></div><div class="ms-filters"><span id="ms-count"></span></div><div id="ms-results" class="ms-results archive-tracklist"></div></div></div><script>(function () {
       const overlay = document.getElementById('modem-search');
       if (!overlay) return;
       const input = overlay.querySelector('#ms-input');
@@ -1013,7 +1003,7 @@
       }
 
       let data = null, ctx = null, searchTracks = [];
-      const state = { query: '', mode: 'tracks', tag: null };
+      const state = { query: '', tag: null };
 
       function withData(cb) {
         if (window.__modemData) return cb(window.__modemData);
@@ -1069,34 +1059,14 @@
           '<div class="track-shows">' + badges + '</div></div>';
       }
 
-      function showCard(r) {
-        return '<a class="archive-card" href="/' + esc(r.slug) + '">' +
-          (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
-          '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div><div class="card-meta">' + esc(r.date || '') +
-          (r.embeds && r.embeds.length ? ' · ' + r.embeds.length + ' tracks' : '') + '</div></div></a>';
-      }
-
       function draw() {
         const ts = terms();
-        if (state.mode === 'tracks') {
-          const tracks = searchTracks;
-          const filtered = tracks
-            .filter((tk) => { if (state.tag && !trackMatchesTag(tk, state.tag)) return false; if (!ts.length) return true; return hit((tk.searchText || '').toLowerCase(), ts); })
-            .sort((a, b) => latestShowDate(b) - latestShowDate(a));
-          countEl.textContent = filtered.length + ' / ' + tracks.length + ' tracks';
-          resultsEl.className = 'ms-results archive-tracklist';
-          resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
-        } else {
-          const type = state.mode === 'lists' ? 'list' : 'show';
-          const pool = (data.records || []).filter((r) => r.type === type);
-          const filtered = pool.filter((r) => {
-            if (state.tag) { const list = (state.tag.kind === 'label' ? r.labels : r.artists) || []; if (!list.some((x) => normKey(x.name) === normKey(state.tag.name))) return false; }
-            if (!ts.length) return true; return hit((r.searchText || '').toLowerCase(), ts);
-          });
-          countEl.textContent = filtered.length + ' / ' + pool.length + ' ' + (type === 'list' ? 'lists' : 'shows');
-          resultsEl.className = 'ms-results archive-grid';
-          resultsEl.innerHTML = filtered.length ? filtered.map(showCard).join('') : emptyMsg();
-        }
+        const tracks = searchTracks;
+        const filtered = tracks
+          .filter((tk) => { if (state.tag && !trackMatchesTag(tk, state.tag)) return false; if (!ts.length) return true; return hit((tk.searchText || '').toLowerCase(), ts); })
+          .sort((a, b) => latestShowDate(b) - latestShowDate(a));
+        countEl.textContent = filtered.length + ' / ' + tracks.length + ' tracks';
+        resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
       }
 
       // Position the narrow window next to whatever opened it (a button / the tag
@@ -1171,9 +1141,6 @@
         window.addEventListener('touchend', () => { dragging = false; });
       })();
       activeTagEl.onclick = (e) => { if (e.target.closest('.active-tag-clear')) { state.tag = null; renderActiveTag(); draw(); } };
-      overlay.querySelectorAll('.ms-filters button').forEach((btn) => {
-        btn.onclick = () => { state.mode = btn.getAttribute('data-mode'); overlay.querySelectorAll('.ms-filters button').forEach((b) => b.classList.remove('active')); btn.classList.add('active'); draw(); };
-      });
       resultsEl.onclick = (e) => {
         const link = e.target.closest('a');
         if (link) {
@@ -1204,10 +1171,8 @@
           withData((d) => {
             data = d; ctx = buildCtx(d); searchTracks = dedupeAlbumTracks(d.tracks || []);
             state.query = (initial && initial.query) || '';
-            state.mode = (initial && initial.mode) || 'tracks';
             state.tag = (initial && initial.tag) || null;
             input.value = state.query;
-            overlay.querySelectorAll('.ms-filters button').forEach((b) => b.classList.toggle('active', b.getAttribute('data-mode') === state.mode));
             overlay.hidden = false;
             renderActiveTag();
             draw();

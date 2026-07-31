@@ -354,17 +354,7 @@
     }
     .active-tag-clear:hover { background: #ffff00; }
     .archive-filters { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.55rem; flex-wrap: wrap; }
-    .archive-filters button { font-family: Arial, sans-serif; font-weight: bold; text-transform: lowercase; font-size: 0.85rem; padding: 0.3rem 0.7rem; border: 2px solid #000; background: #fff; cursor: pointer; }
-    .archive-filters button:hover { background: #ffff00; }
-    .archive-filters button.active { background: #000; color: #fff; }
     #archive-count { margin-left: auto; font-size: 0.8rem; font-weight: bold; opacity: 0.7; }
-    .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.9rem; }
-    .archive-card { display: flex; flex-direction: column; background: rgba(255,255,255,0.92); border: 2px solid #000; overflow: hidden; cursor: pointer; text-decoration: none; color: #000; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-    .archive-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 3px #ffff00; }
-    .archive-card .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; display: block; }
-    .archive-card .card-body { padding: 0.55rem 0.6rem 0.7rem; }
-    .archive-card .card-title { font-weight: bold; text-transform: lowercase; font-size: 0.95rem; line-height: 1.15; }
-    .archive-card .card-meta { font-size: 0.72rem; opacity: 0.65; margin-top: 0.2rem; }
     .archive-empty { padding: 2rem 0; text-align: center; font-weight: bold; opacity: 0.7; }
 
     /* ---- track/album-first result list ---- */
@@ -399,7 +389,6 @@
       .detail-inner-wrap, .archive-inner-wrap { padding-top: max(0px, calc(4.6rem - var(--nav-h, 0px))); }
       .detail-back { top: 3.85rem; }
       .detail-nav { top: 3.85rem; }
-      .archive-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
     }
   </style>
 </head>
@@ -425,13 +414,10 @@
                  placeholder="search tracks, artists, shows…">
           <div id="archive-active-tag" class="archive-active-tag" hidden></div>
           <div class="archive-filters">
-            <button data-mode="tracks" class="active">tracks</button>
-            <button data-mode="shows">shows</button>
-            <button data-mode="lists">lists</button>
             <span id="archive-count"></span>
           </div>
         </div>
-        <div id="archive-results" class="archive-grid"></div>
+        <div id="archive-results" class="archive-tracklist"></div>
       </div>
     </div>
   </div>
@@ -1744,10 +1730,12 @@
       };
 
       // -------- search mode (track/album-first) --------
-      // Primary index is `data.tracks` — every track/album played across all
-      // shows, deduped, each carrying a "featured in modem NN" list. `initial`
-      // seeds the view: { query } free text, { tag:{kind,name} } from a chip,
-      // or { mode:'shows'|'lists' }.
+      // Only ever searches `data.tracks` — every track/album played across all
+      // shows, deduped, each carrying a "featured in modem NN" list (browsing
+      // shows/lists directly by title had its own tab here once, but that was
+      // pure duplication of the radio-show/year-end-lists grids and never
+      // rendered right — dropped). `initial` seeds the view: { query } free
+      // text, or { tag:{kind,name} } from a chip.
       const normKey = (s) => (s == null ? '' : String(s)).toLowerCase()
         .normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 
@@ -1816,17 +1804,13 @@
         // not one show or list) — default the nav underline to radio show,
         // the more common way search/tag browsing gets reached.
         if (window.updateActiveNavGlobal) window.updateActiveNavGlobal('radio-show');
-        const records = data.records || [];
         const tracks = dedupeAlbumTracks(data.tracks || []);
         const resultsEl = document.getElementById('archive-results');
         const searchEl = document.getElementById('archive-search');
         const countEl = document.getElementById('archive-count');
         const activeTagEl = document.getElementById('archive-active-tag');
 
-        const bySlug = {};
-        records.forEach((r) => (bySlug[r.slug] = r));
-
-        const state = { query: initial.query || '', mode: initial.mode || 'tracks', tag: initial.tag || null };
+        const state = { query: initial.query || '', tag: initial.tag || null };
         searchEl.value = state.query;
 
         function renderActiveTag() {
@@ -1892,15 +1876,7 @@
           '</div>';
         }
 
-        function showCard(r) {
-          return '<a class="archive-card" href="/' + esc(r.slug) + '">' +
-            (r.cover ? '<img class="thumb" loading="lazy" src="' + esc(r.cover) + '" alt="">' : '<div class="thumb"></div>') +
-            '<div class="card-body"><div class="card-title">' + esc(r.title || r.slug) + '</div>' +
-            '<div class="card-meta">' + esc(r.date || '') +
-            (r.embeds && r.embeds.length ? ' · ' + r.embeds.length + ' tracks' : '') + '</div></div></a>';
-        }
-
-        function drawTracks() {
+        function draw() {
           const ts = terms();
           const filtered = tracks.filter((tk) => {
             if (state.tag && !trackMatchesTag(tk, state.tag)) return false;
@@ -1911,25 +1887,6 @@
           resultsEl.className = 'archive-tracklist';
           resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
         }
-
-        function drawShows() {
-          const type = state.mode === 'lists' ? 'list' : 'show';
-          const ts = terms();
-          const pool = records.filter((r) => r.type === type);
-          const filtered = pool.filter((r) => {
-            if (state.tag) {
-              const list = (state.tag.kind === 'label' ? r.labels : r.artists) || [];
-              if (!list.some((x) => normKey(x.name) === normKey(state.tag.name))) return false;
-            }
-            if (!ts.length) return true;
-            return hit((r.searchText || '').toLowerCase(), ts);
-          });
-          countEl.textContent = filtered.length + ' / ' + pool.length + ' ' + (type === 'list' ? 'lists' : 'shows');
-          resultsEl.className = 'archive-grid';
-          resultsEl.innerHTML = filtered.length ? filtered.map(showCard).join('') : emptyMsg();
-        }
-
-        function draw() { state.mode === 'tracks' ? drawTracks() : drawShows(); }
 
         searchEl.oninput = () => { state.query = searchEl.value; draw(); };
         activeTagEl.onclick = (e) => {
@@ -1950,16 +1907,6 @@
           if ((tk.kind === 'soundcloud' || tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show') && window.modemPlayer) window.modemPlayer.playTrack(tk, tracks);
           else if (tk.link) window.open(tk.link, '_blank', 'noopener');
         };
-        searchView.querySelectorAll('.archive-filters button').forEach((btn) => {
-          btn.onclick = () => {
-            state.mode = btn.getAttribute('data-mode');
-            searchView.querySelectorAll('.archive-filters button').forEach((b) => b.classList.remove('active'));
-            btn.classList.add('active');
-            draw();
-          };
-        });
-        searchView.querySelectorAll('.archive-filters button').forEach((b) =>
-          b.classList.toggle('active', b.getAttribute('data-mode') === state.mode));
 
         searchView.hidden = false;
         detailView.hidden = true;
