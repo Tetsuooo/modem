@@ -80,24 +80,47 @@ function fixScArtistFromTitle(data) {
   return { fixed, unresolved };
 }
 
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // A track's artist can end up correct through a completely different route
 // than the heuristic above — e.g. a segment-level edit (segEdits, applied
-// AFTER this module runs) cascading its own artist fix down onto the track —
-// while the title still carries the same "Artist - " prefix redundantly,
-// unstripped, because that fixed the artist without ever touching the title
-// (e.g. modem-03 seg 2's "Zolitude" got its artist corrected via a segEdit
-// months ago, but "Zolitude - LOR" still shows the full raw title next to
-// an artist line that now already says "Zolitude"). Run this LAST — after
-// every artist-setting mechanism in apply-overrides.js, segEdits included —
-// so it always checks against the FINAL artist, whatever fixed it.
+// AFTER this module runs) cascading its own artist fix down onto the track,
+// or (for Bandcamp compilations) it was already correct straight from the
+// scrape — while the title still carries the SAME artist name as a redundant
+// prefix, unstripped, because whatever fixed (or already had) the artist
+// never touched the title. Not just a plain " - " either: a label's own
+// formatting can separate them with an em dash, a colon, or an emoji (e.g.
+// modem-158's `Fungal Mat 🍂 "Video Games" but you're playing harp…`, artist
+// already correctly "Fungal Mat") — so the separator only has to be SOME
+// non-alphanumeric symbol, not a specific character, as long as there's a
+// real one there (never zero-width — a title that merely happens to START
+// with the same word as the artist, no separator at all, is left alone).
+// Run this LAST — after every artist-setting mechanism in apply-overrides.js,
+// segEdits included — so it always checks against the FINAL artist, whatever
+// fixed it (or however it was always correct).
+// Deliberately excluded from the separator class below:
+//  - quote marks (" ' " " ' ') — "Raf Shermen "cold robot"" needs the WHOLE
+//    quoted phrase kept together, opening quote included; treating it as a
+//    separator would eat only the opening one, leaving a dangling close quote
+//    ("cold robot"", unpaired). Left unstripped rather than mangled.
+//  - & — "Forgotten Wind & Faron - Solitude of Dormancy" is a two-artist
+//    collab credit continuing right past the artist field's first name, not
+//    "artist, then a title starting with another proper noun"; treating "&"
+//    as a separator would strip only "Forgotten Wind" and leave "Faron" —
+//    the second half of the SAME credit — stranded at the front of the title.
+const NOT_A_SEPARATOR = '"\'“”‘’&';
 function stripRedundantArtistPrefix(data) {
   let stripped = 0;
   (data.tracks || []).forEach((t) => {
     if (!t.title || !t.artist) return;
-    const m = t.title.match(/^(.{1,60}?)\s+[-–—]\s+(.+)$/);
-    if (!m) return;
-    if (m[1].trim().toLowerCase() === t.artist.trim().toLowerCase()) {
-      t.title = m[2].trim();
+    const artist = t.artist.trim();
+    if (!artist) return;
+    const re = new RegExp('^' + escapeRegExp(artist) + '\\s+[^\\w\\s' + NOT_A_SEPARATOR + ']{1,8}\\s*(.+)$', 'iu');
+    const m = t.title.match(re);
+    if (m && m[1].trim()) {
+      t.title = m[1].trim();
       stripped++;
     }
   });
