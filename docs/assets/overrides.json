@@ -1635,6 +1635,60 @@
       "labels": [
         "JEROME"
       ]
+    },
+    "bc:2260456380:4025965852": {
+      "artist": "Uio Loi",
+      "artists": [
+        "Uio Loi"
+      ],
+      "labels": [
+        "videogamemusic"
+      ]
+    },
+    "sc:378866405": {
+      "artist": "Magic From Space",
+      "artists": [
+        "Magic From Space"
+      ],
+      "labels": [
+        "Squiggle Dot"
+      ]
+    },
+    "sc:378870272": {
+      "artist": "dok-s project",
+      "artists": [
+        "dok-s project"
+      ],
+      "labels": [
+        "Squiggle Dot"
+      ]
+    },
+    "sc:378863186": {
+      "artist": "Harsh Radish",
+      "artists": [
+        "Harsh Radish"
+      ],
+      "labels": [
+        "Squiggle Dot"
+      ]
+    },
+    "bc:1675366877:1272636650": {
+      "artist": "Dirk De Akkers & Erik Slinge",
+      "artists": [
+        "Dirk De Akkers & Erik Slinge"
+      ],
+      "labels": [
+        "Open Hand Real Flames"
+      ]
+    },
+    "bc:2279520614:1738882615": {
+      "artist": "Bass Clef",
+      "artists": [
+        "Bass Clef"
+      ],
+      "labels": [
+        "Open Hand Real Flames"
+      ]
     }
   },
   "segEdits": {
@@ -2682,6 +2736,65 @@
         ],
         "labels": [
           "JEROME"
+        ]
+      }
+    },
+    "modem-25": {
+      "7": {
+        "artists": [
+          "Hyph11E",
+          "Prettybwoy"
+        ],
+        "labels": [
+          "SVBKVLT"
+        ]
+      },
+      "9": {
+        "artists": [
+          "Dagshenma"
+        ],
+        "labels": [
+          "Zona Music(a)"
+        ]
+      }
+    },
+    "modem-26": {
+      "4": {
+        "artists": [
+          "Uio Loi"
+        ],
+        "labels": [
+          "videogamemusic"
+        ]
+      }
+    },
+    "modem-27": {
+      "2": {
+        "artists": [
+          "Magic From Space",
+          "dok-s project",
+          "Harsh Radish"
+        ],
+        "labels": [
+          "Squiggle Dot"
+        ]
+      }
+    },
+    "modem-28": {
+      "6": {
+        "artists": [
+          "1898music"
+        ],
+        "labels": []
+      },
+      "12": {
+        "artists": [
+          "Bass Clef",
+          "core. pan",
+          "Dirk De Akkers & Erik Slinge"
+        ],
+        "labels": [
+          "Open Hand Real Flames"
         ]
       }
     }

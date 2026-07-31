@@ -1570,8 +1570,16 @@
             });
             for (const node of [...p.childNodes]) {
               if (node.nodeType === 3) {                                  // leading text node
-                if (node.textContent.indexOf('/') === -1) { p.removeChild(node); continue; } // pure name → remove
-                node.textContent = node.textContent.replace(/^[^/]*/, '');                    // strip name, keep slashes
+                // The real decorative divider is always a RUN of 2+ slashes —
+                // a lone single "/" can legitimately sit inside the name text
+                // itself (modem-31's label "40% Foda/Maneiríssimo", modem-33's
+                // "Orange Milk / Noumenal Loom" two-name heading) and must NOT
+                // be mistaken for the divider's start, or everything from that
+                // "/" onward (including the rest of the real name) survives as
+                // bogus leftover text next to the actual slash run.
+                const m = node.textContent.match(/\/{2,}/);
+                if (!m) { p.removeChild(node); continue; }               // no real divider run → pure name → remove
+                node.textContent = node.textContent.slice(m.index);      // strip name, keep from the divider run onward
               }
               break;                                                      // reached first slash / first <a> → name gone
             }
