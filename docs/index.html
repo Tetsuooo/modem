@@ -904,15 +904,14 @@
     #ms-input:focus { background: #ffffcc; }
     .ms-close { width: 2.1rem; height: 2.1rem; flex: none; border: 1px solid #000; background: #fff; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0; }
     .ms-close:hover { background: #ffff00; }
-    .ms-active-tag { padding: 0.5rem 0.6rem 0; }
     .ms-active-tag[hidden] { display: none; }
     .ms-active-tag .active-tag-pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: bold; background: #000; color: #fff; border: 1px solid #000; border-radius: 999px; padding: 0.2rem 0.35rem 0.2rem 0.7rem; }
     .ms-active-tag .active-tag-kind { text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.06em; opacity: 0.6; }
     .ms-active-tag .active-tag-clear { display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; flex: none; border: 0; border-radius: 999px; background: #fff; color: #000; font-size: 0.85rem; line-height: 1; cursor: pointer; padding: 0; }
     .ms-active-tag .active-tag-clear:hover { background: #ffff00; }
-    /* sits right below the header, ahead of the active-tag pill (not after
-       it) so its own position never shifts when a tag filter appears or
-       clears — only the space between it and the results list changes.
+    /* sits right below the header; the active-tag pill lives IN this same
+       row (to its left, count pushed right) rather than a row of its own, so
+       its own position never shifts when a tag filter appears or clears.
        Also a second drag handle (like .ms-head), same input/button guard. */
     .ms-filters { display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid #000; flex-wrap: wrap; cursor: move; }
     #ms-count { margin-left: auto; font-size: 0.75rem; font-weight: bold; opacity: 0.7; }
@@ -934,7 +933,7 @@
     .modem-search .track-src { flex: none; text-decoration: none; color: #000; font-weight: bold; font-size: 1rem; padding: 0 0.25rem; }
     .modem-search .track-src:hover { color: #0645ad; }
     .modem-search .archive-empty { padding: 2rem 0; text-align: center; font-weight: bold; opacity: 0.7; }
-    @media (max-width: 600px) { .ms-window { width: 100vw; height: 100vh; height: 100dvh; top: 0; left: 0; transform: none; border: 0; } }</style><div id="modem-search" class="modem-search" hidden><div class="ms-window"><div class="ms-head"><input id="ms-input" autocomplete="off" spellcheck="false" placeholder="search tracks, artists, shows…"> <button class="ms-close" type="button" aria-label="close search">×</button></div><div class="ms-filters"><span id="ms-count"></span></div><div id="ms-active-tag" class="ms-active-tag" hidden></div><div id="ms-results" class="ms-results archive-tracklist"></div></div></div><script>(function () {
+    @media (max-width: 600px) { .ms-window { width: 100vw; height: 100vh; height: 100dvh; top: 0; left: 0; transform: none; border: 0; } }</style><div id="modem-search" class="modem-search" hidden><div class="ms-window"><div class="ms-head"><input id="ms-input" autocomplete="off" spellcheck="false" placeholder="search tracks, artists, shows…"> <button class="ms-close" type="button" aria-label="close search">×</button></div><div class="ms-filters"><div id="ms-active-tag" class="ms-active-tag" hidden></div><span id="ms-count"></span></div><div id="ms-results" class="ms-results archive-tracklist"></div></div></div><script>(function () {
       const overlay = document.getElementById('modem-search');
       if (!overlay) return;
       const input = overlay.querySelector('#ms-input');
