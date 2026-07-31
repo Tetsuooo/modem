@@ -1538,6 +1538,10 @@
       let currentDetailRec = null; // for the seg-editor click handler below, which needs the live rec object
       function renderDetail(rec, records) {
         currentDetailRec = rec;
+        // The nav bar has no link of its own for an archive slug — tell it
+        // which top-level page this record actually belongs under (see
+        // index.html's updateActiveNav) now that its type is known.
+        if (window.updateActiveNavGlobal) window.updateActiveNavGlobal(rec.type === 'list' ? 'year-end-lists' : 'radio-show');
         detailInner.innerHTML =
           (rec.cover ? '<img class="detail-cover-big" src="' + esc(rec.cover) + '" alt="">' : '') +
           (rec.date ? '<div class="detail-date">' + esc(rec.date) + '</div>' : '') +
@@ -1690,6 +1694,10 @@
 
       function renderSearch(data, initial) {
         initial = initial || {};
+        // No single record here to read a type off (it's a tag/query search,
+        // not one show or list) — default the nav underline to radio show,
+        // the more common way search/tag browsing gets reached.
+        if (window.updateActiveNavGlobal) window.updateActiveNavGlobal('radio-show');
         const records = data.records || [];
         const tracks = dedupeAlbumTracks(data.tracks || []);
         const resultsEl = document.getElementById('archive-results');

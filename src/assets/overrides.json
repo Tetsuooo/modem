@@ -945,6 +945,25 @@
       "labels": [
         "awaport"
       ]
+    },
+    "sc:340020715": {
+      "artist": "Toiret Status & Nozomu Matsumoto",
+      "artists": [
+        "Toiret Status",
+        "Nozomu Matsumoto"
+      ],
+      "labels": [
+        "noumenal loom"
+      ]
+    },
+    "sc:340022056": {
+      "artist": "$ega & the rainbow streets",
+      "artists": [
+        "$ega & the rainbow streets"
+      ],
+      "labels": [
+        "noumenal loom"
+      ]
     }
   },
   "segEdits": {
@@ -1616,6 +1635,19 @@
         ],
         "labels": [
           "Cudighi"
+        ]
+      }
+    },
+    "modem-18": {
+      "1": {
+        "artists": [
+          "$3.33",
+          "$ega & the rainbow streets",
+          "Toiret Status",
+          "Nozomu Matsumoto"
+        ],
+        "labels": [
+          "noumenal loom"
         ]
       }
     }

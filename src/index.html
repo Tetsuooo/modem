@@ -149,8 +149,14 @@
       font-size: clamp(0.75rem, 2vw, 0.9rem); /* Slightly reduced font size */
       white-space: nowrap;
       padding: clamp(0.15rem, 0.4vw, 0.25rem) clamp(0.25rem, 0.7vw, 0.4rem); /* Reduced touch targets */
+      padding-bottom: calc(clamp(0.15rem, 0.4vw, 0.25rem) - 1px); /* underline sits 1px closer to the text */
       line-height: 1;
       text-align: center;
+      border-bottom: 2px solid transparent; /* reserve the space so .active's underline never shifts layout */
+    }
+    /* Current subpage indicator — see updateActiveNav() */
+    nav a.active {
+      border-bottom-color: black;
     }
 
     #content {
@@ -168,6 +174,7 @@
       nav a {
         font-size: clamp(0.7rem, 1.8vw, 0.85rem); /* Reduced font size for tablets */
         padding: clamp(0.12rem, 0.35vw, 0.2rem) clamp(0.2rem, 0.6vw, 0.35rem);
+        padding-bottom: calc(clamp(0.12rem, 0.35vw, 0.2rem) - 1px);
       }
     }
 
@@ -179,6 +186,7 @@
       nav a {
         font-size: clamp(0.65rem, 1.6vw, 0.8rem); /* Reduced font size for mobile */
         padding: clamp(0.1rem, 0.3vw, 0.15rem) clamp(0.18rem, 0.5vw, 0.25rem);
+        padding-bottom: calc(clamp(0.1rem, 0.3vw, 0.15rem) - 1px);
       }
     }
 
@@ -192,6 +200,7 @@
       nav a {
         font-size: clamp(0.66rem, 2.3vw, 1.1rem);
         padding: clamp(0.4rem, 1.3vw, 0.6rem) clamp(0.18rem, 0.6vw, 0.4rem);
+        padding-bottom: calc(clamp(0.4rem, 1.3vw, 0.6rem) - 1px);
       }
     }
 
@@ -206,6 +215,7 @@
       nav a {
         font-size: clamp(0.82rem, 1.6vw, 1.02rem);
         padding: clamp(0.25rem, 0.65vw, 0.4rem) clamp(0.3rem, 0.85vw, 0.5rem);
+        padding-bottom: calc(clamp(0.25rem, 0.65vw, 0.4rem) - 1px);
       }
     }
   </style>
@@ -680,8 +690,29 @@
         setTimeout(fixViewportIfExpanded, 450);
       }
 
+      // Underline the nav link for whichever subpage is current (see the
+      // nav a.active CSS rule). navKey is one of the six direct nav hrefs
+      // ('home', 'radio-show', …) or falsy to clear the underline entirely —
+      // used for an archive slug before its type (show vs. year-end list) is
+      // known yet. Exposed globally so archive.html can correct it once a
+      // slug resolves to a real record (see its renderDetail/renderSearch),
+      // since navigating between archive slugs while the fragment is already
+      // mounted never calls loadPage() again to re-derive it here.
+      function updateActiveNav(navKey) {
+        links.forEach((link) => {
+          link.classList.toggle('active', navKey != null && link.getAttribute('href') === '/' + navKey);
+        });
+      }
+      window.updateActiveNavGlobal = updateActiveNav;
+
       async function loadPage(url) {
         try {
+          const navKey = url.replace(/\.html$/, '');
+          // 'archive' has no nav link of its own — leave the underline as-is
+          // (whatever the previous page/slug resolved to) rather than clear
+          // it, since archive.html will correct it to radio-show or
+          // year-end-lists in a moment once the slug's record type is known.
+          if (navKey !== 'archive') updateActiveNav(navKey);
           // year-end-lists and dial-up want the actual document to scroll in
           // portrait (their own body/height rules rely on that); every other
           // page relies on html's overflow:hidden (see below) to stop .cloud
