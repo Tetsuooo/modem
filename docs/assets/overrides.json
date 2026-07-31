@@ -1532,14 +1532,109 @@
       "artists": [
         "Jonáš Gruska"
       ],
-      "labels": []
+      "labels": [
+        "LOM"
+      ]
     },
     "yt:3FS5nmhsXvA": {
       "artist": "Yem Gel",
       "artists": [
         "Yem Gel"
       ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "yt:P97zZpDUb6I": {
+      "artist": "Monofee",
+      "artists": [
+        "Monofee"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "yt:p5WQTSJIkoE": {
+      "artist": "Wa?ste",
+      "artists": [
+        "Wa?ste"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "yt:Rf_YbBmMTVU": {
+      "artist": "Swivelized Sounds",
+      "artists": [
+        "Swivelized Sounds"
+      ],
       "labels": []
+    },
+    "yt:SbZMsji0Uz8": {
+      "artist": "ivan skoryna",
+      "artists": [
+        "ivan skoryna"
+      ],
+      "labels": []
+    },
+    "yt:AGW9d-mnR7M": {
+      "artist": "Ikey",
+      "artists": [
+        "Ikey"
+      ],
+      "labels": []
+    },
+    "yt:Ob4yDdM6KGk": {
+      "artist": "Million Brazilians",
+      "artists": [
+        "Million Brazilians"
+      ],
+      "labels": [
+        "Nonlocal Research"
+      ]
+    },
+    "yt:FzyE-BEFA7Q": {
+      "artist": "Fausto Mercier",
+      "artists": [
+        "Fausto Mercier"
+      ],
+      "labels": [
+        "Genot Centre"
+      ]
+    },
+    "yt:GdAO_AVEeyE": {
+      "artist": "Mor Air",
+      "artists": [
+        "Mor Air"
+      ],
+      "labels": []
+    },
+    "bc:3258062492:3456025869": {
+      "artist": "Avbvr",
+      "artists": [
+        "Avbvr"
+      ],
+      "labels": [
+        "JEROME"
+      ]
+    },
+    "bc:3258062492:1412254664": {
+      "artist": "Ptwiggs",
+      "artists": [
+        "Ptwiggs"
+      ],
+      "labels": [
+        "JEROME"
+      ]
+    },
+    "bc:3258062492:350853209": {
+      "artist": "GRAN",
+      "artists": [
+        "GRAN"
+      ],
+      "labels": [
+        "JEROME"
+      ]
     }
   },
   "segEdits": {
@@ -2572,6 +2667,22 @@
           "eyeface"
         ],
         "labels": []
+      }
+    },
+    "modem-22": {
+      "16": {
+        "artists": [
+          "Dellity",
+          "HDMIRROR",
+          "Mang",
+          "Profundo Vazio",
+          "Avbvrn",
+          "Ptwiggs",
+          "GRAN"
+        ],
+        "labels": [
+          "JEROME"
+        ]
       }
     }
   }

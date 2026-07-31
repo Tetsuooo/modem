@@ -1620,6 +1620,19 @@
               }
               break;                                                      // reached first slash / first <a> → name gone
             }
+            // Several artist links in a row (one <a> per name, each holding its
+            // own run of slashes, plus plain-text slash filler between them) adds
+            // up to a LOT of width — e.g. modem-21's "c-" heading: 4 links × ~7
+            // slashes each, plus filler, is 40+ characters wide before the chips
+            // even start, forcing them onto their own line below instead of the
+            // "///// [chips]" layout every other heading gets. Shortening each
+            // run (a run of 3+ "/" only ever shrinks, never grows, so a short
+            // run is untouched) keeps every link fully clickable — same href,
+            // just less of it visually — while leaving real room for the chips
+            // to actually sit on this line.
+            const capSlashes = (s, max) => s.replace(/\/{3,}/g, (run) => '/'.repeat(Math.min(run.length, max)));
+            p.querySelectorAll('a').forEach((a) => { a.textContent = capSlashes(a.textContent, 4); });
+            [...p.childNodes].forEach((node) => { if (node.nodeType === 3) node.textContent = capSlashes(node.textContent, 2); });
             p.innerHTML = '<span class="seg-links">' + p.innerHTML + '</span>' + slashes + tagsHtml;
             return;
           }
