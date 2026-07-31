@@ -1392,6 +1392,154 @@
       "labels": [
         "formforum"
       ]
+    },
+    "bc:3905637266:1688373039": {
+      "artist": "hunterc44t & Finlay Clark",
+      "artists": [
+        "hunterc44t",
+        "Finlay Clark"
+      ],
+      "labels": [
+        "Primordial Void"
+      ]
+    },
+    "sc:1124000017": {
+      "artist": "malibu_stan 4ever & Malibu",
+      "artists": [
+        "malibu_stan 4ever",
+        "Malibu"
+      ],
+      "labels": []
+    },
+    "sc:328244126": {
+      "artist": "Shintaro Matsuo",
+      "artists": [
+        "Shintaro Matsuo"
+      ],
+      "labels": [
+        "Cacao"
+      ]
+    },
+    "bc:752674822:3712293962": {
+      "artist": "Phil Struck",
+      "artists": [
+        "Phil Struck"
+      ],
+      "labels": [
+        "Quiet Time"
+      ]
+    },
+    "bc:1517610848:1150658197": {
+      "artist": "Solpara",
+      "artists": [
+        "Solpara"
+      ],
+      "labels": [
+        "Quiet Time"
+      ]
+    },
+    "bc:2235191803:138985520": {
+      "artist": "garbage boy",
+      "artists": [
+        "garbage boy"
+      ],
+      "labels": [
+        "Orange Milk"
+      ]
+    },
+    "bc:2235191803:1443302404": {
+      "artist": "qwizzzz",
+      "artists": [
+        "qwizzzz"
+      ],
+      "labels": [
+        "Orange Milk"
+      ]
+    },
+    "bc:3861740826:1390704851": {
+      "artist": "eyeface & garbage boy",
+      "artists": [
+        "eyeface",
+        "garbage boy"
+      ],
+      "labels": []
+    },
+    "yt:5QucH4pAgyY": {
+      "artist": "Seth Graham",
+      "artists": [
+        "Seth Graham"
+      ],
+      "labels": []
+    },
+    "yt:jzEKSTYa5FE": {
+      "artist": "Jerry Paper",
+      "artists": [
+        "Jerry Paper"
+      ],
+      "labels": []
+    },
+    "yt:S85S5q-MpXA": {
+      "artist": "yeongrak",
+      "artists": [
+        "yeongrak"
+      ],
+      "labels": []
+    },
+    "yt:Ok9VoT1ISdA": {
+      "artist": "Raft Of Trash",
+      "artists": [
+        "Raft Of Trash"
+      ],
+      "labels": []
+    },
+    "yt:4y1p1aaKUVU": {
+      "artist": "Tashi",
+      "artists": [
+        "Tashi"
+      ],
+      "labels": []
+    },
+    "yt:CEmM8zGJ7WM": {
+      "artist": "FIRE-TOOLZ",
+      "artists": [
+        "FIRE-TOOLZ"
+      ],
+      "labels": []
+    },
+    "yt:wuMaauwcfDs": {
+      "artist": "Renick Bell",
+      "artists": [
+        "Renick Bell"
+      ],
+      "labels": []
+    },
+    "yt:mfEA6tYnZ_c": {
+      "artist": "Minais B",
+      "artists": [
+        "Minais B"
+      ],
+      "labels": []
+    },
+    "yt:-aUH2fuvXik": {
+      "artist": "dasychira",
+      "artists": [
+        "dasychira"
+      ],
+      "labels": []
+    },
+    "yt:u10hfQMGdk8": {
+      "artist": "Jonáš Gruska",
+      "artists": [
+        "Jonáš Gruska"
+      ],
+      "labels": []
+    },
+    "yt:3FS5nmhsXvA": {
+      "artist": "Yem Gel",
+      "artists": [
+        "Yem Gel"
+      ],
+      "labels": []
     }
   },
   "segEdits": {
@@ -2291,6 +2439,137 @@
       "1": {
         "artists": [
           "nola shade"
+        ],
+        "labels": []
+      }
+    },
+    "modem-123": {
+      "14": {
+        "artists": [
+          "hunterc44t",
+          "Finlay Clark"
+        ],
+        "labels": [
+          "Primordial Void"
+        ]
+      }
+    },
+    "modem-122": {
+      "17": {
+        "artists": [
+          "truee.love",
+          "optic core"
+        ],
+        "labels": [
+          "eldia"
+        ]
+      }
+    },
+    "modem-119": {
+      "1": {
+        "artists": [
+          "Bloodz Boi",
+          "Sam Tiba"
+        ],
+        "labels": []
+      },
+      "5": {
+        "artists": [
+          "Clean Slate"
+        ],
+        "labels": [
+          "surf"
+        ]
+      }
+    },
+    "modem-118": {
+      "0": {
+        "artists": [
+          "Giant Claw",
+          "Isabel Watson"
+        ],
+        "labels": [
+          "We Time Audio House"
+        ]
+      },
+      "10": {
+        "artists": [
+          "Yuuyuu"
+        ],
+        "labels": [
+          "Curiosity Shop"
+        ]
+      }
+    },
+    "modem-11": {
+      "19": {
+        "artists": [
+          "Jlin"
+        ],
+        "labels": [
+          "Planet Mu"
+        ]
+      }
+    },
+    "modem-13": {
+      "1": {
+        "artists": [
+          "HERBARIUM"
+        ],
+        "labels": [
+          "BRAT"
+        ]
+      }
+    },
+    "modem-14": {
+      "11": {
+        "artists": [
+          "Shintaro Matsuo"
+        ],
+        "labels": [
+          "Cacao"
+        ]
+      }
+    },
+    "modem-15": {
+      "1": {
+        "artists": [
+          "Phil Struck",
+          "Solpara"
+        ],
+        "labels": [
+          "Quiet Time"
+        ]
+      },
+      "7": {
+        "artists": [
+          "dasychira",
+          "Baby Blue"
+        ],
+        "labels": [
+          "S.M.I.L.E."
+        ]
+      }
+    },
+    "modem-16": {
+      "0": {
+        "artists": [
+          "garbage boy",
+          "Euglossine",
+          "Matt Wellins",
+          "Nmesh",
+          "koeosaeme",
+          "qwizzzz"
+        ],
+        "labels": [
+          "Orange Milk"
+        ]
+      }
+    },
+    "modem-17": {
+      "1": {
+        "artists": [
+          "eyeface"
         ],
         "labels": []
       }

@@ -234,9 +234,24 @@ function migrate195(data) {
   ];
 }
 
+// modem-21's page opens with three decorative <p>s (a slash-run announcement
+// line, a row of down-arrows, a row of plus signs) ahead of the first real
+// segment marker — leftover scrape noise, not part of any track's own
+// content. Idempotent: a no-op once already stripped.
+function stripModem21Intro(data) {
+  const rec = (data.records || []).find((r) => r.slug === 'modem-21');
+  if (!rec || !rec.bodyHtml) return;
+  const intro = '<p>/////////////////////////////&nbsp; EXCLUSIVE MIXES FROM KUTHI JINANI and TETSUO</p>\n' +
+    '<p>⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇</p>\n' +
+    '<p>++++++++++++++++++++++++++++++++</p>\n';
+  if (rec.bodyHtml.indexOf(intro) !== 0) return;
+  rec.bodyHtml = rec.bodyHtml.slice(intro.length);
+}
+
 function applySegMarkerFixes(data) {
   migrate224(data);
   migrate195(data);
+  stripModem21Intro(data);
 }
 
 module.exports = { applySegMarkerFixes };
