@@ -1363,6 +1363,26 @@
         "Permanent Dog Paw Print Dirt Stain"
       ],
       "labels": []
+    },
+    "bc:1117896043:2501585827": {
+      "artist": "EKSE & ELAZY",
+      "artists": [
+        "EKSE",
+        "ELAZY"
+      ],
+      "labels": [
+        "Clam"
+      ]
+    },
+    "bc:1860403318:3799396775": {
+      "artist": "claire rousay & More Eaze",
+      "artists": [
+        "claire rousay",
+        "More Eaze"
+      ],
+      "labels": [
+        "Orange Milk"
+      ]
     }
   },
   "segEdits": {
@@ -2202,6 +2222,26 @@
         ],
         "labels": [
           "BFF"
+        ]
+      }
+    },
+    "modem-132": {
+      "3": {
+        "artists": [
+          "EKSE",
+          "ELAZY"
+        ],
+        "labels": [
+          "Clam"
+        ]
+      },
+      "5": {
+        "artists": [
+          "claire rousay",
+          "More Eaze"
+        ],
+        "labels": [
+          "Orange Milk"
         ]
       }
     }
