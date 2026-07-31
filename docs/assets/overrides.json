@@ -168,6 +168,41 @@
     "bc:705312098:-": {
       "title": "Hi and Bye"
     },
+    "sc:1039593787": {
+      "title": "'Bridge' (2021). Courtesy the artists.",
+      "artist": "L.Cie & DJH"
+    },
+    "sc:857427799": {
+      "title": "'ι Gem θ Gem 水棱鏡' (2020). Courtest the artist.",
+      "artist": "Yikii"
+    },
+    "sc:491663244": {
+      "title": "\"goodbye to you\"",
+      "artist": "Patrick Lovelace"
+    },
+    "sc:914929414": {
+      "title": "GAME OVER.mp3",
+      "artist": "Tom Nook"
+    },
+    "sc:537176784": {
+      "title": "\"Collages II [excerpt]\"",
+      "artist": "Max Park"
+    },
+    "sc:537175752": {
+      "title": "\"Mary's Welcoming Party\"",
+      "artist": "Kral"
+    },
+    "sc:1078826260": {
+      "title": "June (Glasswort)",
+      "artist": "Giant Claw and Isabel Watson"
+    },
+    "sc:1187982388": {
+      "title": "December (Turkey Tail)",
+      "artist": "Jasper Lee"
+    },
+    "sc:499173108": {
+      "artist": "Yoshitaka Ikebe / Shiva & Nancy Feat.Mako"
+    },
     "bc:565587585:983361818": {
       "artist": "Chickenmilk dot com & ANTHEM",
       "artists": [
@@ -1799,12 +1834,20 @@
         ]
       },
       "3": {
-        "artists": [],
-        "labels": []
+        "artists": [
+          "Brood Ma"
+        ],
+        "labels": [
+          "Tri-Angle"
+        ]
       },
       "4": {
-        "artists": [],
-        "labels": []
+        "artists": [
+          "Yearning Kru"
+        ],
+        "labels": [
+          "Planet Mu"
+        ]
       },
       "5": {
         "artists": [
@@ -1817,7 +1860,9 @@
         ]
       },
       "7": {
-        "artists": [],
+        "artists": [
+          "Ssaliva"
+        ],
         "labels": []
       }
     },
