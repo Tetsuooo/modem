@@ -1689,6 +1689,44 @@
       "labels": [
         "Open Hand Real Flames"
       ]
+    },
+    "bc:285902213:3585606004": {
+      "artist": "Dustin Wong & Takako Minekawa & Good Willsmith",
+      "artists": [
+        "Dustin Wong",
+        "Takako Minekawa",
+        "Good Willsmith"
+      ],
+      "labels": [
+        "Umor Rex"
+      ]
+    },
+    "sc:443454624": {
+      "artist": "ooo & MA'AM",
+      "artists": [
+        "ooo",
+        "MA'AM"
+      ],
+      "labels": [
+        "EXILES"
+      ]
+    },
+    "sc:473745843": {
+      "artist": "Yuto Ohashi",
+      "artists": [
+        "Yuto Ohashi"
+      ],
+      "labels": [
+        "Cudighi"
+      ]
+    },
+    "bc:3885294899:-": {
+      "artist": "BZMC & Black Zone Myth Chant",
+      "artists": [
+        "BZMC",
+        "Black Zone Myth Chant"
+      ],
+      "labels": []
     }
   },
   "segEdits": {
@@ -2796,6 +2834,61 @@
         "labels": [
           "Open Hand Real Flames"
         ]
+      }
+    },
+    "modem-36": {
+      "0": {
+        "artists": [
+          "Dustin Wong",
+          "Good Willsmith",
+          "Takako Minekawa"
+        ],
+        "labels": [
+          "Umor Rex"
+        ]
+      }
+    },
+    "modem-37": {
+      "8": {
+        "artists": [
+          "woopheadclrms",
+          "Ten Hyphen Twenty"
+        ],
+        "labels": [
+          "Genot Centre"
+        ]
+      }
+    },
+    "modem-38": {
+      "13": {
+        "artists": [
+          "Alley Catss",
+          "ooo",
+          "MA'AM"
+        ],
+        "labels": [
+          "EXILES"
+        ]
+      }
+    },
+    "modem-40": {
+      "2": {
+        "artists": [
+          "Yuto Ohashi",
+          "L O O T U S",
+          "Toon"
+        ],
+        "labels": [
+          "Cudighi"
+        ]
+      }
+    },
+    "modem-48": {
+      "7": {
+        "artists": [
+          "BZMC"
+        ],
+        "labels": []
       }
     }
   }
