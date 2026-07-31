@@ -1105,6 +1105,26 @@
       "labels": [
         "Quantum Natives"
       ]
+    },
+    "bc:3002732965:1669016742": {
+      "artist": "épong & TRESS",
+      "artists": [
+        "épong",
+        "TRESS"
+      ],
+      "labels": [
+        "Montage"
+      ]
+    },
+    "bc:3002732965:1489136159": {
+      "artist": "Inferior Design & Lambert",
+      "artists": [
+        "Inferior Design",
+        "Lambert"
+      ],
+      "labels": [
+        "Montage"
+      ]
     }
   },
   "segEdits": {
@@ -1874,6 +1894,42 @@
         ],
         "labels": [
           "Quantum Natives"
+        ]
+      }
+    },
+    "modem-116": {
+      "1": {
+        "artists": [
+          "⎩༯༧ࣤ༨༩༣𝓁 ⎧ࣥࣨ"
+        ],
+        "labels": []
+      },
+      "12": {
+        "artists": [
+          "crayon moon"
+        ],
+        "labels": [
+          "Curiosity Shop"
+        ]
+      }
+    },
+    "modem-115": {
+      "0": {
+        "artists": [],
+        "labels": [
+          "i.u"
+        ]
+      },
+      "10": {
+        "artists": [
+          "épong",
+          "Inferior Design",
+          "Justin",
+          "Lambert",
+          "TRESS"
+        ],
+        "labels": [
+          "Montage"
         ]
       }
     }
