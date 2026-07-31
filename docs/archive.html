@@ -1252,17 +1252,19 @@
         const pencilHtml = (key) => admin
           ? '<button type="button" class="track-edit-pencil" data-track-key="' + esc(key) + '" title="edit this track\'s own tags">&#9998;</button>'
           : '';
+        // The page's own "★*ﾟ30 best videos...*★" intro line — not a per-entry
+        // description. Shared by both passes below: pass 1 must never treat it as
+        // one, and pass 2 must recognise it as "nothing came before this embed"
+        // (same as another embed immediately preceding it) so the very FIRST
+        // entry of an embed-only list still gets a row — otherwise it's the one
+        // entry neither pass ever reaches (pass 1 skips it as a heading, pass 2's
+        // old "prev has an iframe" check saw the heading has none and assumed a
+        // real description must already be sitting there unprocessed).
+        const isIntroHeading = (p) => !!p && p.children.length === 1 && p.children[0].tagName === 'STRONG' &&
+          p.children[0].textContent.trim() === (p.textContent || '').trim();
         [...body.querySelectorAll('p')].forEach((p) => {
           if (p.querySelector('iframe')) return;              // skip embed paragraphs
-          // The page's own "★*ﾟ30 best videos...*★" intro line is a heading, not
-          // a per-entry description — normally its next sibling has no iframe (a
-          // real description sits between it and the first embed) so it's already
-          // excluded below, but an embed-only list (every "best videos" list: just
-          // a bare run of <p><iframe></p>, no description lines at all) puts the
-          // FIRST video directly after it, which would otherwise pass every check
-          // below and get a pencil wrongly attached to a track it has nothing to
-          // do with.
-          if (p.children.length === 1 && p.children[0].tagName === 'STRONG' && p.children[0].textContent.trim() === (p.textContent || '').trim()) return;
+          if (isIntroHeading(p)) return;
           const next = p.nextElementSibling;
           if (!next || !next.querySelector('iframe')) return; // only descriptions (immediately followed by an embed)
           const txt = (p.textContent || '').trim();
@@ -1287,7 +1289,13 @@
           if (!chips && !pencil) return;
           // description on the left, chips pushed to the right edge (like the shows, minus the slashes)
           p.classList.add('list-row');
-          p.innerHTML = '<span class="list-desc">' + p.innerHTML + '</span><span class="list-tags">' + chips + pencil + '</span>';
+          // A video's own YouTube thumbnail already shows its title + channel —
+          // repeating that as a text line above it is pure duplication (unlike a
+          // Bandcamp/SoundCloud embed, which doesn't always surface the label).
+          // Keep the (empty) span anyway so flex still pushes the chips/pencil to
+          // the right edge exactly as it does everywhere else on this page.
+          const descHtml = tk && tk.kind === 'youtube' ? '' : p.innerHTML;
+          p.innerHTML = '<span class="list-desc">' + descHtml + '</span><span class="list-tags">' + chips + pencil + '</span>';
         });
         // Stray embeds: some entries pack a 2nd (or 3rd) album under one description
         // with no line of its own. Give each its own entry, using the resolved
@@ -1295,14 +1303,20 @@
         [...body.querySelectorAll('p')].forEach((p) => {
           if (!p.querySelector('iframe')) return;
           const prev = p.previousElementSibling;
-          if (!(prev && prev.querySelector('iframe'))) return; // it already has a description (prev isn't an embed)
+          // Needs its own row when nothing usable precedes it: either chained
+          // right after another embed (no description was ever meant to exist
+          // between them), or it's the very first entry in an embed-only list
+          // (prev is the intro heading, not a real unprocessed description).
+          if (!(prev && (prev.querySelector('iframe') || isIntroHeading(prev)))) return;
           const t = trackForEmbedP(p);
           if (!t) return;
           const pencil = pencilHtml(t.key);
           if (!t.artist && !pencil) return;
           const row = document.createElement('p');
           row.className = 'list-row';
-          const desc = t.artist ? (esc(t.artist) + ((t.album || t.title) ? ' - ' + esc(t.album || t.title) : '')) : '';
+          // Same as pass 1 above — a video's own thumbnail already shows its
+          // title + channel, so the synthesized text line would just repeat it.
+          const desc = (t.kind !== 'youtube' && t.artist) ? (esc(t.artist) + ((t.album || t.title) ? ' - ' + esc(t.album || t.title) : '')) : '';
           const artistChip = t.artist ? chip('artist', 'artist-chip', t.artist) : '';
           row.innerHTML = '<span class="list-desc">' + desc + '</span><span class="list-tags">' + artistChip + pencil + '</span>';
           p.parentNode.insertBefore(row, p);
