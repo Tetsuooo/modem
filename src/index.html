@@ -1572,6 +1572,15 @@
           if (!url || !inShow(t)) return null; // unplayable, or a list-only album
           const first = (t.shows || []).find((s) => s.type === 'show') || (t.shows && t.shows[0]);
           const isBc = t.kind === 'bandcamp';
+          // Always display Bandcamp's own title/artist — never SoundCloud's.
+          // scPlay only supplies the AUDIO; a matched SC upload is frequently
+          // a third-party repost/premiere (not the artist's or label's own
+          // account), whose own title/artist metadata is unreliable — e.g. a
+          // "[PREMIERE] artist - title (label)" string with the reposting
+          // account listed as "artist". Bandcamp's whole-album-embed generic
+          // titles (title === album, e.g. modem-242's "lovejector") get a
+          // manually reviewed, explicit fix instead — see overrides.json
+          // tagEdits' "title" field, applied in apply-overrides.js.
           return {
             apiUrl: url, title: t.title || '(untitled)', artist: t.artist || '',
             album: (t.album && t.album !== t.title) ? t.album : '',

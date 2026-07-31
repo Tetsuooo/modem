@@ -112,7 +112,16 @@ const html = `<!doctype html>
   const approvals = Object.assign({}, FILE_APPROVALS, JSON.parse(localStorage.getItem(KEY) || '{}'));
   // pre-approve the airtight "auto" tier (user can still override)
   DATA.forEach((o) => { if (o.tier === 'auto' && !(o.key in approvals)) approvals[o.key] = o.suggest; });
+  // Picks already sitting in localStorage from a previous visit that never
+  // got applied (the exact bug this whole dirty-tracking exists for) — start
+  // the header button already flagged instead of only after the next pick.
+  const startedDirty = JSON.stringify(approvals) !== JSON.stringify(FILE_APPROVALS);
   let mode = 'todo', idx = 0, query = ''; // 'todo' = undecided queue, 'done' = decided backlog
+  // True whenever there's something in localStorage the live site doesn't
+  // have yet (a pick/undo since the last successful "save & apply to site",
+  // or startedDirty above). Drives the header button's label and the
+  // leave-page warning below (see pick()/undo() and #saveapply).
+  let dirty = startedDirty;
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const fmt = (s) => s ? Math.floor(s/60)+':'+String(s%60).padStart(2,'0') : '–';
@@ -135,8 +144,22 @@ const html = `<!doctype html>
     return mode === 'todo' ? undecided() : DATA.filter((o) => o.key in approvals);
   }
   // deciding drops a track out of the review queue (into the backlog); undo returns it
-  function pick(o, val) { approvals[o.key] = val; save(); render(); }
-  function undo(o) { delete approvals[o.key]; save(); render(); }
+  function pick(o, val) { approvals[o.key] = val; save(); dirty = true; renderSaveBtn(); render(); }
+  function undo(o) { delete approvals[o.key]; save(); dirty = true; renderSaveBtn(); render(); }
+  // Keeps the header button's label in sync with dirty outside of a full
+  // render() (e.g. right after a pick, before the card re-renders).
+  function renderSaveBtn() {
+    const btn = document.getElementById('saveapply');
+    if (btn && !btn.disabled) btn.textContent = dirty ? '✔ save & apply to site — unsaved picks' : '✔ save & apply to site';
+  }
+  // The #1 way this bites: pick a track, see "picked: …", assume that means
+  // done, close the tab or navigate away — nothing was ever sent to the
+  // server. Block that specific mistake with a native confirm prompt.
+  window.addEventListener('beforeunload', (e) => {
+    if (!dirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
 
   function render() {
     const L = list();
@@ -179,10 +202,15 @@ const html = `<!doctype html>
         '<iframe loading="lazy" src="' + esc(scPlayer(c.id)) + '"></iframe></div>';
     }).join('');
     const isManual = typeof cur === 'string';
+    // "picked" not "saved" — pick() only writes to localStorage (this browser,
+    // this device). Nothing reaches the live site until "save & apply to
+    // site" (below) is actually clicked — that's the one that POSTs to the
+    // server and runs apply-sc-matches.js. Calling this "saved" reads as
+    // "done, the site has it now", which it isn't yet.
     const savedLabel = cur === undefined ? 'not decided yet'
-      : cur === null ? 'saved: none (keeps bandcamp)'
-      : isManual ? 'saved: manual link'
-      : 'saved: candidate #' + (o.candidates.findIndex((c) => c.id === cur) + 1);
+      : cur === null ? 'picked: none (keeps bandcamp)'
+      : isManual ? 'picked: manual link'
+      : 'picked: candidate #' + (o.candidates.findIndex((c) => c.id === cur) + 1);
     document.getElementById('card').innerHTML =
       '<div class="bc">' +
         (o.bcArt ? '<img src="' + esc(o.bcArt) + '" alt="">' : '<div class="bc-noimg"></div>') +
@@ -238,14 +266,14 @@ const html = `<!doctype html>
   document.getElementById('saveapply').onclick = async () => {
     const btn = document.getElementById('saveapply');
     if (location.protocol === 'file:') { alert('Open this page at http://localhost:8085/match-review to use save & apply.'); return; }
-    const orig = btn.textContent; btn.disabled = true; btn.textContent = 'saving…';
+    btn.disabled = true; btn.textContent = 'saving…';
     try {
       const r = await fetch('/save-approvals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(approvals) });
       const j = await r.json();
-      if (j.ok) { btn.textContent = '✔ applied! reload the site'; }
+      if (j.ok) { btn.textContent = '✔ applied! reload the site'; dirty = false; }
       else { btn.textContent = '✗ error'; alert('apply failed:\\n' + j.error); }
     } catch (e) { btn.textContent = '✗ error'; alert('could not reach the dev server:\\n' + e); }
-    setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 3500);
+    setTimeout(() => { btn.disabled = false; renderSaveBtn(); }, 3500);
   };
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT') return;
@@ -258,6 +286,7 @@ const html = `<!doctype html>
   });
   if (!DATA.length) document.getElementById('card').innerHTML = '<div class="donemsg">no candidates to review 🎉</div>';
   else render();
+  renderSaveBtn();
 </script></body></html>`;
 
 fs.writeFileSync(OUT, html);

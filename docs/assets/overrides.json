@@ -162,6 +162,12 @@
     "Urubu": "Urubu Tapes"
   },
   "tagEdits": {
+    "bc:3198824310:-": {
+      "title": "anything helps"
+    },
+    "bc:705312098:-": {
+      "title": "Hi and Bye"
+    },
     "bc:565587585:983361818": {
       "artist": "Chickenmilk dot com & ANTHEM",
       "artists": [
@@ -964,6 +970,106 @@
       "labels": [
         "noumenal loom"
       ]
+    },
+    "bc:3198824310:2039016272": {
+      "artist": "prototype money",
+      "artists": [
+        "prototype money"
+      ],
+      "labels": [
+        "soak"
+      ]
+    },
+    "bc:807394572:883367372": {
+      "artist": "Galen & galen tipton",
+      "artists": [
+        "Galen",
+        "galen tipton"
+      ],
+      "labels": [
+        "Squiggle Dot"
+      ]
+    },
+    "bc:436415307:-": {
+      "artist": "OV",
+      "artists": [
+        "OV"
+      ],
+      "labels": [
+        "Future Times"
+      ]
+    },
+    "sc:267544843": {
+      "artist": "x/o",
+      "artists": [
+        "x/o"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "sc:298578649": {
+      "artist": "Zolitude",
+      "artists": [
+        "Zolitude"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "sc:302985837": {
+      "artist": "Swivelized Sounds",
+      "artists": [
+        "Swivelized Sounds"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "sc:288659682": {
+      "artist": "White Goblin",
+      "artists": [
+        "White Goblin"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "sc:303685111": {
+      "artist": "City",
+      "artists": [
+        "City"
+      ],
+      "labels": [
+        "Halcyon Veil"
+      ]
+    },
+    "sc:276901007": {
+      "artist": "N-Prolenta",
+      "artists": [
+        "N-Prolenta"
+      ],
+      "labels": [
+        "Halcyon Veil"
+      ]
+    },
+    "sc:1181202358": {
+      "artist": "Adum Brate",
+      "artists": [
+        "Adum Brate"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
+    },
+    "sc:1181206942": {
+      "artist": "John-Low Hearhat",
+      "artists": [
+        "John-Low Hearhat"
+      ],
+      "labels": [
+        "Quantum Natives"
+      ]
     }
   },
   "segEdits": {
@@ -1636,6 +1742,14 @@
         "labels": [
           "Cudighi"
         ]
+      },
+      "19": {
+        "artists": [
+          "prototype money"
+        ],
+        "labels": [
+          "soak"
+        ]
       }
     },
     "modem-18": {
@@ -1648,6 +1762,73 @@
         ],
         "labels": [
           "noumenal loom"
+        ]
+      }
+    },
+    "modem-01-0": {
+      "3": {
+        "artists": [
+          "Galen Tipton",
+          "Tominaga",
+          "Grapefruit"
+        ],
+        "labels": [
+          "Squiggle Dot"
+        ]
+      },
+      "4": {
+        "artists": [
+          "Motion Graphics",
+          "OV"
+        ],
+        "labels": [
+          "Future Times"
+        ]
+      }
+    },
+    "modem-03": {
+      "2": {
+        "artists": [
+          "Swivelized Sounds",
+          "x/o",
+          "White Goblin",
+          "Zolitude"
+        ],
+        "labels": [
+          "Quantum Natives"
+        ]
+      },
+      "3": {
+        "artists": [],
+        "labels": []
+      },
+      "4": {
+        "artists": [],
+        "labels": []
+      },
+      "5": {
+        "artists": [
+          "N-Prolenta",
+          "Jesse Osborne-Lanthier",
+          "City"
+        ],
+        "labels": [
+          "Halcyon Veil"
+        ]
+      },
+      "7": {
+        "artists": [],
+        "labels": []
+      }
+    },
+    "modem-129": {
+      "13": {
+        "artists": [
+          "John-Low Hearhat",
+          "Adum Brate"
+        ],
+        "labels": [
+          "Quantum Natives"
         ]
       }
     }

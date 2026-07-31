@@ -1557,6 +1557,20 @@
           // plain slashes, still clickable); a filler slash run stretches to the chips.
           if (p.querySelector('a')) {
             p.classList.add('seg-keep');
+            // The name is sometimes wrapped in its own bold element instead of
+            // sitting in a bare text node — either just the name on its own
+            // (modem-03: <strong>Brood Ma</strong><a>///////</a>…) or the
+            // WHOLE run, links included (modem-07: <strong>PAN <a>…</a>…
+            // </strong>). The loop below only knows how to strip a leading
+            // text node, so unwrap a bold wrapper that holds a link (exposing
+            // its name-text + <a> children as plain top-level nodes the loop
+            // already handles) and drop one outright that holds no link at
+            // all (pure name, nothing worth keeping) — otherwise the whole
+            // element is opaque to the loop and the bold name survives untouched.
+            [...p.querySelectorAll(':scope > strong, :scope > b')].forEach((el) => {
+              if (el.querySelector('a')) { while (el.firstChild) p.insertBefore(el.firstChild, el); el.remove(); }
+              else el.remove();
+            });
             for (const node of [...p.childNodes]) {
               if (node.nodeType === 3) {                                  // leading text node
                 if (node.textContent.indexOf('/') === -1) { p.removeChild(node); continue; } // pure name → remove
@@ -1805,11 +1819,18 @@
           const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' +
             (cover ? '<img class="track-thumb" loading="lazy" src="' + esc(cover) + '" alt="">' : '<span class="track-thumb"></span>') +
             '</span>';
+          // Always display Bandcamp's own title/artist — never SoundCloud's;
+          // see index.html's trackItems for the full reasoning (a matched SC
+          // upload is often a third-party repost whose own title/artist are
+          // unreliable). Generic whole-album titles get a manually reviewed
+          // fix via overrides.json tagEdits' "title" field instead.
+          const title = tk.title || '(untitled)';
+          const artist = tk.artist;
           return '<div class="track-row" data-key="' + esc(tk.key) + '">' +
             thumb +
             '<div class="track-main">' +
-              '<div class="track-title">' + esc(tk.title || '(untitled)') + '</div>' +
-              (tk.artist ? '<div class="track-artist">' + esc(tk.artist) + '</div>' : '') +
+              '<div class="track-title">' + esc(title) + '</div>' +
+              (artist ? '<div class="track-artist">' + esc(artist) + '</div>' : '') +
             '</div>' +
             '<div class="track-shows">' + badges + '</div>' +
           '</div>';
