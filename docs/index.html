@@ -891,7 +891,28 @@
         
         routeSegment(window.location.pathname);
       });
-    });</script><style>.modem-search { position: fixed; inset: 0; z-index: 200002; font-family: Arial, sans-serif; pointer-events: none; }
+    });</script><script>// Shared by the search window (place()) and the mini-player (placeNear()):
+    // the edges of whatever main-content column is currently on screen — the
+    // radio-show number grid, or an archive show/list detail page. The player
+    // docks to the LEFT of this, search docks to the RIGHT of this, on first
+    // appearance — flanking the content on opposite sides instead of drifting
+    // to whichever side their trigger happened to be on (which could slide
+    // them over the grid/embeds on narrower windows).
+    function modemContentEl() {
+      const el = document.querySelector('.number-grid, .detail-inner-wrap');
+      if (el) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0) return r;
+      }
+      return null;
+    }
+    function modemContentEdgeLeft() { const r = modemContentEl(); return r ? r.left : null; }
+    function modemContentEdgeRight() { const r = modemContentEl(); return r ? r.right : null; }
+    // Breathing room between a popup and the content edge it's docked to —
+    // scales with viewport width (like the rest of the site's clamp()-based
+    // sizing) instead of a flat px value, so it opens up a bit more on wide
+    // monitors rather than staying cramped-tight everywhere.
+    function modemPopupGap() { return Math.max(28, Math.min(innerWidth * 0.03, 64)); }</script><style>.modem-search { position: fixed; inset: 0; z-index: 200002; font-family: Arial, sans-serif; pointer-events: none; }
     .modem-search[hidden] { display: none; }
     .ms-window {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
@@ -1072,36 +1093,34 @@
         resultsEl.innerHTML = filtered.length ? filtered.map(trackRow).join('') : emptyMsg();
       }
 
-      // Position the narrow window next to whatever opened it (a button / the tag
-      // bubble). Anchor on the left half → window to its right; on the right half →
-      // window rises up-left over it. No anchor → centered. Mobile → CSS full-screen.
-      // tagOpen → sit on the right, just to the LEFT of and rising ABOVE the
-      // bottom-right tag cloud, so the cloud stays visible beside it.
+      // Position the narrow window on first appearance. Horizontally it ALWAYS
+      // docks just to the RIGHT of the current page's main content column (the
+      // radio-show number grid, or an archive show/list detail page) — never
+      // drifting to whichever side of the anchor happens to have more room,
+      // which used to be able to slide it over the grid/embeds on narrower
+      // windows. The player docks to the content's LEFT (see placeNear), so
+      // the two flank the content on opposite sides instead of competing for
+      // the same side. Vertically: tagOpen (a detail-page tag chip) rises from
+      // the bottom; otherwise it aligns with the button that opened it. No
+      // anchor and no content column found → centered. Mobile → CSS full-screen.
       function place(anchorEl, tagOpen) {
         const vw = innerWidth, vh = innerHeight;
         if (vw <= 600) { win.style.left = ''; win.style.top = ''; win.style.transform = ''; return; } // full-screen on mobile (CSS)
         const W = win.offsetWidth, H = win.offsetHeight;
         const rect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
         const player = document.getElementById('modem-player');
-        // sit on the right when the player is open (it prefers the left) so the two
-        // windows don't stack on top of each other
-        if (tagOpen || (player && !player.hidden)) {
-          // the tag cloud always lives bottom-right, so anchor there whatever
-          // opened the search (a chip, or the player's artist/label link)
-          const cloudW = Math.min(340, vw * 0.84);          // how far the chips extend left
-          let left = (vw - 14) - cloudW - 12 - W;             // clear the whole tag cloud to the left
-          let top = (vh - 14) - H;                            // bottom-aligned → rises upward
-          left = Math.max(8, Math.min(left, vw - W - 8));
-          top = Math.max(8, Math.min(top, vh - H - 8));
-          win.style.transform = 'none'; win.style.left = left + 'px'; win.style.top = top + 'px';
-          return;
-        }
-        if (!rect) { win.style.left = '50%'; win.style.top = '50%'; win.style.transform = 'translate(-50%,-50%)'; return; }
-        const gap = 10;
-        let left, top;
-        if (rect.left + rect.width / 2 < vw / 2) { left = rect.right + gap; top = rect.top; }
-        else { left = rect.right - W; top = rect.bottom - H; }
+        const gap = modemPopupGap();
+        const edge = modemContentEdgeRight();
+        let left = edge != null ? edge + gap : (rect ? rect.right + gap : vw / 2 - W / 2);
         left = Math.max(8, Math.min(left, vw - W - 8));
+        let top;
+        if (tagOpen || (player && !player.hidden)) {
+          top = (vh - 14) - H; // bottom-aligned → rises upward
+        } else if (rect) {
+          top = rect.top;
+        } else {
+          top = vh / 2 - H / 2;
+        }
         top = Math.max(8, Math.min(top, vh - H - 8));
         win.style.transform = 'none'; win.style.left = left + 'px'; win.style.top = top + 'px';
       }
@@ -1530,33 +1549,26 @@
         });
       }
 
-      // position the player just to the right of whatever opened it (e.g. the
-      // "play random track" button); only when it's first shown, so a dragged
-      // position isn't yanked back.
+      // Position the player on first appearance — ALWAYS the same spot,
+      // regardless of which of the three ways it was first opened ("play
+      // random show/track", an inline track-play button on a show page, or a
+      // play button on a search result row): docked to the left of the
+      // current page's main content column (number grid / detail page), at a
+      // fixed vertical clamp. The search window docks to that same column's
+      // RIGHT (see place()), so the two flank the content on opposite sides
+      // instead of competing for the same side. anchorEl is now unused for
+      // positioning (kept as a param only so start()'s "was it ever opened
+      // from somewhere" gate still reads naturally) — every trigger used to
+      // nudge this to a slightly different spot depending on the button/
+      // element clicked, which is exactly what shouldn't happen.
       function placeNear(anchorEl) {
         if (window.matchMedia('(max-width: 600px)').matches) { el.style.left = ''; el.style.top = ''; el.style.right = ''; return; } // full-screen on mobile (CSS)
-        const search = document.getElementById('modem-search');
-        if (search && !search.hidden) { // search is open (right side) → sit on the left, out of its way
-          el.style.right = 'auto'; el.style.left = '1rem'; el.style.top = '4.5rem'; return;
-        }
-        // 'left' sentinel: same standard-ish spot regardless of where the trigger
-        // sits on the page — used by a show page's embed play buttons, since those
-        // can be anywhere in a long tracklist and shouldn't drag the player around
-        // with them the way "play random track"'s fixed-position button can.
-        // Proportional (vw/vh), not a fixed px/rem value, so it scales with the
-        // window instead of landing disproportionately close to/far from the edge
-        // on very small or very large screens — clamped so it still stays
-        // reasonable at the extremes. Started from where "play random track"
-        // itself actually lands (measured empirically at ~17.5rem/4rem on a
-        // typical desktop width), nudged a bit lower/righter from there.
-        if (anchorEl === 'left') { el.style.right = 'auto'; el.style.left = 'clamp(14rem, 23vw, 32rem)'; el.style.top = 'clamp(4rem, 12vh, 9rem)'; return; }
-        if (!anchorEl || !anchorEl.getBoundingClientRect) return;
-        const r = anchorEl.getBoundingClientRect();
-        const w = el.offsetWidth || 420, h = el.offsetHeight || 400;
-        let left = Math.max(8, Math.min(r.right + 12, innerWidth - w - 8));
-        // sit higher: lift the player so its bottom edge lands at the anchor's top edge
-        let top = Math.max(64, Math.min(r.top - h, innerHeight - h - 8));
-        el.style.right = 'auto'; el.style.left = left + 'px'; el.style.top = top + 'px';
+        const w = el.offsetWidth || 420;
+        const gap = modemPopupGap();
+        const edge = modemContentEdgeLeft();
+        let left = edge != null ? edge - gap - w : 8;
+        left = Math.max(8, Math.min(left, innerWidth - w - 8));
+        el.style.right = 'auto'; el.style.left = left + 'px'; el.style.top = 'clamp(4rem, 12vh, 9rem)';
       }
 
       function start(items, startIdx, anchor, seekMs) {
