@@ -405,6 +405,21 @@
           ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       }
 
+      // The big detail-page cover used to hotlink rec.cover (radiostudent.si's
+      // og:image) directly — occasionally slow/unavailable, and ~4x the size of
+      // the WebP mirror scrape-modem.js's ensureCoverArt() keeps in
+      // src/assets/modem_covers (filename convention kept in sync with that
+      // function's coverFileName()). Prefer the local mirror; renderDetail wires
+      // an onerror fallback to rec.cover itself for the rare record that hasn't
+      // been backfilled yet (e.g. a brand-new show before the next scrape run).
+      function localCoverSrc(rec) {
+        if (rec.type === 'show' && rec.number) {
+          return '/assets/modem_covers/modem' + (rec.number < 10 ? '0' + rec.number : rec.number) + '.webp';
+        }
+        if (rec.slug) return '/assets/modem_covers/' + rec.slug + '.webp';
+        return null;
+      }
+
       // ---- inline segment-tag editing (logged in via /admin, password saved to
       // localStorage there) — lets an admin fix a segment heading's artist/label
       // chips directly on a show page, instead of only via the /admin per-track
@@ -1622,12 +1637,22 @@
         // which top-level page this record actually belongs under (see
         // index.html's updateActiveNav) now that its type is known.
         if (window.updateActiveNavGlobal) window.updateActiveNavGlobal(rec.type === 'list' ? 'year-end-lists' : 'radio-show');
+        const localCover = rec.cover ? localCoverSrc(rec) : null;
         detailInner.innerHTML =
-          (rec.cover ? '<img class="detail-cover-big" src="' + esc(rec.cover) + '" alt="">' : '') +
+          (rec.cover ? '<img class="detail-cover-big" src="' + esc(localCover || rec.cover) + '" alt="">' : '') +
           (rec.date ? '<div class="detail-date">' + esc(rec.date) + '</div>' : '') +
           '<div class="detail-title">' + esc(rec.title || rec.slug) + '</div>' +
           playerMarkup(rec.soundcloud, rec.mp3) +
           (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
+        // Fall back to the live radiostudent.si URL if the local mirror 404s
+        // (not yet backfilled) — never leave the cover just broken.
+        if (localCover) {
+          const coverImg = detailInner.querySelector('.detail-cover-big');
+          if (coverImg) coverImg.addEventListener('error', function onCoverError() {
+            this.removeEventListener('error', onCoverError);
+            this.src = rec.cover;
+          }, { once: true });
+        }
         const body = detailInner.querySelector('.modem-body');
         let listTags = null, segTags = null;
         if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); segTags = injectSegTags(body, rec); addPlayButtons(body); watchForBlockedEmbeds(body); } }

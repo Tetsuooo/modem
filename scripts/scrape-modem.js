@@ -25,12 +25,18 @@ const sharp = require('sharp');
 const ROOT = path.resolve(__dirname, '..');
 const CACHE_DIR = path.join(__dirname, '.cache');
 const OUT_FILE = path.join(ROOT, 'src', 'assets', 'modem-archive.json');
-// Per-show hover-preview cover art for the radio-show number grid (see
-// radio-show.html's handleMouseEnter) — a local WebP so hovering doesn't
-// hotlink radiostudent.si on every mouseover. ensureCoverArt() below keeps
-// this in sync automatically on every scrape instead of needing a manual
-// per-show step.
+// Local mirror of every record's cover art (radio-show.html's hover-preview,
+// PLUS the detail-page big cover and the mini-player artwork, which used to
+// hotlink radiostudent.si directly — occasionally slow/unavailable, and the
+// source PNGs are ~1.3MB vs. ~300KB re-encoded here). ensureCoverArt() below
+// keeps this in sync automatically on every scrape instead of needing a
+// manual per-show step. Filename convention (mirrored in archive.html's
+// localCoverSrc() — keep the two in sync): shows → `modemNN.webp` (2-digit
+// zero-padded, matching showSlug's own padding); lists → `<slug>.webp`.
 const COVERS_DIR = path.join(ROOT, 'src', 'assets', 'modem_covers');
+function coverFileName(r) {
+  return (r.type === 'show' ? `modem${pad(r.number)}` : r.slug) + '.webp';
+}
 const BASE = 'https://radiostudent.si';
 const SC_USER = 'https://soundcloud.com/modemodemodem';
 const UA =
@@ -371,23 +377,24 @@ function cachedCurl(cacheKey, url, isLive) {
   return { body, cached: false };
 }
 
-// ---------- hover-preview cover art (radio-show.html number grid) --------
-// Downloads each show's og:image (the same URL rec.cover already resolves
-// to, already used directly by the detail page and the mini-player) and
-// converts it to WebP at its native resolution — no downscaling, so it's at
-// least as sharp as the covers that were being added by hand before this.
-// Idempotent: only ever touches a show whose file doesn't exist yet, so a
-// --reparse (run on every admin tag-edit save) stays cheap after the first
-// backfill and this never re-downloads/re-converts anything already there.
+// ---------- local cover-art mirror (every show + year-end list) ---------
+// Downloads each record's og:image (the same URL rec.cover already resolves
+// to) and converts it to WebP at its native resolution — no downscaling, so
+// it's at least as sharp as the covers that were being added by hand before
+// this. Idempotent: only ever touches a record whose file doesn't exist yet,
+// so a --reparse (run on every admin tag-edit save) stays cheap after the
+// first backfill and this never re-downloads/re-converts anything already
+// there.
 async function ensureCoverArt(records) {
   if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
-  const shows = records.filter((r) => r.type === 'show' && r.number && r.cover);
-  const missing = shows.filter((r) => !fs.existsSync(path.join(COVERS_DIR, `modem${pad(r.number)}.webp`)));
+  const withCover = records.filter((r) => r.cover && (r.type !== 'show' || r.number));
+  const missing = withCover.filter((r) => !fs.existsSync(path.join(COVERS_DIR, coverFileName(r))));
   if (!missing.length) return;
-  console.log(`\nCover art: ${missing.length} show(s) missing a local hover-preview cover, fetching...`);
+  console.log(`\nCover art: ${missing.length} record(s) missing a local cover mirror, fetching...`);
   let ok = 0, failed = 0;
   for (const r of missing) {
-    const dest = path.join(COVERS_DIR, `modem${pad(r.number)}.webp`);
+    const name = coverFileName(r);
+    const dest = path.join(COVERS_DIR, name);
     const tmp = dest + '.download';
     try {
       execFileSync('curl', ['-sS', '-L', '-A', UA, '-o', tmp, r.cover]);
@@ -395,15 +402,15 @@ async function ensureCoverArt(records) {
       await sharp(tmp).webp({ quality: 82 }).toFile(dest);
       fs.unlinkSync(tmp);
       ok++;
-      console.log(`  ✓ modem${pad(r.number)}.webp (${(fs.statSync(dest).size / 1024).toFixed(0)}KB)`);
+      console.log(`  ✓ ${name} (${(fs.statSync(dest).size / 1024).toFixed(0)}KB)`);
       await sleep(500); // courtesy delay between live image fetches, same spirit as the page-scrape rate limit
     } catch (e) {
       failed++;
-      console.warn(`  ! cover for modem${pad(r.number)} failed: ${e.message}`);
+      console.warn(`  ! cover for ${name} failed: ${e.message}`);
       if (fs.existsSync(tmp)) { try { fs.unlinkSync(tmp); } catch (_) {} }
     }
   }
-  console.log(`Covers: ${ok} added, ${failed} failed, ${shows.length - missing.length} already present`);
+  console.log(`Covers: ${ok} added, ${failed} failed, ${withCover.length - missing.length} already present`);
 }
 
 // Resolve & verify the full-show SoundCloud player via oEmbed.

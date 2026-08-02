@@ -1418,9 +1418,16 @@
       }
 
       function showItems(d) {
+        // art = the live radiostudent.si og:image (occasionally slow/unavailable);
+        // artLocal = the local WebP mirror scrape-modem.js's ensureCoverArt() keeps
+        // in assets/modem_covers (same filename convention as archive.html's
+        // localCoverSrc — keep the two in sync). renderMeta prefers artLocal and
+        // falls back to art on error.
         return d.records.filter((r) => r.soundcloud && r.soundcloud.api).map((r) => ({
           apiUrl: r.soundcloud.api, title: r.title || ('modem ' + r.number), artist: r.date || '',
-          art: r.cover || '', kind: 'show', number: r.number, slug: r.slug,
+          art: r.cover || '',
+          artLocal: r.number ? '/assets/modem_covers/modem' + (r.number < 10 ? '0' + r.number : r.number) + '.webp' : '',
+          kind: 'show', number: r.number, slug: r.slug,
           srcLink: (r.soundcloud && r.soundcloud.track) || '',
         }));
       }
@@ -1477,8 +1484,11 @@
       function renderMeta(item) {
         current = item;
         updateMediaSession(item);
-        artImg.src = item.art || '';
-        artImg.style.visibility = item.art ? 'visible' : 'hidden';
+        const remoteArt = item.art || '';
+        const primaryArt = item.artLocal || remoteArt;
+        artImg.onerror = (item.artLocal && remoteArt) ? function () { this.onerror = null; this.src = remoteArt; } : null;
+        artImg.src = primaryArt;
+        artImg.style.visibility = primaryArt ? 'visible' : 'hidden';
         titleEl.textContent = item.title || '';
         artistEl.textContent = item.artist || '';
         artistEl.hidden = !item.artist;
@@ -1699,8 +1709,11 @@
           // stopPropagation is CRITICAL: without it this click bubbles to the el
           // handler below which, seeing mp-mini now set, instantly expands it back
           // (so the player never minimized). Also avoids a duplicate route from
-          // the shell's link interceptor.
+          // the shell's link interceptor — but that also means this handler must
+          // close the search overlay itself (the shell's own link interceptor,
+          // which normally has no reason to touch search, never sees this click).
           e.stopPropagation();
+          if (window.modemSearch) window.modemSearch.close();
           history.pushState({}, '', href);
           window.routeSegmentGlobal(href);
           // On phones the player is full-screen and would hide the show you just
