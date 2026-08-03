@@ -118,7 +118,7 @@
       font-size: 1.5rem; line-height: 1; cursor: pointer;
     }
     .sc-toggle:hover { color: #888; }
-    .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; }
+    .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; touch-action: none; }
     .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
     .sc-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
@@ -928,22 +928,36 @@
         const durEl = wrap.querySelector('.sc-dur');
         const fmt = (s) => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
         const seek = (frac) => { const p = Math.max(0, Math.min(1, frac)) * 100; prog.style.width = p + '%'; playhead.style.left = p + '%'; };
+        let scrubbing = false;
         audio.addEventListener('loadedmetadata', () => { durEl.textContent = fmt(audio.duration); });
         audio.addEventListener('play', () => { toggle.textContent = '❚❚'; });
         audio.addEventListener('pause', () => { toggle.textContent = '▶'; });
         audio.addEventListener('ended', () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
         audio.addEventListener('timeupdate', () => {
-          if (audio.duration) seek(audio.currentTime / audio.duration);
+          if (!scrubbing) { if (audio.duration) seek(audio.currentTime / audio.duration); }
           curEl.textContent = fmt(audio.currentTime);
         });
         toggle.onclick = () => { if (audio.paused) audio.play(); else audio.pause(); };
-        bar.onclick = (e) => {
+        // Drag-to-scrub: pointer events cover mouse/touch/pen in one path, and
+        // setPointerCapture keeps move/up firing on `bar` past its (thin) edges.
+        const fracAt = (clientX) => { const r = bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (clientX - r.left) / r.width)); };
+        bar.addEventListener('pointerdown', (e) => {
           if (!audio.duration) return;
-          const r = bar.getBoundingClientRect();
-          const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+          scrubbing = true;
+          bar.setPointerCapture(e.pointerId);
+          seek(fracAt(e.clientX));
+          e.preventDefault();
+        });
+        bar.addEventListener('pointermove', (e) => { if (scrubbing) seek(fracAt(e.clientX)); });
+        const endScrub = (e) => {
+          if (!scrubbing) return;
+          scrubbing = false;
+          const frac = fracAt(e.clientX);
           audio.currentTime = frac * audio.duration;
           seek(frac);
         };
+        bar.addEventListener('pointerup', endScrub);
+        bar.addEventListener('pointercancel', () => { scrubbing = false; });
       }
       function initPlayer() {
         const wrap = detailInner.querySelector('.sc-player');
@@ -971,7 +985,7 @@
         // track that works fine a couple seconds later. Both timeouts are also more
         // generous than the tracklist-embed check (10s here vs. that one's 6s) since
         // this is a single widget, not up to a dozen on the page at once.
-        let widget = null, durationMs = 0, readyTimer = null, currentPositionMs = 0;
+        let widget = null, durationMs = 0, readyTimer = null, currentPositionMs = 0, scrubbing = false;
         function showFallback() { wrap.style.display = 'none'; if (fallback) fallback.classList.add('show'); }
         function restoreFromFallback() { wrap.style.display = ''; if (fallback) fallback.classList.remove('show'); }
         function ready() {
@@ -985,10 +999,32 @@
           widget.bind(SC.Widget.Events.PLAY, () => { toggle.textContent = '❚❚'; });
           widget.bind(SC.Widget.Events.PAUSE, () => { toggle.textContent = '▶'; });
           widget.bind(SC.Widget.Events.FINISH, () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
-          widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => { seek(e.relativePosition); curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition; });
+          widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
+            if (!scrubbing) seek(e.relativePosition); // don't fight the user's drag
+            curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition;
+          });
         }
         toggle.onclick = () => { if (widget) widget.toggle(); };
-        bar.onclick = (e) => { if (!widget || !durationMs) return; const r = bar.getBoundingClientRect(); const frac = (e.clientX - r.left) / r.width; seek(frac); widget.seekTo(frac * durationMs); };
+        // Drag-to-scrub: pointer events cover mouse/touch/pen in one path, and
+        // setPointerCapture keeps move/up firing on `bar` past its (thin) edges.
+        const fracAt = (clientX) => { const r = bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (clientX - r.left) / r.width)); };
+        bar.addEventListener('pointerdown', (e) => {
+          if (!widget || !durationMs) return;
+          scrubbing = true;
+          bar.setPointerCapture(e.pointerId);
+          seek(fracAt(e.clientX));
+          e.preventDefault();
+        });
+        bar.addEventListener('pointermove', (e) => { if (scrubbing) seek(fracAt(e.clientX)); });
+        const endScrub = (e) => {
+          if (!scrubbing) return;
+          scrubbing = false;
+          const frac = fracAt(e.clientX);
+          seek(frac);
+          widget.seekTo(frac * durationMs);
+        };
+        bar.addEventListener('pointerup', endScrub);
+        bar.addEventListener('pointercancel', () => { scrubbing = false; });
         const popout = wrap.querySelector('.sc-popout');
         if (popout) popout.onclick = () => {
           if (!window.modemPlayer || !currentDetailRec) return;
