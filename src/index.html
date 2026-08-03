@@ -1353,8 +1353,9 @@
     /* shuffle toggle pinned to the top-right corner of the white panel */
     .mp-shuffle { position: absolute; top: 0.4rem; right: 0.45rem; z-index: 4; width: 1.5rem; height: 1.4rem; border: 0; background: transparent; cursor: pointer; font-size: 0.95rem; line-height: 1; color: #bbb; padding: 0; }
     .mp-shuffle.on { color: #000; background: #ffff00; }
-    /* scrubber with a distinct vertical playhead */
-    .mp-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; }
+    /* scrubber with a distinct vertical playhead. touch-action:none so a drag
+       started on the bar scrubs instead of the page/window trying to pan. */
+    .mp-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; touch-action: none; }
     .mp-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .mp-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; border: 0; transform: translateX(-50%); }
     /* plain × (no circle), pinned to the artwork's top-left corner (the
@@ -1526,7 +1527,7 @@
       const closeBtn = el.querySelector('.mp-close');
       const minBtn = el.querySelector('.mp-min');
       const shufBtn = el.querySelector('#mp-shuffle');
-      let durationMs = 0, shuffleOn = true, wantPlaying = false, playing = false;
+      let durationMs = 0, shuffleOn = true, wantPlaying = false, playing = false, scrubbing = false;
       const fmtT = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 
       let widget = null, queue = [], idx = 0;
@@ -1679,7 +1680,7 @@
         widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
         widget.bind(SC.Widget.Events.FINISH, () => go(1));
         widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
-          setProgress(e.relativePosition);
+          if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
           if (!durationMs && e.relativePosition > 0) durationMs = e.currentPosition / e.relativePosition;
           timeEl.textContent = fmtT(e.currentPosition) + ' / ' + fmtT(durationMs);
         });
@@ -1842,13 +1843,31 @@
         // re-order what plays next, keeping the current track playing
         if (queue.length) { const cur = queue[idx]; queue = order(queue); idx = Math.max(0, queue.findIndex((x) => x.apiUrl === cur.apiUrl)); }
       };
-      bar.onclick = (e) => {
+      // Scrubbing: pointer events cover mouse/touch/pen in one path, and
+      // setPointerCapture keeps move/up firing on `bar` even once the
+      // finger/cursor strays outside its (thin) bounds mid-drag — the frac
+      // is still clamped to [0,1] below, so it just tracks the nearest end.
+      const fracAt = (clientX) => { const r = bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (clientX - r.left) / r.width)); };
+      bar.addEventListener('pointerdown', (e) => {
         if (!widget) return;
-        const r = bar.getBoundingClientRect();
-        const frac = (e.clientX - r.left) / r.width;
+        scrubbing = true;
+        bar.setPointerCapture(e.pointerId);
+        setProgress(fracAt(e.clientX));
+        e.preventDefault();
+      });
+      bar.addEventListener('pointermove', (e) => {
+        if (!scrubbing) return;
+        setProgress(fracAt(e.clientX));
+      });
+      const endScrub = (e) => {
+        if (!scrubbing || !widget) return;
+        scrubbing = false;
+        const frac = fracAt(e.clientX);
         setProgress(frac); // immediate feedback; PLAY_PROGRESS then keeps it in sync
         widget.getDuration((d) => widget.seekTo(frac * d));
       };
+      bar.addEventListener('pointerup', endScrub);
+      bar.addEventListener('pointercancel', () => { scrubbing = false; });
       // "featured in modem NN" → open that show's detail via the SPA (no reload)
       showEl.onclick = (e) => {
         const href = showEl.getAttribute('href') || '';
