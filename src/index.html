@@ -1421,10 +1421,10 @@
       /* ---- minimized: a slim bar pinned to the bottom of the screen ---- */
       .modem-player.mp-mini {
         left: 0; right: 0; bottom: 0; top: auto;
-        width: 100vw; height: auto; min-height: 56px;
+        width: 100vw; height: auto; min-height: 64px;
         flex-direction: row; align-items: center; justify-content: flex-start;
-        gap: 0.7rem; padding: 0.5rem 0.85rem; cursor: pointer;
-        background: #fff; border-top: 2px solid #000;
+        gap: 0.7rem; padding: 0.85rem 0.85rem 0.65rem; cursor: pointer;
+        background: #fff;
       }
       /* things that only belong in the full-screen view */
       .modem-player.mp-mini .mp-min,
@@ -1433,26 +1433,42 @@
       .modem-player.mp-mini .mp-show,
       .modem-player.mp-mini .mp-shuffle,
       .modem-player.mp-mini .mp-time,
-      .modem-player.mp-mini .mp-prev,
       .modem-player.mp-mini .mp-album,
       .modem-player.mp-mini .mp-label { display: none; }
 
       .modem-player.mp-mini .mp-art-wrap { width: 44px; height: 44px; flex: none; align-self: center; margin: 0; }
+      /* position:static here (not inherited from the full-screen .mp-panel rule
+         above) matters: it keeps mp-panel OUT of the containing-block chain for
+         .mp-bar below, so the full-bleed timeline resolves against the mini bar
+         itself instead of getting clipped to this panel's width. */
       .modem-player.mp-mini .mp-panel {
-        flex: 1; min-width: 0; max-width: none; padding: 0; background: transparent;
+        position: static; flex: 1; min-width: 0; max-width: none; padding: 0; background: transparent;
         display: grid; align-items: center; gap: 0 0.6rem;
         grid-template-columns: 1fr auto; grid-template-areas: "title controls" "meta controls";
       }
       .modem-player.mp-mini .mp-title { grid-area: title; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; padding: 0; }
-      .modem-player.mp-mini .mp-meta { grid-area: meta; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; margin-top: 0; }
-      .modem-player.mp-mini .mp-bottom { grid-area: controls; margin: 0; }
+      .modem-player.mp-mini .mp-meta { grid-area: meta; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem; margin-top: 0; padding: 0; }
+      /* transport cluster (prev/play/next), pinned to the right of the title/meta
+         column. Reset in full against the full-screen .mp-bottom rule above —
+         notably position:static, so it doesn't become .mp-bar's containing block
+         (see .mp-panel comment) and clip the timeline to just this button cluster. */
+      .modem-player.mp-mini .mp-bottom {
+        grid-area: controls; position: static; flex-direction: row;
+        align-items: center; justify-content: flex-end; gap: 0; width: auto; margin: 0;
+      }
       .modem-player.mp-mini .mp-controls { gap: 0.1rem; }
       .modem-player.mp-mini .mp-controls button { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
-      /* playback progress becomes a thin line across the very top of the bar */
+      /* playback progress: a full-bleed line sitting exactly on the mini bar's
+         top edge (it IS the divider from the page above — no separate border),
+         edge to edge — anchored to .modem-player.mp-mini (position:fixed), the
+         nearest positioned ancestor once .mp-panel/.mp-bottom above are static. */
       .modem-player.mp-mini .mp-bar {
-        position: absolute; top: 0; left: 0; right: 0; width: 100%; max-width: none;
-        height: 3px; border: 0; background: #e9e9e9;
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 5px; border: 0; background: #e9e9e9;
       }
+      /* shorter playhead tick to match the thin mini timeline — the full-screen
+         one (11px, ±4px past the bar) would loom over this slim bar otherwise */
+      .modem-player.mp-mini .mp-playhead { top: -1px; bottom: -1px; }
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
