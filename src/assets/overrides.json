@@ -159,7 +159,18 @@
     "Conjunktival": "Conjuktival",
     "Trilogy Tapes": "The Trilogy Tapes",
     "Eternal Dragonz": "Eternal Dragons",
-    "Urubu": "Urubu Tapes"
+    "Urubu": "Urubu Tapes",
+    "galen tipton": "Galen Tipton",
+    "Polonius": "POLONIUS",
+    "koeosaeme": "Koeosaeme",
+    "ascyth": "ASCYTH",
+    "4kfairyFantasy": "4kfairyfantasy",
+    "Money Lang": "money lang",
+    "Shinetiac": "shinetiac",
+    "Bass Clef": "bass clef",
+    "L O O T U S": "Lootus",
+    "sin aspirin": "Sin Aspirin",
+    "Bloodz Boi": "bloodz boi"
   },
   "tagEdits": {
     "bc:3198824310:-": {
@@ -1727,6 +1738,15 @@
         "Black Zone Myth Chant"
       ],
       "labels": []
+    },
+    "bc:3810503038:-": {
+      "artist": "inkscreen",
+      "artists": [
+        "inkscreen"
+      ],
+      "labels": [
+        "Seedlink⁺"
+      ]
     }
   },
   "segEdits": {
@@ -2889,6 +2909,16 @@
           "BZMC"
         ],
         "labels": []
+      }
+    },
+    "modem-237": {
+      "21": {
+        "artists": [
+          "inkscreen"
+        ],
+        "labels": [
+          "Seedlink⁺"
+        ]
       }
     }
   }
