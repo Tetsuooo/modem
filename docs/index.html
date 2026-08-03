@@ -1827,4 +1827,19 @@
           });
         },
       };
+    })();</script><script>// Publish the minimized player's live height as --mp-mini-h so other
+    // fixed, bottom-anchored page UI (e.g. home.html's social-icon row) can
+    // move out of its way instead of sitting underneath it unclickable.
+    (function () {
+      const mp = document.getElementById('modem-player');
+      if (!mp) return;
+      const root = document.documentElement;
+      function sync() {
+        const showing = !mp.hidden && mp.classList.contains('mp-mini') &&
+          window.matchMedia('(max-width: 600px)').matches;
+        root.style.setProperty('--mp-mini-h', showing ? mp.getBoundingClientRect().height + 'px' : '0px');
+      }
+      new MutationObserver(sync).observe(mp, { attributes: true, attributeFilter: ['class', 'hidden'] });
+      window.addEventListener('resize', sync);
+      sync();
     })();</script></body></html>
