@@ -18,6 +18,10 @@
        the page in, and the zoom carried into the SPA-navigated subpage). Keeps
        pinch-zoom + panning; also removes the 300ms tap delay. */
     html, body { touch-action: manipulation; }
+    /* kill the translucent blue/gray flash WebKit/Chrome paint on every tap
+       (links, buttons) — purely cosmetic default, no accessibility loss since
+       real interactive elements still get their own hover/active states. */
+    * { -webkit-tap-highlight-color: transparent; }
     /* .cloud (below) is position:absolute inside a position:fixed wrapper —
        browsers can still let its oversized/animated children expand the
        DOCUMENT's (html, not just body) scrollable area, even with body's own
@@ -1457,7 +1461,7 @@
         align-items: center; justify-content: flex-end; gap: 0; width: auto; margin: 0;
       }
       .modem-player.mp-mini .mp-controls { gap: 0.1rem; }
-      .modem-player.mp-mini .mp-controls button { width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
+      .modem-player.mp-mini .mp-controls button { width: 2rem; height: 2rem; font-size: 1.1rem; }
       /* playback progress: a full-bleed line sitting exactly on the mini bar's
          top edge (it IS the divider from the page above — no separate border),
          edge to edge — anchored to .modem-player.mp-mini (position:fixed), the
