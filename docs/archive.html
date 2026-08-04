@@ -358,10 +358,15 @@
     .track-thumb { width: 52px; height: 52px; flex: none; object-fit: cover; background: #eee; display: block; position: relative; }
     .track-thumb-wrap { position: relative; flex: none; width: 52px; height: 52px; }
     .track-thumb-wrap.play::after {
-      content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 0.9rem; color: #fff; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s;
+      content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s;
     }
-    .track-row:hover .track-thumb-wrap.play::after { opacity: 1; }
+    .track-thumb-wrap.play::before {
+      content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-40%, -50%);
+      width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px;
+      border-color: transparent transparent transparent #fff; opacity: 0; transition: opacity 0.12s; z-index: 1;
+    }
+    .track-row:hover .track-thumb-wrap.play::after,
+    .track-row:hover .track-thumb-wrap.play::before { opacity: 1; }
     .track-main { flex: 1; min-width: 0; }
     .track-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .track-artist { font-size: 0.8rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -404,6 +409,12 @@
         return String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
           ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       }
+
+      // Plain SVG instead of Unicode glyphs (▶/❚❚) — iOS Safari renders those
+      // as colorful emoji rather than plain text, so play/pause looked totally
+      // different there than everywhere else.
+      const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>';
+      const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
       // The big detail-page cover used to hotlink rec.cover (radiostudent.si's
       // og:image) directly — occasionally slow/unavailable, and ~4x the size of
@@ -849,7 +860,7 @@
           return '<div class="sc-player sc-player-native">' +
             '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
             '<div class="sc-row">' +
-              '<button class="sc-toggle" type="button" aria-label="play">▶</button>' +
+              '<button class="sc-toggle" type="button" aria-label="play">' + ICON_PLAY + '</button>' +
               '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
             '</div>' +
             '</div>' +
@@ -863,7 +874,7 @@
           '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
           '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">&#8599;</button>' +
           '<div class="sc-row">' +
-            '<button class="sc-toggle" type="button" aria-label="play">▶</button>' +
+            '<button class="sc-toggle" type="button" aria-label="play">' + ICON_PLAY + '</button>' +
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
           '</div>' +
           '</div>' +
@@ -885,9 +896,9 @@
         const seek = (frac) => { const p = Math.max(0, Math.min(1, frac)) * 100; prog.style.width = p + '%'; playhead.style.left = p + '%'; };
         let scrubbing = false;
         audio.addEventListener('loadedmetadata', () => { durEl.textContent = fmt(audio.duration); });
-        audio.addEventListener('play', () => { toggle.textContent = '❚❚'; });
-        audio.addEventListener('pause', () => { toggle.textContent = '▶'; });
-        audio.addEventListener('ended', () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
+        audio.addEventListener('play', () => { toggle.innerHTML = ICON_PAUSE; });
+        audio.addEventListener('pause', () => { toggle.innerHTML = ICON_PLAY; });
+        audio.addEventListener('ended', () => { toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
         audio.addEventListener('timeupdate', () => {
           if (!scrubbing) { if (audio.duration) seek(audio.currentTime / audio.duration); }
           curEl.textContent = fmt(audio.currentTime);
@@ -951,9 +962,9 @@
             restoreFromFallback();
             widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); });
           });
-          widget.bind(SC.Widget.Events.PLAY, () => { toggle.textContent = '❚❚'; });
-          widget.bind(SC.Widget.Events.PAUSE, () => { toggle.textContent = '▶'; });
-          widget.bind(SC.Widget.Events.FINISH, () => { toggle.textContent = '▶'; seek(0); curEl.textContent = '0:00'; });
+          widget.bind(SC.Widget.Events.PLAY, () => { toggle.innerHTML = ICON_PAUSE; });
+          widget.bind(SC.Widget.Events.PAUSE, () => { toggle.innerHTML = ICON_PLAY; });
+          widget.bind(SC.Widget.Events.FINISH, () => { toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
           widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
             if (!scrubbing) seek(e.relativePosition); // don't fight the user's drag
             curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition;
@@ -1194,7 +1205,7 @@
             btn.className = 'embed-play';
             btn.title = 'play in the modem player';
             btn.setAttribute('aria-label', 'play in the modem player');
-            btn.textContent = '▶';
+            btn.innerHTML = ICON_PLAY;
             btn.onclick = () => { if (window.modemPlayer) window.modemPlayer.playTrack(tk, null, 'left'); };
             const marker = findOwnMarker(wrap.parentElement);
             if (marker) {

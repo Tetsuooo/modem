@@ -947,8 +947,10 @@
     .modem-search .track-row:hover { box-shadow: 0 0 0 2px #ffff00; }
     .modem-search .track-thumb { width: 46px; height: 46px; flex: none; object-fit: cover; background: #eee; display: block; }
     .modem-search .track-thumb-wrap { position: relative; flex: none; width: 46px; height: 46px; }
-    .modem-search .track-thumb-wrap.play::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: #fff; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s; }
-    .modem-search .track-row:hover .track-thumb-wrap.play::after { opacity: 1; }
+    .modem-search .track-thumb-wrap.play::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.12s; }
+    .modem-search .track-thumb-wrap.play::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-40%, -50%); width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px; border-color: transparent transparent transparent #fff; opacity: 0; transition: opacity 0.12s; z-index: 1; }
+    .modem-search .track-row:hover .track-thumb-wrap.play::after,
+    .modem-search .track-row:hover .track-thumb-wrap.play::before { opacity: 1; }
     .modem-search .track-main { flex: 1; min-width: 0; }
     .modem-search .track-title { font-weight: bold; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .modem-search .track-artist { font-size: 0.76rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1389,9 +1391,14 @@
       /* shorter playhead tick to match the thin mini timeline — the full-screen
          one (11px, ±4px past the bar) would loom over this slim bar otherwise */
       .modem-player.mp-mini .mp-playhead { top: -1px; bottom: -1px; }
-    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous">⏮</button> <button class="mp-toggle" type="button" aria-label="play or pause">▶</button> <button class="mp-next" type="button" aria-label="next">⏭</button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
+    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> <button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
       const el = document.getElementById('modem-player');
       if (!el) return;
+      // Plain SVG instead of Unicode glyphs (▶/❚❚) — iOS Safari renders those
+      // as colorful emoji rather than plain text, so play/pause looked totally
+      // different there than everywhere else.
+      const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>';
+      const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
       const iframe = el.querySelector('.mp-hidden');
       const artLink = el.querySelector('#mp-art');
       const artImg = artLink.querySelector('img');
@@ -1555,13 +1562,13 @@
         if (widget) return;                    // never bind twice (warm + start can race)
         widget = SC.Widget(iframe);
         widget.bind(SC.Widget.Events.PLAY, () => {
-          playing = true; toggleBtn.textContent = '❚❚'; wantPlaying = true;
+          playing = true; toggleBtn.innerHTML = ICON_PAUSE; wantPlaying = true;
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
           resolvePermalink();
           widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
           if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
         });
-        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.textContent = '▶'; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
         widget.bind(SC.Widget.Events.FINISH, () => go(1));
         widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
           if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
@@ -1628,7 +1635,7 @@
       function loadAndPlay(item) {
         wantPlaying = true;
         playing = false;
-        toggleBtn.textContent = '▶';
+        toggleBtn.innerHTML = ICON_PLAY;
         renderMeta(item);
         widget.load(item.apiUrl, Object.assign({}, LOAD_OPTS, {
           auto_play: true,
