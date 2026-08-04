@@ -1481,7 +1481,7 @@
   <div id="modem-player" class="modem-player" hidden>
     <span class="mp-art-wrap">
       <a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a>
-      <a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a>
+      <a class="mp-src" id="mp-src" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg> soundcloud</a>
       <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button>
       <button class="mp-close" type="button" aria-label="close">×</button>
     </span>
@@ -1515,6 +1515,9 @@
       // different there than everywhere else.
       const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>';
       const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      // Same deal for the "↗ soundcloud"/"↗ bandcamp" corner pill's arrow —
+      // also an emoji-capable glyph on iOS.
+      const ICON_ARROW = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg>';
       const iframe = el.querySelector('.mp-hidden');
       const artLink = el.querySelector('#mp-art');
       const artImg = artLink.querySelector('img');
@@ -1628,7 +1631,11 @@
       function setSrc(url, label) {
         const u = url || '';
         artLink.setAttribute('href', u || '#');
-        if (u) { srcEl.hidden = false; srcEl.setAttribute('href', u); srcEl.textContent = '↗ ' + (label || 'soundcloud'); }
+        if (u) {
+          srcEl.hidden = false; srcEl.setAttribute('href', u);
+          srcEl.innerHTML = ICON_ARROW;
+          srcEl.appendChild(document.createTextNode(' ' + (label || 'soundcloud')));
+        }
         else { srcEl.hidden = true; }
       }
       // ask the widget for the real public track permalink once it's loaded —

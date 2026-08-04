@@ -460,6 +460,9 @@
       // different there than everywhere else.
       const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>';
       const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      // Same deal for the "↗ listen on soundcloud"-style arrows — also an
+      // emoji-capable glyph on iOS.
+      const ICON_ARROW = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg>';
 
       // The big detail-page cover used to hotlink rec.cover (radiostudent.si's
       // og:image) directly — occasionally slow/unavailable, and ~4x the size of
@@ -917,13 +920,13 @@
           '&show_comments=false&show_playcount=false&visual=false&hide_related=true';
         return '<div class="sc-player">' +
           '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
-          '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">&#8599;</button>' +
+          '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">' + ICON_ARROW + '</button>' +
           '<div class="sc-row">' +
             '<button class="sc-toggle" type="button" aria-label="play">' + ICON_PLAY + '</button>' +
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
           '</div>' +
           '</div>' +
-          (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">&#8599; listen on soundcloud</a>' : '') +
+          (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">' + ICON_ARROW + ' listen on soundcloud</a>' : '') +
           '<iframe class="sc-hidden" allow="autoplay" src="' + src + '"></iframe>';
       }
       // Native <audio>-backed twin of the SoundCloud player below, for the rare
@@ -1165,7 +1168,8 @@
           const a = document.createElement('a');
           a.className = 'embed-fallback-link';
           a.href = href; a.target = '_blank'; a.rel = 'noopener';
-          a.textContent = '↗ ' + (label ? label + ' ' : '') + 'on soundcloud';
+          a.innerHTML = ICON_ARROW;
+          a.appendChild(document.createTextNode(' ' + (label ? label + ' ' : '') + 'on soundcloud'));
           const row = document.createElement('span');
           row.className = 'embed-fallback show';
           row.appendChild(a);

@@ -1391,7 +1391,7 @@
       /* shorter playhead tick to match the thin mini timeline — the full-screen
          one (11px, ±4px past the bar) would loom over this slim bar otherwise */
       .modem-player.mp-mini .mp-playhead { top: -1px; bottom: -1px; }
-    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener">↗ soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> <button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
+    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg> soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> <button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>(function () {
       const el = document.getElementById('modem-player');
       if (!el) return;
       // Plain SVG instead of Unicode glyphs (▶/❚❚) — iOS Safari renders those
@@ -1399,6 +1399,9 @@
       // different there than everywhere else.
       const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg>';
       const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      // Same deal for the "↗ soundcloud"/"↗ bandcamp" corner pill's arrow —
+      // also an emoji-capable glyph on iOS.
+      const ICON_ARROW = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg>';
       const iframe = el.querySelector('.mp-hidden');
       const artLink = el.querySelector('#mp-art');
       const artImg = artLink.querySelector('img');
@@ -1512,7 +1515,11 @@
       function setSrc(url, label) {
         const u = url || '';
         artLink.setAttribute('href', u || '#');
-        if (u) { srcEl.hidden = false; srcEl.setAttribute('href', u); srcEl.textContent = '↗ ' + (label || 'soundcloud'); }
+        if (u) {
+          srcEl.hidden = false; srcEl.setAttribute('href', u);
+          srcEl.innerHTML = ICON_ARROW;
+          srcEl.appendChild(document.createTextNode(' ' + (label || 'soundcloud')));
+        }
         else { srcEl.hidden = true; }
       }
       // ask the widget for the real public track permalink once it's loaded —
