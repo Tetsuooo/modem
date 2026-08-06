@@ -248,9 +248,52 @@ function stripModem21Intro(data) {
   rec.bodyHtml = rec.bodyHtml.slice(intro.length);
 }
 
+// modem-244's "PHO BHO" compilation (2 tracks, Pho Beat Bazar Vol. 6) is
+// followed by an EMPTY <p data-seg="5" class="seg-marker"></p> ahead of its
+// second track, and the real next heading — "kęnåi & 261ssh ///…", the actual
+// start of the following (unrelated, single-track) segment — got typed as
+// trailing text glued onto the end of that second track's own <p>, instead of
+// its own marker paragraph. Net effect: both the 2nd PHO BHO track AND the
+// next segment's track shared seg 5, under a garbled label. Move the marker:
+// drop the empty seg-5 <p> (so the 2nd PHO BHO track falls back into seg 4,
+// joining the 1st), and re-home the "kęnåi & 261ssh" heading — cleaned of the
+// leading compilation text it absorbed — onto its own seg-5 marker right
+// before the track it actually belongs to.
+function migrate244(data) {
+  const rec = data.records.find((r) => r.slug === 'modem-244');
+  if (!rec) return;
+  const from =
+    '<p data-seg="5" class="seg-marker"></p><p><iframe src="https://bandcamp.com/EmbeddedPlayer/album=598821762/size=small/bgcol=ffffff/linkcol=0687f5/track=2173472006/transparent=true/">&amp;lt;a href="<a href="https://phobhorecords.bandcamp.com/album/pho-beat-bazar-vol-6">https://phobhorecords.bandcamp.com/album/pho-beat-bazar-vol-6</a>"&amp;gt;Pho Beat Bazar Vol. 6 by V.A.&amp;lt;/a&amp;gt;</iframe> kęnåi &amp; 261ssh ///////////////////////////////////////////////////////////</p>';
+  if (rec.bodyHtml.indexOf(from) === -1) return; // already applied (or show missing)
+  const to =
+    '<p><iframe src="https://bandcamp.com/EmbeddedPlayer/album=598821762/size=small/bgcol=ffffff/linkcol=0687f5/track=2173472006/transparent=true/">&amp;lt;a href="<a href="https://phobhorecords.bandcamp.com/album/pho-beat-bazar-vol-6">https://phobhorecords.bandcamp.com/album/pho-beat-bazar-vol-6</a>"&amp;gt;Pho Beat Bazar Vol. 6 by V.A.&amp;lt;/a&amp;gt;</iframe></p><p data-seg="5" class="seg-marker">kęnåi &amp; 261ssh ///////////////////////////////////////////////////////////</p>';
+  rec.bodyHtml = rec.bodyHtml.replace(from, to);
+
+  rec.segments[5] = 'kęnåi & 261ssh'; // positional: segments[N] == data-seg="N"
+
+  // tau contrib / Ursula Sereghy are the 2 PHO BHO tracks' own artists — never
+  // literal heading text, so the scraper leaves them seg:null. Both belong to
+  // seg 4 (the "PHO BHO" heading), same as the compilation's first track.
+  const tauContrib = rec.artists.find((a) => a.name === 'tau contrib' && a.seg == null);
+  if (tauContrib) tauContrib.seg = 4;
+  const ursula = rec.artists.find((a) => a.name === 'Ursula Sereghy' && a.seg == null);
+  if (ursula) ursula.seg = 4;
+
+  applyTrackSeg(data.tracks, 'modem-244', 'bc:598821762:2173472006', 4); // Ursula Sereghy — Flower Tooth
+  applyTrackSeg(data.tracks, 'modem-244', 'bc:3470721751:-', 5);         // kęnåi & 261ssh — the way things flow
+  const fixLabel = (key, label) => {
+    const t = data.tracks.find((x) => x.key === key);
+    const s = t && (t.shows || []).find((x) => x.slug === 'modem-244');
+    if (s) s.segLabel = label;
+  };
+  fixLabel('bc:598821762:2173472006', 'PHO BHO');
+  fixLabel('bc:3470721751:-', 'kęnåi & 261ssh');
+}
+
 function applySegMarkerFixes(data) {
   migrate224(data);
   migrate195(data);
+  migrate244(data);
   stripModem21Intro(data);
 }
 
