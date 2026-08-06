@@ -1,12 +1,17 @@
 name: modem — auto-update & deploy
 
 # Three ways this runs:
-#   • schedule  — twice a week, poll the podcast feed and scrape any new shows
+#   • schedule  — poll the podcast feed and scrape any new shows. New Modem
+#     shows are usually ready by Monday morning, every second Monday, so this
+#     fires Monday & Tuesday mornings — but only actually scrapes on the
+#     biweekly show week (see the "Determine show week" gate below); the
+#     other Monday/Tuesday it's a no-op. Two mornings in a row gives a
+#     same-week retry if the feed hasn't updated yet by Monday.
 #   • dispatch  — manual "Run workflow" button (also good for a first cold run)
 #   • push      — rebuild docs/ whenever src/ changes (so pushing source auto-deploys)
 on:
   schedule:
-    - cron: '23 7 * * 1,4'   # Mon & Thu 07:23 UTC — shows are bi-weekly; this catches them within days
+    - cron: '23 7 * * 1,2'   # Mon & Tue 07:23 UTC (~morning in Europe/Ljubljana year-round)
   workflow_dispatch:
   push:
     branches: [main]
@@ -45,10 +50,33 @@ jobs:
           restore-keys: |
             modem-cache-
 
-      # Only on schedule/dispatch: check the feed and scrape new shows through the
-      # full pipeline. On a plain push we just rebuild docs/ from the current source.
+      # Scheduled runs only matter on the biweekly show week — figure out whether
+      # today (or, for the Tuesday retry, yesterday) is one, anchored to 2026-08-03,
+      # a known show Monday. Manual/dispatch and push runs always proceed.
+      - name: Determine show week
+        id: cadence
+        if: github.event_name == 'schedule'
+        run: |
+          today=$(date -u +%F)
+          dow=$(date -u +%u)
+          if [ "$dow" = "2" ]; then
+            ref=$(date -u -d "$today -1 day" +%F)
+          else
+            ref=$today
+          fi
+          days=$(( ( $(date -u -d "$ref" +%s) - $(date -u -d '2026-08-03' +%s) ) / 86400 ))
+          mod=$(( ((days % 14) + 14) % 14 ))
+          if [ "$mod" -eq 0 ]; then
+            echo "on_cadence=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on_cadence=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only on schedule (show week)/dispatch: check the feed and scrape new shows
+      # through the full pipeline. On a plain push we just rebuild docs/ from the
+      # current source.
       - name: Check feed & scrape new shows
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && (github.event_name != 'schedule' || steps.cadence.outputs.on_cadence == 'true')
         run: node scripts/auto-update.js
 
       - name: Build docs/
