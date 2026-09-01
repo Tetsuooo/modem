@@ -1,22 +1,240 @@
 {
-  "generatedAt": "2026-08-18T07:56:55.194Z",
+  "generatedAt": "2026-09-01T12:36:05.352Z",
   "source": "https://radiostudent.si/glasba/modem",
   "counts": {
-    "total": 266,
-    "shows": 245,
+    "total": 267,
+    "shows": 246,
     "lists": 21,
-    "withSoundcloud": 243,
+    "withSoundcloud": 244,
     "lastScraped": [
-      "modem-245",
+      "modem-246",
       "best-releases-of-2025"
     ],
-    "tracks": 4520,
+    "tracks": 4529,
     "scMatched": 1562,
     "tagMerges": 171,
     "tagEdits": 189,
     "segEdits": 78
   },
   "records": [
+    {
+      "type": "show",
+      "slug": "modem-246",
+      "number": 246,
+      "title": "modem ///246",
+      "url": "https://radiostudent.si/glasba/modem/modem-246",
+      "date": "31. 8. 2026",
+      "cover": "https://radiostudent.si/sites/default/files/2026-08/modem246.png",
+      "mp3": "https://radiostudent.si/sites/default/files/posnetki/modem/2026-08-31-modem-modem-246.mp3",
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-246",
+        "api": "https://api.soundcloud.com/tracks/2391615150",
+        "title": "modem ///246 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-UH9yVHBuxXwpFEVP-4NRS6w-t500x500.jpg"
+      },
+      "artists": [
+        {
+          "name": "Andy Loebs",
+          "url": "https://radiostudent.si/ustvarjalci/andy-loebs",
+          "seg": 1
+        },
+        {
+          "name": "YNO",
+          "url": "https://radiostudent.si/ustvarjalci/yno",
+          "seg": 2
+        },
+        {
+          "name": "Euglossine",
+          "url": "https://radiostudent.si/ustvarjalci/euglossine",
+          "seg": 4
+        },
+        {
+          "name": "mononomonooto",
+          "url": "https://radiostudent.si/ustvarjalci/mononomonooto",
+          "seg": 5
+        },
+        {
+          "name": "devva",
+          "url": "https://radiostudent.si/ustvarjalci/devva",
+          "seg": 6
+        },
+        {
+          "name": "Bryce Hayashi",
+          "url": "https://radiostudent.si/ustvarjalci/bryce-hayashi",
+          "seg": 7
+        },
+        {
+          "name": "nic",
+          "url": "https://radiostudent.si/ustvarjalci/nic",
+          "seg": 8
+        },
+        {
+          "name": "4h4",
+          "url": "https://radiostudent.si/4h4",
+          "seg": 9
+        },
+        {
+          "name": "LavanderGarden",
+          "url": "https://radiostudent.si/ustvarjalci/lavandergarden",
+          "seg": 10
+        },
+        {
+          "name": "dj galen",
+          "url": "https://radiostudent.si/ustvarjalci/dj-galen",
+          "seg": 11
+        },
+        {
+          "name": "K8K8K8K8",
+          "url": "https://radiostudent.si/ustvarjalci/k8k8k8k8",
+          "seg": 13
+        },
+        {
+          "name": "margo proxy",
+          "url": "https://radiostudent.si/ustvarjalci/margo-proxy",
+          "seg": 14
+        },
+        {
+          "name": "Jeffrey Campbell",
+          "url": "https://radiostudent.si/jeffrey-campbell",
+          "seg": 16
+        },
+        {
+          "name": "Visible Cloaks",
+          "url": "https://radiostudent.si/ustvarjalci/visible-cloaks",
+          "seg": null
+        },
+        {
+          "name": "Les Halles",
+          "url": "https://radiostudent.si/ustvarjalci/les-halles",
+          "seg": null
+        },
+        {
+          "name": "Ursula Sereghy",
+          "url": "https://radiostudent.si/ustvarjalci/ursula-sereghy",
+          "seg": null
+        },
+        {
+          "name": "Dorota Barová",
+          "url": "https://radiostudent.si/dorota-barova",
+          "seg": null
+        },
+        {
+          "name": "Jonáš Gruska",
+          "url": "https://radiostudent.si/ustvarjalci/jonas-gruska",
+          "seg": null
+        },
+        {
+          "name": "Memotone",
+          "url": "https://radiostudent.si/ustvarjalci/memotone",
+          "seg": null
+        },
+        {
+          "name": "Forces",
+          "url": "https://radiostudent.si/ustvarjalci/forces",
+          "seg": null
+        }
+      ],
+      "labels": [],
+      "embeds": [
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=4163463262/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2976447075/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1386917987/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1582730282/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1245262590/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2873816277/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=3245831611/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1469132032/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=2867839524/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=125997276/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=1727067426/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=3127133124/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=1168469391/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=4142382876/transparent=true/"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2383209897&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386158153&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382793587&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385409542&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387666691&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387854515&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385540153&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2384438841&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390240349&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        }
+      ],
+      "segments": [
+        "Orange Milk",
+        "<a href=\" https://andyloebs.bandcamp.com/album/glide-by-2 \">Glide By by Andy Loebs</a> YNO",
+        "YNO",
+        "Image Research",
+        "<a href=\" https://euglossine.bandcamp.com/album/qualia \">Qualia by Euglossine</a> mononomonooto",
+        "mononomonooto",
+        "devva",
+        "Bryce Hayashi",
+        "nic",
+        "4h4",
+        "LavanderGarden",
+        "dj galen",
+        "<a href=\" https://o0o0o0o0.bandcamp.com/album/nu-jock-swing \">Nu Jock Swing by dj galen</a> K8K8K8K8",
+        "K8K8K8K8",
+        "margo proxy",
+        "Landscaping",
+        "<a href=\" https://landscaping.bandcamp.com/album/toysoldiers \">Toysoldiers by Jeffrey Campbell</a> mappa"
+      ],
+      "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">Orange Milk ///////</p><p data-seg=\"1\" class=\"seg-marker\"></p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=4163463262/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2976447075/transparent=true/\">&lt;a href=\"<a href=\"https://andyloebs.bandcamp.com/album/glide-by-2\">https://andyloebs.bandcamp.com/album/glide-by-2</a>\"&gt;Glide By by Andy Loebs&lt;/a&gt;</iframe> YNO //////////////////////////////////////////////////////</p><p data-seg=\"2\" class=\"seg-marker\">YNO ///////</p>\n<p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2383209897&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/user-252471624\" target=\"_blank\">YNO</a> · <a href=\"https://soundcloud.com/user-252471624/arp\" target=\"_blank\">有譜(ARP)</a></div><p data-seg=\"3\" class=\"seg-marker\">Image Research ///////</p><p data-seg=\"4\" class=\"seg-marker\"></p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1386917987/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1582730282/transparent=true/\">&lt;a href=\"<a href=\"https://euglossine.bandcamp.com/album/qualia\">https://euglossine.bandcamp.com/album/qualia</a>\"&gt;Qualia by Euglossine&lt;/a&gt;</iframe> mononomonooto //////////////////////////////////////////////////////</p><p data-seg=\"5\" class=\"seg-marker\">mononomonooto ///////</p>\n<p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386158153&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/mononomonooto\" target=\"_blank\">mononomonooto</a> · <a href=\"https://soundcloud.com/mononomonooto/5sgrzbzvoybd\" target=\"_blank\">分析の終わり、不完全さそのもの</a></div><p data-seg=\"6\" class=\"seg-marker\">devva ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382793587&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/devvaa\" target=\"_blank\">devva</a> · <a href=\"https://soundcloud.com/devvaa/fluttershy-100sweetcafe-7\" target=\"_blank\">fluttershy +100%sweetcafe</a></div><p data-seg=\"7\" class=\"seg-marker\">Bryce Hayashi ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385409542&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/brycehayashi\" target=\"_blank\">Bryce Hayashi</a> · <a href=\"https://soundcloud.com/brycehayashi/r-53-52-w-grace\" target=\"_blank\">r 53 52 w grace</a></div><p data-seg=\"8\" class=\"seg-marker\">nic ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387666691&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/nic200\" target=\"_blank\">nic</a> · <a href=\"https://soundcloud.com/nic200/cafe\" target=\"_blank\">café demo 7/28</a></div><p data-seg=\"9\" class=\"seg-marker\">4h4 ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387854515&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/4hal4\" target=\"_blank\">4h4</a> · <a href=\"https://soundcloud.com/4hal4/4h4-4h4-4h4-4h4-h4-4h4h-4h4h\" target=\"_blank\">4h4 4h4 4h4 4h4 h4 4h4h 4h4h 4h 4 h4 h4 h4listen to this shit rn https://soundcloud.com/4hal4</a></div><p data-seg=\"10\" class=\"seg-marker\">LavanderGarden ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385540153&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/lavandergarden\" target=\"_blank\">LavanderGarden</a> · <a href=\"https://soundcloud.com/lavandergarden/dream-big-clips\" target=\"_blank\">Dream Big !!! (clips)</a></div><p data-seg=\"11\" class=\"seg-marker\">dj galen ///////</p><p data-seg=\"12\" class=\"seg-marker\"></p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1245262590/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2873816277/transparent=true/\">&lt;a href=\"<a href=\"https://o0o0o0o0.bandcamp.com/album/nu-jock-swing\">https://o0o0o0o0.bandcamp.com/album/nu-jock-swing</a>\"&gt;Nu Jock Swing by dj galen&lt;/a&gt;</iframe> K8K8K8K8 //////////////////////////////////////////////////////</p><p data-seg=\"13\" class=\"seg-marker\">K8K8K8K8 ///////</p>\n<p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2384438841&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/k8k8k8k8\" target=\"_blank\">K8K8K8K8</a> · <a href=\"https://soundcloud.com/k8k8k8k8/mc-skibadee-alt-history\" target=\"_blank\">mc skibadee alt history</a></div><p data-seg=\"14\" class=\"seg-marker\">margo proxy ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390240349&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/margoproxy\" target=\"_blank\">margo proxy</a> · <a href=\"https://soundcloud.com/margoproxy/censorship\" target=\"_blank\">Censorship</a></div><p data-seg=\"15\" class=\"seg-marker\">Landscaping ///////</p><p data-seg=\"16\" class=\"seg-marker\"></p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3245831611/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1469132032/transparent=true/\">&lt;a href=\"<a href=\"https://landscaping.bandcamp.com/album/toysoldiers\">https://landscaping.bandcamp.com/album/toysoldiers</a>\"&gt;Toysoldiers by Jeffrey Campbell&lt;/a&gt;</iframe> mappa ////////////////////////////////////////////////////// <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=2867839524/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Visible Cloaks&lt;/a&gt;</iframe> <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=125997276/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Les Halles&lt;/a&gt;</iframe> <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=1727067426/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Ursula Sereghy &amp;amp; Dorota Barová&lt;/a&gt;</iframe> <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=3127133124/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Jonáš Gruska&lt;/a&gt;</iframe> <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=1168469391/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Memotone&lt;/a&gt;</iframe> <iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1878880625/size=small/bgcol=ffffff/linkcol=0687f5/track=4142382876/transparent=true/\">&lt;a href=\"<a href=\"https://mappa.bandcamp.com/album/synthetic-water-music\">https://mappa.bandcamp.com/album/synthetic-water-music</a>\"&gt;Synthetic Water Music by Forces&lt;/a&gt;</iframe></p>",
+      "searchText": "Modem ///246 \n 31. 8. 2026 \n Andy Loebs YNO Euglossine mononomonooto devva Bryce Hayashi nic 4h4 LavanderGarden dj galen K8K8K8K8 margo proxy Jeffrey Campbell Visible Cloaks Les Halles Ursula Sereghy Dorota Barová Jonáš Gruska Memotone Forces \n Orange Milk /////// <a href=\" https://andyloebs.bandcamp.com/album/glide-by-2 \">Glide By by Andy Loebs</a> YNO ////////////////////////////////////////////////////// YNO /////// YNO · 有譜(ARP) Image Research /////// <a href=\" https://euglossine.bandcamp.com/album/qualia \">Qualia by Euglossine</a> mononomonooto ////////////////////////////////////////////////////// mononomonooto /////// mononomonooto · 分析の終わり、不完全さそのもの devva /////// devva · fluttershy +100%sweetcafe Bryce Hayashi /////// Bryce Hayashi · r 53 52 w grace nic /////// nic · café demo 7/28 4h4 /////// 4h4 · 4h4 4h4 4h4 4h4 h4 4h4h 4h4h 4h 4 h4 h4 h4listen to this shit rn https://soundcloud.com/4hal4 LavanderGarden /////// LavanderGarden · Dream Big !!! (clips) dj galen /////// <a href=\" https://o0o0o0o0.bandcamp.com/album/nu-jock-swing \">Nu Jock Swing by dj galen</a> K8K8K8K8 ////////////////////////////////////////////////////// K8K8K8K8 /////// K8K8K8K8 · mc skibadee alt history margo proxy /////// margo proxy · Censorship Landscaping /////// <a href=\" https://landscaping.bandcamp.com/album/toysoldiers \">Toysoldiers by Jeffrey Campbell</a> mappa ////////////////////////////////////////////////////// <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Visible Cloaks</a> <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Les Halles</a> <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Ursula Sereghy &amp; Dorota Barová</a> <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Jonáš Gruska</a> <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Memotone</a> <a href=\" https://mappa.bandcamp.com/album/synthetic-water-music \">Synthetic Water Music by Forces</a>"
+    },
     {
       "type": "show",
       "slug": "modem-245",
@@ -78587,6 +78805,30 @@
       ]
     },
     {
+      "key": "sc:2387854515",
+      "kind": "soundcloud",
+      "title": "4h4 4h4 4h4 4h4 h4 4h4h 4h4h 4h 4 h4 h4 h4listen to this shit rn https://soundcloud.com/4hal4",
+      "artist": "4h4",
+      "artUrl": "https://i1.sndcdn.com/artworks-22tc71JqolxmFII3-a1jQDQ-t500x500.jpg",
+      "link": "https://soundcloud.com/4hal4",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387854515&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "4h4",
+          "labels": []
+        }
+      ],
+      "searchText": "4h4 4h4 4h4 4h4 h4 4h4h 4h4h 4h 4 h4 h4 h4listen to this shit rn https://soundcloud.com/4hal4 \n 4h4 \n 4h4 \n modem 246 \n 246"
+    },
+    {
       "key": "sc:2211785327",
       "kind": "soundcloud",
       "title": "1837#♯⛐",
@@ -92800,6 +93042,30 @@
       "searchText": "hang u up? \n Bryce Hayashi \n SUM \n modem 236 \n 236"
     },
     {
+      "key": "sc:2385409542",
+      "kind": "soundcloud",
+      "title": "r 53 52 w grace",
+      "artist": "Bryce Hayashi",
+      "artUrl": "https://i1.sndcdn.com/artworks-cNpP6yKb7i6bdyaP-spBWGg-t500x500.jpg",
+      "link": "https://soundcloud.com/brycehayashi",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385409542&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 7,
+          "segLabel": "Bryce Hayashi",
+          "labels": []
+        }
+      ],
+      "searchText": "r 53 52 w grace \n Bryce Hayashi \n Bryce Hayashi \n modem 246 \n 246"
+    },
+    {
       "key": "sc:2380692597",
       "kind": "soundcloud",
       "title": "rt3 42t",
@@ -101929,6 +102195,30 @@
         }
       ],
       "searchText": "⑂⏛⑂ \n devva \n devva \n modem 209 \n 209"
+    },
+    {
+      "key": "sc:2382793587",
+      "kind": "soundcloud",
+      "title": "fluttershy +100%sweetcafe",
+      "artist": "devva",
+      "artUrl": "https://i1.sndcdn.com/artworks-QzgESTXWRlk1Uq9c-mUbqXg-t500x500.jpg",
+      "link": "https://soundcloud.com/devvaa",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382793587&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 6,
+          "segLabel": "devva",
+          "labels": []
+        }
+      ],
+      "searchText": "fluttershy +100%sweetcafe \n devva \n devva \n modem 246 \n 246"
     },
     {
       "key": "bc:3725837006:1687650708",
@@ -132497,6 +132787,30 @@
       "searchText": "compounding social deaths \n K8K8K8K8 \n K8K8K8K8 \n modem 244 \n 244"
     },
     {
+      "key": "sc:2384438841",
+      "kind": "soundcloud",
+      "title": "mc skibadee alt history",
+      "artist": "K8K8K8K8",
+      "artUrl": "https://i1.sndcdn.com/artworks-3zn3mzkV3H0JSojd-cdcqWw-t500x500.jpg",
+      "link": "https://soundcloud.com/k8k8k8k8",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2384438841&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 13,
+          "segLabel": "K8K8K8K8",
+          "labels": []
+        }
+      ],
+      "searchText": "mc skibadee alt history \n K8K8K8K8 \n K8K8K8K8 \n modem 246 \n 246"
+    },
+    {
       "key": "sc:2117869347",
       "kind": "soundcloud",
       "title": "mold exposure and tooth infection speedrun",
@@ -133100,35 +133414,6 @@
       "scPlay": 263621488,
       "scPlayTitle": "Goodbye Suez",
       "scPlayArtist": "karimelghazoly"
-    },
-    {
-      "key": "sc:2380340466",
-      "kind": "soundcloud",
-      "title": "Glacial Rain (1999-2002) [label: BeQuiet™]",
-      "artist": "premiere: blue steel",
-      "artUrl": "https://i1.sndcdn.com/artworks-xqzduh8yzETu17lv-yg0sDg-t500x500.jpg",
-      "link": "https://soundcloud.com/katharsislabel",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2380340466&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-      "shows": [
-        {
-          "number": 245,
-          "slug": "modem-245",
-          "date": "17. 8. 2026",
-          "type": "show",
-          "seg": 18,
-          "segLabel": "katharsis",
-          "labels": [
-            "katharsis"
-          ]
-        }
-      ],
-      "searchText": "premiere: blue steel - Glacial Rain (1999-2002) [label: BeQuiet™] \n katharsis \n katharsis \n modem 245 \n 245",
-      "artists": [
-        "premiere: blue steel"
-      ]
     },
     {
       "key": "bc:1494663679:-",
@@ -137805,6 +138090,30 @@
         }
       ],
       "searchText": "Campsite clips \n LavanderGarden \n LavanderGarden \n modem 238 \n 238"
+    },
+    {
+      "key": "sc:2385540153",
+      "kind": "soundcloud",
+      "title": "Dream Big !!! (clips)",
+      "artist": "LavanderGarden",
+      "artUrl": "https://i1.sndcdn.com/artworks-WnBL52HEucDK2YSz-QoJuJA-t500x500.jpg",
+      "link": "https://soundcloud.com/lavandergarden",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2385540153&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 10,
+          "segLabel": "LavanderGarden",
+          "labels": []
+        }
+      ],
+      "searchText": "Dream Big !!! (clips) \n LavanderGarden \n LavanderGarden \n modem 246 \n 246"
     },
     {
       "key": "sc:2094094287",
@@ -143803,6 +144112,30 @@
       "searchText": "Blankets \n margo proxy \n margo proxy \n modem 242 \n 242"
     },
     {
+      "key": "sc:2390240349",
+      "kind": "soundcloud",
+      "title": "Censorship",
+      "artist": "margo proxy",
+      "artUrl": "https://i1.sndcdn.com/artworks-me7yWcTZPv4xAxFZ-CgpVyw-t500x500.jpg",
+      "link": "https://soundcloud.com/margoproxy",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390240349&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 14,
+          "segLabel": "margo proxy",
+          "labels": []
+        }
+      ],
+      "searchText": "Censorship \n margo proxy \n margo proxy \n modem 246 \n 246"
+    },
+    {
       "key": "sc:2222643545",
       "kind": "soundcloud",
       "title": "Found",
@@ -149037,6 +149370,30 @@
       "searchText": "価値とは \n mononomonooto \n mononomonooto \n modem 148 \n 148"
     },
     {
+      "key": "sc:2386158153",
+      "kind": "soundcloud",
+      "title": "分析の終わり、不完全さそのもの",
+      "artist": "mononomonooto",
+      "artUrl": "https://i1.sndcdn.com/artworks-kMKICSTQoOhq26Am-hfqdMg-t500x500.jpg",
+      "link": "https://soundcloud.com/mononomonooto",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386158153&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 5,
+          "segLabel": "mononomonooto",
+          "labels": []
+        }
+      ],
+      "searchText": "分析の終わり、不完全さそのもの \n mononomonooto \n mononomonooto \n modem 246 \n 246"
+    },
+    {
       "key": "sc:1197521209",
       "kind": "soundcloud",
       "title": "自殺",
@@ -152074,6 +152431,30 @@
         }
       ],
       "searchText": "atlas \n nic \n nic \n modem 187 \n 187"
+    },
+    {
+      "key": "sc:2387666691",
+      "kind": "soundcloud",
+      "title": "café demo 7/28",
+      "artist": "nic",
+      "artUrl": "https://i1.sndcdn.com/artworks-sgyd0C2p3wwwHwJP-tciHWg-t500x500.jpg",
+      "link": "https://soundcloud.com/nic200",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2387666691&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 8,
+          "segLabel": "nic",
+          "labels": []
+        }
+      ],
+      "searchText": "café demo 7/28 \n nic \n nic \n modem 246 \n 246"
     },
     {
       "key": "sc:1470693940",
@@ -160781,6 +161162,32 @@
       "scPlay": 1393915030,
       "scPlayTitle": "Preface — Summoning Orion's Belt",
       "scPlayArtist": "Midheaven"
+    },
+    {
+      "key": "sc:2380340466",
+      "kind": "soundcloud",
+      "title": "Glacial Rain (1999-2002) [label: BeQuiet™]",
+      "artist": "premiere: blue steel",
+      "artUrl": "https://i1.sndcdn.com/artworks-xqzduh8yzETu17lv-yg0sDg-t500x500.jpg",
+      "link": "https://soundcloud.com/katharsislabel",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2380340466&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 245,
+          "slug": "modem-245",
+          "date": "17. 8. 2026",
+          "type": "show",
+          "seg": 18,
+          "segLabel": "katharsis",
+          "labels": [
+            "katharsis"
+          ]
+        }
+      ],
+      "searchText": "Glacial Rain (1999-2002) [label: BeQuiet™] \n premiere: blue steel \n katharsis \n modem 245 \n 245"
     },
     {
       "key": "sc:359356319",
@@ -192434,6 +192841,30 @@
       "searchText": "月(ZUKI) \n YNO \n YNO \n modem 206 \n 206"
     },
     {
+      "key": "sc:2383209897",
+      "kind": "soundcloud",
+      "title": "有譜(ARP)",
+      "artist": "YNO",
+      "artUrl": "https://i1.sndcdn.com/avatars-000425583105-o59kcl-t500x500.jpg",
+      "link": "https://soundcloud.com/user-252471624",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2383209897&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 246,
+          "slug": "modem-246",
+          "date": "31. 8. 2026",
+          "type": "show",
+          "seg": 2,
+          "segLabel": "YNO",
+          "labels": []
+        }
+      ],
+      "searchText": "有譜(ARP) \n YNO \n YNO \n modem 246 \n 246"
+    },
+    {
       "key": "sc:2210124602",
       "kind": "soundcloud",
       "title": "柚(YU)",
@@ -196209,5 +196640,5 @@
       "searchText": "Nazo House \n 食品まつり a.k.a. foodman \n Diskotopia \n modem 26 \n 26"
     }
   ],
-  "tracksGeneratedAt": "2026-08-18T07:56:55.194Z"
+  "tracksGeneratedAt": "2026-09-01T12:36:05.352Z"
 }
