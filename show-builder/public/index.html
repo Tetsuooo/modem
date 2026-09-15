@@ -175,6 +175,9 @@
 
   /* ---- Mix tab: a rudimentary DAW — one lane per clip, horizontal = time,
      drag the body to reposition, drag a corner handle to fade. ---- */
+  .mix-zoom { display: inline-flex; align-items: center; gap: 6px; }
+  .mix-zoom button { padding: 4px 10px; font-size: 13px; }
+  .mix-zoom .status { min-width: 52px; text-align: center; }
   .mix-palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .mix-palette-item {
     display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 6px;
@@ -196,10 +199,11 @@
     background: #24304a; border: 1px solid #3a5080; user-select: none;
   }
   .mix-clip.dragging { cursor: grabbing; opacity: .85; box-shadow: 0 6px 16px rgba(0,0,0,.5); z-index: 5; }
+  .mix-clip-wave { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; }
   .mix-clip-fill {
     position: absolute; inset: 0;
     background: linear-gradient(90deg, transparent 0%, #3a6ff0 var(--fade-in, 0%), #3a6ff0 calc(100% - var(--fade-out, 0%)), transparent 100%);
-    opacity: .35; pointer-events: none;
+    opacity: .3; pointer-events: none;
   }
   .mix-clip-label {
     position: relative; padding: 4px 8px; font-size: 11px; line-height: 1.3; pointer-events: none;
@@ -304,12 +308,16 @@
   </section>
 
   <section class="tab-panel tab-panel-wide" id="panel-mix" hidden>
-    <h2>Mix — drag clips to position them, drag their corners to fade</h2>
+    <h2>Mix — drag clips to position them, drag their corners to fade, click the ruler to seek</h2>
     <div class="actions">
-      <button id="mixPlayBtn" class="primary">▶ Play</button>
-      <button id="mixStopBtn">■ Stop</button>
+      <button id="mixPlayToggleBtn" class="primary">▶ Play</button>
       <button id="mixAddAllBtn">Add all from Your show</button>
       <button id="mixExportBtn">Export mix (.wav)</button>
+      <span class="mix-zoom">
+        <button id="mixZoomOutBtn" title="zoom out">−</button>
+        <span id="mixZoomLabel" class="status">10 px/s</span>
+        <button id="mixZoomInBtn" title="zoom in">+</button>
+      </span>
       <span id="mixStatus" class="status"></span>
     </div>
     <div id="mixPalette" class="mix-palette"></div>
@@ -856,18 +864,78 @@ function downloadedFileUrl(relPath) {
 let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut }
 let mixAudioCtx = null;
 const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
+const mixWaveformCache = new Map(); // src -> Float32Array of [min,max] pairs, MIX_WAVE_BUCKETS long
 let mixPlaying = false;
 let mixActiveSources = [];
 let mixPlayStartCtxTime = 0;
 let mixPlayheadRAF = null;
 let mixSeekPosition = 0; // seconds — where the next Play starts from; click the ruler to move it
-const MIX_PX_PER_SEC = 10;
+let MIX_PX_PER_SEC = 10; // zoom level — mutable, see zoomMix()
+const MIX_PX_PER_SEC_MIN = 2;
+const MIX_PX_PER_SEC_MAX = 60;
 const MIX_LANE_H = 54;
+const MIX_CLIP_H = 46; // must match .mix-clip's CSS height
+const MIX_WAVE_BUCKETS = 800; // resolution the full-buffer peaks are cached at; resampled to actual on-screen width when drawn
 
 function fmtMixTime(t) {
   const m = Math.floor(t / 60);
   const s = Math.floor(t % 60);
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function zoomMix(factor) {
+  MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, MIX_PX_PER_SEC * factor));
+  el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
+  renderMixTimeline();
+}
+
+// Full-resolution min/max peaks over the WHOLE buffer, computed once and
+// cached per src (a several-minute track is a few million samples — cheap
+// to scan once, wasteful to rescan on every render/zoom/drag). Drawing
+// resamples this fixed-resolution cache to whatever the clip's current
+// on-screen pixel width is, so zooming redraws instantly with no rescan.
+function getWaveformPeaks(src) {
+  if (mixWaveformCache.has(src)) return mixWaveformCache.get(src);
+  const buffer = mixBuffers.get(src);
+  if (!buffer) return null;
+  const data = buffer.getChannelData(0); // first channel only — a visual guide, not a mixdown
+  const samplesPerBucket = Math.max(1, Math.floor(data.length / MIX_WAVE_BUCKETS));
+  const peaks = new Float32Array(MIX_WAVE_BUCKETS * 2);
+  for (let b = 0; b < MIX_WAVE_BUCKETS; b++) {
+    let min = 0, max = 0;
+    const start = b * samplesPerBucket;
+    const end = Math.min(data.length, start + samplesPerBucket);
+    for (let i = start; i < end; i++) {
+      const v = data[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    peaks[b * 2] = min;
+    peaks[b * 2 + 1] = max;
+  }
+  mixWaveformCache.set(src, peaks);
+  return peaks;
+}
+
+function drawMixWaveform(canvas, src) {
+  const peaks = getWaveformPeaks(src);
+  if (!peaks) return;
+  const ctx2d = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx2d.clearRect(0, 0, w, h);
+  ctx2d.strokeStyle = 'rgba(170,195,255,0.55)';
+  ctx2d.lineWidth = 1;
+  const buckets = peaks.length / 2;
+  ctx2d.beginPath();
+  for (let x = 0; x < w; x++) {
+    const b = Math.min(buckets - 1, Math.floor((x / w) * buckets));
+    const min = peaks[b * 2], max = peaks[b * 2 + 1];
+    const y1 = h / 2 - max * (h / 2);
+    const y2 = h / 2 - min * (h / 2);
+    ctx2d.moveTo(x + 0.5, y1);
+    ctx2d.lineTo(x + 0.5, y2);
+  }
+  ctx2d.stroke();
 }
 
 async function getMixBuffer(src) {
@@ -1004,6 +1072,7 @@ function renderMixTimeline() {
     const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
     return `
     <div class="mix-clip" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
+      <canvas class="mix-clip-wave" width="${width}" height="${MIX_CLIP_H - 8}" data-src="${escAttr(c.src)}"></canvas>
       <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
       <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
       <button class="mix-clip-remove" data-id="${escAttr(c.id)}" title="remove">×</button>
@@ -1012,6 +1081,7 @@ function renderMixTimeline() {
     </div>`;
   }).join('') + '<div id="mixPlayhead" class="mix-playhead" hidden></div>';
 
+  timeline.querySelectorAll('.mix-clip-wave').forEach((canvas) => drawMixWaveform(canvas, canvas.dataset.src));
   wireMixClipDrag();
   timeline.querySelectorAll('.mix-clip-remove').forEach((b) => {
     b.addEventListener('click', (e) => {
@@ -1121,6 +1191,21 @@ function scheduleMixClip(ctx, clip, originTime, seekFrom) {
   return src;
 }
 
+// A single toggling button (▶ Play / ⏸ Pause) instead of separate Play/Stop
+// buttons — the previous pair gave no reliable visual cue that playback was
+// still running once you looked away, which made a long first clip (the
+// default mix has no gap between tracks, but track 1 alone can easily run
+// 1-2 minutes) read as "stuck" even when scheduling was working correctly.
+function updateMixPlayToggleBtn() {
+  const btn = el('mixPlayToggleBtn');
+  if (!btn) return;
+  btn.textContent = mixPlaying ? '⏸ Pause' : '▶ Play';
+}
+
+function toggleMixPlayback() {
+  if (mixPlaying) stopMix(); else playMix();
+}
+
 async function playMix() {
   if (!mixClips.length || mixPlaying) return;
   el('selected').querySelectorAll('audio').forEach((a) => a.pause());
@@ -1135,6 +1220,7 @@ async function playMix() {
   }
   el('mixStatus').textContent = '';
   mixPlaying = true;
+  updateMixPlayToggleBtn();
   const now = mixAudioCtx.currentTime + 0.1; // small headroom so nothing schedules "in the past"
   const seekFrom = mixSeekPosition;
   mixPlayStartCtxTime = now;
@@ -1155,6 +1241,7 @@ async function playMix() {
 
 function stopMix() {
   mixPlaying = false;
+  updateMixPlayToggleBtn();
   if (mixPlayheadRAF) cancelAnimationFrame(mixPlayheadRAF);
   mixActiveSources.forEach((s) => { try { s.stop(); } catch (e) { /* already stopped */ } });
   mixActiveSources = [];
@@ -1394,9 +1481,22 @@ async function loadDraft() {
     }
     renderSelected();
     renderMixTimeline();
+    // A restored mixClips only carries plain descriptors (see saveDraft's
+    // comment) — mixBuffers itself is empty on a fresh page load, so a clip
+    // restored this way has no decoded buffer yet. Playback already handles
+    // that (playMix awaits getMixBuffer itself before scheduling), but the
+    // waveform draw is synchronous and silently no-ops without a buffer —
+    // preload them now and redraw once ready, so restored clips get their
+    // waveform without needing Play clicked first.
+    if (mixClips.length) preloadMixBuffers();
   } catch (e) { /* first run, no draft yet */ }
   draftLoaded = true;
   if (!el('panel-mix').hidden) ensureMixAutoFilled();
+}
+
+async function preloadMixBuffers() {
+  await Promise.all(mixClips.map((c) => getMixBuffer(c.src).catch(() => null)));
+  renderMixTimeline();
 }
 
 // Mirrors generate-html.js's headingName(): a real modem heading is always
@@ -1724,10 +1824,11 @@ el('openCoversBtn').addEventListener('click', () => {
 el('checkLiveBtn').addEventListener('click', checkLive);
 el('runPublishBtn').addEventListener('click', runPublish);
 el('confirmPushBtn').addEventListener('click', confirmPush);
-el('mixPlayBtn').addEventListener('click', playMix);
-el('mixStopBtn').addEventListener('click', stopMix);
+el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixAddAllBtn').addEventListener('click', addAllToMix);
 el('mixExportBtn').addEventListener('click', exportMix);
+el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
+el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
 // Click the ruler to move the playhead — getBoundingClientRect() already
 // accounts for the timeline-wrap's horizontal scroll (it returns the
 // element's position relative to the viewport, not its unscrolled content
@@ -1742,6 +1843,18 @@ el('mixRuler').addEventListener('click', (e) => {
   mixSeekPosition = Math.max(0, (e.clientX - rect.left) / MIX_PX_PER_SEC);
   updateMixPlayheadPosition();
   if (wasPlaying) playMix();
+});
+// Spacebar play/pause, scoped to the Mix tab only — ignored while typing in
+// a field (so it doesn't hijack normal text entry elsewhere) and only wired
+// up while the Mix panel is actually the visible one.
+document.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' && e.key !== ' ') return;
+  const active = document.activeElement;
+  const tag = active && active.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (active && active.isContentEditable)) return;
+  if (el('panel-mix').hidden) return;
+  e.preventDefault();
+  toggleMixPlayback();
 });
 
 loadDraft();
