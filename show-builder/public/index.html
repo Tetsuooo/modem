@@ -1206,40 +1206,65 @@ function toggleMixPlayback() {
   if (mixPlaying) stopMix(); else playMix();
 }
 
+// Diagnostic logging (console.log — open DevTools with F12, Console tab) for
+// tracking down a report that only the first clip is ever audible despite
+// scheduling verifying correctly in isolated testing: logs the AudioContext
+// state, every clip's scheduled window, each source's actual onended firing
+// (or silent absence of one — the clearest signal of a genuinely dropped
+// clip vs. one that's merely quiet), and any state changes on the context
+// itself (e.g. an unexpected suspend mid-playback).
+function mixLog(...args) { console.log('[mix]', ...args); }
+
 async function playMix() {
   if (!mixClips.length || mixPlaying) return;
   el('selected').querySelectorAll('audio').forEach((a) => a.pause());
-  if (!mixAudioCtx) mixAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (mixAudioCtx.state === 'suspended') await mixAudioCtx.resume();
+  if (!mixAudioCtx) {
+    mixAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    mixAudioCtx.addEventListener('statechange', () => mixLog('AudioContext state changed ->', mixAudioCtx.state));
+    mixLog('created AudioContext, sampleRate=', mixAudioCtx.sampleRate, 'state=', mixAudioCtx.state);
+  }
+  if (mixAudioCtx.state === 'suspended') { mixLog('resuming suspended context…'); await mixAudioCtx.resume(); }
   el('mixStatus').textContent = 'loading…';
   try {
     await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
   } catch (e) {
     el('mixStatus').textContent = 'failed to load a clip: ' + (e.message || e);
+    mixLog('buffer load failed:', e);
     return;
   }
-  el('mixStatus').textContent = '';
   mixPlaying = true;
   updateMixPlayToggleBtn();
   const now = mixAudioCtx.currentTime + 0.1; // small headroom so nothing schedules "in the past"
   const seekFrom = mixSeekPosition;
   mixPlayStartCtxTime = now;
-  mixActiveSources = mixClips
-    .filter((clip) => clip.start + clip.duration > seekFrom) // already fully played out before the seek point
-    .map((clip) => scheduleMixClip(mixAudioCtx, clip, now, seekFrom));
+  mixLog('play: ctx.currentTime=', mixAudioCtx.currentTime, 'ctx.state=', mixAudioCtx.state, 'seekFrom=', seekFrom, 'clips=', mixClips.length);
+  const scheduled = mixClips.filter((clip) => clip.start + clip.duration > seekFrom);
+  mixActiveSources = scheduled.map((clip, idx) => {
+    const src = scheduleMixClip(mixAudioCtx, clip, now, seekFrom);
+    const label = `${clip.title} (scheduled start=${(now + clip.start).toFixed(2)} stop=${(now + clip.start + clip.duration).toFixed(2)})`;
+    mixLog('scheduled', idx + 1 + '/' + scheduled.length, label);
+    src.onended = () => mixLog('ENDED:', clip.title, 'at ctx.currentTime=', mixAudioCtx.currentTime.toFixed(2));
+    return src;
+  });
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration));
+  mixLog('totalDur=', totalDur);
   const tick = () => {
     if (!mixPlaying) return;
     const elapsed = mixAudioCtx.currentTime - mixPlayStartCtxTime;
     mixSeekPosition = seekFrom + elapsed;
     updateMixPlayheadPosition();
-    if (mixSeekPosition >= totalDur) { mixSeekPosition = 0; stopMix(); return; }
+    const nowPlaying = mixClips.findIndex((c) => mixSeekPosition >= c.start && mixSeekPosition < c.start + c.duration);
+    el('mixStatus').textContent = nowPlaying === -1
+      ? `t=${fmtMixTime(mixSeekPosition)} (gap — no clip here)`
+      : `t=${fmtMixTime(mixSeekPosition)} — playing ${nowPlaying + 1}/${mixClips.length}: ${mixClips[nowPlaying].title}`;
+    if (mixSeekPosition >= totalDur) { mixSeekPosition = 0; mixLog('reached totalDur, stopping'); stopMix(); return; }
     mixPlayheadRAF = requestAnimationFrame(tick);
   };
   mixPlayheadRAF = requestAnimationFrame(tick);
 }
 
 function stopMix() {
+  mixLog('stopMix() called, mixSeekPosition=', mixSeekPosition);
   mixPlaying = false;
   updateMixPlayToggleBtn();
   if (mixPlayheadRAF) cancelAnimationFrame(mixPlayheadRAF);
