@@ -98,8 +98,20 @@ function scanReposts(cutoffDate) {
         source: 'soundcloud',
         key: 'sc:' + track.id,
         title: track.title,
-        artist: (track.user && track.user.username) || item.user?.username || 'unknown',
+        // SoundCloud now lets an uploading account (e.g. a label, or a
+        // curator compiling an OST) tag a track with the REAL performing
+        // artist via publisher_metadata.artist, distinct from who actually
+        // published it (track.user.username) — prefer that when set, so a
+        // various-artists compilation shows its real artists, not just the
+        // publisher's name repeated on every track.
+        artist: (track.publisher_metadata && track.publisher_metadata.artist) || (track.user && track.user.username) || item.user?.username || 'unknown',
         url: track.permalink_url,
+        // Some uploaders restrict embedding to themselves ("embeddable_by":
+        // "me" instead of "all") — SoundCloud's oEmbed API then refuses to
+        // generate a widget for anyone else, which generate-html.js can't
+        // work around. Flagging it here (free — already on the track object)
+        // lets the picker avoid it instead of hitting that wall at Generate.
+        embeddable: track.embeddable_by === 'all',
         artwork: track.artwork_url || (track.user && track.user.avatar_url) || null,
         date: item.created_at,
         // SoundCloud's own `display_date` is what it actually shows publicly
@@ -150,10 +162,15 @@ function resolveTracks(item) {
     .map((t) => ({
       id: t.id,
       title: t.title,
-      artist: (t.user && t.user.username) || null,
+      // Real artist (see scanReposts' comment above) over the uploader's
+      // username — this is what makes a various-artists SoundCloud
+      // compilation (e.g. an OST uploaded under one curator account) show
+      // each track's actual artist once expanded.
+      artist: (t.publisher_metadata && t.publisher_metadata.artist) || (t.user && t.user.username) || null,
       url: t.permalink_url,
       artwork: t.artwork_url || null,
       duration: t.duration ? Math.round(t.duration / 1000) : null,
+      embeddable: t.embeddable_by === 'all',
       // The playlist's own releaseDate is just when it was assembled, not
       // when this track was published — each resolved track needs its own.
       // display_date (see scanReposts' comment above) over release_date/

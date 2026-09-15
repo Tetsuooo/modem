@@ -25,17 +25,19 @@
   button.primary:hover:not(:disabled) { background: #4a7dff; }
   .status { font-size: 12px; color: #9a9ba5; }
   .errors { padding: 8px 20px; background: #3a1f1f; color: #ff9b9b; font-size: 12px; }
-  main { display: flex; gap: 0; align-items: stretch; }
-  .col { flex: 1 1 0; min-width: 0; padding: 16px 20px; overflow-x: hidden; }
-  .col h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
-  .divider {
-    width: 7px; align-self: stretch; background: #2a2b33; cursor: col-resize; flex: none;
-    position: relative;
+  .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
+  .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
+  .tabs { display: flex; gap: 18px; }
+  .tab-btn {
+    background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
+    padding: 6px 2px; font-size: 13px; cursor: pointer; border-radius: 0;
   }
-  .divider::after {
-    content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 1px; background: #3a3b45;
+  .tab-btn:hover { color: #e8e8ea; }
+  .tab-btn.active { color: #e8e8ea; border-bottom-color: #3a6ff0; }
+  .tab-badge {
+    display: inline-block; margin-left: 6px; font-size: 10px; background: #3a6ff0; color: #fff;
+    border-radius: 999px; padding: 1px 6px; vertical-align: middle;
   }
-  .divider:hover, .divider.dragging { background: #3a6ff0; }
   .group-label { font-size: 11px; text-transform: uppercase; color: #6f7080; margin: 14px 0 6px; letter-spacing: .05em; }
   .row {
     display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px;
@@ -53,6 +55,7 @@
   .row .age-flag.lastyear { color: #ff9640; }
   .row .age-flag.ancient { color: #ff6666; }
   .row .dup-flag { font-size: 11px; color: #d08fff; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .embed-flag { font-size: 11px; color: #ff6666; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .preview-art { cursor: pointer; }
   .preview-art:hover { outline: 2px solid #3a6ff0; outline-offset: -2px; }
   .expand-btn, .expand-spacer { flex: none; width: 18px; }
@@ -97,6 +100,17 @@
   #selected .row { cursor: grab; border: 1px solid #2a2b33; margin-bottom: 6px; background: #1a1b21; }
   #selected .row.dragging { opacity: .35; box-shadow: 0 6px 16px rgba(0,0,0,.5); transform: scale(1.015); border-color: #3a6ff0; }
   .selected-item { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+  /* Tracks off the same release (see groupRuns()) get one shared, editable
+     heading bar above the run, and each row in the run shows a connecting
+     left border instead of its own heading-choice — the heading is shared. */
+  .group-heading-bar {
+    display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; padding: 6px 8px;
+    background: #1a2333; border: 1px solid #2a3b55; border-radius: 6px;
+  }
+  .group-heading-bar .group-heading-field { flex: 1; }
+  .group-heading-hint { font-size: 11px; color: #7a9bd0; white-space: nowrap; flex: none; }
+  .selected-item.grouped .row { border-left: 3px solid #3a6ff0; margin-bottom: 2px; }
+  .selected-item.grouped + .selected-item.grouped { margin-top: 0; }
   .show-num-label { font-size: 12px; color: #9a9ba5; display: flex; align-items: center; gap: 6px; }
   .show-num-label input {
     background: #0e0f13; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 4px;
@@ -162,33 +176,44 @@
 <body>
 <header>
   <h1>modem show builder</h1>
-  <button id="scanBtn" class="primary">Scan (last 14 days)</button>
-  <span id="statusText" class="status"></span>
+  <nav class="tabs" id="tabBar">
+    <button class="tab-btn active" data-tab="scan">Scan</button>
+    <button class="tab-btn" data-tab="arrange">Download &amp; Arrange<span id="arrangeCount" class="tab-badge" hidden></span></button>
+    <button class="tab-btn" data-tab="publish">Publish &amp; Edit</button>
+  </nav>
 </header>
 <div id="errorsBox"></div>
 
 <main>
-  <div class="col" id="leftCol">
-    <h2>Scan results</h2>
+  <section class="tab-panel" id="panel-scan">
+    <div class="actions">
+      <button id="scanBtn" class="primary">Scan (last 14 days)</button>
+      <span id="statusText" class="status"></span>
+    </div>
     <div class="toolbar">
       <button id="selectAllBtn">Select all</button>
       <button id="deselectAllBtn">Deselect all</button>
     </div>
     <div id="scanResults"><div class="empty">Click "Scan" to check SoundCloud reposts + Bandcamp wishlist/library.</div></div>
-  </div>
-  <div class="divider" id="dragDivider"></div>
-  <div class="col" id="rightCol">
+  </section>
+
+  <section class="tab-panel" id="panel-arrange" hidden>
     <h2>Your show (drag to reorder)</h2>
     <div id="selected"><div class="empty">Nothing selected yet.</div></div>
     <div class="actions">
       <button id="downloadBtn">Download selected</button>
+      <button id="openCoversBtn" title="downloads/_covers">Open covers folder</button>
+    </div>
+    <div id="downloadLog" class="log"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-publish" hidden>
+    <div class="actions">
       <label class="show-num-label">Show # <input type="text" id="showNumber" placeholder="245" size="4"></label>
       <button id="generateBtn" class="primary">Generate HTML</button>
       <button id="generateListBtn">Generate artist list</button>
       <button id="previewBtn">Preview</button>
-      <button id="openCoversBtn" title="downloads/_covers">Open covers folder</button>
     </div>
-    <div id="downloadLog" class="log"></div>
     <div id="outputBox" style="display:none">
       <h2>Tracklist HTML — paste into radioštudent</h2>
       <textarea id="outputText" readonly></textarea>
@@ -220,7 +245,7 @@
         <div class="actions"><button id="confirmPushBtn" class="danger">Confirm &amp; push</button></div>
       </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <script>
@@ -244,7 +269,28 @@ function isSelected(key) { return selected.some((it) => it.key === key); }
 // post) the label's name, never both, so headingSource records that choice;
 // label starts blank since the scan sources only ever give us one name.
 function makeSelectedEntry(item) {
-  return Object.assign({ label: '', headingSource: 'artist' }, item);
+  return Object.assign(
+    { label: '', headingSource: 'artist', groupHeading: item.groupLabel || item.artist || '' },
+    item
+  );
+}
+
+// Same grouping rule generate-html.js's groupRuns() applies server-side —
+// duplicated here (no module system for this inline script) since the
+// reorderable "Your show" list needs the same run boundaries to render the
+// shared-heading UI. Keep these in sync if the rule ever changes.
+function groupRuns(items) {
+  const runOf = new Array(items.length).fill(-1);
+  let i = 0;
+  while (i < items.length) {
+    let j = i;
+    while (j + 1 < items.length && items[j + 1].groupKey && items[j + 1].groupKey === items[i].groupKey) j++;
+    if (items[i].groupKey && j > i) {
+      for (let k = i; k <= j; k++) runOf[k] = i;
+    }
+    i = j + 1;
+  }
+  return runOf;
 }
 
 function toggleSelect(item) {
@@ -313,6 +359,17 @@ function duplicateNote(it) {
   const showsText = dup.shows.map((n) => '#' + n).join(', ');
   const what = dup.matchType === 'album' ? 'a different track off this release' : 'this track';
   return `<div class="dup-flag">♻ already played — ${esc(what)} in modem ${esc(showsText)}</div>`;
+}
+
+// SoundCloud uploaders can restrict embedding to themselves only
+// (embeddable_by !== 'all') — generate-html.js's oEmbed call fails outright
+// for those, with no workaround, so flag it here (already free on the scan
+// data) rather than let it surface as a Generate-HTML failure later. Only
+// ever set for SoundCloud items — `=== false` (not just falsy) keeps
+// Bandcamp rows, which never carry this field, from being flagged.
+function embedFlagNote(it) {
+  if (it.embeddable !== false) return '';
+  return `<div class="embed-flag">🚫 can't be embedded — uploader restricted it to themselves</div>`;
 }
 
 // Preview embeds are built client-side (no extra fetch needed): SoundCloud's
@@ -401,6 +458,18 @@ function subtrackItem(parent, t) {
     // album's — still accurate, since Bandcamp album tracks share one release.
     releaseDate: t.releaseDate || (isBandcamp ? parent.releaseDate : null) || null,
     previouslyPlayed: t.previouslyPlayed || null,
+    embeddable: isBandcamp ? undefined : t.embeddable,
+    // Ties tracks expanded from the same release together — when 2+ end up
+    // adjacent in "Your show", generateShowHtml groups them under one shared
+    // heading instead of repeating a heading per track (the modem convention:
+    // see e.g. modem-242's "Cold Storage" covering 3 tracks off one album, or
+    // modem-246's "mappa" label heading covering 6 different artists' tracks
+    // off one compilation). groupLabel seeds the editable shared heading with
+    // the release's own artist/label field — a various-artists Bandcamp
+    // release's `.artist` is already the curating label's name (e.g. "mappa"),
+    // and a SoundCloud playlist's `.artist` is its uploader/curator account.
+    groupKey: isBandcamp ? (parent.albumId ? 'bc:' + parent.albumId : null) : 'scset:' + parent.key,
+    groupLabel: parent.artist || '',
     albumId: isBandcamp ? parent.albumId : undefined,
     trackId: isBandcamp ? t.id : undefined,
   };
@@ -420,6 +489,7 @@ function renderSubtracks(parent) {
             <div class="title">${esc(sub.title)}</div>
             ${ageFlagNote(sub)}
             ${duplicateNote(sub)}
+            ${embedFlagNote(sub)}
           </div>
           <button class="preview-btn" data-key="${escAttr(sub.key)}" title="preview">▶</button>
         </div>
@@ -454,6 +524,7 @@ function renderScanResults() {
             ${playlistNote(it)}
             ${ageFlagNote(it)}
             ${duplicateNote(it)}
+            ${embedFlagNote(it)}
           </div>
           <span class="date">${fmtDate(it.date)}</span>
           <button class="preview-btn" data-key="${escAttr(it.key)}" title="preview">▶</button>
@@ -497,6 +568,10 @@ function deselectAll() {
 }
 
 function renderSelected() {
+  const badge = el('arrangeCount');
+  if (selected.length) { badge.textContent = String(selected.length); badge.hidden = false; }
+  else badge.hidden = true;
+
   const box = el('selected');
   // FLIP: record where each item currently sits (by stable key) before the
   // re-render, then animate from there to its new position after — this is
@@ -508,8 +583,23 @@ function renderSelected() {
   });
 
   if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; return; }
-  box.innerHTML = selected.map((it, i) => `
-    <div class="selected-item" data-key="${escAttr(it.key)}">
+
+  // Runs of 2+ adjacent items off the same release share one heading — see
+  // groupRuns()'s comment. runOf[i] === i marks the first item of such a run.
+  const runOf = groupRuns(selected);
+
+  box.innerHTML = selected.map((it, i) => {
+    const grouped = runOf[i] !== -1;
+    const groupStart = runOf[i] === i;
+    let runLen = 0;
+    if (groupStart) { let j = i; while (j + 1 < selected.length && runOf[j + 1] === i) j++; runLen = j - i + 1; }
+    const groupBar = groupStart ? `
+    <div class="group-heading-bar">
+      <input class="edit-field group-heading-field" data-group-key="${escAttr(it.groupKey)}" placeholder="compilation / release heading" value="${escAttr(it.groupHeading || '')}">
+      <span class="group-heading-hint">shared heading · ${runLen} tracks</span>
+    </div>` : '';
+    return `${groupBar}
+    <div class="selected-item${grouped ? ' grouped' : ''}" data-key="${escAttr(it.key)}">
       <div class="row" draggable="true" data-index="${i}">
         <span class="tag ${SOURCE_TAG[it.source]}">${SOURCE_TAG[it.source]}</span>
         <img src="${escAttr(it.artwork || '')}" loading="lazy" onerror="this.style.visibility='hidden'">
@@ -517,19 +607,21 @@ function renderSelected() {
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
             <input class="edit-field edit-artist" data-key="${escAttr(it.key)}" placeholder="artist" value="${escAttr(it.artist || '')}">
-            <input class="edit-field edit-label" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">
+            ${grouped ? '' : `<input class="edit-field edit-label" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">`}
           </div>
+          ${grouped ? '' : `
           <div class="heading-choice">
             heading:
             <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="artist" ${it.headingSource !== 'label' ? 'checked' : ''}> artist</label>
             <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="label" ${it.headingSource === 'label' ? 'checked' : ''}> label</label>
-          </div>
+          </div>`}
         </div>
         ${downloadStatus(it)}
         <button class="remove" data-index="${i}" title="remove">×</button>
       </div>
       ${playerRow(it)}
-    </div>`).join('');
+    </div>`;
+  }).join('');
   wireDragAndDrop();
   wireTrackPlayers(box);
   box.querySelectorAll('.remove').forEach((b) => b.addEventListener('click', () => {
@@ -539,12 +631,21 @@ function renderSelected() {
   // Editing artist/label/heading-choice updates the underlying data silently
   // (no re-render) so typing doesn't lose focus/cursor position — only
   // structural changes (add/remove/reorder) rebuild the DOM.
-  box.querySelectorAll('.edit-field').forEach((input) => {
+  box.querySelectorAll('.edit-field:not(.group-heading-field)').forEach((input) => {
     input.addEventListener('input', () => {
       const item = selected.find((s) => s.key === input.dataset.key);
       if (!item) return;
       if (input.classList.contains('edit-artist')) item.artist = input.value;
       else item.label = input.value;
+      debouncedSaveDraft();
+    });
+  });
+  // A group's shared heading lives on every member (groupHeading), kept in
+  // sync by group key rather than by index, since indices shift on reorder.
+  box.querySelectorAll('.group-heading-field').forEach((input) => {
+    input.addEventListener('input', () => {
+      const gk = input.dataset.groupKey;
+      selected.forEach((it) => { if (it.groupKey === gk) it.groupHeading = input.value; });
       debouncedSaveDraft();
     });
   });
@@ -860,19 +961,47 @@ function dedupedField(field) {
 // heading first (whichever of artist/label drives that track's heading),
 // the other credit in brackets when both are known, matching how existing
 // modem posts already credit a label release's artist alongside it.
+// A grouped run gets ONE credit line — its shared heading with every
+// distinct real artist in the run bracketed after it (e.g.
+// "mappa [ Visible Cloaks, Les Halles, ... ]") — instead of repeating the
+// same heading once per track.
 function generateArtistListText() {
   const num = el('showNumber').value.trim();
   const header = num ? `///${num}\n\n` : '';
   const seen = new Set();
   const lines = [];
-  selected.forEach((it) => {
-    const heading = headingName(it).replace(/@/g, '').trim();
-    const other = (it.headingSource === 'label' ? it.artist : it.label || '').replace(/@/g, '').trim();
-    if (!heading) return;
-    const line = other && other.toLowerCase() !== heading.toLowerCase() ? `${heading} [ ${other} ]` : heading;
-    const key = line.toLowerCase();
-    if (!seen.has(key)) { seen.add(key); lines.push(line); }
-  });
+  const runOf = groupRuns(selected);
+  let i = 0;
+  while (i < selected.length) {
+    if (runOf[i] === i) {
+      let j = i;
+      while (j + 1 < selected.length && runOf[j + 1] === i) j++;
+      const heading = (selected[i].groupHeading || headingName(selected[i])).replace(/@/g, '').trim();
+      const seenOther = new Set();
+      const others = [];
+      for (let k = i; k <= j; k++) {
+        const nm = (selected[k].artist || '').replace(/@/g, '').trim();
+        const ok = nm.toLowerCase();
+        if (nm && ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
+      }
+      if (heading) {
+        const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
+        const key = line.toLowerCase();
+        if (!seen.has(key)) { seen.add(key); lines.push(line); }
+      }
+      i = j + 1;
+    } else {
+      const it = selected[i];
+      const heading = headingName(it).replace(/@/g, '').trim();
+      const other = (it.headingSource === 'label' ? it.artist : it.label || '').replace(/@/g, '').trim();
+      if (heading) {
+        const line = other && other.toLowerCase() !== heading.toLowerCase() ? `${heading} [ ${other} ]` : heading;
+        const key = line.toLowerCase();
+        if (!seen.has(key)) { seen.add(key); lines.push(line); }
+      }
+      i++;
+    }
+  }
   return `${header}featuring tracks from:\n\n${lines.map((n) => `* ${n}`).join('\n')}`;
 }
 
@@ -937,13 +1066,48 @@ function normalizeEmbedsPreview(root) {
 // (duplicate-heading merges, per-track fallback from window.__modemData.tracks,
 // admin-edit suppression, etc.) — none of that applies to a freshly generated,
 // not-yet-scraped draft, which always uses the clean "recent" heading dialect.
+//
+// A grouped run shares ONE segment/marker for several items (same rule as
+// generateShowHtml/groupRuns), so markers don't line up 1:1 with `items`
+// once any group exists — segGroups rebuilds that same one-entry-per-heading
+// structure so marker i pairs with segGroups[i] (an array of 1+ items), and
+// a grouped marker shows one artist-chip per distinct real artist in the run.
 function injectSegTagsPreview(root, items) {
   const chip = (cls, n) => `<span class="chip ${cls}">${esc(n)}</span>`;
   const markers = [...root.querySelectorAll('.seg-marker[data-seg]')];
+  const runOf = groupRuns(items);
+  const segGroups = [];
+  {
+    let i = 0;
+    while (i < items.length) {
+      if (runOf[i] === i) {
+        let j = i;
+        while (j + 1 < items.length && runOf[j + 1] === i) j++;
+        segGroups.push(items.slice(i, j + 1));
+        i = j + 1;
+      } else {
+        segGroups.push([items[i]]);
+        i++;
+      }
+    }
+  }
   markers.forEach((p, i) => {
-    const item = items[i];
-    if (!item) return;
-    const chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
+    const group = segGroups[i];
+    if (!group || !group.length) return;
+    let chips;
+    if (group.length > 1) {
+      const seen = new Set();
+      chips = group.map((item) => {
+        const nm = (item.artist || '').trim();
+        const key = nm.toLowerCase();
+        if (!nm || seen.has(key)) return '';
+        seen.add(key);
+        return chip('artist-chip', nm);
+      }).join('');
+    } else {
+      const item = group[0];
+      chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
+    }
     const slashes = `<span class="seg-slashes"> ${'/'.repeat(60)}</span>`;
     p.innerHTML = slashes + (chips ? `<span class="seg-tags">${chips}</span>` : '');
   });
@@ -1017,39 +1181,24 @@ async function confirmPush() {
   }
 }
 
-// Drag the divider between the two panels to resize them; remembered
-// per-browser so it doesn't reset every reload.
-(function setupResizablePanels() {
-  const divider = el('dragDivider');
-  const left = el('leftCol');
-  const main = document.querySelector('main');
-  let dragging = false;
-
-  try {
-    const saved = localStorage.getItem('sb-split');
-    if (saved) left.style.flex = `0 0 ${saved}%`;
-  } catch (e) { /* ignore */ }
-
-  divider.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    dragging = true;
-    divider.classList.add('dragging');
-    document.body.style.userSelect = 'none';
+// Scan / Download & Arrange / Publish & Edit tabs — one panel visible at a
+// time, remembered per-browser so a reload doesn't dump you back on Scan.
+const TABS = ['scan', 'arrange', 'publish'];
+function switchTab(tab) {
+  if (!TABS.includes(tab)) tab = 'scan';
+  TABS.forEach((t) => { el('panel-' + t).hidden = t !== tab; });
+  document.querySelectorAll('.tab-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.tab === tab);
   });
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
-    const rect = main.getBoundingClientRect();
-    let pct = ((e.clientX - rect.left) / rect.width) * 100;
-    pct = Math.max(20, Math.min(80, pct));
-    left.style.flex = `0 0 ${pct}%`;
-    try { localStorage.setItem('sb-split', pct.toFixed(1)); } catch (e2) { /* ignore */ }
-  });
-  window.addEventListener('mouseup', () => {
-    if (!dragging) return;
-    dragging = false;
-    divider.classList.remove('dragging');
-    document.body.style.userSelect = '';
-  });
+  try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
+}
+document.querySelectorAll('.tab-btn').forEach((b) => {
+  b.addEventListener('click', () => switchTab(b.dataset.tab));
+});
+(function restoreTab() {
+  let tab = 'scan';
+  try { tab = localStorage.getItem('sb-tab') || tab; } catch (e) { /* ignore */ }
+  switchTab(tab);
 })();
 
 // Only one track should ever be audible at once. HTMLMediaElement's 'play'

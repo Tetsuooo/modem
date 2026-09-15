@@ -3,7 +3,7 @@
 // with the same field wrapper divs scripts/scrape-modem.js's fieldByClass()
 // looks for, then runs the REAL parsePage() against it — not a reimplementation.
 const { parsePage } = require('../scripts/scrape-modem.js');
-const { generateShowHtml } = require('./generate-html');
+const { generateShowHtml, groupRuns, headingName } = require('./generate-html');
 const { escapeHtml } = require('./lib');
 
 // items: ordered, selected candidates (same shape /generate takes — each may
@@ -42,19 +42,44 @@ ${links(labels)}
 // via the /admin segment editor (see e.g. the modem-244 "PHO BHO" heading,
 // whose artist tags needed a manual segEdit). So that's expected, not a bug —
 // flagged as an FYI, not a warning, and only once as a single aggregate note.
+//
+// Grouped tracks (see generate-html.js's groupRuns()) share ONE heading/
+// segment across several items, so `record.segments` has fewer entries than
+// `items` once any group exists — itemToSeg maps each item to the segment
+// index it actually landed in, and the heading-mismatch check runs once per
+// group (at its first item) rather than once per track.
 function buildWarnings(record, items) {
   const warnings = [];
   const notes = [];
+  const runOf = groupRuns(items);
+  const itemToSeg = [];
+  {
+    let seg = 0, i = 0;
+    while (i < items.length) {
+      if (runOf[i] === i) {
+        let j = i;
+        while (j + 1 < items.length && runOf[j + 1] === i) j++;
+        for (let k = i; k <= j; k++) itemToSeg[k] = seg;
+        seg++; i = j + 1;
+      } else {
+        itemToSeg[i] = seg; seg++; i++;
+      }
+    }
+  }
 
   items.forEach((item, i) => {
-    const heading = (record.segments || [])[i];
+    if (runOf[i] !== -1 && runOf[i] !== i) return; // grouped, but not the group's first — already checked
+    const heading = (record.segments || [])[itemToSeg[i]];
     const headingKey = (heading || '').trim().toLowerCase();
-    const expected = (item.headingSource === 'label' && item.label ? item.label : item.artist || item.label || '').trim().toLowerCase();
+    const expected = (runOf[i] === i ? (item.groupHeading || headingName(item)) : headingName(item)).trim().toLowerCase();
+    const label = runOf[i] === i ? `Group starting at track ${i + 1} ("${item.title}")` : `Track ${i + 1} ("${item.title}")`;
     if (expected && headingKey !== expected) {
-      warnings.push(`Track ${i + 1} ("${item.title}"): heading came out as "${heading}", expected "${expected}" — check for unusual characters in the name.`);
+      warnings.push(`${label}: heading came out as "${heading}", expected "${expected}" — check for unusual characters in the name.`);
     }
-    const other = item.headingSource === 'label' ? item.artist : item.label;
-    if (other && other.trim()) notes.push(i);
+    if (runOf[i] === -1) {
+      const other = item.headingSource === 'label' ? item.artist : item.label;
+      if (other && other.trim()) notes.push(i);
+    }
   });
   if (notes.length) {
     warnings.push(`FYI: ${notes.length} track(s) have both an artist and a label — the non-heading one won't auto-link to its segment until you (or an admin) fix it after publishing, same as any label release on the live site.`);
