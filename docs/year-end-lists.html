@@ -93,18 +93,59 @@
     }
     /* Lists mirrored into the on-site archive stay clickable but carry no
        persistent tint (matches the radio-show grid). Hover still highlights. */
-    .preview-image {
+    /* Artwork + the artist/label chip rows that type themselves in below it
+       on hover — one shared fixed wrapper so the rows just flow under the
+       image instead of needing separately-computed positions. */
+    .preview-wrap {
       position: fixed;
-      top: 65%; /* Moved higher from 70% */
+      /* Top-anchored, NOT vertically centered — a centered transform would
+         re-center (and visibly shift) the image itself as the chip rows
+         beneath it grow taller during the reveal. Pinning the top edge
+         keeps the artwork perfectly still no matter how many chips end up
+         listed below it. */
+      top: 31vh;
       left: 50%;
-      transform: translate(-50%, -50%);
-      width: 60vw; /* Use explicit width instead of max-width */
-      height: 60vh; /* Use explicit height instead of max-height */
-      object-fit: contain; /* Maintain aspect ratio */
-      display: none; /* Initially hidden */
+      transform: translateX(-50%);
+      width: 60vw;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8vh;
       z-index: 20; /* Lower than text */
       pointer-events: none;
     }
+    .preview-wrap.show { display: flex; }
+    .preview-image {
+      width: 100%;
+      height: 50vh; /* was 60vh — trimmed to make room for the chip rows */
+      object-fit: contain; /* Maintain aspect ratio */
+      display: block;
+    }
+    .preview-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.35vw 0.35vw;
+      width: 100%;
+      padding: 0 1vw;
+      box-sizing: border-box;
+    }
+    .preview-chip {
+      display: inline-block;
+      font-size: clamp(0.65rem, 0.95vw, 0.85rem);
+      font-weight: bold;
+      border: 1.5px solid #000;
+      border-radius: 999px;
+      padding: 0.12rem 0.6rem;
+      background: rgba(255, 255, 255, 0.92);
+      color: #000;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      white-space: nowrap;
+    }
+    .preview-chip.label { background: rgba(224, 224, 255, 0.92); }
+    .preview-chip.show { opacity: 1; transform: translateY(0); }
     .year-end-lists {
       position: fixed;
       top: 50%;
@@ -163,15 +204,12 @@
         margin: 0; /* spacing handled by the .list gap above */
       }
 
-      .preview-image {
-        position: fixed;
-        top: 50vh; /* Center vertically */
-        left: 50%;
-        transform: translate(-50%, -50%);
+      .preview-wrap {
+        top: 16vh; /* top-anchored (see the base rule) — same visual start the old centered 46vh/60vh gave */
         width: 80vw; /* Larger explicit width in portrait */
-        height: 80vh; /* Larger explicit height in portrait */
-        object-fit: contain; /* Maintain aspect ratio */
-        z-index: 20; /* Lower than text */
+      }
+      .preview-image {
+        height: 60vh; /* Larger explicit height in portrait, trimmed for the chip rows */
       }
     }
 
@@ -216,21 +254,69 @@
        fixed nav — give it proper clearance (this rule comes last so it wins). */
     @media (max-width: 768px) and (orientation: portrait) {
       .container { margin-top: calc(4.25rem + env(safe-area-inset-top, 0px)); }
-    }</style></head><body><div class="content"><img id="preview-image" class="preview-image" src="" alt="Preview"><div class="container"><div class="year-column"><div class="year">2025</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2025" data-image="assets/year_end_list_covers/releases2025.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/modem-community-lists-2025" data-image="assets/year_end_list_covers/community2025.webp">community lists</a></div></div><div class="year-column"><div class="year">2024</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2024-0" data-image="assets/year_end_list_covers/releases2024.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2024" data-image="assets/year_end_list_covers/labels2024.webp">best labels</a></div></div><div class="year-column"><div class="year">2023</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2023" data-image="assets/year_end_list_covers/releases2023.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2023" data-image="assets/year_end_list_covers/labels2023.webp">best labels</a></div></div><div class="year-column"><div class="year">2022</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2022" data-image="assets/year_end_list_covers/releases2022.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2022" data-image="assets/year_end_list_covers/labels2022.webp">best labels</a></div></div><div class="year-column"><div class="year">2021</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2021" data-image="assets/year_end_list_covers/releases2021.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2021" data-image="assets/year_end_list_covers/labels2021.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2021" data-image="assets/year_end_list_covers/videos2021.webp">best videos</a></div></div><div class="year-column"><div class="year">2020</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2020" data-image="assets/year_end_list_covers/releases2020.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2020" data-image="assets/year_end_list_covers/labels2020.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2020" data-image="assets/year_end_list_covers/videos2020.webp">best videos</a></div></div><div class="year-column"><div class="year">2019</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2019" data-image="assets/year_end_list_covers/releases2019.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2019" data-image="assets/year_end_list_covers/labels2019.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2019" data-image="assets/year_end_list_covers/videos2019.webp">best videos</a></div></div><div class="year-column"><div class="year">2018</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2018" data-image="assets/year_end_list_covers/releases2018.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2018" data-image="assets/year_end_list_covers/labels2018.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2018" data-image="assets/year_end_list_covers/videos2018.webp">best videos</a></div></div><div class="year-column"><div class="year">2017</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-of-2017" data-image="assets/year_end_list_covers/best2017.webp">best of</a></div></div></div></div><script>function initializeYearEndListsHover() {
+    }</style></head><body><div class="content"><div id="preview-wrap" class="preview-wrap"><img id="preview-image" class="preview-image" src="" alt="Preview"><div id="preview-chips" class="preview-chips"></div></div><div class="container"><div class="year-column"><div class="year">2025</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2025" data-image="assets/year_end_list_covers/releases2025.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/modem-community-lists-2025" data-image="assets/year_end_list_covers/community2025.webp">community lists</a></div></div><div class="year-column"><div class="year">2024</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2024-0" data-image="assets/year_end_list_covers/releases2024.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2024" data-image="assets/year_end_list_covers/labels2024.webp">best labels</a></div></div><div class="year-column"><div class="year">2023</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2023" data-image="assets/year_end_list_covers/releases2023.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2023" data-image="assets/year_end_list_covers/labels2023.webp">best labels</a></div></div><div class="year-column"><div class="year">2022</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2022" data-image="assets/year_end_list_covers/releases2022.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2022" data-image="assets/year_end_list_covers/labels2022.webp">best labels</a></div></div><div class="year-column"><div class="year">2021</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2021" data-image="assets/year_end_list_covers/releases2021.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2021" data-image="assets/year_end_list_covers/labels2021.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2021" data-image="assets/year_end_list_covers/videos2021.webp">best videos</a></div></div><div class="year-column"><div class="year">2020</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2020" data-image="assets/year_end_list_covers/releases2020.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2020" data-image="assets/year_end_list_covers/labels2020.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2020" data-image="assets/year_end_list_covers/videos2020.webp">best videos</a></div></div><div class="year-column"><div class="year">2019</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2019" data-image="assets/year_end_list_covers/releases2019.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2019" data-image="assets/year_end_list_covers/labels2019.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2019" data-image="assets/year_end_list_covers/videos2019.webp">best videos</a></div></div><div class="year-column"><div class="year">2018</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-releases-of-2018" data-image="assets/year_end_list_covers/releases2018.webp">best releases</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-labels-of-2018" data-image="assets/year_end_list_covers/labels2018.webp">best labels</a> <a class="list-item" href="https://radiostudent.si/glasba/modem/best-videos-of-2018" data-image="assets/year_end_list_covers/videos2018.webp">best videos</a></div></div><div class="year-column"><div class="year">2017</div><div class="list"><a class="list-item" href="https://radiostudent.si/glasba/modem/best-of-2017" data-image="assets/year_end_list_covers/best2017.webp">best of</a></div></div></div></div><script>// slug -> { kind: 'labels'|'artists', names: string[] } — filled in once
+    // markLocalArchiveLists()'s fetch resolves; the hover handler just no-ops
+    // on the chip rows until then (typically well before anyone hovers).
+    let slugChipData = null;
+
+    function initializeYearEndListsHover() {
+      const previewWrap = document.getElementById('preview-wrap');
+      // This page's own script AND the shell's loadPage() both call this on
+      // mount — harmless for the old set-src/toggle-display code (idempotent),
+      // but the stateful chip-reveal sequence below isn't, so guard against
+      // attaching everything twice on the same mount. A real re-navigation
+      // recreates this element fresh, so the guard doesn't stick around.
+      if (previewWrap.dataset.hoverInit) return;
+      previewWrap.dataset.hoverInit = '1';
       const previewImage = document.getElementById('preview-image');
+      const previewChips = document.getElementById('preview-chips');
       const listItems = document.querySelectorAll('.list-item');
+      let chipTimer = null;
+      const CHIP_STAGGER_MS = 65;
+
+      function stopChipReveal() {
+        clearTimeout(chipTimer);
+        previewChips.innerHTML = '';
+      }
+
+      // Reveals every entry one at a time (fade + slide up), same rhythm as
+      // a typewriter but chip-by-chip rather than letter-by-letter. Always
+      // the full list — no truncation — so the artwork's own position above
+      // (see .preview-wrap: top-anchored, not centered) never has to shift
+      // to account for how many rows the chips end up taking.
+      function revealChips(entry) {
+        stopChipReveal();
+        if (!entry || !entry.names.length) return;
+        let i = 0;
+        (function step() {
+          if (i >= entry.names.length) return;
+          const el = document.createElement('span');
+          el.className = 'preview-chip' + (entry.kind === 'labels' ? ' label' : '');
+          el.textContent = entry.names[i];
+          previewChips.appendChild(el);
+          // Double rAF so the initial (opacity:0) state actually paints
+          // before .show flips the transition, instead of the browser
+          // coalescing both into one frame and skipping the animation.
+          requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+          i++;
+          chipTimer = setTimeout(step, CHIP_STAGGER_MS);
+        })();
+      }
 
       listItems.forEach(item => {
         item.addEventListener('mouseenter', () => {
           const imageSrc = item.getAttribute('data-image');
           if (imageSrc) {
             previewImage.src = imageSrc;
-            previewImage.style.display = 'block';
+            previewWrap.classList.add('show');
           }
+          const slug = (item.getAttribute('href') || '').split('/').pop();
+          revealChips(slugChipData && slug ? slugChipData.get(slug) : null);
         });
 
         item.addEventListener('mouseleave', () => {
-          previewImage.style.display = 'none';
+          previewWrap.classList.remove('show');
+          stopChipReveal();
         });
       });
     }
@@ -239,14 +325,14 @@
     initializeYearEndListsHover();
 
     // For year-end lists we've mirrored locally, point the link at the on-site
-    // archive entry (clean URL /slug) and visually mark it as available.
+    // archive entry (clean URL /slug), visually mark it as available, and
+    // build the artist/label lookup the hover chips read from.
     function markLocalArchiveLists() {
       fetch('assets/modem-archive.json', { cache: 'no-cache' })
         .then((r) => r.json())
         .then((data) => {
-          const local = new Set(
-            (data.records || []).filter((r) => r.type === 'list').map((r) => r.slug)
-          );
+          const records = (data.records || []).filter((r) => r.type === 'list');
+          const local = new Set(records.map((r) => r.slug));
           document.querySelectorAll('.list-item[href]').forEach((a) => {
             const slug = (a.getAttribute('href') || '').split('/').pop();
             if (slug && local.has(slug)) {
@@ -254,6 +340,90 @@
               a.classList.add('in-archive');
             }
           });
+
+          // Same structural test archive.html/build-label-logos.js use: a
+          // list page written as show-style "name /////" headings (the
+          // "best labels of <year>"/"best of <year>"/community-lists pages)
+          // is about LABELS; everything else (best releases/videos, each
+          // entry its own embed) is about ARTISTS.
+          //
+          // For the ARTIST pages, don't read rec.artists — that comes from
+          // radiostudent.si's own separate artist/label taxonomy field,
+          // which for these lists is unreliable: a few years (e.g.
+          // best-videos-of-2019/2020) never had it filled in at all despite
+          // the body text clearly naming every artist, and one year
+          // (best-releases-of-2025) has it in a different order than the
+          // body's own (the page explicitly says "in alphabetical order")
+          // sequence. Parsing the body directly — the same "Artist - Title
+          // (Label)" pattern archive.html's own injectListTags() already
+          // uses to build that page's chips — reads the same names in the
+          // order the writer actually put them in, and works even when the
+          // taxonomy field is empty.
+          const tracksByEmbedId = { bc: {}, yt: {}, sc: {} };
+          (data.tracks || []).forEach((t) => {
+            const src = t.embedSrc || '';
+            const bc = src.match(/(?:album|track)=(\d+)/);
+            if (bc && !tracksByEmbedId.bc[bc[1]]) tracksByEmbedId.bc[bc[1]] = t;
+            if (t.kind === 'youtube') { const yt = src.match(/embed\/([\w-]+)/); if (yt) tracksByEmbedId.yt[yt[1]] = t; }
+            if (t.kind === 'soundcloud') { const sc = src.match(/tracks\/(\d+)/); if (sc) tracksByEmbedId.sc[sc[1]] = t; }
+          });
+          const parser = new DOMParser();
+          function deriveArtistsFromBody(bodyHtml) {
+            const body = parser.parseFromString(bodyHtml || '', 'text/html').body;
+            const names = [], seen = new Set();
+            const add = (n) => { const k = (n || '').trim(); if (k && !seen.has(k.toLowerCase())) { seen.add(k.toLowerCase()); names.push(k); } };
+            const isIntroHeading = (p) => !!p && p.children.length === 1 && p.children[0].tagName === 'STRONG' &&
+              p.children[0].textContent.trim() === (p.textContent || '').trim();
+            const trackForEmbedP = (p) => {
+              const f = p && p.querySelector('iframe');
+              const src = f && (f.getAttribute('src') || '');
+              if (!src) return null;
+              let m;
+              if ((m = src.match(/(?:album|track)=(\d+)/))) return tracksByEmbedId.bc[m[1]] || null;
+              if ((m = src.match(/youtube\.com\/embed\/([\w-]+)/))) return tracksByEmbedId.yt[m[1]] || null;
+              if ((m = src.match(/api\.soundcloud\.com\/tracks\/(\d+)/))) return tracksByEmbedId.sc[m[1]] || null;
+              return null;
+            };
+            // Pass 1: each entry's own description paragraph, immediately
+            // followed by its embed.
+            [...body.querySelectorAll('p')].forEach((p) => {
+              if (p.querySelector('iframe') || isIntroHeading(p)) return;
+              const next = p.nextElementSibling;
+              if (!next || !next.querySelector('iframe')) return;
+              const txt = (p.textContent || '').trim();
+              if (!txt) return;
+              const firstLink = p.querySelector('a');
+              let artist;
+              if (firstLink && txt.startsWith(firstLink.textContent.trim())) artist = firstLink.textContent.trim();
+              else { const dash = txt.search(/\s[-–—]\s/); artist = dash > 0 ? txt.slice(0, dash).trim() : ''; }
+              if (artist && !/^(v\.?\s?a\.?|various\s+artists?)$/i.test(artist)) add(artist);
+            });
+            // Pass 2: a 2nd/3rd embed packed under one description, or the
+            // very first entry of an embed-only list — fall back to the
+            // embed's own track data.
+            [...body.querySelectorAll('p')].forEach((p) => {
+              if (!p.querySelector('iframe')) return;
+              const prev = p.previousElementSibling;
+              if (!(prev && (prev.querySelector('iframe') || isIntroHeading(prev)))) return;
+              const t = trackForEmbedP(p);
+              if (t && t.artist) add(t.artist);
+            });
+            return names;
+          }
+
+          const map = new Map();
+          records.forEach((rec) => {
+            const isLabelList = /<p data-seg="\d+"[^>]*class="seg-marker"/.test(rec.bodyHtml || '');
+            if (isLabelList) {
+              const seen = new Set();
+              const names = (rec.labels || []).map((e) => e.name).filter((n) => n && !seen.has(n) && seen.add(n));
+              if (names.length) map.set(rec.slug, { kind: 'labels', names });
+            } else {
+              const names = deriveArtistsFromBody(rec.bodyHtml);
+              if (names.length) map.set(rec.slug, { kind: 'artists', names });
+            }
+          });
+          slugChipData = map;
         })
         .catch(() => {});
     }
