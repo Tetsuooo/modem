@@ -384,12 +384,15 @@
 
   <section class="tab-panel tab-panel-wide" id="panel-covers" hidden>
     <h2>Cover Generator — drag layers to reorder, luma key masks each by its own brightness</h2>
+    <div class="actions">
+      <button id="coverAddAllBtn">Add all covers</button>
+      <button id="coverSaveBtn">Save</button>
+      <button id="coverExportBtn" class="primary">Export PNG</button>
+      <span id="coverStatus" class="status"></span>
+    </div>
     <div class="cover-layout">
       <div class="cover-sidebar">
         <div id="coverPalette" class="cover-palette"></div>
-        <div class="actions">
-          <button id="coverAddAllBtn">Add all covers</button>
-        </div>
         <h3 class="cover-section-title">Layers (top = front)</h3>
         <div id="coverLayerList" class="cover-layer-list"></div>
         <h3 class="cover-section-title">Adjust (whole image)</h3>
@@ -398,11 +401,6 @@
           <label>Lightness <input type="range" id="coverBrightness" min="-100" max="100" value="0"><span id="coverBrightnessVal">0</span></label>
           <label>Saturation <input type="range" id="coverSaturation" min="-100" max="100" value="0"><span id="coverSaturationVal">0</span></label>
         </div>
-        <div class="actions">
-          <button id="coverSaveBtn">Save</button>
-          <button id="coverExportBtn" class="primary">Export PNG</button>
-        </div>
-        <span id="coverStatus" class="status"></span>
       </div>
       <div class="cover-canvas-wrap">
         <canvas id="coverCanvas"></canvas>
