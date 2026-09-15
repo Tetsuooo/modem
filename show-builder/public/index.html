@@ -267,10 +267,10 @@
   .cover-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9a9ba5; margin: 2px 0; }
   .cover-layer-list { display: flex; flex-direction: column; gap: 6px; }
   .cover-layer {
-    background: #1c1d24; border: 1px solid #2a2b33; border-radius: 6px; padding: 6px 8px; cursor: grab;
+    background: #1c1d24; border: 1px solid #2a2b33; border-radius: 6px; padding: 6px 8px;
   }
   .cover-layer.dragging { opacity: .4; }
-  .cover-layer-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .cover-layer-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: grab; }
   .cover-layer-thumb { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex: none; background: #2a2b33; }
   .cover-layer-title { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cover-layer-remove { background: none; border: none; color: #6f7080; cursor: pointer; font-size: 14px; flex: none; padding: 0 2px; }
@@ -1643,8 +1643,8 @@ function renderCoverLayerList() {
     return;
   }
   box.innerHTML = coverLayers.map((l) => `
-    <div class="cover-layer" data-id="${escAttr(l.id)}" draggable="true">
-      <div class="cover-layer-head">
+    <div class="cover-layer" data-id="${escAttr(l.id)}">
+      <div class="cover-layer-head" draggable="true" title="drag to reorder">
         <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
         <span class="cover-layer-title">${esc(l.title)}</span>
         <button class="cover-layer-remove" data-id="${escAttr(l.id)}" title="remove">×</button>
@@ -1685,12 +1685,17 @@ function wireCoverLayerDrag() {
   const box = el('coverLayerList');
   let draggingEl = null;
 
-  box.querySelectorAll('.cover-layer').forEach((row) => {
-    row.addEventListener('dragstart', () => {
+  // draggable="true" sits on .cover-layer-head only (see renderCoverLayerList)
+  // — dragging is scoped to that top strip so it never fights a slider drag
+  // lower in the same card — but the element that actually MOVES in the DOM
+  // is its parent .cover-layer (the whole card, sliders included).
+  box.querySelectorAll('.cover-layer-head').forEach((head) => {
+    const row = head.closest('.cover-layer');
+    head.addEventListener('dragstart', () => {
       draggingEl = row;
       row.classList.add('dragging');
     });
-    row.addEventListener('dragend', () => {
+    head.addEventListener('dragend', () => {
       row.classList.remove('dragging');
       draggingEl = null;
       const ids = [...box.querySelectorAll('.cover-layer')].map((n) => n.dataset.id);
