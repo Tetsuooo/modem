@@ -246,6 +246,42 @@
   .mix-playhead {
     position: absolute; top: 0; bottom: 0; width: 2px; background: #ff6666; z-index: 4; pointer-events: none;
   }
+
+  /* ---- Cover Generator: a small Photoshop-style layer stack. Sidebar
+     (palette + layer list + global grade) fixed-width on the left, canvas
+     takes whatever's left. ---- */
+  .cover-layout { display: flex; gap: 16px; align-items: flex-start; }
+  .cover-sidebar {
+    flex: 0 0 300px; max-width: 300px; display: flex; flex-direction: column; gap: 8px;
+    max-height: 78vh; overflow-y: auto; padding-right: 4px;
+  }
+  .cover-canvas-wrap { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
+  #coverCanvas { max-width: 100%; height: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #000; }
+  .cover-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cover-palette-item {
+    display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 6px;
+    background: #1c1d24; border: 1px solid #2a2b33; font-size: 12px;
+  }
+  .cover-palette-item img { width: 22px; height: 22px; object-fit: cover; border-radius: 4px; background: #2a2b33; }
+  .cover-palette-item button { padding: 3px 8px; font-size: 11px; }
+  .cover-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9a9ba5; margin: 2px 0; }
+  .cover-layer-list { display: flex; flex-direction: column; gap: 6px; }
+  .cover-layer {
+    background: #1c1d24; border: 1px solid #2a2b33; border-radius: 6px; padding: 6px 8px; cursor: grab;
+  }
+  .cover-layer.dragging { opacity: .4; }
+  .cover-layer-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .cover-layer-thumb { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex: none; background: #2a2b33; }
+  .cover-layer-title { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cover-layer-remove { background: none; border: none; color: #6f7080; cursor: pointer; font-size: 14px; flex: none; padding: 0 2px; }
+  .cover-layer-remove:hover { color: #ff8080; }
+  .cover-layer-sliders { display: flex; flex-direction: column; gap: 2px; }
+  .cover-layer-sliders label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #9a9ba5; }
+  .cover-layer-sliders input[type=range] { flex: 1; height: 14px; }
+  .cover-global-adjust { display: flex; flex-direction: column; gap: 4px; }
+  .cover-global-adjust label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .cover-global-adjust input[type=range] { flex: 1; }
+  .cover-global-adjust span { width: 28px; text-align: right; font-size: 11px; color: #9a9ba5; }
 </style>
 </head>
 <body>
@@ -256,6 +292,7 @@
     <button class="tab-btn" data-tab="arrange">Download &amp; Arrange<span id="arrangeCount" class="tab-badge" hidden></span></button>
     <button class="tab-btn" data-tab="publish">Publish &amp; Edit</button>
     <button class="tab-btn" data-tab="mix">Mix</button>
+    <button class="tab-btn" data-tab="covers">Covers</button>
   </nav>
 </header>
 <div id="errorsBox"></div>
@@ -341,6 +378,34 @@
       <div id="mixRuler" class="mix-ruler"></div>
       <div id="mixTimeline" class="mix-timeline">
         <div id="mixPlayhead" class="mix-playhead" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-panel tab-panel-wide" id="panel-covers" hidden>
+    <h2>Cover Generator — drag layers to reorder, luma key masks each by its own brightness</h2>
+    <div class="cover-layout">
+      <div class="cover-sidebar">
+        <div id="coverPalette" class="cover-palette"></div>
+        <div class="actions">
+          <button id="coverAddAllBtn">Add all covers</button>
+        </div>
+        <h3 class="cover-section-title">Layers (top = front)</h3>
+        <div id="coverLayerList" class="cover-layer-list"></div>
+        <h3 class="cover-section-title">Adjust (whole image)</h3>
+        <div class="cover-global-adjust">
+          <label>Contrast <input type="range" id="coverContrast" min="-100" max="100" value="0"><span id="coverContrastVal">0</span></label>
+          <label>Lightness <input type="range" id="coverBrightness" min="-100" max="100" value="0"><span id="coverBrightnessVal">0</span></label>
+          <label>Saturation <input type="range" id="coverSaturation" min="-100" max="100" value="0"><span id="coverSaturationVal">0</span></label>
+        </div>
+        <div class="actions">
+          <button id="coverSaveBtn">Save</button>
+          <button id="coverExportBtn" class="primary">Export PNG</button>
+        </div>
+        <span id="coverStatus" class="status"></span>
+      </div>
+      <div class="cover-canvas-wrap">
+        <canvas id="coverCanvas"></canvas>
       </div>
     </div>
   </section>
@@ -769,6 +834,7 @@ function renderSelected() {
     });
   });
   renderMixPalette();
+  renderCoverPalette();
 }
 
 // Only a compact status badge lives inline in the row now — once a file is
@@ -1466,6 +1532,293 @@ function audioBufferToWav(buffer) {
   return new Blob([arrBuf], { type: 'audio/wav' });
 }
 
+// ---------- Covers tab: a small Photoshop-style layer stack ---------------
+// One layer per track cover, drag to reorder (top of the list = front-most,
+// drawn last), each with its own luma key ("Blend If" in Photoshop's Layer
+// Style dialog — a luminosity-based mask: pixels darker than a black-point
+// threshold become transparent, pixels lighter than a white-point threshold
+// become transparent too, and each threshold can be "split" into a gradual
+// falloff range instead of a hard cutoff, exactly like dragging half a
+// Blend-If slider handle in Photoshop). Global contrast/lightness/
+// saturation sit above the whole stack, applied last via the canvas
+// context's own `filter` (same syntax as CSS filter), so both the live
+// preview and the exported PNG reflect it identically — nothing here is a
+// CSS-only effect that would vanish on export.
+let coverLayers = []; // { id, key, title, src, blackPoint, blackRange, whitePoint, whiteRange }
+let coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
+const coverImageCache = new Map(); // src -> HTMLImageElement
+const COVER_CANVAS_SIZE = 1200;
+
+// Mirrors modem_download.py's sanitize_filename() — a best-effort guess at
+// a track's cover filename for when _download.cover itself is missing (an
+// already-downloaded track re-scanned by an older show-builder before the
+// skip-path bug fix always reported cover:null even though the file was
+// sitting right there — see server.js's coverFallback for the server-side
+// half of this fix). Gracefully hidden (onerror) if the guess is wrong.
+function sanitizeForCoverGuess(name) {
+  return String(name).replace(/[:/\\<>"|?*]/g, '_').trim();
+}
+
+function getCoverCandidates() {
+  const candidates = [];
+  selected.forEach((it) => {
+    if (!it._download || !it._download.files || !it._download.files.length) return;
+    const coverPath = it._download.cover || ('downloads/_covers/' + sanitizeForCoverGuess(it.title) + '_cover.jpg');
+    candidates.push({ key: it.key, title: it.title, src: downloadedFileUrl(coverPath) });
+  });
+  return candidates;
+}
+
+function getCoverImage(src) {
+  if (coverImageCache.has(src)) return coverImageCache.get(src);
+  const promise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('image failed to load: ' + src));
+    img.src = src;
+  });
+  coverImageCache.set(src, promise);
+  return promise;
+}
+
+function renderCoverPalette() {
+  const box = el('coverPalette');
+  if (!box) return;
+  const candidates = getCoverCandidates();
+  if (!candidates.length) {
+    box.innerHTML = '<div class="empty">Download some tracks first (Download &amp; Arrange tab) — their covers show up here.</div>';
+    return;
+  }
+  box.innerHTML = candidates.map((c) => `
+    <div class="cover-palette-item">
+      <img src="${escAttr(c.src)}" loading="lazy" onerror="this.style.visibility='hidden'">
+      <span>${esc(c.title)}</span>
+      <button data-src="${escAttr(c.src)}" data-title="${escAttr(c.title)}" data-key="${escAttr(c.key)}">+ add</button>
+    </div>`).join('');
+  box.querySelectorAll('button[data-src]').forEach((b) => {
+    b.addEventListener('click', () => addCoverLayer({ src: b.dataset.src, title: b.dataset.title, key: b.dataset.key }));
+  });
+}
+
+async function addCoverLayer(cand) {
+  el('coverStatus').textContent = 'loading…';
+  try {
+    await getCoverImage(cand.src);
+    // New layers go to the FRONT (index 0), matching how Photoshop adds a
+    // new layer above whatever's currently selected — the most recently
+    // added cover ends up on top, visible, rather than buried at the back.
+    coverLayers.unshift({
+      id: cand.key + ':' + Date.now(),
+      key: cand.key, title: cand.title, src: cand.src,
+      blackPoint: 0, blackRange: 0, whitePoint: 255, whiteRange: 0,
+    });
+    el('coverStatus').textContent = '';
+    renderCoverLayerList();
+    scheduleCoverRender();
+    debouncedSaveDraft();
+  } catch (e) {
+    el('coverStatus').textContent = 'failed to load: ' + (e.message || e);
+  }
+}
+
+async function addAllCovers() {
+  const existingKeys = new Set(coverLayers.map((l) => l.key));
+  const missing = getCoverCandidates().filter((c) => !existingKeys.has(c.key));
+  for (const c of missing) await addCoverLayer(c);
+}
+
+let coverAutoFillDone = false;
+async function ensureCoverAutoFilled() {
+  if (coverAutoFillDone) return;
+  coverAutoFillDone = true;
+  if (coverLayers.length) return;
+  await addAllCovers();
+}
+
+function renderCoverLayerList() {
+  const box = el('coverLayerList');
+  if (!box) return;
+  if (!coverLayers.length) {
+    box.innerHTML = '<div class="empty">Add a cover above to start the stack.</div>';
+    return;
+  }
+  box.innerHTML = coverLayers.map((l) => `
+    <div class="cover-layer" data-id="${escAttr(l.id)}" draggable="true">
+      <div class="cover-layer-head">
+        <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
+        <span class="cover-layer-title">${esc(l.title)}</span>
+        <button class="cover-layer-remove" data-id="${escAttr(l.id)}" title="remove">×</button>
+      </div>
+      <div class="cover-layer-sliders">
+        <label>Black <input type="range" min="0" max="255" value="${l.blackPoint}" data-id="${escAttr(l.id)}" data-field="blackPoint"></label>
+        <label>Black feather <input type="range" min="0" max="255" value="${l.blackRange}" data-id="${escAttr(l.id)}" data-field="blackRange"></label>
+        <label>White <input type="range" min="0" max="255" value="${l.whitePoint}" data-id="${escAttr(l.id)}" data-field="whitePoint"></label>
+        <label>White feather <input type="range" min="0" max="255" value="${l.whiteRange}" data-id="${escAttr(l.id)}" data-field="whiteRange"></label>
+      </div>
+    </div>`).join('');
+
+  box.querySelectorAll('.cover-layer-remove').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      coverLayers = coverLayers.filter((l) => l.id !== b.dataset.id);
+      renderCoverLayerList();
+      scheduleCoverRender();
+      debouncedSaveDraft();
+    });
+  });
+  box.querySelectorAll('.cover-layer-sliders input[type=range]').forEach((input) => {
+    input.addEventListener('input', () => {
+      const layer = coverLayers.find((l) => l.id === input.dataset.id);
+      if (!layer) return;
+      layer[input.dataset.field] = Number(input.value);
+      scheduleCoverRender();
+    });
+    input.addEventListener('change', debouncedSaveDraft);
+  });
+  wireCoverLayerDrag();
+}
+
+// Same live-FLIP reorder feel as "Your show"/mix clips, kept as its own
+// small implementation rather than generalizing wireDragAndDrop() (which is
+// tightly bound to #selected's specific markup) for a single extra list.
+function wireCoverLayerDrag() {
+  const box = el('coverLayerList');
+  let draggingEl = null;
+
+  box.querySelectorAll('.cover-layer').forEach((row) => {
+    row.addEventListener('dragstart', () => {
+      draggingEl = row;
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      draggingEl = null;
+      const ids = [...box.querySelectorAll('.cover-layer')].map((n) => n.dataset.id);
+      const byId = new Map(coverLayers.map((l) => [l.id, l]));
+      coverLayers = ids.map((id) => byId.get(id)).filter(Boolean);
+      scheduleCoverRender();
+      debouncedSaveDraft();
+    });
+  });
+  box.ondrop = (e) => e.preventDefault();
+  box.ondragover = (e) => {
+    e.preventDefault();
+    if (!draggingEl) return;
+    const after = [...box.querySelectorAll('.cover-layer')].find((n) => {
+      if (n === draggingEl) return false;
+      const r = n.getBoundingClientRect();
+      return e.clientY < r.top + r.height / 2;
+    });
+    if (after) box.insertBefore(draggingEl, after);
+    else box.appendChild(draggingEl);
+  };
+}
+
+// object-fit: cover — scale to fill w×h, cropping the overflow, so every
+// layer (regardless of its own aspect ratio) fills the shared canvas the
+// same way a stack of same-size Photoshop layers would.
+function drawImageCover(ctx, img, w, h) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale, sh = h / scale;
+  const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+}
+
+// The actual Blend-If math: luminosity below blackPoint -> fully
+// transparent; between blackPoint and blackPoint+blackRange -> ramps from
+// transparent to opaque (the "gradual" half of a split slider handle);
+// mirrored on the white end. blackRange/whiteRange of 0 means a hard
+// cutoff, matching an UN-split Photoshop slider handle.
+function applyLumaKey(imageData, layer) {
+  const d = imageData.data;
+  const bp = layer.blackPoint, br = layer.blackRange;
+  const wp = layer.whitePoint, wr = layer.whiteRange;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    let mul = 1;
+    if (lum < bp) mul = 0;
+    else if (br > 0 && lum < bp + br) mul = (lum - bp) / br;
+    if (lum > wp) mul = Math.min(mul, 0);
+    else if (wr > 0 && lum > wp - wr) mul = Math.min(mul, (wp - lum) / wr);
+    if (mul < 1) d[i + 3] = Math.round(d[i + 3] * Math.max(0, mul));
+  }
+}
+
+function buildCoverFilterCss() {
+  const c = 100 + coverAdjust.contrast;
+  const b = 100 + coverAdjust.brightness;
+  const s = 100 + coverAdjust.saturation;
+  return `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
+}
+
+let coverRenderQueued = false;
+function scheduleCoverRender() {
+  if (coverRenderQueued) return;
+  coverRenderQueued = true;
+  requestAnimationFrame(() => { coverRenderQueued = false; renderCoverCanvas(); });
+}
+
+async function renderCoverCanvas() {
+  const canvas = el('coverCanvas');
+  if (!canvas) return;
+  canvas.width = COVER_CANVAS_SIZE;
+  canvas.height = COVER_CANVAS_SIZE;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, COVER_CANVAS_SIZE, COVER_CANVAS_SIZE);
+  if (!coverLayers.length) return;
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = COVER_CANVAS_SIZE;
+  offscreen.height = COVER_CANVAS_SIZE;
+  const octx = offscreen.getContext('2d');
+
+  // Draw bottom-to-top (list index 0 = front, so walk the array backwards).
+  for (let i = coverLayers.length - 1; i >= 0; i--) {
+    const layer = coverLayers[i];
+    let img;
+    try { img = await getCoverImage(layer.src); } catch (e) { continue; }
+    const tmp = document.createElement('canvas');
+    tmp.width = COVER_CANVAS_SIZE;
+    tmp.height = COVER_CANVAS_SIZE;
+    const tctx = tmp.getContext('2d');
+    drawImageCover(tctx, img, COVER_CANVAS_SIZE, COVER_CANVAS_SIZE);
+    if (layer.blackPoint > 0 || layer.whitePoint < 255) {
+      const imageData = tctx.getImageData(0, 0, COVER_CANVAS_SIZE, COVER_CANVAS_SIZE);
+      applyLumaKey(imageData, layer);
+      tctx.putImageData(imageData, 0, 0);
+    }
+    octx.drawImage(tmp, 0, 0);
+  }
+
+  ctx.filter = buildCoverFilterCss();
+  ctx.drawImage(offscreen, 0, 0);
+  ctx.filter = 'none';
+}
+
+async function exportCoverPng() {
+  if (!coverLayers.length) return;
+  el('coverExportBtn').disabled = true;
+  el('coverStatus').textContent = 'rendering…';
+  try {
+    await renderCoverCanvas();
+    const blob = await new Promise((resolve) => el('coverCanvas').toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('canvas produced no image data');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `modem-cover-${el('showNumber').value.trim() || Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    el('coverStatus').textContent = 'exported ✓';
+  } catch (e) {
+    el('coverStatus').textContent = 'export failed: ' + (e.message || e);
+  } finally {
+    el('coverExportBtn').disabled = false;
+  }
+}
+
 // Trello/Notion-style live reorder: the dragged row's actual DOM node moves
 // between siblings as you drag over them (not just on drop), and every row
 // whose position shifts as a result animates into place via FLIP — so it's
@@ -1608,7 +1961,10 @@ async function saveDraft() {
     // the plain descriptors (position/fades/etc.) need to persist.
     await fetch('/draft', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ selected, mixClips, generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null }),
+      body: JSON.stringify({
+        selected, mixClips, coverLayers, coverAdjust,
+        generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null,
+      }),
     });
   } catch (e) { /* best-effort */ }
 }
@@ -1623,6 +1979,8 @@ async function loadDraft() {
     const j = await (await fetch('/draft')).json();
     selected = j.selected || [];
     mixClips = j.mixClips || [];
+    coverLayers = j.coverLayers || [];
+    coverAdjust = j.coverAdjust || { contrast: 0, brightness: 0, saturation: 0 };
     if (j.generatedHtml) { el('outputBox').style.display = ''; el('outputText').value = j.generatedHtml; }
     if (j.showNumber) el('showNumber').value = j.showNumber;
     else {
@@ -1641,9 +1999,18 @@ async function loadDraft() {
     // preload them now and redraw once ready, so restored clips get their
     // waveform without needing Play clicked first.
     if (mixClips.length) preloadMixBuffers();
+    el('coverContrast').value = coverAdjust.contrast;
+    el('coverBrightness').value = coverAdjust.brightness;
+    el('coverSaturation').value = coverAdjust.saturation;
+    el('coverContrastVal').textContent = coverAdjust.contrast;
+    el('coverBrightnessVal').textContent = coverAdjust.brightness;
+    el('coverSaturationVal').textContent = coverAdjust.saturation;
+    renderCoverLayerList();
+    if (coverLayers.length) scheduleCoverRender();
   } catch (e) { /* first run, no draft yet */ }
   draftLoaded = true;
   if (!el('panel-mix').hidden) ensureMixAutoFilled();
+  if (!el('panel-covers').hidden) ensureCoverAutoFilled();
 }
 
 async function preloadMixBuffers() {
@@ -1914,11 +2281,12 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish', 'mix'];
-// Guards ensureMixAutoFilled() from running before loadDraft() has actually
-// populated `selected`/`mixClips` — restoreTab() below can switch straight
-// to "mix" on page load (a remembered tab), well before that async load
-// resolves; loadDraft() re-checks and fires the auto-fill itself once ready.
+const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers'];
+// Guards ensureMixAutoFilled()/ensureCoverAutoFilled() from running before
+// loadDraft() has actually populated `selected`/`mixClips`/`coverLayers` —
+// restoreTab() below can switch straight to "mix"/"covers" on page load (a
+// remembered tab), well before that async load resolves; loadDraft()
+// re-checks and fires the auto-fill itself once ready.
 let draftLoaded = false;
 function switchTab(tab) {
   if (!TABS.includes(tab)) tab = 'scan';
@@ -1928,6 +2296,7 @@ function switchTab(tab) {
   });
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
   if (tab === 'mix' && draftLoaded) ensureMixAutoFilled();
+  if (tab === 'covers' && draftLoaded) ensureCoverAutoFilled();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -1981,6 +2350,17 @@ el('mixAddAllBtn').addEventListener('click', addAllToMix);
 el('mixExportBtn').addEventListener('click', exportMix);
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
+el('coverAddAllBtn').addEventListener('click', addAllCovers);
+el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });
+el('coverExportBtn').addEventListener('click', exportCoverPng);
+[['coverContrast', 'contrast'], ['coverBrightness', 'brightness'], ['coverSaturation', 'saturation']].forEach(([id, field]) => {
+  el(id).addEventListener('input', () => {
+    coverAdjust[field] = Number(el(id).value);
+    el(id + 'Val').textContent = coverAdjust[field];
+    scheduleCoverRender();
+  });
+  el(id).addEventListener('change', debouncedSaveDraft);
+});
 // Click the ruler to move the playhead — getBoundingClientRect() already
 // accounts for the timeline-wrap's horizontal scroll (it returns the
 // element's position relative to the viewport, not its unscrolled content

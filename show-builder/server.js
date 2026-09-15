@@ -175,6 +175,34 @@ app.get('/download-status', (req, res) => {
   });
 });
 
+// modem_download.py's sanitize_filename(), ported — must match exactly so
+// the fallback below re-derives the same _covers filename it would have
+// written.
+function sanitizeForCoverMatch(name) {
+  return String(name).replace(/[:/\\<>"|?*]/g, '_').trim();
+}
+
+// A record whose cover is null could just genuinely have none — OR could be
+// an already-downloaded track re-scanned before this fix existed (older
+// runs of modem_download.py's skip-path always wrote null, even when the
+// cover file was sitting right there in _covers/ from the original
+// download). Re-derive the expected filename the same way
+// embed_cover_single()/copy_album_cover_to_global() name it, and use it if
+// it actually exists on disk — self-heals on the next scan/download poll,
+// no re-download needed.
+function coverFallback(rec) {
+  if (rec.cover) return rec.cover;
+  let base;
+  if (rec.kind === 'playlist' && rec.files && rec.files[0]) {
+    base = path.basename(path.dirname(rec.files[0]));
+  } else if (rec.title) {
+    base = sanitizeForCoverMatch(rec.title);
+  }
+  if (!base) return null;
+  const relPath = path.join('downloads', '_covers', `${base}_cover.jpg`);
+  return fs.existsSync(path.join(__dirname, relPath)) ? relPath : null;
+}
+
 // Read data/download-manifest.jsonl and return the latest record per URL
 // (last line wins, so re-running a download overwrites the earlier attempt).
 function matchManifest(urls) {
@@ -189,7 +217,11 @@ function matchManifest(urls) {
       /* skip malformed line */
     }
   }
-  return urls.map((u) => byUrl.get(u) || { url: u, files: [] });
+  return urls.map((u) => {
+    const rec = byUrl.get(u) || { url: u, files: [] };
+    rec.cover = coverFallback(rec);
+    return rec;
+  });
 }
 
 // ---------- /preview ---------------------------------------------------------

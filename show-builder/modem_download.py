@@ -336,11 +336,19 @@ def download_single(url, info):
 
     if already_downloaded_single(info):
         print(f"Single track '{info.get('title')}' already downloaded; skipping.")
+        # The cover was already copied to _covers on the ORIGINAL download —
+        # re-derive its expected path (same naming as embed_cover_single)
+        # instead of reporting None, or every re-scan of an already-
+        # downloaded track looks cover-less to anything reading the manifest.
+        covers_dir = os.path.join("downloads", "_covers")
+        cover_name = os.path.splitext(os.path.basename(file_path))[0]
+        expected_cover = os.path.join(covers_dir, f"{sanitize_filename(cover_name)}_cover.jpg")
         append_manifest({
             "url": url, "kind": "single", "title": track_title,
             "artist": info.get("uploader") or info.get("artist"),
             "files": [file_path] if os.path.exists(file_path) else [],
-            "cover": None, "skipped": True,
+            "cover": expected_cover if os.path.exists(expected_cover) else None,
+            "skipped": True,
         })
         return
     outtmpl = single_outtmpl()
@@ -406,9 +414,14 @@ def download_playlist(url, info):
     if already_downloaded_playlist(album_dir):
         print(f"Album at '{album_dir}' already downloaded; skipping.")
         files = [os.path.join(album_dir, f) for f in os.listdir(album_dir) if f.lower().endswith(".mp3")] if os.path.exists(album_dir) else []
+        # Same fix as download_single's skip path — re-derive the cover's
+        # expected path (same naming as copy_album_cover_to_global) instead
+        # of always reporting None.
+        covers_dir = os.path.join("downloads", "_covers")
+        expected_cover = os.path.join(covers_dir, f"{os.path.basename(album_dir)}_cover.jpg")
         append_manifest({
             "url": url, "kind": "playlist", "title": album_title, "artist": album_artist,
-            "files": files, "cover": None, "skipped": True,
+            "files": files, "cover": expected_cover if os.path.exists(expected_cover) else None, "skipped": True,
         })
         return
     outtmpl = os.path.join(album_dir, "%(title)s.%(ext)s")
