@@ -487,6 +487,7 @@ function renderSubtracks(parent) {
           <input type="checkbox" ${isSelected(sub.key) ? 'checked' : ''} data-key="${escAttr(sub.key)}" class="selectbox">
           <div class="meta">
             <div class="title">${esc(sub.title)}</div>
+            ${sub.artist ? `<div class="artist">${esc(sub.artist)}</div>` : ''}
             ${ageFlagNote(sub)}
             ${duplicateNote(sub)}
             ${embedFlagNote(sub)}

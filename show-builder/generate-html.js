@@ -21,22 +21,28 @@ function buildBandcampEmbed(item) {
 
 // SoundCloud's iframe is always fetched ready-made via oEmbed — same call
 // scripts/scrape-modem.js's resolveSoundcloud() already makes for full shows.
+//
+// Some uploaders restrict embedding to themselves (embeddable_by !== 'all'),
+// which SoundCloud enforces at the oEmbed API level with no workaround —
+// falls back to a plain link instead of failing the whole show, the same
+// fallback the live site's own curators already use when an embed isn't
+// available (confirmed against the archive: modem-245's "7FO", modem-242's
+// "lavi", 140 cases total — all a bare <p><a href="URL">URL</a></p>, no
+// iframe). `item.embeddable === false` (set at scan time — see
+// scan-soundcloud.js) skips the doomed oEmbed round-trip outright; the
+// catch below is defense-in-depth for anything that slips past that flag.
 function buildSoundcloudEmbed(item) {
+  const plainLink = () => `<a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a>`;
+  if (item.embeddable === false) return plainLink();
   const oembed = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(item.url)}`;
   const body = curlGet(oembed);
   let data;
   try {
     data = JSON.parse(body);
   } catch (e) {
-    // A blank/non-JSON body here is almost always SoundCloud's oEmbed
-    // endpoint returning an empty 403 — confirmed by checking the track's
-    // own `embeddable_by` field, which is "me" (owner-only) rather than
-    // "all" for a track whose uploader restricted embedding. There's no
-    // workaround: SoundCloud simply won't generate a public embed widget
-    // for it, so this can't be retried or cached around.
-    throw new Error(`SoundCloud won't embed "${item.title}" (${item.url}) — the uploader has restricted embedding to themselves only. Swap it for a different track, or link it manually instead of embedding.`);
+    return plainLink();
   }
-  if (!data || !data.html) throw new Error('SoundCloud oEmbed returned no html for ' + item.url);
+  if (!data || !data.html) return plainLink();
   return data.html;
 }
 

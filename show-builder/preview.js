@@ -94,8 +94,13 @@ function buildWarnings(record, items) {
     if (count > 1 && key) warnings.push(`Heading "${key}" appears ${count}× — only the first will get an artist tag.`);
   }
 
-  if (record.embeds.length !== items.length) {
-    warnings.push(`Expected ${items.length} embed(s) but the parser found ${record.embeds.length} — an embed may have failed to generate correctly.`);
+  // A SoundCloud track the uploader restricted to self-embedding falls back
+  // to a plain <a> link (see generate-html.js's buildSoundcloudEmbed) — the
+  // live parser's extractEmbeds() only counts <iframe> tags, so that's one
+  // fewer "embed" by design, not a failure. Don't count it toward expected.
+  const expectedEmbeds = items.filter((it) => it.embeddable !== false).length;
+  if (record.embeds.length !== expectedEmbeds) {
+    warnings.push(`Expected ${expectedEmbeds} embed(s) but the parser found ${record.embeds.length} — an embed may have failed to generate correctly.`);
   }
 
   return warnings;
