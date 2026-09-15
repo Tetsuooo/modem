@@ -275,9 +275,32 @@
   .cover-layer-title { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cover-layer-remove { background: none; border: none; color: #6f7080; cursor: pointer; font-size: 14px; flex: none; padding: 0 2px; }
   .cover-layer-remove:hover { color: #ff8080; }
-  .cover-layer-sliders { display: flex; flex-direction: column; gap: 2px; }
-  .cover-layer-sliders label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #9a9ba5; }
-  .cover-layer-sliders input[type=range] { flex: 1; height: 14px; }
+  /* ---- Luma key ("Blend If") bar: one gradient track, a black handle and a
+     white handle — double-click either to split it into a draggable
+     black/white pair (the feather width), same interaction as Photoshop's
+     own Blend If sliders. See wireLumaKeyBars() / positionLumaKeyBar(). ---- */
+  .cover-layer-lumakey { margin: 6px 2px 2px; }
+  .lumakey-bar { position: relative; height: 24px; touch-action: none; }
+  .lumakey-track {
+    position: absolute; left: 0; right: 0; top: 8px; height: 7px; border-radius: 3px;
+    background: linear-gradient(to right, #000, #fff); border: 1px solid #000;
+  }
+  .lumakey-bridge { position: absolute; top: 8px; height: 7px; background: rgba(255,193,7,.55); pointer-events: none; }
+  .lumakey-handle {
+    position: absolute; top: 15px; width: 0; height: 0; margin-left: -6px;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-bottom: 9px solid #000; cursor: ew-resize; touch-action: none;
+  }
+  .lumakey-handle.white { border-bottom-color: #fff; filter: drop-shadow(0 0 1px rgba(0,0,0,.8)); }
+  .lumakey-handle.black { filter: drop-shadow(0 0 1px rgba(255,255,255,.55)); }
+  .lumakey-handle.feather { margin-left: -4px; border-left-width: 4px; border-right-width: 4px; border-bottom-width: 7px; opacity: .8; }
+  .lumakey-handle[hidden] { display: none; }
+  .lumakey-value {
+    position: absolute; top: -13px; transform: translateX(-50%); font-size: 9px; line-height: 1.4;
+    color: #c7c8d1; background: #101117; border: 1px solid #2a2b33; border-radius: 3px;
+    padding: 0 3px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .1s;
+  }
+  .lumakey-value.show { opacity: 1; }
   .cover-global-adjust { display: flex; flex-direction: column; gap: 4px; }
   .cover-global-adjust label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
   .cover-global-adjust input[type=range] { flex: 1; }
@@ -1647,11 +1670,20 @@ function renderCoverLayerList() {
         <span class="cover-layer-title">${esc(l.title)}</span>
         <button class="cover-layer-remove" data-id="${escAttr(l.id)}" title="remove">×</button>
       </div>
-      <div class="cover-layer-sliders">
-        <label>Black <input type="range" min="0" max="255" value="${l.blackPoint}" data-id="${escAttr(l.id)}" data-field="blackPoint"></label>
-        <label>Black feather <input type="range" min="0" max="255" value="${l.blackRange}" data-id="${escAttr(l.id)}" data-field="blackRange"></label>
-        <label>White <input type="range" min="0" max="255" value="${l.whitePoint}" data-id="${escAttr(l.id)}" data-field="whitePoint"></label>
-        <label>White feather <input type="range" min="0" max="255" value="${l.whiteRange}" data-id="${escAttr(l.id)}" data-field="whiteRange"></label>
+      <div class="cover-layer-lumakey">
+        <div class="lumakey-bar" data-id="${escAttr(l.id)}" title="double-click a handle to feather it">
+          <div class="lumakey-track"></div>
+          <div class="lumakey-bridge black" data-role="bridge-black"></div>
+          <div class="lumakey-bridge white" data-role="bridge-white"></div>
+          <div class="lumakey-handle black point" data-role="blackPoint"></div>
+          <div class="lumakey-value" data-for="blackPoint"></div>
+          <div class="lumakey-handle black feather" data-role="blackFeather"></div>
+          <div class="lumakey-value" data-for="blackFeather"></div>
+          <div class="lumakey-handle white point" data-role="whitePoint"></div>
+          <div class="lumakey-value" data-for="whitePoint"></div>
+          <div class="lumakey-handle white feather" data-role="whiteFeather"></div>
+          <div class="lumakey-value" data-for="whiteFeather"></div>
+        </div>
       </div>
     </div>`).join('');
 
@@ -1664,16 +1696,131 @@ function renderCoverLayerList() {
       debouncedSaveDraft();
     });
   });
-  box.querySelectorAll('.cover-layer-sliders input[type=range]').forEach((input) => {
-    input.addEventListener('input', () => {
-      const layer = coverLayers.find((l) => l.id === input.dataset.id);
-      if (!layer) return;
-      layer[input.dataset.field] = Number(input.value);
-      scheduleCoverRender();
-    });
-    input.addEventListener('change', debouncedSaveDraft);
-  });
+  wireLumaKeyBars();
   wireCoverLayerDrag();
+}
+
+// ---- Luma key ("Blend If") bar -------------------------------------------
+// blackRange/whiteRange of 0 = unsplit (a single hard-cutoff handle); >0 =
+// split into two independently-draggable handles (point + feather), exactly
+// mirroring applyLumaKey()'s own math — no new data fields needed, this is
+// purely a different way to edit the same blackPoint/blackRange/whitePoint/
+// whiteRange layer fields the old 4-slider UI wrote to.
+const LUMA_DEFAULT_FEATHER = 24;
+
+function pctFor(v) { return Math.max(0, Math.min(100, (v / 255) * 100)); }
+
+function positionLumaKeyBar(bar, layer) {
+  const bp = layer.blackPoint, br = layer.blackRange;
+  const wp = layer.whitePoint, wr = layer.whiteRange;
+  const blackFeatherPos = bp + br;
+  const whiteFeatherPos = wp - wr;
+  const place = (role, val, visible) => {
+    const h = bar.querySelector(`.lumakey-handle[data-role="${role}"]`);
+    const label = bar.querySelector(`.lumakey-value[data-for="${role}"]`);
+    if (h) { h.hidden = !visible; if (visible) h.style.left = pctFor(val) + '%'; }
+    if (label) { label.style.left = pctFor(val) + '%'; label.textContent = Math.round(val); }
+  };
+  place('blackPoint', bp, true);
+  place('blackFeather', blackFeatherPos, br > 0);
+  place('whitePoint', wp, true);
+  place('whiteFeather', whiteFeatherPos, wr > 0);
+  const bridgeB = bar.querySelector('.lumakey-bridge[data-role="bridge-black"]');
+  if (bridgeB) {
+    bridgeB.hidden = br <= 0;
+    bridgeB.style.left = pctFor(bp) + '%';
+    bridgeB.style.width = Math.max(0, pctFor(blackFeatherPos) - pctFor(bp)) + '%';
+  }
+  const bridgeW = bar.querySelector('.lumakey-bridge[data-role="bridge-white"]');
+  if (bridgeW) {
+    bridgeW.hidden = wr <= 0;
+    bridgeW.style.left = pctFor(whiteFeatherPos) + '%';
+    bridgeW.style.width = Math.max(0, pctFor(wp) - pctFor(whiteFeatherPos)) + '%';
+  }
+}
+
+// Dragging the POINT handle of a split pair keeps the FEATHER handle's
+// absolute position fixed (so the point can't cross past it); dragging the
+// FEATHER handle keeps the point fixed instead — each half moves
+// independently, same as Photoshop's split Blend If triangles.
+function applyLumaHandleValue(layer, role, v) {
+  if (role === 'blackPoint') {
+    if (layer.blackRange > 0) {
+      const featherAbs = layer.blackPoint + layer.blackRange;
+      const bp = Math.min(v, featherAbs);
+      layer.blackRange = featherAbs - bp;
+      layer.blackPoint = bp;
+    } else {
+      layer.blackPoint = v;
+    }
+  } else if (role === 'blackFeather') {
+    const featherAbs = Math.max(v, layer.blackPoint);
+    layer.blackRange = featherAbs - layer.blackPoint;
+  } else if (role === 'whitePoint') {
+    if (layer.whiteRange > 0) {
+      const featherAbs = layer.whitePoint - layer.whiteRange;
+      const wp = Math.max(v, featherAbs);
+      layer.whiteRange = wp - featherAbs;
+      layer.whitePoint = wp;
+    } else {
+      layer.whitePoint = v;
+    }
+  } else if (role === 'whiteFeather') {
+    const featherAbs = Math.min(v, layer.whitePoint);
+    layer.whiteRange = layer.whitePoint - featherAbs;
+  }
+}
+
+function toggleLumaFeather(layer, role) {
+  if (role === 'blackPoint' || role === 'blackFeather') {
+    layer.blackRange = layer.blackRange > 0 ? 0 : Math.min(LUMA_DEFAULT_FEATHER, 255 - layer.blackPoint);
+  } else if (role === 'whitePoint' || role === 'whiteFeather') {
+    layer.whiteRange = layer.whiteRange > 0 ? 0 : Math.min(LUMA_DEFAULT_FEATHER, layer.whitePoint);
+  }
+}
+
+function wireLumaKeyBars() {
+  const box = el('coverLayerList');
+  box.querySelectorAll('.lumakey-bar').forEach((bar) => {
+    const layer = coverLayers.find((l) => l.id === bar.dataset.id);
+    if (!layer) return;
+    positionLumaKeyBar(bar, layer);
+    bar.querySelectorAll('.lumakey-handle').forEach((handle) => {
+      const role = handle.dataset.role;
+      handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const label = bar.querySelector(`.lumakey-value[data-for="${role}"]`);
+        if (label) label.classList.add('show');
+        const track = bar.querySelector('.lumakey-track');
+        const applyFromClientX = (clientX) => {
+          const r = track.getBoundingClientRect();
+          const v = Math.max(0, Math.min(255, Math.round(((clientX - r.left) / r.width) * 255)));
+          applyLumaHandleValue(layer, role, v);
+          positionLumaKeyBar(bar, layer);
+          scheduleCoverRender();
+        };
+        applyFromClientX(e.clientX);
+        const onMove = (ev) => applyFromClientX(ev.clientX);
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          if (label) label.classList.remove('show');
+          debouncedSaveDraft();
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+      handle.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleLumaFeather(layer, role);
+        positionLumaKeyBar(bar, layer);
+        scheduleCoverRender();
+        debouncedSaveDraft();
+      });
+    });
+  });
 }
 
 // Same live-FLIP reorder feel as "Your show"/mix clips, kept as its own
