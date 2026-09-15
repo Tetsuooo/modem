@@ -536,7 +536,7 @@ function extractEmbeds(body) {
 }
 
 // ---------- main ---------------------------------------------------------
-(async () => {
+async function main() {
   // --reparse: re-parse every page already in the archive straight from cache
   // (raw, un-edited records) — used by the admin save so tag merges/un-merges are
   // always derived from the source rather than accumulating on mutated data.
@@ -660,4 +660,16 @@ function extractEmbeds(body) {
   );
 
   await ensureCoverArt(merged);
-})();
+}
+
+// Runs immediately when invoked as `node scripts/scrape-modem.js ...` (CLI/CI
+// usage, unchanged). Guarded so other tools (show-builder's preview) can
+// require() this file for its parser functions without triggering a scrape.
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  parsePage, cleanBody, extractEmbeds, annotateAndSegment, attachSegments,
+  splitStrayEmbeds, fieldByClass, stripTags, decodeEntities, firstMatch, abs,
+};

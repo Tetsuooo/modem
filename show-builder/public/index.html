@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>modem show builder</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #14151a; color: #e8e8ea;
+    font: 14px/1.45 -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  header {
+    padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid #2a2b33; position: sticky; top: 0; background: #14151a; z-index: 5;
+  }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+  button {
+    background: #2a2b33; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px;
+    padding: 7px 14px; font-size: 13px; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #34353f; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.primary { background: #3a6ff0; border-color: #3a6ff0; }
+  button.primary:hover:not(:disabled) { background: #4a7dff; }
+  .status { font-size: 12px; color: #9a9ba5; }
+  .errors { padding: 8px 20px; background: #3a1f1f; color: #ff9b9b; font-size: 12px; }
+  main { display: flex; gap: 0; align-items: stretch; }
+  .col { flex: 1 1 0; min-width: 0; padding: 16px 20px; overflow-x: hidden; }
+  .col h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
+  .divider {
+    width: 7px; align-self: stretch; background: #2a2b33; cursor: col-resize; flex: none;
+    position: relative;
+  }
+  .divider::after {
+    content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 1px; background: #3a3b45;
+  }
+  .divider:hover, .divider.dragging { background: #3a6ff0; }
+  .group-label { font-size: 11px; text-transform: uppercase; color: #6f7080; margin: 14px 0 6px; letter-spacing: .05em; }
+  .row {
+    display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px;
+  }
+  .row:hover { background: #1c1d24; }
+  .row img { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; background: #2a2b33; flex: none; }
+  .row .meta { min-width: 0; flex: 1; }
+  .row .title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .artist { font-size: 12px; color: #9a9ba5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .date { font-size: 11px; color: #6f7080; flex: none; }
+  .row .preorder { font-size: 11px; color: #ffb066; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .playlist-note { font-size: 11px; color: #66b0ff; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .age-flag { font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .age-flag.old { color: #ffb066; }
+  .row .age-flag.lastyear { color: #ff9640; }
+  .row .age-flag.ancient { color: #ff6666; }
+  .row .dup-flag { font-size: 11px; color: #d08fff; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .preview-art { cursor: pointer; }
+  .preview-art:hover { outline: 2px solid #3a6ff0; outline-offset: -2px; }
+  .expand-btn, .expand-spacer { flex: none; width: 18px; }
+  .expand-btn { background: none; border: none; color: #9a9ba5; padding: 0; font-size: 12px; cursor: pointer; }
+  .expand-btn:hover:not(:disabled) { color: #e8e8ea; background: none; }
+  .subtracks { padding-left: 44px; border-left: 1px solid #2a2b33; margin: 2px 0 4px 18px; }
+  .subtrack-row { padding: 3px 8px; }
+  .subtrack-row .title { font-size: 12px; color: #c8c8ce; }
+  .player-row { padding: 2px 8px 10px 8px; }
+  .multi-files { padding: 4px 8px 4px 8px; }
+  .file-row { padding: 3px 0 8px; }
+  .file-name { font-size: 12px; color: #9a9ba5; display: block; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Custom track player: the whole rectangle is the play/pause hit target,
+     the scrub bar is a strip pinned to its bottom edge (kept clear via
+     padding-bottom on the flex content, not overlapping it) — thickens
+     further on hover so it's an easy target to grab. */
+  .track-player {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    height: 46px; padding: 0 12px 10px; border-radius: 6px; background: #1c1d24;
+    border: 1px solid #2a2b33; cursor: pointer; overflow: hidden; user-select: none;
+  }
+  .track-player:hover { background: #22232b; }
+  .track-player audio { display: none; }
+  .track-player-icon { font-size: 14px; flex: none; width: 16px; text-align: center; }
+  .track-player-time { font-size: 11px; color: #9a9ba5; margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
+  .scrub-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #2a2b33;
+    cursor: pointer; transition: height 120ms ease;
+  }
+  .track-player:hover .scrub-bar { height: 11px; }
+  .scrub-fill { height: 100%; width: 0%; background: #3a6ff0; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+  .toolbar button { padding: 4px 10px; font-size: 12px; }
+  .preview-btn { flex: none; padding: 4px 8px; font-size: 12px; }
+  .preview-frame { padding: 6px 8px 10px 54px; }
+  .preview-frame iframe { border: 0; width: 100%; max-width: 400px; display: block; }
+  .tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; flex: none; }
+  .tag.sc { background: #3a2a1a; color: #ffb066; }
+  .tag.bcw { background: #1a2a3a; color: #66b0ff; }
+  .tag.bcl { background: #1a3a2a; color: #66ffb0; }
+  #selected .row { cursor: grab; border: 1px solid #2a2b33; margin-bottom: 6px; background: #1a1b21; }
+  #selected .row.dragging { opacity: .35; box-shadow: 0 6px 16px rgba(0,0,0,.5); transform: scale(1.015); border-color: #3a6ff0; }
+  .selected-item { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+  .show-num-label { font-size: 12px; color: #9a9ba5; display: flex; align-items: center; gap: 6px; }
+  .show-num-label input {
+    background: #0e0f13; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 4px;
+    padding: 5px 6px; font-size: 12px; width: 56px;
+  }
+  .edit-row { display: flex; gap: 6px; margin-top: 3px; }
+  .edit-field {
+    background: #0e0f13; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 4px;
+    padding: 4px 6px; font-size: 12px; flex: 1; min-width: 0;
+  }
+  .edit-field:focus { border-color: #3a6ff0; outline: none; }
+  .heading-choice { font-size: 11px; color: #6f7080; margin-top: 3px; display: flex; gap: 10px; align-items: center; }
+  .heading-choice label { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; flex: none; }
+  .badge.ok { background: #1a3a2a; color: #7dffb0; }
+  .badge.err { background: #3a1a1a; color: #ff8080; }
+  .badge.pending { background: #2a2b33; color: #9a9ba5; }
+  .remove { background: none; border: none; color: #6f7080; font-size: 16px; padding: 0 4px; cursor: pointer; }
+  .remove:hover { color: #ff8080; }
+  textarea {
+    width: 100%; height: 260px; background: #0e0f13; color: #d8d8dc; border: 1px solid #2a2b33;
+    border-radius: 6px; padding: 10px; font: 12px/1.5 ui-monospace, monospace; resize: vertical;
+  }
+  .actions { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; align-items: center; }
+  #listOutputText { height: 140px; }
+  .empty { color: #6f7080; font-size: 12px; padding: 10px 8px; }
+  .log { font: 11px/1.5 ui-monospace, monospace; color: #6f7080; max-height: 90px; overflow-y: auto; white-space: pre-wrap; margin-top: 6px; }
+
+  button.danger { background: #4a1a1a; border-color: #6a2a2a; color: #ffb0b0; }
+  button.danger:hover:not(:disabled) { background: #5a2020; }
+  .diff-pre {
+    font: 11px/1.5 ui-monospace, monospace; color: #d8d8dc; background: #0e0f13;
+    border: 1px solid #2a2b33; border-radius: 6px; padding: 10px; max-height: 200px;
+    overflow: auto; white-space: pre-wrap; margin: 6px 0;
+  }
+  #publishBox { margin-top: 18px; padding-top: 14px; border-top: 1px solid #2a2b33; }
+  .warning-item { font-size: 12px; color: #ffb066; padding: 3px 0; }
+  .warning-clean { font-size: 12px; color: #7dffb0; padding: 3px 0; }
+
+  /* ---- ported preview render (mirrors src/archive.html's renderDetail()/
+     injectSegTags() — same CSS classes/markup shape, simplified: no track
+     index, no admin edits, no historical scrape-artifact fixups, since none
+     of that applies to a fresh not-yet-published draft). Light theme on
+     purpose — this is meant to look like the live page, not the tool UI. */
+  #previewPane {
+    background: #fff; color: #111; border-radius: 8px; padding: 18px 20px;
+    font: 1rem/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  #previewPane .modem-body p { margin: 0.4rem 0; }
+  #previewPane .modem-body .seg-marker { scroll-margin-top: 5rem; margin: 1.8rem 0 0.3rem; display: flex; align-items: center; flex-wrap: wrap; }
+  #previewPane .modem-body .seg-marker .seg-slashes { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; margin-right: 0.35rem; color: #111; }
+  #previewPane .modem-body .seg-marker .seg-tags { flex: 0 0 auto; white-space: nowrap; }
+  #previewPane .chip {
+    display: inline-block; font-size: 0.78rem; font-weight: bold; border: 1.5px solid #000;
+    border-radius: 999px; padding: 0.12rem 0.6rem; margin: 0 0 0.35rem 0.35rem;
+    background: rgba(255,255,255,0.96); color: #000;
+  }
+  #previewPane .chip.label-chip { background: rgba(224,224,255,0.96); }
+  #previewPane .modem-body iframe { max-width: 100%; border: 0; margin: 0.25rem 0 1rem; display: block; width: 100%; max-width: 560px; height: 120px; }
+  #previewPane .modem-body iframe[src*="bandcamp"] { height: 120px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>modem show builder</h1>
+  <button id="scanBtn" class="primary">Scan (last 14 days)</button>
+  <span id="statusText" class="status"></span>
+</header>
+<div id="errorsBox"></div>
+
+<main>
+  <div class="col" id="leftCol">
+    <h2>Scan results</h2>
+    <div class="toolbar">
+      <button id="selectAllBtn">Select all</button>
+      <button id="deselectAllBtn">Deselect all</button>
+    </div>
+    <div id="scanResults"><div class="empty">Click "Scan" to check SoundCloud reposts + Bandcamp wishlist/library.</div></div>
+  </div>
+  <div class="divider" id="dragDivider"></div>
+  <div class="col" id="rightCol">
+    <h2>Your show (drag to reorder)</h2>
+    <div id="selected"><div class="empty">Nothing selected yet.</div></div>
+    <div class="actions">
+      <button id="downloadBtn">Download selected</button>
+      <label class="show-num-label">Show # <input type="text" id="showNumber" placeholder="245" size="4"></label>
+      <button id="generateBtn" class="primary">Generate HTML</button>
+      <button id="generateListBtn">Generate artist list</button>
+      <button id="previewBtn">Preview</button>
+      <button id="openCoversBtn" title="downloads/_covers">Open covers folder</button>
+    </div>
+    <div id="downloadLog" class="log"></div>
+    <div id="outputBox" style="display:none">
+      <h2>Tracklist HTML — paste into radioštudent</h2>
+      <textarea id="outputText" readonly></textarea>
+      <div class="actions"><button id="copyBtn">Copy to clipboard</button></div>
+    </div>
+    <div id="listOutputBox" style="display:none">
+      <h2>Artist/label credits</h2>
+      <textarea id="listOutputText" readonly></textarea>
+      <div class="actions"><button id="copyListBtn">Copy to clipboard</button></div>
+    </div>
+    <div id="previewBox" style="display:none">
+      <h2>Preview — same parser the live site uses</h2>
+      <div id="previewWarnings"></div>
+      <div id="previewPane"></div>
+    </div>
+    <div id="publishBox">
+      <h2>Publish (after pasting into radioštudent)</h2>
+      <div class="actions">
+        <button id="checkLiveBtn">Check if live</button>
+        <span id="liveStatus" class="status"></span>
+      </div>
+      <div class="actions">
+        <button id="runPublishBtn" disabled>Run publish pipeline</button>
+      </div>
+      <div id="publishLog" class="log"></div>
+      <div id="publishDiffBox" style="display:none">
+        <div class="preorder" style="margin:6px 0">Review before pushing — this touches the live site:</div>
+        <pre id="publishDiff" class="diff-pre"></pre>
+        <div class="actions"><button id="confirmPushBtn" class="danger">Confirm &amp; push</button></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let scanResults = [];
+let selected = [];
+let itemRegistry = new Map(); // key -> item object, covers both top-level results and expanded sub-tracks
+let expandedOpen = new Set(); // keys of releases currently expanded into their track list
+
+const el = (id) => document.getElementById(id);
+const SOURCE_LABEL = { soundcloud: 'SoundCloud repost', 'bandcamp-wishlist': 'Bandcamp wishlist', 'bandcamp-library': 'Bandcamp library' };
+const SOURCE_TAG = { soundcloud: 'sc', 'bandcamp-wishlist': 'bcw', 'bandcamp-library': 'bcl' };
+
+function fmtDate(d) {
+  try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; }
+}
+
+function isSelected(key) { return selected.some((it) => it.key === key); }
+
+// label + headingSource are editable per track in "Your show" — real modem
+// headings are either the artist's or (for a label-curated/various-artists
+// post) the label's name, never both, so headingSource records that choice;
+// label starts blank since the scan sources only ever give us one name.
+function makeSelectedEntry(item) {
+  return Object.assign({ label: '', headingSource: 'artist' }, item);
+}
+
+function toggleSelect(item) {
+  const i = selected.findIndex((it) => it.key === item.key);
+  if (i === -1) selected.push(makeSelectedEntry(item));
+  else selected.splice(i, 1);
+  renderSelected();
+  renderScanResults();
+  saveDraft();
+}
+
+function preorderNote(it) {
+  if (!it.preorder) return '';
+  const rd = it.releaseDate ? fmtDate(it.releaseDate) : 'unknown date';
+  const counts = (it.tracksTotal != null) ? ` · ${it.tracksPublished} of ${it.tracksTotal} tracks published` : '';
+  return `<div class="preorder">⏳ releases ${esc(rd)}${counts}</div>`;
+}
+
+function playlistNote(it) {
+  if (!it.isPlaylist) return '';
+  const count = it.trackCount ? `${it.trackCount} tracks` : 'multiple tracks';
+  return `<div class="playlist-note">▤ playlist · ${esc(count)}</div>`;
+}
+
+// Flags anything whose actual release date (not repost/wishlist-add date —
+// see scan-soundcloud.js/scan-bandcamp.js's `releaseDate`) is more than 3
+// months old, so a stale reshare doesn't slip into a show unnoticed. Severity
+// escalates by calendar year: this year's old tracks get a mild note, last
+// year's a stronger one, anything before that the strongest.
+//
+// Playlists are skipped here on purpose: a SoundCloud playlist's own
+// releaseDate is when the PLAYLIST was assembled/created, not when the music
+// inside it was originally published — showing that as if it were the
+// track's age would be exactly the "checking the wrong date" bug this is
+// meant to avoid. Once a playlist is expanded, each individual sub-track
+// carries its own real releaseDate and gets flagged there instead.
+function releaseAgeInfo(it) {
+  if (it.isPlaylist) return null;
+  if (!it.releaseDate) return null;
+  const date = new Date(it.releaseDate);
+  if (isNaN(date.getTime())) return null;
+  const now = new Date();
+  const ageMonths = (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
+  if (ageMonths < 3) return null;
+  const yearDiff = now.getFullYear() - date.getFullYear();
+  const tier = yearDiff >= 2 ? 'ancient' : (yearDiff === 1 ? 'lastyear' : 'old');
+  const label = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  return { tier, label };
+}
+
+function ageFlagNote(it) {
+  const info = releaseAgeInfo(it);
+  if (!info) return '';
+  const icon = info.tier === 'ancient' ? '⛔' : info.tier === 'lastyear' ? '⚠' : '⏱';
+  const suffix = info.tier === 'lastyear' ? ' (last year)' : '';
+  return `<div class="age-flag ${info.tier}">${icon} released ${esc(info.label)}${suffix}</div>`;
+}
+
+// Flags anything already featured in a past modem show — matched server-side
+// (see duplicate-check.js) against scripts/build-track-index.js's flat track
+// index, so it reflects the real, already-published archive rather than just
+// this tool's own session history.
+function duplicateNote(it) {
+  const dup = it.previouslyPlayed;
+  if (!dup || !dup.shows || !dup.shows.length) return '';
+  const showsText = dup.shows.map((n) => '#' + n).join(', ');
+  const what = dup.matchType === 'album' ? 'a different track off this release' : 'this track';
+  return `<div class="dup-flag">♻ already played — ${esc(what)} in modem ${esc(showsText)}</div>`;
+}
+
+// Preview embeds are built client-side (no extra fetch needed): SoundCloud's
+// player widget resolves a permalink URL directly, and Bandcamp's
+// EmbeddedPlayer is fully determined by album/track id — same construction
+// generate-html.js uses for the final show, just bigger and with
+// tracklist=true so a whole release can be browsed, not just one track.
+function previewEmbedHtml(it) {
+  if (it.source === 'soundcloud') {
+    // SoundCloud's widget auto-detects a /sets/ (playlist/album) URL and
+    // renders a scrollable tracklist instead of a single player — it just
+    // needs enough height to actually show more than one row, and looks
+    // better without the big "visual" artwork banner eating that space.
+    const isPlaylist = it.isPlaylist;
+    const height = isPlaylist ? Math.min(80 + (it.trackCount || 5) * 32, 450) : 166;
+    const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(it.url)}&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=${isPlaylist ? 'false' : 'true'}`;
+    return `<iframe width="100%" height="${height}" scrolling="no" frameborder="no" allow="autoplay" src="${src}"></iframe>`;
+  }
+  const parts = ['https://bandcamp.com/EmbeddedPlayer/'];
+  if (it.albumId) parts.push(`album=${it.albumId}/`);
+  if (it.trackId) parts.push(`track=${it.trackId}/`);
+  parts.push('size=large/bgcol=333333/linkcol=0f91ff/tracklist=true/artwork=small/transparent=true/');
+  return `<iframe style="width:400px;height:${it.albumId ? 472 : 150}px" src="${parts.join('')}" seamless></iframe>`;
+}
+
+function togglePreview(key) {
+  const frame = document.querySelector(`.preview-frame[data-key="${cssEsc(key)}"]`);
+  if (!frame) return;
+  if (frame.hidden) {
+    const item = itemRegistry.get(key);
+    if (item) frame.innerHTML = previewEmbedHtml(item);
+    frame.hidden = false;
+  } else {
+    frame.hidden = true;
+    frame.innerHTML = ''; // drop the iframe so playback actually stops
+  }
+}
+
+function cssEsc(s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c); }
+
+// A release is expandable once we know (or can find out) its individual
+// tracks: Bandcamp albums already carry `tracks` from /scan; SoundCloud
+// playlists resolve theirs lazily, the first time they're expanded.
+function isExpandable(it) {
+  return it.isPlaylist || (it.albumId && (!it.tracks || it.tracks.length > 1));
+}
+
+async function toggleExpand(key) {
+  if (expandedOpen.has(key)) {
+    expandedOpen.delete(key);
+    renderScanResults();
+    return;
+  }
+  const parent = itemRegistry.get(key);
+  if (!parent) return;
+  const btn = document.querySelector(`.expand-btn[data-key="${cssEsc(key)}"]`);
+  if (!parent.tracks) {
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+      const r = await fetch('/release-tracks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: parent }) });
+      const j = await r.json();
+      parent.tracks = j.tracks || [];
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = '▸'; }
+      el('errorsBox').innerHTML = `<div class="errors">could not load tracks: ${esc(e.message || e)}</div>`;
+      return;
+    }
+  }
+  expandedOpen.add(key);
+  renderScanResults();
+}
+
+function subtrackItem(parent, t) {
+  const isBandcamp = parent.source !== 'soundcloud';
+  return {
+    source: parent.source,
+    key: (isBandcamp ? 'bc:' : 'sc:') + t.id,
+    title: t.title,
+    artist: t.artist || parent.artist,
+    url: t.url,
+    artwork: t.artwork || parent.artwork,
+    date: parent.date,
+    // SoundCloud sub-tracks carry their own real releaseDate (see
+    // resolveTracks in scan-soundcloud.js); Bandcamp album tracks don't get
+    // individual release dates from the API, so they fall back to the
+    // album's — still accurate, since Bandcamp album tracks share one release.
+    releaseDate: t.releaseDate || (isBandcamp ? parent.releaseDate : null) || null,
+    previouslyPlayed: t.previouslyPlayed || null,
+    albumId: isBandcamp ? parent.albumId : undefined,
+    trackId: isBandcamp ? t.id : undefined,
+  };
+}
+
+function renderSubtracks(parent) {
+  const tracks = parent.tracks || [];
+  if (!tracks.length) return '<div class="empty" style="padding-left:54px">No individually streamable tracks found.</div>';
+  return `<div class="subtracks">${tracks.map((t) => {
+    const sub = subtrackItem(parent, t);
+    itemRegistry.set(sub.key, sub);
+    return `
+      <div class="result">
+        <div class="row subtrack-row" data-key="${escAttr(sub.key)}">
+          <input type="checkbox" ${isSelected(sub.key) ? 'checked' : ''} data-key="${escAttr(sub.key)}" class="selectbox">
+          <div class="meta">
+            <div class="title">${esc(sub.title)}</div>
+            ${ageFlagNote(sub)}
+            ${duplicateNote(sub)}
+          </div>
+          <button class="preview-btn" data-key="${escAttr(sub.key)}" title="preview">▶</button>
+        </div>
+        <div class="preview-frame" data-key="${escAttr(sub.key)}" hidden></div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function renderScanResults() {
+  const box = el('scanResults');
+  if (!scanResults.length) { box.innerHTML = '<div class="empty">No results yet.</div>'; return; }
+  const groups = { soundcloud: [], 'bandcamp-wishlist': [], 'bandcamp-library': [] };
+  scanResults.forEach((it) => { if (groups[it.source]) groups[it.source].push(it); });
+  let html = '';
+  for (const [src, items] of Object.entries(groups)) {
+    if (!items.length) continue;
+    html += `<div class="group-label">${SOURCE_LABEL[src]} (${items.length})</div>`;
+    html += items.map((it) => {
+      itemRegistry.set(it.key, it);
+      const expandable = isExpandable(it);
+      const open = expandedOpen.has(it.key);
+      return `
+      <div class="result">
+        <div class="row" data-key="${escAttr(it.key)}">
+          ${expandable ? `<button class="expand-btn" data-key="${escAttr(it.key)}" title="show individual tracks">${open ? '▾' : '▸'}</button>` : '<span class="expand-spacer"></span>'}
+          <input type="checkbox" ${isSelected(it.key) ? 'checked' : ''} data-key="${escAttr(it.key)}" class="selectbox">
+          <img class="preview-art" src="${escAttr(it.artwork || '')}" loading="lazy" title="play preview" data-key="${escAttr(it.key)}" onerror="this.style.visibility='hidden'">
+          <div class="meta">
+            <div class="title">${esc(it.title)}</div>
+            <div class="artist">${esc(it.artist)}</div>
+            ${preorderNote(it)}
+            ${playlistNote(it)}
+            ${ageFlagNote(it)}
+            ${duplicateNote(it)}
+          </div>
+          <span class="date">${fmtDate(it.date)}</span>
+          <button class="preview-btn" data-key="${escAttr(it.key)}" title="preview">▶</button>
+        </div>
+        <div class="preview-frame" data-key="${escAttr(it.key)}" hidden></div>
+        ${open ? renderSubtracks(it) : ''}
+      </div>`;
+    }).join('');
+  }
+  box.innerHTML = html || '<div class="empty">Nothing in the last 14 days.</div>';
+  box.querySelectorAll('.selectbox').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const item = itemRegistry.get(cb.dataset.key);
+      if (item) toggleSelect(item);
+    });
+  });
+  box.querySelectorAll('.preview-btn').forEach((b) => {
+    b.addEventListener('click', () => togglePreview(b.dataset.key));
+  });
+  box.querySelectorAll('.preview-art').forEach((img) => {
+    img.addEventListener('click', () => togglePreview(img.dataset.key));
+  });
+  box.querySelectorAll('.expand-btn').forEach((b) => {
+    b.addEventListener('click', () => toggleExpand(b.dataset.key));
+  });
+}
+
+function selectAll() {
+  scanResults.forEach((it) => { if (!isSelected(it.key)) selected.push(makeSelectedEntry(it)); });
+  renderSelected();
+  renderScanResults();
+  saveDraft();
+}
+
+function deselectAll() {
+  const keys = new Set(scanResults.map((it) => it.key));
+  selected = selected.filter((it) => !keys.has(it.key));
+  renderSelected();
+  renderScanResults();
+  saveDraft();
+}
+
+function renderSelected() {
+  const box = el('selected');
+  // FLIP: record where each item currently sits (by stable key) before the
+  // re-render, then animate from there to its new position after — this is
+  // what makes reordering read as "cards sliding into place" instead of an
+  // instant jump-cut, so it's clear where a drag is landing.
+  const prevRects = new Map();
+  box.querySelectorAll('.selected-item[data-key]').forEach((node) => {
+    prevRects.set(node.dataset.key, node.getBoundingClientRect());
+  });
+
+  if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; return; }
+  box.innerHTML = selected.map((it, i) => `
+    <div class="selected-item" data-key="${escAttr(it.key)}">
+      <div class="row" draggable="true" data-index="${i}">
+        <span class="tag ${SOURCE_TAG[it.source]}">${SOURCE_TAG[it.source]}</span>
+        <img src="${escAttr(it.artwork || '')}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="meta">
+          <div class="title">${esc(it.title)}</div>
+          <div class="edit-row">
+            <input class="edit-field edit-artist" data-key="${escAttr(it.key)}" placeholder="artist" value="${escAttr(it.artist || '')}">
+            <input class="edit-field edit-label" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">
+          </div>
+          <div class="heading-choice">
+            heading:
+            <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="artist" ${it.headingSource !== 'label' ? 'checked' : ''}> artist</label>
+            <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="label" ${it.headingSource === 'label' ? 'checked' : ''}> label</label>
+          </div>
+        </div>
+        ${downloadStatus(it)}
+        <button class="remove" data-index="${i}" title="remove">×</button>
+      </div>
+      ${playerRow(it)}
+    </div>`).join('');
+  wireDragAndDrop();
+  wireTrackPlayers(box);
+  box.querySelectorAll('.remove').forEach((b) => b.addEventListener('click', () => {
+    selected.splice(Number(b.dataset.index), 1);
+    renderSelected(); renderScanResults(); saveDraft();
+  }));
+  // Editing artist/label/heading-choice updates the underlying data silently
+  // (no re-render) so typing doesn't lose focus/cursor position — only
+  // structural changes (add/remove/reorder) rebuild the DOM.
+  box.querySelectorAll('.edit-field').forEach((input) => {
+    input.addEventListener('input', () => {
+      const item = selected.find((s) => s.key === input.dataset.key);
+      if (!item) return;
+      if (input.classList.contains('edit-artist')) item.artist = input.value;
+      else item.label = input.value;
+      debouncedSaveDraft();
+    });
+  });
+  box.querySelectorAll('.heading-choice input[type=radio]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      const item = selected.find((s) => s.key === radio.dataset.key);
+      if (item && radio.checked) { item.headingSource = radio.value; saveDraft(); }
+    });
+  });
+
+  box.querySelectorAll('.selected-item[data-key]').forEach((node) => {
+    const prev = prevRects.get(node.dataset.key);
+    if (!prev) return;
+    const next = node.getBoundingClientRect();
+    const dy = prev.top - next.top;
+    if (!dy) return;
+    node.style.transition = 'none';
+    node.style.transform = `translateY(${dy}px)`;
+    requestAnimationFrame(() => {
+      node.style.transition = '';
+      node.style.transform = '';
+    });
+  });
+}
+
+// Only a compact status badge lives inline in the row now — once a file is
+// actually downloaded its player gets a full-width row of its own (below),
+// big enough for a real scrubber instead of a cramped inline sliver.
+function downloadStatus(it) {
+  const files = (it._download && it._download.files) || [];
+  if (!it._download) return '<span class="badge pending">not downloaded</span>';
+  if (it._download.error) return '<span class="badge err">download failed</span>';
+  if (!files.length) return '<span class="badge pending">…</span>';
+  return '';
+}
+
+// Once a track is actually on disk, play it from there with a plain
+// rectangle: click anywhere to toggle play/pause, scrub bar along the
+// bottom edge — instead of leaning on the source platform's iframe embed
+// or the browser's native <audio controls> widget.
+function playerRow(it) {
+  const files = (it._download && it._download.files) || [];
+  if (!files.length) return '';
+  if (files.length === 1) {
+    return `<div class="player-row">${trackPlayerHtml(downloadedFileUrl(files[0]))}</div>`;
+  }
+  // Rare now that individual tracks can be picked directly (see
+  // subtrackItem) — a whole release downloaded as one candidate still gets
+  // one full-size player per resulting file rather than a collapsed badge.
+  return `<div class="multi-files">${files.map((f) => {
+    const name = String(f).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '');
+    return `<div class="file-row"><span class="file-name">${esc(name)}</span>${trackPlayerHtml(downloadedFileUrl(f))}</div>`;
+  }).join('')}</div>`;
+}
+
+function trackPlayerHtml(src) {
+  return `
+    <div class="track-player">
+      <audio preload="none" src="${escAttr(src)}"></audio>
+      <span class="track-player-icon">▶</span>
+      <span class="track-player-time">0:00 / 0:00</span>
+      <div class="scrub-bar"><div class="scrub-fill"></div></div>
+    </div>`;
+}
+
+function formatTime(s) {
+  if (!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+
+// Wires every .track-player under `root`: click the rectangle to toggle
+// play/pause (except on the scrub bar, which seeks instead), drag/click the
+// scrub bar to seek. Re-run after renderSelected() rebuilds the DOM.
+function wireTrackPlayers(root) {
+  root.querySelectorAll('.track-player').forEach((box) => {
+    const audio = box.querySelector('audio');
+    const icon = box.querySelector('.track-player-icon');
+    const time = box.querySelector('.track-player-time');
+    const scrubBar = box.querySelector('.scrub-bar');
+    const scrubFill = box.querySelector('.scrub-fill');
+
+    const updateTime = () => {
+      const dur = audio.duration || 0;
+      time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(dur)}`;
+      scrubFill.style.width = dur ? `${(audio.currentTime / dur) * 100}%` : '0%';
+    };
+    audio.addEventListener('loadedmetadata', updateTime);
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('play', () => { icon.textContent = '⏸'; });
+    audio.addEventListener('pause', () => { icon.textContent = '▶'; });
+    audio.addEventListener('ended', () => { icon.textContent = '▶'; });
+
+    box.addEventListener('click', (e) => {
+      if (scrubBar.contains(e.target)) return;
+      if (audio.paused) audio.play(); else audio.pause();
+    });
+
+    function seek(e) {
+      const rect = scrubBar.getBoundingClientRect();
+      const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      if (audio.duration) audio.currentTime = pct * audio.duration;
+    }
+    let scrubbing = false;
+    scrubBar.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      scrubbing = true;
+      seek(e);
+      scrubBar.setPointerCapture(e.pointerId);
+    });
+    scrubBar.addEventListener('pointermove', (e) => { if (scrubbing) seek(e); });
+    scrubBar.addEventListener('pointerup', () => { scrubbing = false; });
+    scrubBar.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+function downloadedFileUrl(relPath) {
+  const norm = String(relPath).replace(/\\/g, '/').replace(/^downloads\//i, '');
+  return '/downloads/' + norm.split('/').map(encodeURIComponent).join('/');
+}
+
+// Trello/Notion-style live reorder: the dragged row's actual DOM node moves
+// between siblings as you drag over them (not just on drop), and every row
+// whose position shifts as a result animates into place via FLIP — so it's
+// visible where the drop will land before you let go, not just after.
+// The dragged node itself is moved in place (never destroyed/rebuilt) so the
+// browser's native drag session stays intact throughout.
+function wireDragAndDrop() {
+  const box = el('selected');
+  let draggingItem = null;
+
+  box.querySelectorAll('.selected-item').forEach((item) => {
+    const row = item.querySelector('.row');
+    row.addEventListener('dragstart', () => {
+      draggingItem = item;
+      row.classList.add('dragging');
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      draggingItem = null;
+      syncSelectedFromDom();
+      saveDraft();
+    });
+  });
+
+  box.ondrop = (e) => e.preventDefault(); // reorder already happened live during dragover
+  box.ondragover = (e) => {
+    e.preventDefault();
+    if (!draggingItem) return;
+    const after = itemAfterPoint(box, e.clientY, draggingItem);
+    if (after === draggingItem) return;
+
+    const prevRects = new Map();
+    box.querySelectorAll('.selected-item').forEach((n) => prevRects.set(n, n.getBoundingClientRect()));
+
+    if (after == null) box.appendChild(draggingItem);
+    else box.insertBefore(draggingItem, after);
+
+    box.querySelectorAll('.selected-item').forEach((n) => {
+      const prev = prevRects.get(n);
+      if (!prev) return;
+      const next = n.getBoundingClientRect();
+      const dy = prev.top - next.top;
+      if (!dy) return;
+      n.style.transition = 'none';
+      n.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        n.style.transition = '';
+        n.style.transform = '';
+      });
+    });
+  };
+}
+
+function itemAfterPoint(container, y, skip) {
+  const items = [...container.querySelectorAll('.selected-item')].filter((n) => n !== skip);
+  let closest = { offset: -Infinity, element: null };
+  for (const child of items) {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) closest = { offset, element: child };
+  }
+  return closest.element;
+}
+
+function syncSelectedFromDom() {
+  const keys = [...el('selected').querySelectorAll('.selected-item')].map((n) => n.dataset.key);
+  const byKey = new Map(selected.map((it) => [it.key, it]));
+  selected = keys.map((k) => byKey.get(k)).filter(Boolean);
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function escAttr(s) { return esc(s); }
+
+async function scan() {
+  el('scanBtn').disabled = true;
+  el('scanBtn').textContent = 'Scanning…';
+  el('errorsBox').innerHTML = '';
+  try {
+    const r = await fetch('/scan', { method: 'POST' });
+    const j = await r.json();
+    scanResults = j.items || [];
+    if (j.errors && j.errors.length) {
+      el('errorsBox').innerHTML = j.errors.map((e) => `<div class="errors">${esc(e.source)}: ${esc(e.error)}</div>`).join('');
+    }
+    el('statusText').textContent = `${scanResults.length} items since ${fmtDate(j.cutoff)}`;
+    renderScanResults();
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">scan failed: ${esc(e.message || e)}</div>`;
+  } finally {
+    el('scanBtn').disabled = false;
+    el('scanBtn').textContent = 'Scan (last 14 days)';
+  }
+}
+
+async function startDownload() {
+  if (!selected.length) return;
+  el('downloadBtn').disabled = true;
+  el('downloadBtn').textContent = 'Downloading…';
+  await fetch('/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: selected }) });
+  const poll = setInterval(async () => {
+    const j = await (await fetch('/download-status')).json();
+    el('downloadLog').textContent = (j.log || []).join('\n');
+    if (!j.running) {
+      clearInterval(poll);
+      el('downloadBtn').disabled = false;
+      el('downloadBtn').textContent = 'Download selected';
+      if (j.results) {
+        const byUrl = new Map(j.results.map((r) => [r.url, r]));
+        selected.forEach((it) => { it._download = byUrl.get(it.url) || null; });
+        renderSelected();
+        saveDraft();
+      }
+    }
+  }, 1500);
+}
+
+async function generateHtml() {
+  if (!selected.length) return;
+  el('generateBtn').disabled = true;
+  el('generateBtn').textContent = 'Generating…';
+  try {
+    const r = await fetch('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: selected }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'generate failed');
+    el('outputBox').style.display = '';
+    el('outputText').value = j.html;
+    saveDraft();
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">generate failed: ${esc(e.message || e)}</div>`;
+  } finally {
+    el('generateBtn').disabled = false;
+    el('generateBtn').textContent = 'Generate HTML';
+  }
+}
+
+async function saveDraft() {
+  try {
+    await fetch('/draft', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selected, generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null }),
+    });
+  } catch (e) { /* best-effort */ }
+}
+let saveDraftTimer = null;
+function debouncedSaveDraft() {
+  clearTimeout(saveDraftTimer);
+  saveDraftTimer = setTimeout(saveDraft, 600);
+}
+
+async function loadDraft() {
+  try {
+    const j = await (await fetch('/draft')).json();
+    selected = j.selected || [];
+    if (j.generatedHtml) { el('outputBox').style.display = ''; el('outputText').value = j.generatedHtml; }
+    if (j.showNumber) el('showNumber').value = j.showNumber;
+    else {
+      try {
+        const n = await (await fetch('/next-show-number')).json();
+        if (n && n.next) el('showNumber').value = n.next;
+      } catch (e2) { /* leave blank */ }
+    }
+    renderSelected();
+  } catch (e) { /* first run, no draft yet */ }
+}
+
+// Mirrors generate-html.js's headingName(): a real modem heading is always
+// ONE name — the artist's, or (for a label-curated/various-artists post)
+// the label's — chosen per track via headingSource, never both combined.
+function headingName(it) {
+  if (it.headingSource === 'label' && it.label) return it.label;
+  return it.artist || it.label || '';
+}
+
+// Deduped names in show order, with any "@" stripped (handles/labels are
+// often pasted as "@handle" — reads better without them). One source of
+// truth: both the artist-list text and the /preview request (which needs
+// the same lists to build its synthetic artist/label fields) use this
+// rather than each having their own copy of the dedup logic.
+function dedupedField(field) {
+  const seen = new Set();
+  const names = [];
+  selected.forEach((it) => {
+    const name = (it[field] || '').replace(/@/g, '').trim();
+    const key = name.toLowerCase();
+    if (name && !seen.has(key)) { seen.add(key); names.push(name); }
+  });
+  return names;
+}
+
+// "* Heading [ Other ]" bullet list for the radioštudent post's intro text —
+// heading first (whichever of artist/label drives that track's heading),
+// the other credit in brackets when both are known, matching how existing
+// modem posts already credit a label release's artist alongside it.
+function generateArtistListText() {
+  const num = el('showNumber').value.trim();
+  const header = num ? `///${num}\n\n` : '';
+  const seen = new Set();
+  const lines = [];
+  selected.forEach((it) => {
+    const heading = headingName(it).replace(/@/g, '').trim();
+    const other = (it.headingSource === 'label' ? it.artist : it.label || '').replace(/@/g, '').trim();
+    if (!heading) return;
+    const line = other && other.toLowerCase() !== heading.toLowerCase() ? `${heading} [ ${other} ]` : heading;
+    const key = line.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); lines.push(line); }
+  });
+  return `${header}featuring tracks from:\n\n${lines.map((n) => `* ${n}`).join('\n')}`;
+}
+
+// ---------- Preview: run the real site parser against the draft ------------
+async function runPreview() {
+  if (!selected.length) return;
+  el('previewBtn').disabled = true;
+  el('previewBtn').textContent = 'Checking…';
+  try {
+    const body = {
+      items: selected, artists: dedupedField('artist'), labels: dedupedField('label'),
+      showNumber: el('showNumber').value.trim() || null,
+    };
+    const r = await fetch('/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'preview failed');
+    el('previewBox').style.display = '';
+    el('previewWarnings').innerHTML = j.warnings.length
+      ? j.warnings.map((w) => `<div class="warning-item">⚠ ${esc(w)}</div>`).join('')
+      : '<div class="warning-clean">✓ no issues found</div>';
+    renderPreviewPane(j.record, selected);
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">preview failed: ${esc(e.message || e)}</div>`;
+  } finally {
+    el('previewBtn').disabled = false;
+    el('previewBtn').textContent = 'Preview';
+  }
+}
+
+// Simplified port of src/archive.html's normalizeEmbeds() — same iframe
+// param normalization + stray-caption stripping, verbatim logic (it's
+// already self-contained DOM manipulation, no external deps).
+function normalizeEmbedsPreview(root) {
+  root.querySelectorAll('p').forEach((p) => {
+    const last = p.lastChild;
+    if (!last || last.nodeType !== 3 || !/~{8,}/.test(last.textContent)) return;
+    last.textContent = last.textContent.replace(/~{8,}/g, '');
+    if (!last.textContent.trim()) p.removeChild(last);
+  });
+  root.querySelectorAll('iframe').forEach((f) => {
+    const src = f.getAttribute('src') || '';
+    if (!/w\.soundcloud\.com\/player/i.test(src)) return;
+    let s = /visual=true/i.test(src) ? src.replace(/visual=true/i, 'visual=false')
+      : (/visual=false/i.test(src) ? src : src + (src.indexOf('?') > -1 ? '&' : '?') + 'visual=false');
+    s = /hide_related=/i.test(s) ? s.replace(/hide_related=(true|false)/i, 'hide_related=true')
+      : s + (s.indexOf('?') > -1 ? '&' : '?') + 'hide_related=true';
+    f.setAttribute('src', s);
+    f.setAttribute('height', '120');
+    f.setAttribute('width', '100%');
+  });
+}
+
+// Simplified port of src/archive.html's injectSegTags(): same final chip
+// markup/classes (.seg-tags/.chip/.artist-chip/.label-chip). Uses `items`
+// directly (artist+label per track), paired with each .seg-marker by
+// POSITION rather than record.artists/.labels's fuzzy name-matching — a
+// track's non-heading name legitimately doesn't auto-match its segment on
+// the real site either (see preview.js's buildWarnings comment), so
+// matching by position shows what the credits SHOULD be once that's fixed,
+// rather than reproducing that same real gap here too. Deliberately skips
+// the live version's ~250 lines of historical-scrape-artifact correction
+// (duplicate-heading merges, per-track fallback from window.__modemData.tracks,
+// admin-edit suppression, etc.) — none of that applies to a freshly generated,
+// not-yet-scraped draft, which always uses the clean "recent" heading dialect.
+function injectSegTagsPreview(root, items) {
+  const chip = (cls, n) => `<span class="chip ${cls}">${esc(n)}</span>`;
+  const markers = [...root.querySelectorAll('.seg-marker[data-seg]')];
+  markers.forEach((p, i) => {
+    const item = items[i];
+    if (!item) return;
+    const chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
+    const slashes = `<span class="seg-slashes"> ${'/'.repeat(60)}</span>`;
+    p.innerHTML = slashes + (chips ? `<span class="seg-tags">${chips}</span>` : '');
+  });
+}
+
+function renderPreviewPane(record, items) {
+  const pane = el('previewPane');
+  pane.innerHTML = `<div class="detail-title" style="font-weight:bold;font-size:1.1rem;margin-bottom:.5rem">${esc(record.title || '')}</div>` +
+    `<div class="modem-body">${record.bodyHtml || ''}</div>`;
+  const body = pane.querySelector('.modem-body');
+  if (body) {
+    normalizeEmbedsPreview(body);
+    injectSegTagsPreview(body, items);
+  }
+}
+
+// ---------- Publish (after the show is live on radioštudent) ---------------
+async function checkLive() {
+  const show = el('showNumber').value.trim();
+  if (!show) return;
+  el('checkLiveBtn').disabled = true;
+  el('liveStatus').textContent = 'checking…';
+  try {
+    const j = await (await fetch(`/publish-check?show=${encodeURIComponent(show)}`)).json();
+    el('liveStatus').textContent = j.live ? `✓ modem-${show} is live` : `✗ not live yet — paste into radioštudent first`;
+    el('runPublishBtn').disabled = !j.live;
+  } catch (e) {
+    el('liveStatus').textContent = 'check failed: ' + (e.message || e);
+  } finally {
+    el('checkLiveBtn').disabled = false;
+  }
+}
+
+async function runPublish() {
+  const show = el('showNumber').value.trim();
+  if (!show) return;
+  el('runPublishBtn').disabled = true;
+  el('runPublishBtn').textContent = 'Running…';
+  el('publishDiffBox').style.display = 'none';
+  await fetch('/publish-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show }) });
+  const poll = setInterval(async () => {
+    const j = await (await fetch('/publish-status')).json();
+    el('publishLog').textContent = (j.log || []).join('\n');
+    if (!j.running) {
+      clearInterval(poll);
+      el('runPublishBtn').disabled = false;
+      el('runPublishBtn').textContent = 'Run publish pipeline';
+      if (j.error) {
+        el('errorsBox').innerHTML = `<div class="errors">publish pipeline failed: ${esc(j.error)}</div>`;
+      } else if (j.diffSummary) {
+        el('publishDiffBox').style.display = '';
+        el('publishDiff').textContent = j.diffSummary;
+      }
+    }
+  }, 1500);
+}
+
+async function confirmPush() {
+  if (!confirm('This will commit and push to the live site’s repository. Continue?')) return;
+  el('confirmPushBtn').disabled = true;
+  el('confirmPushBtn').textContent = 'Pushing…';
+  try {
+    const r = await fetch('/publish-push', { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'push failed');
+    el('confirmPushBtn').textContent = j.pushed ? '✔ pushed' : 'nothing to commit';
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">push failed: ${esc(e.message || e)}</div>`;
+    el('confirmPushBtn').disabled = false;
+    el('confirmPushBtn').textContent = 'Confirm & push';
+  }
+}
+
+// Drag the divider between the two panels to resize them; remembered
+// per-browser so it doesn't reset every reload.
+(function setupResizablePanels() {
+  const divider = el('dragDivider');
+  const left = el('leftCol');
+  const main = document.querySelector('main');
+  let dragging = false;
+
+  try {
+    const saved = localStorage.getItem('sb-split');
+    if (saved) left.style.flex = `0 0 ${saved}%`;
+  } catch (e) { /* ignore */ }
+
+  divider.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    divider.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const rect = main.getBoundingClientRect();
+    let pct = ((e.clientX - rect.left) / rect.width) * 100;
+    pct = Math.max(20, Math.min(80, pct));
+    left.style.flex = `0 0 ${pct}%`;
+    try { localStorage.setItem('sb-split', pct.toFixed(1)); } catch (e2) { /* ignore */ }
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    divider.classList.remove('dragging');
+    document.body.style.userSelect = '';
+  });
+})();
+
+// Only one track should ever be audible at once. HTMLMediaElement's 'play'
+// event doesn't bubble, but it still goes through the capturing phase, so a
+// single capture-phase listener on the (never-replaced) container catches
+// every <audio> in "Your show" without needing to re-wire it on each render.
+el('selected').addEventListener('play', (e) => {
+  if (e.target.tagName !== 'AUDIO') return;
+  el('selected').querySelectorAll('audio').forEach((a) => { if (a !== e.target) a.pause(); });
+}, true);
+
+el('scanBtn').addEventListener('click', scan);
+el('selectAllBtn').addEventListener('click', selectAll);
+el('deselectAllBtn').addEventListener('click', deselectAll);
+el('downloadBtn').addEventListener('click', startDownload);
+el('generateBtn').addEventListener('click', generateHtml);
+el('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(el('outputText').value);
+  el('copyBtn').textContent = 'Copied!';
+  setTimeout(() => (el('copyBtn').textContent = 'Copy to clipboard'), 1200);
+});
+el('generateListBtn').addEventListener('click', () => {
+  if (!selected.length) return;
+  el('listOutputBox').style.display = '';
+  el('listOutputText').value = generateArtistListText();
+  saveDraft();
+});
+el('copyListBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(el('listOutputText').value);
+  el('copyListBtn').textContent = 'Copied!';
+  setTimeout(() => (el('copyListBtn').textContent = 'Copy to clipboard'), 1200);
+});
+el('previewBtn').addEventListener('click', runPreview);
+el('openCoversBtn').addEventListener('click', () => {
+  fetch('/open-covers-folder', { method: 'POST' }).catch(() => {});
+});
+el('checkLiveBtn').addEventListener('click', checkLive);
+el('runPublishBtn').addEventListener('click', runPublish);
+el('confirmPushBtn').addEventListener('click', confirmPush);
+
+loadDraft();
+</script>
+</body>
+</html>

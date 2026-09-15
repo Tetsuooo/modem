@@ -11,6 +11,7 @@
     "prepare_assets": "node read_files",
     "build": "node ./node_modules/webpack/bin/webpack.js --config webpack.js",
     "dev": "nodemon server.js",
+    "showbuilder": "node show-builder/server.js",
     "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.dev.js"
   },
   "devDependencies": {
