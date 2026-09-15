@@ -1,22 +1,242 @@
 {
-  "generatedAt": "2026-09-01T12:36:05.352Z",
+  "generatedAt": "2026-09-15T12:43:13.961Z",
   "source": "https://radiostudent.si/glasba/modem",
   "counts": {
-    "total": 267,
-    "shows": 246,
+    "total": 268,
+    "shows": 247,
     "lists": 21,
-    "withSoundcloud": 244,
+    "withSoundcloud": 245,
     "lastScraped": [
-      "modem-246",
+      "modem-247",
       "best-releases-of-2025"
     ],
-    "tracks": 4529,
+    "tracks": 4544,
     "scMatched": 1562,
     "tagMerges": 171,
     "tagEdits": 189,
     "segEdits": 78
   },
   "records": [
+    {
+      "type": "show",
+      "slug": "modem-247",
+      "number": 247,
+      "title": "modem ///247",
+      "url": "https://radiostudent.si/glasba/modem/modem-247",
+      "date": "14. 9. 2026",
+      "cover": "https://radiostudent.si/sites/default/files/2026-09/modem247.png",
+      "mp3": "https://radiostudent.si/sites/default/files/posnetki/modem/2026-09-14-modem-modem-247.mp3",
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-247",
+        "api": "https://api.soundcloud.com/tracks/2400650388",
+        "title": "modem ///247 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-TafwyiMhsTyfyiM7-5y50fA-t500x500.jpg"
+      },
+      "artists": [
+        {
+          "name": "Inferior Design",
+          "url": "https://radiostudent.si/ustvarjalci/inferior-design",
+          "seg": null
+        },
+        {
+          "name": "bb",
+          "url": "https://radiostudent.si/ustvarjalci/bb",
+          "seg": 1
+        },
+        {
+          "name": "Musica pro bono",
+          "url": "https://radiostudent.si/ustvarjalci/musica-pro-bono",
+          "seg": 2
+        },
+        {
+          "name": "student of life 🧬🧪🦠",
+          "url": "https://radiostudent.si/ustvarjalci/student-of-life",
+          "seg": 3
+        },
+        {
+          "name": "Mifu",
+          "url": "https://radiostudent.si/ustvarjalci/mifu",
+          "seg": 4
+        },
+        {
+          "name": "4h4",
+          "url": "https://radiostudent.si/4h4",
+          "seg": 5
+        },
+        {
+          "name": "orchead420",
+          "url": "https://radiostudent.si/ustvarjalci/orchead420",
+          "seg": 6
+        },
+        {
+          "name": "serpuline",
+          "url": "https://radiostudent.si/ustvarjalci/serpuline",
+          "seg": 7
+        },
+        {
+          "name": "devour",
+          "url": "https://radiostudent.si/ustvarjalci/devour-0",
+          "seg": 8
+        },
+        {
+          "name": "pingstar",
+          "url": "https://radiostudent.si/ustvarjalci/pingstar",
+          "seg": 9
+        },
+        {
+          "name": "MouseMan",
+          "url": "https://radiostudent.si/ustvarjalci/mouseman",
+          "seg": 10
+        },
+        {
+          "name": "NikitaPromised You✟",
+          "url": "https://radiostudent.si/ustvarjalci/nikitapromised-you",
+          "seg": 11
+        },
+        {
+          "name": "Minoyimn",
+          "url": "https://radiostudent.si/ustvarjalci/minoyimn",
+          "seg": null
+        },
+        {
+          "name": "YNO",
+          "url": "https://radiostudent.si/ustvarjalci/yno",
+          "seg": 12
+        },
+        {
+          "name": "Computer man",
+          "url": "https://radiostudent.si/ustvarjalci/computer-man",
+          "seg": 13
+        },
+        {
+          "name": "ant. adventure.ᐟ",
+          "url": "https://radiostudent.si/ustvarjalci/ant-adventuret",
+          "seg": 14
+        },
+        {
+          "name": "ranena",
+          "url": "https://radiostudent.si/ustvarjalci/ranena",
+          "seg": 15
+        },
+        {
+          "name": "cranes",
+          "url": "https://radiostudent.si/ustvarjalci/cranes",
+          "seg": 16
+        },
+        {
+          "name": "Vies",
+          "url": "https://radiostudent.si/ustvarjalci/vies",
+          "seg": null
+        },
+        {
+          "name": "Holly Waxwing",
+          "url": "https://radiostudent.si/ustvarjalci/holly-waxwing",
+          "seg": 18
+        }
+      ],
+      "labels": [],
+      "embeds": [
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=968466443/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=200277514/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=524069617/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=844535009/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/track=2616212140/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=3694621525/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=693272257/transparent=true/"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997350&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997338&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398733514&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2395835493&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2356079618&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382423897&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398141371&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2399383089&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2271140696&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2391809136&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2113382718&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390592144&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2396199045&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386393980&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2333494994&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+        }
+      ],
+      "segments": [
+        "Muzik",
+        "bb",
+        "Musica pro bono",
+        "student of life 🧬🧪🦠",
+        "Mifu",
+        "4h4",
+        "orchead420",
+        "serpuline",
+        "devour",
+        "pingstar",
+        "MouseMan",
+        "NikitaPromised You✟",
+        "YNO",
+        "Computer man",
+        "ant. adventure.ᐟ",
+        "ranena",
+        "cranes",
+        "Blorpus",
+        "Holly Waxwing"
+      ],
+      "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">Muzik ///////&nbsp;</p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=968466443/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=200277514/transparent=true/\">&lt;a href=\"<a href=\"https://muzik-label.bandcamp.com/album/inferior-design-deugnietn\">https://muzik-label.bandcamp.com/album/inferior-design-deugnietn</a>\"&gt;Inferior Design - deugnietn by Muzik&lt;/a&gt;</iframe></p><p data-seg=\"1\" class=\"seg-marker\">bb ///////&nbsp;</p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=524069617/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=844535009/transparent=true/\">&lt;a href=\"<a href=\"https://bb99.bandcamp.com/album/newflip\">https://bb99.bandcamp.com/album/newflip</a>\"&gt;newflip by bb&lt;/a&gt;</iframe></p><p data-seg=\"2\" class=\"seg-marker\">Musica pro bono ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997350&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/musica-pro-bono\" target=\"_blank\">Musica pro bono</a> · <a href=\"https://soundcloud.com/musica-pro-bono/5x-5\" target=\"_blank\">Battle against my evil doctor</a></div><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997338&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/musica-pro-bono\" target=\"_blank\">Musica pro bono</a> · <a href=\"https://soundcloud.com/musica-pro-bono/4x-4\" target=\"_blank\">Fiff hinter cyclobenzaprine</a></div><p data-seg=\"3\" class=\"seg-marker\">student of life 🧬🧪🦠 ///////&nbsp;</p><p><a href=\"https://soundcloud.com/mazin-976721269/this-song-is-cursed-be-careful?si=574fc9e44dce4ae28c661bcc17f7a94a&amp;utm_source=clipboard&amp;utm_medium=text&amp;utm_campaign=social_sharing\">https://soundcloud.com/mazin-976721269/this-song-is-cursed-be-careful?s…</a></p><p data-seg=\"4\" class=\"seg-marker\">Mifu ///////&nbsp;</p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/track=2616212140/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/\">&lt;a href=\"<a href=\"https://mifu.bandcamp.com/track/--2\">https://mifu.bandcamp.com/track/--2</a>\"&gt;⠀ ⢘⡀⠀⠀⠀⠀⡏⠀⠈⠚⠁⠀⡏⠀ ⠈⠚⡀⢄⡀⠀⠘⠦⣀⢀⣠⠔⠁⠀ ⠀⠀⠀⠑⠊⠀⠀⠀⠀⠑⠁⠀⠀⠀ by Mifu&lt;/a&gt;</iframe></p><p data-seg=\"5\" class=\"seg-marker\">4h4 ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398733514&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/4hal4\" target=\"_blank\">4h4</a> · <a href=\"https://soundcloud.com/4hal4/flower-symbol\" target=\"_blank\">8</a></div><p data-seg=\"6\" class=\"seg-marker\">orchead420 ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2395835493&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/orchead420\" target=\"_blank\">orchead420</a> · <a href=\"https://soundcloud.com/orchead420/on\" target=\"_blank\">my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park https://www.instagram.com/orchead420/</a></div><p data-seg=\"7\" class=\"seg-marker\">serpuline ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2356079618&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/serpuline\" target=\"_blank\">serpuline</a> · <a href=\"https://soundcloud.com/serpuline/some\" target=\"_blank\">Love it🍴Like it🍴</a></div><p data-seg=\"8\" class=\"seg-marker\">devour ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382423897&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/ddvour\" target=\"_blank\">devour</a> · <a href=\"https://soundcloud.com/ddvour/supersheepbitsonga\" target=\"_blank\">@notbit05 supersheep|\\ \\ \\ \\ \\ \\ \\ \\ | \\ \\ \\ \\ \\ \\ \\ \\ | O~-_ | &gt;----|-|-|-|-|-|-|--| / | / / / / / / / / |__\\ |/ / / / / / / /</a></div><p data-seg=\"9\" class=\"seg-marker\">pingstar ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398141371&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/pingstarr\" target=\"_blank\">pingstar</a> · <a href=\"https://soundcloud.com/pingstarr/i-work-in-a-button-factory\" target=\"_blank\">i work in a button factory</a></div><p data-seg=\"10\" class=\"seg-marker\">MouseMan ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2399383089&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/mousemane\" target=\"_blank\">MouseMan</a> · <a href=\"https://soundcloud.com/mousemane/union-slough\" target=\"_blank\">Union Slough :</a></div><p data-seg=\"11\" class=\"seg-marker\">NikitaPromised You✟ ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2271140696&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/nkieve8\" target=\"_blank\">NikitaPromised You✟</a> · <a href=\"https://soundcloud.com/nkieve8/sets/blue-gem-ost\" target=\"_blank\">Blue:Gem OST</a></div><p data-seg=\"12\" class=\"seg-marker\">YNO ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2391809136&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/user-252471624\" target=\"_blank\">YNO</a> · <a href=\"https://soundcloud.com/user-252471624/ant\" target=\"_blank\">暗十(ANT)</a></div><p data-seg=\"13\" class=\"seg-marker\">Computer man ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2113382718&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/c0mput3rm4n\" target=\"_blank\">Computer man</a> · <a href=\"https://soundcloud.com/c0mput3rm4n/experiment2\" target=\"_blank\">Hydrocodones</a></div><p data-seg=\"14\" class=\"seg-marker\">ant. adventure.ᐟ ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390592144&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/anteaterworld\" target=\"_blank\">ant. adventure.ᐟ</a> · <a href=\"https://soundcloud.com/anteaterworld/mosherville-metropolis-v4\" target=\"_blank\">mosherville metropolis !</a></div><p data-seg=\"15\" class=\"seg-marker\">ranena ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2396199045&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/ranena9\" target=\"_blank\">ranena</a> · <a href=\"https://soundcloud.com/ranena9/teach-me-how-to-be-cool-like\" target=\"_blank\">teach me how to be cool like you #clips</a></div><p data-seg=\"16\" class=\"seg-marker\">cranes ///////&nbsp;</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386393980&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/cranessssss\" target=\"_blank\">cranes</a> · <a href=\"https://soundcloud.com/cranessssss/legendary-w-monker178-love\" target=\"_blank\">vanilla cherry w/ monker178 &amp; love life all the time</a></div><p data-seg=\"17\" class=\"seg-marker\">Blorpus ///////&nbsp;</p><p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3694621525/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=693272257/transparent=true/\">&lt;a href=\"<a href=\"https://blorpuseditions.bandcamp.com/album/schaduw-fleeting-images\">https://blorpuseditions.bandcamp.com/album/schaduw-fleeting-images</a>\"&gt;Schaduw / Fleeting Images by Vies&lt;/a&gt;</iframe></p><p data-seg=\"18\" class=\"seg-marker\">Holly Waxwing ///////</p><p><iframe src=\"https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2333494994&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true&amp;visual=true\" allow=\"autoplay; encrypted-media\" frameborder=\"no\" height=\"300\" width=\"100%\"></iframe></p><div><a href=\"https://soundcloud.com/hollywaxwing\" target=\"_blank\">Holly Waxwing</a> · <a href=\"https://soundcloud.com/hollywaxwing/softportent\" target=\"_blank\">Soft Portent</a></div>",
+      "searchText": "Modem ///247 \n 14. 9. 2026 \n Inferior Design bb Musica pro bono student of life 🧬🧪🦠 Mifu 4h4 orchead420 serpuline devour pingstar MouseMan NikitaPromised You✟ Minoyimn YNO Computer man ant. adventure.ᐟ ranena cranes Vies Holly Waxwing \n Muzik /////// <a href=\" https://muzik-label.bandcamp.com/album/inferior-design-deugnietn \">Inferior Design - deugnietn by Muzik</a> bb /////// <a href=\" https://bb99.bandcamp.com/album/newflip \">newflip by bb</a> Musica pro bono /////// Musica pro bono · Battle against my evil doctor Musica pro bono · Fiff hinter cyclobenzaprine student of life 🧬🧪🦠 /////// https://soundcloud.com/mazin-976721269/this-song-is-cursed-be-careful?s… Mifu /////// <a href=\" https://mifu.bandcamp.com/track/--2 \">⠀ ⢘⡀⠀⠀⠀⠀⡏⠀⠈⠚⠁⠀⡏⠀ ⠈⠚⡀⢄⡀⠀⠘⠦⣀⢀⣠⠔⠁⠀ ⠀⠀⠀⠑⠊⠀⠀⠀⠀⠑⠁⠀⠀⠀ by Mifu</a> 4h4 /////// 4h4 · 8 orchead420 /////// orchead420 · my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park https://www.instagram.com/orchead420/ serpuline /////// serpuline · Love it🍴Like it🍴 devour /////// devour · @notbit05 supersheep|\\ \\ \\ \\ \\ \\ \\ \\ | \\ \\ \\ \\ \\ \\ \\ \\ | O~-_ | >----|-|-|-|-|-|-|--| / | / / / / / / / / |__\\ |/ / / / / / / / pingstar /////// pingstar · i work in a button factory MouseMan /////// MouseMan · Union Slough : NikitaPromised You✟ /////// NikitaPromised You✟ · Blue:Gem OST YNO /////// YNO · 暗十(ANT) Computer man /////// Computer man · Hydrocodones ant. adventure.ᐟ /////// ant. adventure.ᐟ · mosherville metropolis ! ranena /////// ranena · teach me how to be cool like you #clips cranes /////// cranes · vanilla cherry w/ monker178 & love life all the time Blorpus /////// <a href=\" https://blorpuseditions.bandcamp.com/album/schaduw-fleeting-images \">Schaduw / Fleeting Images by Vies</a> Holly Waxwing /////// Holly Waxwing · Soft Portent"
+    },
     {
       "type": "show",
       "slug": "modem-246",
@@ -78829,6 +79049,30 @@
       "searchText": "4h4 4h4 4h4 4h4 h4 4h4h 4h4h 4h 4 h4 h4 h4listen to this shit rn https://soundcloud.com/4hal4 \n 4h4 \n 4h4 \n modem 246 \n 246"
     },
     {
+      "key": "sc:2398733514",
+      "kind": "soundcloud",
+      "title": "8",
+      "artist": "4h4",
+      "artUrl": "https://i1.sndcdn.com/artworks-8rqHgkpeDYuygUFr-gxbE3Q-t500x500.jpg",
+      "link": "https://soundcloud.com/4hal4",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398733514&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 5,
+          "segLabel": "4h4",
+          "labels": []
+        }
+      ],
+      "searchText": "8 \n 4h4 \n 4h4 \n modem 247 \n 247"
+    },
+    {
       "key": "sc:2211785327",
       "kind": "soundcloud",
       "title": "1837#♯⛐",
@@ -84414,6 +84658,30 @@
         }
       ],
       "searchText": "Petrichor \n Ans M \n TT (fka Tobago Tracks) \n modem 79 \n 79"
+    },
+    {
+      "key": "sc:2390592144",
+      "kind": "soundcloud",
+      "title": "mosherville metropolis !",
+      "artist": "ant. adventure.ᐟ",
+      "artUrl": "https://i1.sndcdn.com/artworks-FUnogMQyhb8G8y6V-ojAHAg-t500x500.jpg",
+      "link": "https://soundcloud.com/anteaterworld",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2390592144&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 14,
+          "segLabel": "ant. adventure.ᐟ",
+          "labels": []
+        }
+      ],
+      "searchText": "mosherville metropolis ! \n ant. adventure.ᐟ \n ant. adventure.ᐟ \n modem 247 \n 247"
     },
     {
       "key": "sc:2296629143",
@@ -97383,6 +97651,30 @@
       "searchText": "denpadenpadenpa \n Computer man \n Computer man \n modem 209 \n 209"
     },
     {
+      "key": "sc:2113382718",
+      "kind": "soundcloud",
+      "title": "Hydrocodones",
+      "artist": "Computer man",
+      "artUrl": "https://i1.sndcdn.com/artworks-JmHypYXDtBkTphSo-oPcnDg-t500x500.jpg",
+      "link": "https://soundcloud.com/c0mput3rm4n",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2113382718&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 13,
+          "segLabel": "Computer man",
+          "labels": []
+        }
+      ],
+      "searchText": "Hydrocodones \n Computer man \n Computer man \n modem 247 \n 247"
+    },
+    {
       "key": "sc:2198062575",
       "kind": "soundcloud",
       "title": "Ilus",
@@ -98342,6 +98634,30 @@
       "scPlay": 1036956229,
       "scPlayTitle": "cra_sto ☆ - Ancient Graffiti in Erebuni Fortress ☆",
       "scPlayArtist": "SOUL FEEDER"
+    },
+    {
+      "key": "sc:2386393980",
+      "kind": "soundcloud",
+      "title": "vanilla cherry w/ monker178 & love life all the time",
+      "artist": "cranes",
+      "artUrl": "https://i1.sndcdn.com/artworks-CuNm71kgLKWt1cnm-eVwUfA-t500x500.jpg",
+      "link": "https://soundcloud.com/cranessssss",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2386393980&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 16,
+          "segLabel": "cranes",
+          "labels": []
+        }
+      ],
+      "searchText": "vanilla cherry w/ monker178 & love life all the time \n cranes \n cranes \n modem 247 \n 247"
     },
     {
       "key": "bc:316319156:2879824599",
@@ -102171,6 +102487,30 @@
       "scPlay": 2114116203,
       "scPlayTitle": "Deva - Hearts Synchronisation",
       "scPlayArtist": "Cime"
+    },
+    {
+      "key": "sc:2382423897",
+      "kind": "soundcloud",
+      "title": "@notbit05 supersheep|\\    \\ \\ \\ \\ \\ \\ \\       |  \\    \\ \\ \\ \\ \\ \\ \\   | O~-_ |   >----|-|-|-|-|-|-|--|  / |  /    / / / / / / /   |__\\ |/     / / / / / / /",
+      "artist": "devour",
+      "artUrl": "https://i1.sndcdn.com/artworks-IQ5K3Swq6GyACIds-B0jzyA-t500x500.jpg",
+      "link": "https://soundcloud.com/ddvour",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2382423897&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 8,
+          "segLabel": "devour",
+          "labels": []
+        }
+      ],
+      "searchText": "@notbit05 supersheep|\\    \\ \\ \\ \\ \\ \\ \\       |  \\    \\ \\ \\ \\ \\ \\ \\   | O~-_ |   >----|-|-|-|-|-|-|--|  / |  /    / / / / / / /   |__\\ |/     / / / / / / / \n devour \n devour \n modem 247 \n 247"
     },
     {
       "key": "sc:1964253543",
@@ -122998,6 +123338,30 @@
         }
       ],
       "searchText": "Field Notes (Splice Demo) \n Holly Waxwing \n Holly Waxwing \n modem 169 \n 169"
+    },
+    {
+      "key": "sc:2333494994",
+      "kind": "soundcloud",
+      "title": "Soft Portent",
+      "artist": "Holly Waxwing",
+      "artUrl": "https://i1.sndcdn.com/artworks-z6dC9GBQLyYifgvC-hlAhhg-t500x500.jpg",
+      "link": "https://soundcloud.com/hollywaxwing",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2333494994&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 18,
+          "segLabel": "Holly Waxwing",
+          "labels": []
+        }
+      ],
+      "searchText": "Soft Portent \n Holly Waxwing \n Holly Waxwing \n modem 247 \n 247"
     },
     {
       "key": "bc:-:1615431493",
@@ -150433,6 +150797,30 @@
       "searchText": "i sit still and down \n MouseMan \n MouseMan \n modem 243 \n 243"
     },
     {
+      "key": "sc:2399383089",
+      "kind": "soundcloud",
+      "title": "Union Slough :",
+      "artist": "MouseMan",
+      "artUrl": "https://i1.sndcdn.com/artworks-Rql0V9hwBw4o9r8w-NklfLw-t500x500.jpg",
+      "link": "https://soundcloud.com/mousemane",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2399383089&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 10,
+          "segLabel": "MouseMan",
+          "labels": []
+        }
+      ],
+      "searchText": "Union Slough : \n MouseMan \n MouseMan \n modem 247 \n 247"
+    },
+    {
       "key": "bc:4078608083:3926834756",
       "kind": "bandcamp",
       "title": "Cochlea Jam Sink 56 ft. Siri",
@@ -151129,6 +151517,54 @@
         }
       ],
       "searchText": "October \n music lovers anonymous & staś czekalski \n music lovers anonymous & staś czekalski \n modem 232 \n 232"
+    },
+    {
+      "key": "sc:2315997350",
+      "kind": "soundcloud",
+      "title": "Battle against my evil doctor",
+      "artist": "Musica pro bono",
+      "artUrl": "https://i1.sndcdn.com/artworks-Mq3j87keh4hiNxAp-DVcomg-t500x500.jpg",
+      "link": "https://soundcloud.com/musica-pro-bono",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997350&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 2,
+          "segLabel": "Musica pro bono",
+          "labels": []
+        }
+      ],
+      "searchText": "Battle against my evil doctor \n Musica pro bono \n Musica pro bono \n modem 247 \n 247"
+    },
+    {
+      "key": "sc:2315997338",
+      "kind": "soundcloud",
+      "title": "Fiff hinter cyclobenzaprine",
+      "artist": "Musica pro bono",
+      "artUrl": "https://i1.sndcdn.com/artworks-ypActc34V24kdQWc-7VBpNA-t500x500.jpg",
+      "link": "https://soundcloud.com/musica-pro-bono",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2315997338&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 2,
+          "segLabel": "Musica pro bono",
+          "labels": []
+        }
+      ],
+      "searchText": "Fiff hinter cyclobenzaprine \n Musica pro bono \n Musica pro bono \n modem 247 \n 247"
     },
     {
       "key": "bc:2272110824:-",
@@ -151847,6 +152283,30 @@
       "scPlay": 1532478022,
       "scPlayTitle": "PREMIERE CDL || A-Tweed & Nandele - Naja [Jollies Records] (2023)",
       "scPlayArtist": "COMME DES LARMES"
+    },
+    {
+      "key": "sc:2271140696",
+      "kind": "soundcloud",
+      "title": "2025.10.17-05_Tequila Ayana",
+      "artist": "nature phenomenon gathering",
+      "artUrl": "https://i1.sndcdn.com/artworks-ZIVZUQfiIgWfSwoy-3Krw5g-t500x500.jpg",
+      "link": "https://soundcloud.com/npgathering",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2271140696&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 11,
+          "segLabel": "NikitaPromised You✟",
+          "labels": []
+        }
+      ],
+      "searchText": "2025.10.17-05_Tequila Ayana \n nature phenomenon gathering \n NikitaPromised You✟ \n modem 247 \n 247"
     },
     {
       "key": "bc:2460200756:2116617613",
@@ -156875,6 +157335,30 @@
       "searchText": "#robots \n orchead420 \n orchead420 \n modem 236 \n 236"
     },
     {
+      "key": "sc:2395835493",
+      "kind": "soundcloud",
+      "title": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park  https://www.instagram.com/orchead420/",
+      "artist": "orchead420",
+      "artUrl": "https://i1.sndcdn.com/artworks-wVyaPP9SLW8Cl3aI-ei7apw-t500x500.jpg",
+      "link": "https://soundcloud.com/orchead420",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2395835493&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 6,
+          "segLabel": "orchead420",
+          "labels": []
+        }
+      ],
+      "searchText": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park  https://www.instagram.com/orchead420/ \n orchead420 \n orchead420 \n modem 247 \n 247"
+    },
+    {
       "key": "bc:176654685:3608296694",
       "kind": "bandcamp",
       "title": "e/mpty:gesture",
@@ -159568,6 +160052,30 @@
         }
       ],
       "searchText": "everyday🔁 \n pingstar \n pingstar \n modem 218 \n 218"
+    },
+    {
+      "key": "sc:2398141371",
+      "kind": "soundcloud",
+      "title": "i work in a button factory",
+      "artist": "pingstar",
+      "artUrl": "https://i1.sndcdn.com/artworks-6fFcSeLLDeUqB8dK-YxqE8g-t500x500.jpg",
+      "link": "https://soundcloud.com/pingstarr",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2398141371&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "pingstar",
+          "labels": []
+        }
+      ],
+      "searchText": "i work in a button factory \n pingstar \n pingstar \n modem 247 \n 247"
     },
     {
       "key": "sc:1996906111",
@@ -163601,6 +164109,30 @@
         }
       ],
       "searchText": "My Song 5 \n ranena \n ranena \n modem 244 \n 244"
+    },
+    {
+      "key": "sc:2396199045",
+      "kind": "soundcloud",
+      "title": "teach me how to be cool like you #clips",
+      "artist": "ranena",
+      "artUrl": "https://i1.sndcdn.com/artworks-qUw1H8sO2dbAwPtb-uB9wuA-t500x500.jpg",
+      "link": "https://soundcloud.com/ranena9",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2396199045&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 15,
+          "segLabel": "ranena",
+          "labels": []
+        }
+      ],
+      "searchText": "teach me how to be cool like you #clips \n ranena \n ranena \n modem 247 \n 247"
     },
     {
       "key": "bc:642009560:1041490404",
@@ -169739,6 +170271,30 @@
       "scPlay": 2138873943,
       "scPlayTitle": "serpuline - it can be any temperature",
       "scPlayArtist": "XVIENCE"
+    },
+    {
+      "key": "sc:2356079618",
+      "kind": "soundcloud",
+      "title": "Love it🍴Like it🍴",
+      "artist": "serpuline",
+      "artUrl": "https://i1.sndcdn.com/artworks-1aumZqqi74wzujNH-wVszaA-t500x500.jpg",
+      "link": "https://soundcloud.com/serpuline",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2356079618&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 7,
+          "segLabel": "serpuline",
+          "labels": []
+        }
+      ],
+      "searchText": "Love it🍴Like it🍴 \n serpuline \n serpuline \n modem 247 \n 247"
     },
     {
       "key": "sc:2248555421",
@@ -192817,6 +193373,30 @@
       "searchText": "明るい呪術式 (Akarui jujutsusiki) \n YNO \n Hoge \n modem 74 \n 74"
     },
     {
+      "key": "sc:2391809136",
+      "kind": "soundcloud",
+      "title": "暗十(ANT)",
+      "artist": "YNO",
+      "artUrl": "https://i1.sndcdn.com/avatars-000425583105-o59kcl-t500x500.jpg",
+      "link": "https://soundcloud.com/user-252471624",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A2391809136&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "shows": [
+        {
+          "number": 247,
+          "slug": "modem-247",
+          "date": "14. 9. 2026",
+          "type": "show",
+          "seg": 12,
+          "segLabel": "YNO",
+          "labels": []
+        }
+      ],
+      "searchText": "暗十(ANT) \n YNO \n YNO \n modem 247 \n 247"
+    },
+    {
       "key": "sc:2030739012",
       "kind": "soundcloud",
       "title": "月(ZUKI)",
@@ -196640,5 +197220,5 @@
       "searchText": "Nazo House \n 食品まつり a.k.a. foodman \n Diskotopia \n modem 26 \n 26"
     }
   ],
-  "tracksGeneratedAt": "2026-09-01T12:36:05.352Z"
+  "tracksGeneratedAt": "2026-09-15T12:43:13.961Z"
 }
