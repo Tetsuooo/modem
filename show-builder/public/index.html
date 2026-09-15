@@ -1175,19 +1175,41 @@ function scheduleMixClip(ctx, clip, originTime, seekFrom) {
   src.buffer = buffer;
   const gain = ctx.createGain();
   src.connect(gain).connect(ctx.destination);
-  const clipStart = originTime + clip.start;
+  // BUG FIXED: this must subtract seekFrom to actually shift wall-clock
+  // time earlier (as the comment above always claimed it did) — without
+  // it, seeking anywhere past 0 left every clip's schedule anchored to the
+  // ORIGINAL, un-shifted mix timeline, so a clip starting after the seek
+  // point was scheduled to begin `seekFrom` seconds too late (e.g. seeking
+  // to 100s into a mix left the second clip scheduled ~100 real seconds
+  // later than it should've been — a long silent gap that reads as "the
+  // rest of the mix never plays").
+  const clipStart = originTime - seekFrom + clip.start;
   const clipEnd = clipStart + clip.duration;
   const fi = Math.min(clip.fadeIn, clip.duration / 2);
   const fo = Math.min(clip.fadeOut, clip.duration / 2);
-  gain.gain.setValueAtTime(0, clipStart);
-  if (fi > 0) gain.gain.linearRampToValueAtTime(1, clipStart + fi);
-  else gain.gain.setValueAtTime(1, clipStart);
-  if (fo > 0) gain.gain.setValueAtTime(1, Math.max(clipStart + fi, clipEnd - fo));
-  else gain.gain.setValueAtTime(1, clipEnd);
-  gain.gain.linearRampToValueAtTime(0, clipEnd);
+  // AudioParam.setValueAtTime()/linearRampToValueAtTime() throw outright on
+  // a negative time — confirmed live: "Time must be a finite non-negative
+  // number" — unlike AudioBufferSourceNode.start(), which just clamps a
+  // past time to "now" on its own (already handled below). A seek easily
+  // puts clipStart (or even the fade points) before the AudioContext's own
+  // time-zero, e.g. seeking into the middle of clip 1 makes ITS clipStart
+  // negative — so every gain-automation time needs its own explicit clamp.
+  // Clamping each independently preserves their relative order (a
+  // non-decreasing sequence stays non-decreasing after max(0, x) on each),
+  // so the ramp shape survives — it just starts wherever "now" already is.
+  const t0 = Math.max(0, clipStart);
+  const t1 = Math.max(0, clipStart + fi);
+  const t2 = Math.max(0, Math.max(clipStart + fi, clipEnd - fo));
+  const t3 = Math.max(0, clipEnd);
+  gain.gain.setValueAtTime(0, t0);
+  if (fi > 0) gain.gain.linearRampToValueAtTime(1, t1);
+  else gain.gain.setValueAtTime(1, t0);
+  if (fo > 0) gain.gain.setValueAtTime(1, t2);
+  else gain.gain.setValueAtTime(1, t3);
+  gain.gain.linearRampToValueAtTime(0, t3);
   const bufferOffset = Math.max(0, seekFrom - clip.start);
   src.start(Math.max(clipStart, ctx.currentTime || 0), bufferOffset);
-  src.stop(clipEnd + 0.05);
+  src.stop(Math.max(clipEnd + 0.05, ctx.currentTime || 0));
   return src;
 }
 
@@ -1241,7 +1263,7 @@ async function playMix() {
   const scheduled = mixClips.filter((clip) => clip.start + clip.duration > seekFrom);
   mixActiveSources = scheduled.map((clip, idx) => {
     const src = scheduleMixClip(mixAudioCtx, clip, now, seekFrom);
-    const label = `${clip.title} (scheduled start=${(now + clip.start).toFixed(2)} stop=${(now + clip.start + clip.duration).toFixed(2)})`;
+    const label = `${clip.title} (scheduled start=${(now - seekFrom + clip.start).toFixed(2)} stop=${(now - seekFrom + clip.start + clip.duration).toFixed(2)})`;
     mixLog('scheduled', idx + 1 + '/' + scheduled.length, label);
     src.onended = () => mixLog('ENDED:', clip.title, 'at ctx.currentTime=', mixAudioCtx.currentTime.toFixed(2));
     return src;
