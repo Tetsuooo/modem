@@ -214,19 +214,29 @@
   .mix-clip-remove {
     position: absolute; top: 2px; right: 2px; background: none; border: none; color: #9a9ba5;
     font-size: 13px; line-height: 1; padding: 2px 4px; cursor: pointer; border-radius: 4px;
+    z-index: 4; /* above the fade (3) and trim (2) handles sharing this corner, so it stays clickable */
   }
   .mix-clip-remove:hover { color: #ff8080; background: rgba(0,0,0,.3); }
+  /* Fade handles claim just the top corners (a small drag dot each); trim
+     handles claim the rest of the left/right edge below that — two
+     distinct, non-overlapping interactions on the same two edges. */
   .mix-fade-handle {
-    position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 2;
+    position: absolute; top: 0; height: 14px; width: 14px; cursor: ew-resize; z-index: 3;
   }
   .mix-fade-handle.left { left: 0; }
   .mix-fade-handle.right { right: 0; }
   .mix-fade-handle::after {
-    content: ''; position: absolute; top: 50%; width: 6px; height: 6px; border-radius: 50%;
-    background: #66aaff; transform: translateY(-50%);
+    content: ''; position: absolute; top: 4px; width: 6px; height: 6px; border-radius: 50%;
+    background: #66aaff;
   }
-  .mix-fade-handle.left::after { left: 2px; }
-  .mix-fade-handle.right::after { right: 2px; }
+  .mix-fade-handle.left::after { left: 4px; }
+  .mix-fade-handle.right::after { right: 4px; }
+  .mix-trim-handle {
+    position: absolute; top: 14px; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2;
+  }
+  .mix-trim-handle.left { left: 0; }
+  .mix-trim-handle.right { right: 0; }
+  .mix-trim-handle:hover { background: rgba(255,255,255,.18); }
   .mix-playhead {
     position: absolute; top: 0; bottom: 0; width: 2px; background: #ff6666; z-index: 4; pointer-events: none;
   }
@@ -917,8 +927,11 @@ function getWaveformPeaks(src) {
   return peaks;
 }
 
-function drawMixWaveform(canvas, src) {
-  const peaks = getWaveformPeaks(src);
+// Draws only the [trimStart, trimStart+duration] window of the cached
+// full-buffer peaks — a trimmed clip's waveform should show what actually
+// plays, not the whole source track compressed into the same width.
+function drawMixWaveform(canvas, clip) {
+  const peaks = getWaveformPeaks(clip.src);
   if (!peaks) return;
   const ctx2d = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
@@ -926,9 +939,12 @@ function drawMixWaveform(canvas, src) {
   ctx2d.strokeStyle = 'rgba(170,195,255,0.55)';
   ctx2d.lineWidth = 1;
   const buckets = peaks.length / 2;
+  const sourceDuration = clip.sourceDuration || clip.duration;
+  const bucketStart = ((clip.trimStart || 0) / sourceDuration) * buckets;
+  const bucketSpan = (clip.duration / sourceDuration) * buckets;
   ctx2d.beginPath();
   for (let x = 0; x < w; x++) {
-    const b = Math.min(buckets - 1, Math.floor((x / w) * buckets));
+    const b = Math.min(buckets - 1, Math.max(0, Math.floor(bucketStart + (x / w) * bucketSpan)));
     const min = peaks[b * 2], max = peaks[b * 2 + 1];
     const y1 = h / 2 - max * (h / 2);
     const y2 = h / 2 - min * (h / 2);
@@ -997,7 +1013,9 @@ async function addClipToMix(cand) {
     mixClips.push({
       id: cand.key + ':' + Date.now(),
       key: cand.key, title: cand.title, artist: cand.artist, src: cand.src,
-      duration: buffer.duration, start: end, fadeIn: 1, fadeOut: 1,
+      sourceDuration: buffer.duration, // full track length — trimStart/duration below can only move within this
+      trimStart: 0, duration: buffer.duration, start: end,
+      fadeIn: 0, fadeOut: 0, // no fade by default — only where you actually drag one in
     });
     el('mixStatus').textContent = '';
     renderMixTimeline();
@@ -1072,16 +1090,21 @@ function renderMixTimeline() {
     const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
     return `
     <div class="mix-clip" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
-      <canvas class="mix-clip-wave" width="${width}" height="${MIX_CLIP_H - 8}" data-src="${escAttr(c.src)}"></canvas>
+      <canvas class="mix-clip-wave" width="${width}" height="${MIX_CLIP_H - 8}" data-id="${escAttr(c.id)}"></canvas>
       <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
       <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
       <button class="mix-clip-remove" data-id="${escAttr(c.id)}" title="remove">×</button>
       <div class="mix-fade-handle left" data-id="${escAttr(c.id)}" data-side="in" title="drag to set fade-in"></div>
       <div class="mix-fade-handle right" data-id="${escAttr(c.id)}" data-side="out" title="drag to set fade-out"></div>
+      <div class="mix-trim-handle left" data-id="${escAttr(c.id)}" data-side="start" title="drag to trim the start"></div>
+      <div class="mix-trim-handle right" data-id="${escAttr(c.id)}" data-side="end" title="drag to trim the end"></div>
     </div>`;
   }).join('') + '<div id="mixPlayhead" class="mix-playhead" hidden></div>';
 
-  timeline.querySelectorAll('.mix-clip-wave').forEach((canvas) => drawMixWaveform(canvas, canvas.dataset.src));
+  timeline.querySelectorAll('.mix-clip-wave').forEach((canvas) => {
+    const clip = mixClips.find((c) => c.id === canvas.dataset.id);
+    if (clip) drawMixWaveform(canvas, clip);
+  });
   wireMixClipDrag();
   timeline.querySelectorAll('.mix-clip-remove').forEach((b) => {
     b.addEventListener('click', (e) => {
@@ -1099,11 +1122,13 @@ function renderMixTimeline() {
 // window-level move/up listeners (started on pointerdown, torn down on
 // pointerup) work the same whether or not the pointer drifts outside the
 // clip element mid-drag, same pattern as wireDragAndDrop()'s reorder.
+const MIX_MIN_CLIP_DURATION = 0.2; // seconds — trim can't shrink a clip below this
+
 function wireMixClipDrag() {
   const timeline = el('mixTimeline');
   timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
     clipEl.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-clip-remove')) return;
+      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove')) return;
       const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
       if (!clip) return;
       clipEl.classList.add('dragging');
@@ -1148,6 +1173,61 @@ function wireMixClipDrag() {
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        debouncedSaveDraft();
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  });
+
+  // Trimming the LEFT edge moves trimStart forward (reads later into the
+  // source) while shrinking duration and shifting the clip's timeline
+  // position start by the same amount — the clip's own right edge / content
+  // end stays anchored, only the front gets cut. Trimming the RIGHT edge
+  // just shrinks duration, leaving start/trimStart untouched.
+  timeline.querySelectorAll('.mix-trim-handle').forEach((handle) => {
+    handle.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      const clip = mixClips.find((c) => c.id === handle.dataset.id);
+      if (!clip) return;
+      // Backfill for a clip saved before trimming existed (no sourceDuration
+      // field) — permanently, on the clip itself, not just a local fallback,
+      // so a SECOND trim later doesn't mistake the already-trimmed duration
+      // for the original untrimmed source length.
+      if (clip.sourceDuration == null) clip.sourceDuration = clip.duration;
+      if (clip.trimStart == null) clip.trimStart = 0;
+      const side = handle.dataset.side; // 'start' | 'end'
+      const startX = e.clientX;
+      const startTrimStart = clip.trimStart;
+      const startDuration = clip.duration;
+      const startClipStart = clip.start;
+      const sourceDuration = clip.sourceDuration;
+      const clipEl = handle.closest('.mix-clip');
+      const canvas = clipEl.querySelector('.mix-clip-wave');
+      const onMove = (ev) => {
+        const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
+        if (side === 'start') {
+          const maxDx = startDuration - MIX_MIN_CLIP_DURATION; // can't eat past leaving the minimum
+          const minDx = -startTrimStart; // can't trim before the source's own beginning
+          const clampedDx = Math.max(minDx, Math.min(maxDx, dx));
+          clip.trimStart = startTrimStart + clampedDx;
+          clip.duration = startDuration - clampedDx;
+          clip.start = startClipStart + clampedDx;
+          clipEl.style.left = Math.round(clip.start * MIX_PX_PER_SEC) + 'px';
+        } else {
+          const maxDx = (sourceDuration - startTrimStart) - startDuration; // can't extend past the source's own end
+          const minDx = -(startDuration - MIX_MIN_CLIP_DURATION);
+          const clampedDx = Math.max(minDx, Math.min(maxDx, dx));
+          clip.duration = startDuration + clampedDx;
+        }
+        const width = Math.max(20, Math.round(clip.duration * MIX_PX_PER_SEC));
+        clipEl.style.width = width + 'px';
+        if (canvas) { canvas.width = width; drawMixWaveform(canvas, clip); }
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        renderMixTimeline(); // refresh ruler/scroll extents + fade-fill percentages
         debouncedSaveDraft();
       };
       window.addEventListener('pointermove', onMove);
@@ -1207,7 +1287,11 @@ function scheduleMixClip(ctx, clip, originTime, seekFrom) {
   if (fo > 0) gain.gain.setValueAtTime(1, t2);
   else gain.gain.setValueAtTime(1, t3);
   gain.gain.linearRampToValueAtTime(0, t3);
-  const bufferOffset = Math.max(0, seekFrom - clip.start);
+  // Trimming the front of a clip (see wireMixClipDrag's trim handler) means
+  // its own audio no longer starts at buffer-offset 0 — (clip.trimStart||0)
+  // is where playback of THIS clip actually begins in the source file, on
+  // top of however far in a seek lands within the clip's own timeline span.
+  const bufferOffset = (clip.trimStart || 0) + Math.max(0, seekFrom - clip.start);
   src.start(Math.max(clipStart, ctx.currentTime || 0), bufferOffset);
   src.stop(Math.max(clipEnd + 0.05, ctx.currentTime || 0));
   return src;
