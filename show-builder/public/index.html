@@ -1071,8 +1071,12 @@ function normalizeEmbedsPreview(root) {
 // A grouped run shares ONE segment/marker for several items (same rule as
 // generateShowHtml/groupRuns), so markers don't line up 1:1 with `items`
 // once any group exists — segGroups rebuilds that same one-entry-per-heading
-// structure so marker i pairs with segGroups[i] (an array of 1+ items), and
-// a grouped marker shows one artist-chip per distinct real artist in the run.
+// structure so marker i pairs with segGroups[i] (an array of 1+ items). A
+// grouped marker chips the shared heading itself (label-chip) plus one
+// artist-chip per distinct real artist in the run — the heading chip matters
+// because the literal heading TEXT gets dropped below whenever there are
+// chips to show instead (e.g. a various-artists "mappa" heading would
+// otherwise vanish entirely, leaving only the individual artists visible).
 function injectSegTagsPreview(root, items) {
   const chip = (cls, n) => `<span class="chip ${cls}">${esc(n)}</span>`;
   const markers = [...root.querySelectorAll('.seg-marker[data-seg]')];
@@ -1097,14 +1101,23 @@ function injectSegTagsPreview(root, items) {
     if (!group || !group.length) return;
     let chips;
     if (group.length > 1) {
+      // The heading TEXT itself gets dropped below (same as the standalone
+      // branch, matching the live site's "chips identify the entry, name is
+      // redundant" convention) — so the group's own shared heading needs a
+      // chip of its own too, or it vanishes entirely once the name is gone
+      // and only the per-track real artists remain.
       const seen = new Set();
-      chips = group.map((item) => {
+      const parts = [];
+      const heading = (group[0].groupHeading || '').trim();
+      if (heading) { parts.push(chip('label-chip', heading)); seen.add(heading.toLowerCase()); }
+      group.forEach((item) => {
         const nm = (item.artist || '').trim();
         const key = nm.toLowerCase();
-        if (!nm || seen.has(key)) return '';
+        if (!nm || seen.has(key)) return;
         seen.add(key);
-        return chip('artist-chip', nm);
-      }).join('');
+        parts.push(chip('artist-chip', nm));
+      });
+      chips = parts.join('');
     } else {
       const item = group[0];
       chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
