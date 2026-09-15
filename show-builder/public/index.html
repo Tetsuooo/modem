@@ -85,7 +85,7 @@
   .track-player-time { font-size: 11px; color: #9a9ba5; margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
   .scrub-bar {
     position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #2a2b33;
-    cursor: pointer; transition: height 120ms ease;
+    cursor: pointer; transition: height 120ms ease; touch-action: none; /* so a touch-drag scrubs instead of scrolling the page */
   }
   .track-player:hover .scrub-bar { height: 11px; }
   .scrub-fill { height: 100%; width: 0%; background: #3a6ff0; }
@@ -186,7 +186,10 @@
   .mix-palette-item .mp-title { color: #e8e8ea; }
   .mix-palette-item .mp-artist { color: #9a9ba5; }
   .mix-palette-item button { padding: 3px 8px; font-size: 11px; }
-  .mix-timeline-wrap { overflow-x: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #0e0f13; }
+  .mix-timeline-wrap {
+    overflow-x: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #0e0f13;
+    touch-action: pan-x; /* only native horizontal panning — leaves 2-finger pinch to our own JS handler instead of also fighting a native page-zoom gesture */
+  }
   .mix-ruler {
     position: relative; height: 22px; border-bottom: 1px solid #2a2b33; background: #14151a;
     font-size: 10px; color: #6f7080; cursor: pointer;
@@ -197,6 +200,7 @@
   .mix-clip {
     position: absolute; height: 46px; border-radius: 6px; overflow: hidden; cursor: grab;
     background: #24304a; border: 1px solid #3a5080; user-select: none;
+    touch-action: none; /* a touch-drag on a clip moves it, not the page — swipe empty space to scroll instead */
   }
   .mix-clip.dragging { cursor: grabbing; opacity: .85; box-shadow: 0 6px 16px rgba(0,0,0,.5); z-index: 5; }
   .mix-clip-wave { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; }
@@ -222,6 +226,7 @@
      distinct, non-overlapping interactions on the same two edges. */
   .mix-fade-handle {
     position: absolute; top: 0; height: 14px; width: 14px; cursor: ew-resize; z-index: 3;
+    touch-action: none;
   }
   .mix-fade-handle.left { left: 0; }
   .mix-fade-handle.right { right: 0; }
@@ -233,6 +238,7 @@
   .mix-fade-handle.right::after { right: 4px; }
   .mix-trim-handle {
     position: absolute; top: 14px; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2;
+    touch-action: none;
   }
   .mix-trim-handle.left { left: 0; }
   .mix-trim-handle.right { right: 0; }
@@ -897,6 +903,21 @@ function zoomMix(factor) {
   MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, MIX_PX_PER_SEC * factor));
   el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
   renderMixTimeline();
+}
+
+// Same zoom, but keeps whatever time was under `clientX` still under it
+// afterward (mouse-wheel and pinch zoom both feel wrong otherwise — the
+// view jumps instead of scaling around where your attention actually is).
+// A fixed scrollLeft PIXEL value, left untouched, would otherwise correspond
+// to a different TIME position once px/sec changes, so this has to
+// explicitly recompute scrollLeft after the zoom, not just let it sit.
+function zoomMixAtCursor(clientX, factor) {
+  const wrap = el('mixTimelineWrap');
+  const rect = el('mixRuler').getBoundingClientRect();
+  const mouseOffset = clientX - rect.left;
+  const cursorTime = (wrap.scrollLeft + mouseOffset) / MIX_PX_PER_SEC;
+  zoomMix(factor);
+  wrap.scrollLeft = Math.max(0, cursorTime * MIX_PX_PER_SEC - mouseOffset);
 }
 
 // Full-resolution min/max peaks over the WHOLE buffer, computed once and
@@ -1974,6 +1995,60 @@ el('mixRuler').addEventListener('click', (e) => {
   mixSeekPosition = Math.max(0, (e.clientX - rect.left) / MIX_PX_PER_SEC);
   updateMixPlayheadPosition();
   if (wasPlaying) playMix();
+});
+// Wheel over the ruler zooms (anchored under the cursor); wheel anywhere
+// else in the sequencer scrolls it horizontally — a plain vertical mouse
+// wheel has no other use here, so repurposing it avoids needing a
+// dedicated horizontal scrollbar drag for every small adjustment.
+// stopPropagation on the ruler keeps its zoom from ALSO triggering the
+// wrap's own scroll handler below (they're siblings, both children of
+// mixTimelineWrap, so a ruler-wheel event would otherwise bubble into it).
+el('mixRuler').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  zoomMixAtCursor(e.clientX, e.deltaY < 0 ? 1.08 : 1 / 1.08);
+}, { passive: false });
+el('mixTimelineWrap').addEventListener('wheel', (e) => {
+  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // already-horizontal input (trackpad/shift+wheel) — let it scroll natively
+  e.preventDefault();
+  el('mixTimelineWrap').scrollLeft += e.deltaY;
+}, { passive: false });
+
+// Touch: two-finger pinch zooms (anchored at the pinch midpoint), one-finger
+// drag scrolls natively (no JS needed for that — see the CSS touch-action
+// notes on .mix-clip/.mix-fade-handle/.mix-trim-handle, which turn off the
+// browser's default touch handling ONLY on those, so dragging one moves it
+// via the existing pointer-event handlers instead of panning the page,
+// while empty space keeps native scroll). preventDefault on the pinch stops
+// the browser from ALSO trying to pinch-zoom the whole page.
+let mixPinchStartDist = null;
+let mixPinchStartPxPerSec = null;
+function mixTouchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+el('mixTimelineWrap').addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    mixPinchStartDist = mixTouchDist(e.touches);
+    mixPinchStartPxPerSec = MIX_PX_PER_SEC;
+  }
+}, { passive: true });
+el('mixTimelineWrap').addEventListener('touchmove', (e) => {
+  if (e.touches.length !== 2 || !mixPinchStartDist) return;
+  e.preventDefault();
+  const dist = mixTouchDist(e.touches);
+  const midClientX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+  const rect = el('mixRuler').getBoundingClientRect();
+  const mouseOffset = midClientX - rect.left;
+  const cursorTime = (el('mixTimelineWrap').scrollLeft + mouseOffset) / MIX_PX_PER_SEC;
+  MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, mixPinchStartPxPerSec * (dist / mixPinchStartDist)));
+  el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
+  renderMixTimeline();
+  el('mixTimelineWrap').scrollLeft = Math.max(0, cursorTime * MIX_PX_PER_SEC - mouseOffset);
+}, { passive: false });
+el('mixTimelineWrap').addEventListener('touchend', (e) => {
+  if (e.touches.length < 2) mixPinchStartDist = null;
 });
 // Spacebar play/pause, scoped to the Mix tab only — ignored while typing in
 // a field (so it doesn't hijack normal text entry elsewhere) and only wired
