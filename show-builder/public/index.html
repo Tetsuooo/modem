@@ -26,6 +26,7 @@
   .status { font-size: 12px; color: #9a9ba5; }
   .errors { padding: 8px 20px; background: #3a1f1f; color: #ff9b9b; font-size: 12px; }
   .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
+  .tab-panel.tab-panel-wide { max-width: 1400px; }
   .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
@@ -171,6 +172,60 @@
   #previewPane .chip.label-chip { background: rgba(224,224,255,0.96); }
   #previewPane .modem-body iframe { max-width: 100%; border: 0; margin: 0.25rem 0 1rem; display: block; width: 100%; max-width: 560px; height: 120px; }
   #previewPane .modem-body iframe[src*="bandcamp"] { height: 120px; }
+
+  /* ---- Mix tab: a rudimentary DAW — one lane per clip, horizontal = time,
+     drag the body to reposition, drag a corner handle to fade. ---- */
+  .mix-palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .mix-palette-item {
+    display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 6px;
+    background: #1c1d24; border: 1px solid #2a2b33; font-size: 12px;
+  }
+  .mix-palette-item .mp-title { color: #e8e8ea; }
+  .mix-palette-item .mp-artist { color: #9a9ba5; }
+  .mix-palette-item button { padding: 3px 8px; font-size: 11px; }
+  .mix-timeline-wrap { overflow-x: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #0e0f13; }
+  .mix-ruler {
+    position: relative; height: 22px; border-bottom: 1px solid #2a2b33; background: #14151a;
+    font-size: 10px; color: #6f7080;
+  }
+  .mix-ruler span { position: absolute; top: 4px; border-left: 1px solid #2a2b33; padding-left: 3px; }
+  .mix-timeline { position: relative; min-height: 60px; padding: 8px 0; }
+  .mix-empty { padding: 30px; text-align: center; color: #6f7080; font-size: 12px; }
+  .mix-clip {
+    position: absolute; height: 46px; border-radius: 6px; overflow: hidden; cursor: grab;
+    background: #24304a; border: 1px solid #3a5080; user-select: none;
+  }
+  .mix-clip.dragging { cursor: grabbing; opacity: .85; box-shadow: 0 6px 16px rgba(0,0,0,.5); z-index: 5; }
+  .mix-clip-fill {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, #3a6ff0 var(--fade-in, 0%), #3a6ff0 calc(100% - var(--fade-out, 0%)), transparent 100%);
+    opacity: .35; pointer-events: none;
+  }
+  .mix-clip-label {
+    position: relative; padding: 4px 8px; font-size: 11px; line-height: 1.3; pointer-events: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mix-clip-label .mc-title { color: #e8e8ea; display: block; overflow: hidden; text-overflow: ellipsis; }
+  .mix-clip-label .mc-artist { color: #9fb4e0; display: block; overflow: hidden; text-overflow: ellipsis; }
+  .mix-clip-remove {
+    position: absolute; top: 2px; right: 2px; background: none; border: none; color: #9a9ba5;
+    font-size: 13px; line-height: 1; padding: 2px 4px; cursor: pointer; border-radius: 4px;
+  }
+  .mix-clip-remove:hover { color: #ff8080; background: rgba(0,0,0,.3); }
+  .mix-fade-handle {
+    position: absolute; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 2;
+  }
+  .mix-fade-handle.left { left: 0; }
+  .mix-fade-handle.right { right: 0; }
+  .mix-fade-handle::after {
+    content: ''; position: absolute; top: 50%; width: 6px; height: 6px; border-radius: 50%;
+    background: #66aaff; transform: translateY(-50%);
+  }
+  .mix-fade-handle.left::after { left: 2px; }
+  .mix-fade-handle.right::after { right: 2px; }
+  .mix-playhead {
+    position: absolute; top: 0; bottom: 0; width: 2px; background: #ff6666; z-index: 4; pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -180,6 +235,7 @@
     <button class="tab-btn active" data-tab="scan">Scan</button>
     <button class="tab-btn" data-tab="arrange">Download &amp; Arrange<span id="arrangeCount" class="tab-badge" hidden></span></button>
     <button class="tab-btn" data-tab="publish">Publish &amp; Edit</button>
+    <button class="tab-btn" data-tab="mix">Mix</button>
   </nav>
 </header>
 <div id="errorsBox"></div>
@@ -243,6 +299,23 @@
         <div class="preorder" style="margin:6px 0">Review before pushing — this touches the live site:</div>
         <pre id="publishDiff" class="diff-pre"></pre>
         <div class="actions"><button id="confirmPushBtn" class="danger">Confirm &amp; push</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-panel tab-panel-wide" id="panel-mix" hidden>
+    <h2>Mix — drag clips to position them, drag their corners to fade</h2>
+    <div class="actions">
+      <button id="mixPlayBtn" class="primary">▶ Play</button>
+      <button id="mixStopBtn">■ Stop</button>
+      <button id="mixExportBtn">Export mix (.wav)</button>
+      <span id="mixStatus" class="status"></span>
+    </div>
+    <div id="mixPalette" class="mix-palette"></div>
+    <div id="mixTimelineWrap" class="mix-timeline-wrap">
+      <div id="mixRuler" class="mix-ruler"></div>
+      <div id="mixTimeline" class="mix-timeline">
+        <div id="mixPlayhead" class="mix-playhead" hidden></div>
       </div>
     </div>
   </section>
@@ -670,6 +743,7 @@ function renderSelected() {
       node.style.transform = '';
     });
   });
+  renderMixPalette();
 }
 
 // Only a compact status badge lives inline in the row now — once a file is
@@ -767,6 +841,330 @@ function wireTrackPlayers(root) {
 function downloadedFileUrl(relPath) {
   const norm = String(relPath).replace(/\\/g, '/').replace(/^downloads\//i, '');
   return '/downloads/' + norm.split('/').map(encodeURIComponent).join('/');
+}
+
+// ---------- Mix tab: a rudimentary DAW ---------------------------------
+// One lane per clip (so overlapping time ranges — a manual crossfade — are
+// always visually distinguishable rather than stacked on each other), drag
+// a clip's body to reposition it in time, drag a corner handle to set its
+// fade in/out. Playback and export both use the Web Audio API directly:
+// live playback schedules one AudioBufferSourceNode + GainNode per clip on
+// a real-time AudioContext, export re-schedules the identical graph on an
+// OfflineAudioContext and bounces the result to a WAV Blob (no server
+// round-trip, no encoding library — 16-bit PCM WAV needs neither).
+let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut }
+let mixAudioCtx = null;
+const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
+let mixPlaying = false;
+let mixActiveSources = [];
+let mixPlayStartCtxTime = 0;
+let mixPlayheadRAF = null;
+const MIX_PX_PER_SEC = 10;
+const MIX_LANE_H = 54;
+
+function fmtMixTime(t) {
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+async function getMixBuffer(src) {
+  if (mixBuffers.has(src)) return mixBuffers.get(src);
+  if (!mixAudioCtx) mixAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const res = await fetch(src);
+  const arrBuf = await res.arrayBuffer();
+  const audioBuf = await mixAudioCtx.decodeAudioData(arrBuf);
+  mixBuffers.set(src, audioBuf);
+  return audioBuf;
+}
+
+// The palette lists every already-downloaded file across "Your show" (same
+// _download.files that drive the track players there) — nothing to decode
+// yet, just metadata, so this is cheap to rebuild on every renderSelected().
+function renderMixPalette() {
+  const box = el('mixPalette');
+  if (!box) return;
+  const candidates = [];
+  selected.forEach((it) => {
+    const files = (it._download && it._download.files) || [];
+    files.forEach((f, i) => {
+      const multi = files.length > 1;
+      candidates.push({
+        key: it.key + (multi ? ':' + i : ''),
+        title: multi ? String(f).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '') : it.title,
+        artist: it.artist,
+        src: downloadedFileUrl(f),
+      });
+    });
+  });
+  if (!candidates.length) {
+    box.innerHTML = '<div class="empty">Download some tracks first (Download &amp; Arrange tab) — they\'ll show up here to add to the mix.</div>';
+    return;
+  }
+  box.innerHTML = candidates.map((c) => `
+    <div class="mix-palette-item">
+      <span class="mp-title">${esc(c.title)}</span>
+      <span class="mp-artist">${esc(c.artist || '')}</span>
+      <button data-src="${escAttr(c.src)}" data-title="${escAttr(c.title)}" data-artist="${escAttr(c.artist || '')}" data-key="${escAttr(c.key)}">+ add</button>
+    </div>`).join('');
+  box.querySelectorAll('button[data-src]').forEach((b) => {
+    b.addEventListener('click', () => addClipToMix({ src: b.dataset.src, title: b.dataset.title, artist: b.dataset.artist, key: b.dataset.key }));
+  });
+}
+
+async function addClipToMix(cand) {
+  el('mixStatus').textContent = 'loading…';
+  try {
+    const buffer = await getMixBuffer(cand.src);
+    const end = mixClips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    mixClips.push({
+      id: cand.key + ':' + Date.now(),
+      key: cand.key, title: cand.title, artist: cand.artist, src: cand.src,
+      duration: buffer.duration, start: end, fadeIn: 1, fadeOut: 1,
+    });
+    el('mixStatus').textContent = '';
+    renderMixTimeline();
+    debouncedSaveDraft();
+  } catch (e) {
+    el('mixStatus').textContent = 'failed to load: ' + (e.message || e);
+  }
+}
+
+function renderMixTimeline() {
+  const timeline = el('mixTimeline');
+  const ruler = el('mixRuler');
+  if (!timeline || !ruler) return;
+  if (!mixClips.length) {
+    timeline.innerHTML = '<div class="mix-empty">Add a downloaded track above to start the mix.</div><div id="mixPlayhead" class="mix-playhead" hidden></div>';
+    ruler.innerHTML = '';
+    return;
+  }
+  const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration), 30);
+  const widthPx = Math.ceil(totalDur * MIX_PX_PER_SEC) + 60;
+  timeline.style.width = widthPx + 'px';
+  timeline.style.height = (mixClips.length * MIX_LANE_H + 8) + 'px';
+  ruler.style.width = widthPx + 'px';
+
+  let rulerHtml = '';
+  for (let t = 0; t <= totalDur + 10; t += 10) rulerHtml += `<span style="left:${t * MIX_PX_PER_SEC}px">${fmtMixTime(t)}</span>`;
+  ruler.innerHTML = rulerHtml;
+
+  timeline.innerHTML = mixClips.map((c, i) => {
+    const left = Math.round(c.start * MIX_PX_PER_SEC);
+    const width = Math.max(20, Math.round(c.duration * MIX_PX_PER_SEC));
+    const top = i * MIX_LANE_H;
+    const fadeInPct = c.duration ? Math.min(50, (c.fadeIn / c.duration) * 100) : 0;
+    const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
+    return `
+    <div class="mix-clip" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
+      <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
+      <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
+      <button class="mix-clip-remove" data-id="${escAttr(c.id)}" title="remove">×</button>
+      <div class="mix-fade-handle left" data-id="${escAttr(c.id)}" data-side="in" title="drag to set fade-in"></div>
+      <div class="mix-fade-handle right" data-id="${escAttr(c.id)}" data-side="out" title="drag to set fade-out"></div>
+    </div>`;
+  }).join('') + '<div id="mixPlayhead" class="mix-playhead" hidden></div>';
+
+  wireMixClipDrag();
+  timeline.querySelectorAll('.mix-clip-remove').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mixClips = mixClips.filter((c) => c.id !== b.dataset.id);
+      renderMixTimeline();
+      debouncedSaveDraft();
+    });
+  });
+}
+
+// Both drags read movement as a DELTA from pointerdown (not an absolute
+// position), so they're unaffected by the timeline's own horizontal scroll —
+// window-level move/up listeners (started on pointerdown, torn down on
+// pointerup) work the same whether or not the pointer drifts outside the
+// clip element mid-drag, same pattern as wireDragAndDrop()'s reorder.
+function wireMixClipDrag() {
+  const timeline = el('mixTimeline');
+  timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
+    clipEl.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-clip-remove')) return;
+      const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
+      if (!clip) return;
+      clipEl.classList.add('dragging');
+      const startX = e.clientX;
+      const startPos = clip.start;
+      const onMove = (ev) => {
+        const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
+        clip.start = Math.max(0, startPos + dx);
+        clipEl.style.left = Math.round(clip.start * MIX_PX_PER_SEC) + 'px';
+      };
+      const onUp = () => {
+        clipEl.classList.remove('dragging');
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        renderMixTimeline(); // refresh ruler/scroll extents to the new total length
+        debouncedSaveDraft();
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  });
+
+  timeline.querySelectorAll('.mix-fade-handle').forEach((handle) => {
+    handle.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      const clip = mixClips.find((c) => c.id === handle.dataset.id);
+      if (!clip) return;
+      const side = handle.dataset.side;
+      const startX = e.clientX;
+      const startVal = side === 'in' ? clip.fadeIn : clip.fadeOut;
+      const fillEl = handle.closest('.mix-clip').querySelector('.mix-clip-fill');
+      const onMove = (ev) => {
+        const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
+        const delta = side === 'in' ? dx : -dx;
+        const val = Math.max(0, Math.min(clip.duration / 2, startVal + delta));
+        if (side === 'in') clip.fadeIn = val; else clip.fadeOut = val;
+        const fadeInPct = clip.duration ? Math.min(50, (clip.fadeIn / clip.duration) * 100) : 0;
+        const fadeOutPct = clip.duration ? Math.min(50, (clip.fadeOut / clip.duration) * 100) : 0;
+        fillEl.style.setProperty('--fade-in', fadeInPct + '%');
+        fillEl.style.setProperty('--fade-out', fadeOutPct + '%');
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        debouncedSaveDraft();
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  });
+}
+
+// Shared by live playback and export: schedule one buffer source + gain
+// envelope per clip onto whichever AudioContext (real-time or offline) is
+// passed in, all clips positioned at clip.start relative to `originTime`.
+function scheduleMixClip(ctx, clip, originTime) {
+  const buffer = mixBuffers.get(clip.src);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const gain = ctx.createGain();
+  src.connect(gain).connect(ctx.destination);
+  const clipStart = originTime + clip.start;
+  const clipEnd = clipStart + clip.duration;
+  const fi = Math.min(clip.fadeIn, clip.duration / 2);
+  const fo = Math.min(clip.fadeOut, clip.duration / 2);
+  gain.gain.setValueAtTime(0, clipStart);
+  if (fi > 0) gain.gain.linearRampToValueAtTime(1, clipStart + fi);
+  else gain.gain.setValueAtTime(1, clipStart);
+  if (fo > 0) gain.gain.setValueAtTime(1, Math.max(clipStart + fi, clipEnd - fo));
+  else gain.gain.setValueAtTime(1, clipEnd);
+  gain.gain.linearRampToValueAtTime(0, clipEnd);
+  src.start(clipStart);
+  src.stop(clipEnd + 0.05);
+  return src;
+}
+
+async function playMix() {
+  if (!mixClips.length || mixPlaying) return;
+  el('selected').querySelectorAll('audio').forEach((a) => a.pause());
+  if (!mixAudioCtx) mixAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (mixAudioCtx.state === 'suspended') await mixAudioCtx.resume();
+  el('mixStatus').textContent = 'loading…';
+  try {
+    await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
+  } catch (e) {
+    el('mixStatus').textContent = 'failed to load a clip: ' + (e.message || e);
+    return;
+  }
+  el('mixStatus').textContent = '';
+  mixPlaying = true;
+  const now = mixAudioCtx.currentTime + 0.1; // small headroom so nothing schedules "in the past"
+  mixPlayStartCtxTime = now;
+  mixActiveSources = mixClips.map((clip) => scheduleMixClip(mixAudioCtx, clip, now));
+  const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration));
+  el('mixPlayhead').hidden = false;
+  const tick = () => {
+    if (!mixPlaying) return;
+    const elapsed = mixAudioCtx.currentTime - mixPlayStartCtxTime;
+    const ph = el('mixPlayhead');
+    if (ph) ph.style.left = Math.round(elapsed * MIX_PX_PER_SEC) + 'px';
+    if (elapsed >= totalDur) { stopMix(); return; }
+    mixPlayheadRAF = requestAnimationFrame(tick);
+  };
+  mixPlayheadRAF = requestAnimationFrame(tick);
+}
+
+function stopMix() {
+  mixPlaying = false;
+  if (mixPlayheadRAF) cancelAnimationFrame(mixPlayheadRAF);
+  mixActiveSources.forEach((s) => { try { s.stop(); } catch (e) { /* already stopped */ } });
+  mixActiveSources = [];
+  const ph = el('mixPlayhead');
+  if (ph) ph.hidden = true;
+}
+
+async function exportMix() {
+  if (!mixClips.length) return;
+  el('mixExportBtn').disabled = true;
+  el('mixStatus').textContent = 'rendering…';
+  try {
+    await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
+    const sampleRate = 44100;
+    const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
+    const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDur * sampleRate), sampleRate);
+    mixClips.forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
+    const rendered = await offlineCtx.startRendering();
+    const wavBlob = audioBufferToWav(rendered);
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `modem-mix-${el('showNumber').value.trim() || Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    el('mixStatus').textContent = 'exported ✓';
+  } catch (e) {
+    el('mixStatus').textContent = 'export failed: ' + (e.message || e);
+  } finally {
+    el('mixExportBtn').disabled = false;
+  }
+}
+
+// Plain 16-bit PCM WAV from an AudioBuffer — no encoding library needed
+// (unlike MP3, WAV is just a header in front of the raw interleaved samples).
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const numFrames = buffer.length;
+  const blockAlign = numChannels * 2;
+  const dataSize = numFrames * blockAlign;
+  const arrBuf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(arrBuf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  const channels = [];
+  for (let c = 0; c < numChannels; c++) channels.push(buffer.getChannelData(c));
+  let offset = 44;
+  for (let i = 0; i < numFrames; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      const sample = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+      offset += 2;
+    }
+  }
+  return new Blob([arrBuf], { type: 'audio/wav' });
 }
 
 // Trello/Notion-style live reorder: the dragged row's actual DOM node moves
@@ -906,9 +1304,12 @@ async function generateHtml() {
 
 async function saveDraft() {
   try {
+    // mixClips is saved without its decoded AudioBuffer (mixBuffers is a
+    // separate in-memory cache, re-decoded from `src` on next load) — only
+    // the plain descriptors (position/fades/etc.) need to persist.
     await fetch('/draft', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ selected, generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null }),
+      body: JSON.stringify({ selected, mixClips, generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null }),
     });
   } catch (e) { /* best-effort */ }
 }
@@ -922,6 +1323,7 @@ async function loadDraft() {
   try {
     const j = await (await fetch('/draft')).json();
     selected = j.selected || [];
+    mixClips = j.mixClips || [];
     if (j.generatedHtml) { el('outputBox').style.display = ''; el('outputText').value = j.generatedHtml; }
     if (j.showNumber) el('showNumber').value = j.showNumber;
     else {
@@ -931,6 +1333,7 @@ async function loadDraft() {
       } catch (e2) { /* leave blank */ }
     }
     renderSelected();
+    renderMixTimeline();
   } catch (e) { /* first run, no draft yet */ }
 }
 
@@ -1197,7 +1600,7 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit tabs — one panel visible at a
 // time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish'];
+const TABS = ['scan', 'arrange', 'publish', 'mix'];
 function switchTab(tab) {
   if (!TABS.includes(tab)) tab = 'scan';
   TABS.forEach((t) => { el('panel-' + t).hidden = t !== tab; });
@@ -1222,6 +1625,7 @@ document.querySelectorAll('.tab-btn').forEach((b) => {
 el('selected').addEventListener('play', (e) => {
   if (e.target.tagName !== 'AUDIO') return;
   el('selected').querySelectorAll('audio').forEach((a) => { if (a !== e.target) a.pause(); });
+  if (mixPlaying) stopMix();
 }, true);
 
 el('scanBtn').addEventListener('click', scan);
@@ -1252,6 +1656,9 @@ el('openCoversBtn').addEventListener('click', () => {
 el('checkLiveBtn').addEventListener('click', checkLive);
 el('runPublishBtn').addEventListener('click', runPublish);
 el('confirmPushBtn').addEventListener('click', confirmPush);
+el('mixPlayBtn').addEventListener('click', playMix);
+el('mixStopBtn').addEventListener('click', stopMix);
+el('mixExportBtn').addEventListener('click', exportMix);
 
 loadDraft();
 </script>
