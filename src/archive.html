@@ -175,6 +175,20 @@
     .modem-body .seg-marker.seg-keep .seg-tags { margin-left: 0; }
     .modem-body .seg-marker .chip { margin: 0 0 0 0.3rem; cursor: pointer; vertical-align: middle; }
     .modem-body .seg-marker .chip:hover { background: #ffff00; }
+    /* Label's own Bandcamp profile picture, dropped in front of its heading on the
+       year-end "best labels"/"community lists" pages only — see injectLabelLogos(). */
+    .modem-body .seg-marker .label-logo {
+      width: 4.2rem; height: 4.2rem; flex: 0 0 auto; margin-right: 0.6rem;
+      border-radius: 3px; object-fit: cover;
+      border: 1px solid rgba(0,0,0,0.15); background: #fff;
+    }
+    /* With a logo present, sit the slash-run/chip line on the image's own
+       bottom edge instead of vertically centering against its full height. */
+    .modem-body .seg-marker.has-label-logo { align-items: flex-end; }
+    /* A bit more breathing room between entries on the label-list pages
+       (logo'd or not, so the rhythm stays even) than the default
+       show-tracklist spacing. */
+    .modem-body .seg-marker.label-list-entry { margin-top: 2.6rem; }
     /* Play trigger(s) moved from beside the embed to the front of the heading bar
        (see addPlayButtons()) — a packed multi-track segment gets one per track,
        in order, so the whole row is playable without scanning down to the embeds. */
@@ -1727,6 +1741,62 @@
         return { artists: [...allArtists], labels: [...allLabels] };
       }
 
+      // The label's own Bandcamp profile picture, next to its heading on the
+      // year-end "best labels of <year>"/"modem community lists" pages — these
+      // reuse the show-page seg-marker pipeline above (injectSegTags) for their
+      // chips, since their headings are the same "name /////" format, but only
+      // THESE list pages also get a logo (a show's tracklist headings don't).
+      // The handle is pulled from the heading's own bandcamp.com link — the exact
+      // same one scripts/build-label-logos.js already read to build the lookup
+      // map, so no extra data needs to travel through rec/tracks for this.
+      let labelLogosPromise = null;
+      function loadLabelLogos() {
+        if (!labelLogosPromise) {
+          labelLogosPromise = fetch('assets/label-logos.json', { cache: 'no-cache' })
+            .then((r) => (r.ok ? r.json() : {}))
+            .catch(() => ({}));
+        }
+        return labelLogosPromise;
+      }
+      // Same normalization scripts/build-label-logos.js uses to key its output
+      // by name (not by a handle scraped off any one record's own heading —
+      // the same label can be linked differently, or not at all, from one
+      // year's list to the next; matching by name lets a working link found
+      // on ANY page cover every page that credits that same name).
+      function hardKeyName(s) {
+        return (s == null ? '' : String(s)).toLowerCase().normalize('NFKD')
+          .replace(/[̀-ͯ]/g, '').replace(/[\s._*|~^;:`'"()[\]/\\?<>-]/g, '');
+      }
+      function injectLabelLogos(body, rec) {
+        // Spacing (margin-top) applies to every entry right away, regardless
+        // of whether a logo resolves — otherwise the rhythm looks uneven for
+        // the (up to a couple) entries with no logo, until/unless one loads.
+        body.querySelectorAll('.seg-marker[data-seg]').forEach((marker) => {
+          marker.classList.add('label-list-entry');
+        });
+        loadLabelLogos().then((logos) => {
+          if (!logos || !Object.keys(logos).length) return;
+          body.querySelectorAll('.seg-marker[data-seg]').forEach((marker) => {
+            if (marker.querySelector('.label-logo')) return; // don't double-insert on a stale/late resolve
+            const seg = marker.getAttribute('data-seg');
+            const names = [
+              ...(rec.labels || []).filter((l) => String(l.seg) === seg).map((l) => l.name),
+              ...(rec.artists || []).filter((a) => String(a.seg) === seg).map((a) => a.name),
+            ];
+            let src = null;
+            for (const n of names) { src = logos[hardKeyName(n)]; if (src) break; }
+            if (!src) return;
+            const img = document.createElement('img');
+            img.className = 'label-logo';
+            img.src = '/' + src.replace(/^\/+/, '');
+            img.alt = '';
+            img.loading = 'lazy';
+            marker.classList.add('has-label-logo');
+            marker.insertBefore(img, marker.firstChild);
+          });
+        });
+      }
+
       let currentDetailRec = null; // for the seg-editor click handler below, which needs the live rec object
       function renderDetail(rec, records) {
         currentDetailRec = rec;
@@ -1752,7 +1822,24 @@
         }
         const body = detailInner.querySelector('.modem-body');
         let listTags = null, segTags = null;
-        if (body) { normalizeEmbeds(body); if (rec.type === 'list') listTags = injectListTags(body); else { separateVideoSection(body); segTags = injectSegTags(body, rec); addPlayButtons(body); watchForBlockedEmbeds(body); } }
+        if (body) {
+          normalizeEmbeds(body);
+          // Most year-end lists are description+embed entries (injectListTags).
+          // A few ("best labels of <year>", "modem community lists") are instead
+          // written as show-style "name /////" segment headings with no embeds of
+          // their own — detected structurally (not by slug, so a future year's
+          // page qualifies automatically) — and get the same chip pipeline shows
+          // use, plus each label's own logo next to its heading.
+          if (rec.type === 'list' && !body.querySelector('.seg-marker[data-seg]')) {
+            listTags = injectListTags(body);
+          } else {
+            separateVideoSection(body);
+            segTags = injectSegTags(body, rec);
+            addPlayButtons(body);
+            watchForBlockedEmbeds(body);
+            if (rec.type === 'list') injectLabelLogos(body, rec);
+          }
+        }
         initPlayer();
 
         const nb = neighbors(rec, records);
