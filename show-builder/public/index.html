@@ -186,7 +186,7 @@
   .mix-timeline-wrap { overflow-x: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #0e0f13; }
   .mix-ruler {
     position: relative; height: 22px; border-bottom: 1px solid #2a2b33; background: #14151a;
-    font-size: 10px; color: #6f7080;
+    font-size: 10px; color: #6f7080; cursor: pointer;
   }
   .mix-ruler span { position: absolute; top: 4px; border-left: 1px solid #2a2b33; padding-left: 3px; }
   .mix-timeline { position: relative; min-height: 60px; padding: 8px 0; }
@@ -308,6 +308,7 @@
     <div class="actions">
       <button id="mixPlayBtn" class="primary">▶ Play</button>
       <button id="mixStopBtn">■ Stop</button>
+      <button id="mixAddAllBtn">Add all from Your show</button>
       <button id="mixExportBtn">Export mix (.wav)</button>
       <span id="mixStatus" class="status"></span>
     </div>
@@ -859,6 +860,7 @@ let mixPlaying = false;
 let mixActiveSources = [];
 let mixPlayStartCtxTime = 0;
 let mixPlayheadRAF = null;
+let mixSeekPosition = 0; // seconds — where the next Play starts from; click the ruler to move it
 const MIX_PX_PER_SEC = 10;
 const MIX_LANE_H = 54;
 
@@ -878,12 +880,10 @@ async function getMixBuffer(src) {
   return audioBuf;
 }
 
-// The palette lists every already-downloaded file across "Your show" (same
-// _download.files that drive the track players there) — nothing to decode
-// yet, just metadata, so this is cheap to rebuild on every renderSelected().
-function renderMixPalette() {
-  const box = el('mixPalette');
-  if (!box) return;
+// Every already-downloaded file across "Your show" (same _download.files
+// that drive the track players there), in show order — the single source
+// of truth for both the palette (below) and addAllToMix()'s default fill.
+function getMixCandidates() {
   const candidates = [];
   selected.forEach((it) => {
     const files = (it._download && it._download.files) || [];
@@ -897,6 +897,15 @@ function renderMixPalette() {
       });
     });
   });
+  return candidates;
+}
+
+// Nothing to decode yet here, just metadata, so this is cheap to rebuild on
+// every renderSelected().
+function renderMixPalette() {
+  const box = el('mixPalette');
+  if (!box) return;
+  const candidates = getMixCandidates();
   if (!candidates.length) {
     box.innerHTML = '<div class="empty">Download some tracks first (Download &amp; Arrange tab) — they\'ll show up here to add to the mix.</div>';
     return;
@@ -928,6 +937,44 @@ async function addClipToMix(cand) {
   } catch (e) {
     el('mixStatus').textContent = 'failed to load: ' + (e.message || e);
   }
+}
+
+// Fills the mix with every downloaded track not already in it, in show
+// order, sequentially placed — one at a time (not Promise.all) so they land
+// in "Your show" order regardless of which file finishes decoding first.
+// Safe to re-run any time: already-present tracks (matched by key) are
+// skipped, so it only ever ADDS what's missing, never disturbs clips
+// already positioned/faded.
+async function addAllToMix() {
+  const existingKeys = new Set(mixClips.map((c) => c.key));
+  const missing = getMixCandidates().filter((c) => !existingKeys.has(c.key));
+  for (const c of missing) await addClipToMix(c);
+}
+
+// Runs once per page load, the first time the Mix tab is actually opened —
+// gives a populated timeline by default (every selected/downloaded track,
+// in order) without making the user click "+ add" on each one individually,
+// but only when the mix is genuinely empty (a restored draft, or the user
+// having deliberately cleared it, is left alone).
+let mixAutoFillDone = false;
+async function ensureMixAutoFilled() {
+  if (mixAutoFillDone) return;
+  mixAutoFillDone = true;
+  if (mixClips.length) return;
+  await addAllToMix();
+}
+
+// The playhead div gets torn down and rebuilt by renderMixTimeline() (it's
+// just template text like the clips), so its visibility/position always
+// needs re-applying from mixSeekPosition after a render — never hardcode
+// `hidden` in the template itself, or a click-seek right before a re-render
+// (e.g. adding another clip) would silently revert.
+function updateMixPlayheadPosition() {
+  const ph = el('mixPlayhead');
+  if (!ph) return;
+  if (!mixClips.length) { ph.hidden = true; return; }
+  ph.hidden = false;
+  ph.style.left = Math.round(mixSeekPosition * MIX_PX_PER_SEC) + 'px';
 }
 
 function renderMixTimeline() {
@@ -974,6 +1021,7 @@ function renderMixTimeline() {
       debouncedSaveDraft();
     });
   });
+  updateMixPlayheadPosition();
 }
 
 // Both drags read movement as a DELTA from pointerdown (not an absolute
@@ -1041,7 +1089,17 @@ function wireMixClipDrag() {
 // Shared by live playback and export: schedule one buffer source + gain
 // envelope per clip onto whichever AudioContext (real-time or offline) is
 // passed in, all clips positioned at clip.start relative to `originTime`.
-function scheduleMixClip(ctx, clip, originTime) {
+// seekFrom (live playback only, seconds into the OVERALL mix — export
+// always renders from 0) shifts everything earlier in wall-clock time so
+// playback starts mid-mix instead of at the top; a clip that itself starts
+// before seekFrom gets a matching buffer offset so it resumes mid-clip
+// rather than restarting from its own beginning. The gain envelope is still
+// scheduled at the clip's true, un-shifted times — an automation event
+// that lands before the AudioContext's current time just takes effect
+// immediately, so a fade seeked past comes out at full volume correctly
+// with no special-casing needed.
+function scheduleMixClip(ctx, clip, originTime, seekFrom) {
+  seekFrom = seekFrom || 0;
   const buffer = mixBuffers.get(clip.src);
   const src = ctx.createBufferSource();
   src.buffer = buffer;
@@ -1057,7 +1115,8 @@ function scheduleMixClip(ctx, clip, originTime) {
   if (fo > 0) gain.gain.setValueAtTime(1, Math.max(clipStart + fi, clipEnd - fo));
   else gain.gain.setValueAtTime(1, clipEnd);
   gain.gain.linearRampToValueAtTime(0, clipEnd);
-  src.start(clipStart);
+  const bufferOffset = Math.max(0, seekFrom - clip.start);
+  src.start(Math.max(clipStart, ctx.currentTime || 0), bufferOffset);
   src.stop(clipEnd + 0.05);
   return src;
 }
@@ -1077,16 +1136,18 @@ async function playMix() {
   el('mixStatus').textContent = '';
   mixPlaying = true;
   const now = mixAudioCtx.currentTime + 0.1; // small headroom so nothing schedules "in the past"
+  const seekFrom = mixSeekPosition;
   mixPlayStartCtxTime = now;
-  mixActiveSources = mixClips.map((clip) => scheduleMixClip(mixAudioCtx, clip, now));
+  mixActiveSources = mixClips
+    .filter((clip) => clip.start + clip.duration > seekFrom) // already fully played out before the seek point
+    .map((clip) => scheduleMixClip(mixAudioCtx, clip, now, seekFrom));
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration));
-  el('mixPlayhead').hidden = false;
   const tick = () => {
     if (!mixPlaying) return;
     const elapsed = mixAudioCtx.currentTime - mixPlayStartCtxTime;
-    const ph = el('mixPlayhead');
-    if (ph) ph.style.left = Math.round(elapsed * MIX_PX_PER_SEC) + 'px';
-    if (elapsed >= totalDur) { stopMix(); return; }
+    mixSeekPosition = seekFrom + elapsed;
+    updateMixPlayheadPosition();
+    if (mixSeekPosition >= totalDur) { mixSeekPosition = 0; stopMix(); return; }
     mixPlayheadRAF = requestAnimationFrame(tick);
   };
   mixPlayheadRAF = requestAnimationFrame(tick);
@@ -1097,8 +1158,7 @@ function stopMix() {
   if (mixPlayheadRAF) cancelAnimationFrame(mixPlayheadRAF);
   mixActiveSources.forEach((s) => { try { s.stop(); } catch (e) { /* already stopped */ } });
   mixActiveSources = [];
-  const ph = el('mixPlayhead');
-  if (ph) ph.hidden = true;
+  updateMixPlayheadPosition(); // leaves the playhead wherever playback stopped — Play resumes from there
 }
 
 async function exportMix() {
@@ -1335,6 +1395,8 @@ async function loadDraft() {
     renderSelected();
     renderMixTimeline();
   } catch (e) { /* first run, no draft yet */ }
+  draftLoaded = true;
+  if (!el('panel-mix').hidden) ensureMixAutoFilled();
 }
 
 // Mirrors generate-html.js's headingName(): a real modem heading is always
@@ -1598,9 +1660,14 @@ async function confirmPush() {
   }
 }
 
-// Scan / Download & Arrange / Publish & Edit tabs — one panel visible at a
-// time, remembered per-browser so a reload doesn't dump you back on Scan.
+// Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
+// at a time, remembered per-browser so a reload doesn't dump you back on Scan.
 const TABS = ['scan', 'arrange', 'publish', 'mix'];
+// Guards ensureMixAutoFilled() from running before loadDraft() has actually
+// populated `selected`/`mixClips` — restoreTab() below can switch straight
+// to "mix" on page load (a remembered tab), well before that async load
+// resolves; loadDraft() re-checks and fires the auto-fill itself once ready.
+let draftLoaded = false;
 function switchTab(tab) {
   if (!TABS.includes(tab)) tab = 'scan';
   TABS.forEach((t) => { el('panel-' + t).hidden = t !== tab; });
@@ -1608,6 +1675,7 @@ function switchTab(tab) {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
+  if (tab === 'mix' && draftLoaded) ensureMixAutoFilled();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -1658,7 +1726,23 @@ el('runPublishBtn').addEventListener('click', runPublish);
 el('confirmPushBtn').addEventListener('click', confirmPush);
 el('mixPlayBtn').addEventListener('click', playMix);
 el('mixStopBtn').addEventListener('click', stopMix);
+el('mixAddAllBtn').addEventListener('click', addAllToMix);
 el('mixExportBtn').addEventListener('click', exportMix);
+// Click the ruler to move the playhead — getBoundingClientRect() already
+// accounts for the timeline-wrap's horizontal scroll (it returns the
+// element's position relative to the viewport, not its unscrolled content
+// origin), so no separate scrollLeft adjustment is needed. Seeking mid-
+// playback restarts from the new position rather than just relocating the
+// marker for next time.
+el('mixRuler').addEventListener('click', (e) => {
+  if (!mixClips.length) return;
+  const rect = el('mixRuler').getBoundingClientRect();
+  const wasPlaying = mixPlaying;
+  if (wasPlaying) stopMix();
+  mixSeekPosition = Math.max(0, (e.clientX - rect.left) / MIX_PX_PER_SEC);
+  updateMixPlayheadPosition();
+  if (wasPlaying) playMix();
+});
 
 loadDraft();
 </script>
