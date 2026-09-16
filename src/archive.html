@@ -1900,17 +1900,20 @@
       };
 
       backBtn.onclick = () => {
-        // These detail pages are always reached from the radio-show grid, so
-        // "back" returns there — deterministically, in a single click. Plain
-        // history.back() was unreliable here: browsing shows via the ‹ › arrows
-        // piles up #hash history entries, and backing across the hash boundary
-        // raced the archive's own hashchange handler (which re-rendered the
-        // search view), so it frequently took two clicks.
+        // A show detail is always reached from the radio-show grid, and a
+        // year-end-list detail from the year-end-lists page — "back" returns
+        // to whichever one this detail's own record type implies,
+        // deterministically, in a single click. Plain history.back() was
+        // unreliable here: browsing shows via the ‹ › arrows piles up #hash
+        // history entries, and backing across the hash boundary raced the
+        // archive's own hashchange handler (which re-rendered the search
+        // view), so it frequently took two clicks.
+        const dest = currentDetailRec && currentDetailRec.type === 'list' ? 'year-end-lists' : 'radio-show';
         if (window.loadPageGlobal) {
-          window.history.pushState({}, '', '/radio-show');
-          window.loadPageGlobal('radio-show');
+          window.history.pushState({}, '', '/' + dest);
+          window.loadPageGlobal(dest);
         } else {
-          window.location.href = '/radio-show';
+          window.location.href = '/' + dest;
         }
       };
 

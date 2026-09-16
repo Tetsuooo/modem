@@ -367,7 +367,14 @@
     // slug -> { kind: 'labels'|'artists', names: string[] } — filled in once
     // markLocalArchiveLists()'s fetch resolves; the hover handler just no-ops
     // on the chip rows until then (typically well before anyone hovers).
-    let slugChipData = null;
+    // `var`, not `let`: this script re-runs on every SPA navigation back to
+    // this page (loadPage() re-fetches and re-injects it), and a top-level
+    // `let` would throw "already been declared" on the second run since that
+    // binding lives in the shared global scope for the tab's whole session,
+    // not the removed <script> tag — silently killing the whole script
+    // (including the href-rewrite below) from that point on. See home.html's
+    // IIFE-wrapped globals for the same guard applied differently.
+    var slugChipData = null;
 
     function initializeYearEndListsHover() {
       const previewWrap = document.getElementById('preview-wrap');
