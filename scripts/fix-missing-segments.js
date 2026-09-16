@@ -290,10 +290,30 @@ function migrate244(data) {
   fixLabel('bc:3470721751:-', 'kęnåi & 261ssh');
 }
 
+// best-labels-of-2023 credits "Clam" (rec.labels, seg: null) but its heading
+// in the source is a bare `<strong>CLAM </strong>` — the one entry on this
+// page with no release embed of its own (it's immediately followed by a
+// "Best lives:" sub-section, not a track) — so annotateAndSegment() never
+// turned it into a numbered "///// " marker like the other 18 label picks.
+// No embed to anchor a track to, but the marker itself is still what
+// archive.html's injectLabelLogos() needs to place Clam's logo, so promote
+// it the same as the other orphan-heading cases even though it stays
+// chip-less/trackless.
+function migrateClam2023(data) {
+  const rec = data.records.find((r) => r.slug === 'best-labels-of-2023');
+  if (!rec || rec.segments.length === 19) return; // already applied (or record missing)
+  const from = '<p dir="ltr"><strong>CLAM </strong></p>';
+  must(rec.bodyHtml, from, 'best-labels-of-2023 CLAM heading');
+  rec.bodyHtml = rec.bodyHtml.replace(from, '<p data-seg="18" class="seg-marker">CLAM ///////</p>');
+  rec.segments.push('Clam');
+  applyLabelSeg(rec, 'Clam', 18);
+}
+
 function applySegMarkerFixes(data) {
   migrate224(data);
   migrate195(data);
   migrate244(data);
+  migrateClam2023(data);
   stripModem21Intro(data);
 }
 
