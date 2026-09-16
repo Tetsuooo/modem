@@ -448,6 +448,17 @@
       const detailView = document.getElementById('archive-detail-view');
       const searchView = document.getElementById('archive-search-view');
       if (!detailView || !searchView) return; // markup not injected yet
+      // This page's own trailing self-call (bottom of this script) AND the
+      // shell's loadPage() (which polls for this markup and calls
+      // window.initArchive() once it appears) both fire on the very same
+      // mount — without this guard every navigation into the archive
+      // fragment ran the whole init, including the initial withData(route)
+      // render, TWICE: every embed on the page fetched its network request
+      // twice over. A genuine later re-mount gets a fresh DOM node here, so
+      // the guard doesn't stick around (see year-end-lists.html's
+      // previewWrap.dataset.hoverInit for the same pattern applied there).
+      if (detailView.dataset.archiveInit) return;
+      detailView.dataset.archiveInit = '1';
 
       const detailInner = detailView.querySelector('.detail-page-inner');
       const tagsEl = document.getElementById('detail-tags');
@@ -1196,6 +1207,10 @@
           if (embedRow) embedRow.querySelectorAll('.embed-play, .track-edit-pencil').forEach((btn) => row.appendChild(btn));
           (f.closest('p') || f).insertAdjacentElement('afterend', row);
         }
+        // The CSS-collapse check doesn't need to wait on load state — an ad
+        // blocker's cosmetic rule matches on the selector alone, so it applies
+        // the instant the iframe lands in the DOM regardless of whether (or
+        // when) its own lazy-loaded src actually fetches.
         setTimeout(() => {
           frames.forEach((f) => { if (f.offsetWidth === 0 || f.offsetHeight === 0) showFallbackFor(f); });
         }, 1500);
@@ -1203,8 +1218,16 @@
           if (window.SC && SC.Widget) {
             frames.forEach((f) => {
               const widget = SC.Widget(f);
-              const t = setTimeout(() => showFallbackFor(f), 6000);
-              widget.bind(SC.Widget.Events.READY, () => clearTimeout(t));
+              let timer = null;
+              widget.bind(SC.Widget.Events.READY, () => { if (timer) clearTimeout(timer); });
+              // Since these iframes are now `loading="lazy"` (see normalizeEmbeds),
+              // an off-screen one may not start fetching for a while — starting
+              // the "no READY within 6s" clock from page-render time would flag
+              // every embed the visitor hasn't scrolled to yet as blocked. Start
+              // it from the frame's own 'load' instead, whenever that actually
+              // happens. Fresh iframes just inserted this tick can't have loaded
+              // already, so there's no race with attaching the listener late.
+              f.addEventListener('load', () => { timer = setTimeout(() => showFallbackFor(f), 6000); }, { once: true });
             });
           } else if (n > 0) {
             setTimeout(() => wait(n - 1), 100);
@@ -1798,6 +1821,24 @@
       }
 
       let currentDetailRec = null; // for the seg-editor click handler below, which needs the live rec object
+      // A detail page can carry 20-50+ track/video embeds (each a separate
+      // cross-origin document); loading every one eagerly is most of what
+      // makes these pages feel slow to open. `loading="lazy"` has to be
+      // present in the markup BEFORE the browser ever sees the iframe's
+      // `src` — setting it via JS right after an innerHTML assignment is too
+      // late (the parser already committed to an eager fetch while building
+      // that same DOM in one pass), so this runs on the raw HTML string
+      // itself, ahead of the innerHTML assignment below. Purely additive to
+      // the tag's attributes, so nothing downstream that reads an iframe's
+      // `src` synchronously (addPlayButtons, separateVideoSection,
+      // watchForBlockedEmbeds's id-matching) is affected — only the
+      // browser's own resource fetch is deferred until the iframe nears the
+      // viewport. watchForBlockedEmbeds's ad-blocker-detection timer is
+      // gated on each frame's own 'load' event for the same reason.
+      function lazyLoadIframes(html) {
+        return html.replace(/<iframe\b/gi, '<iframe loading="lazy"');
+      }
+
       function renderDetail(rec, records) {
         currentDetailRec = rec;
         // The nav bar has no link of its own for an archive slug — tell it
@@ -1810,7 +1851,7 @@
           (rec.date ? '<div class="detail-date">' + esc(rec.date) + '</div>' : '') +
           '<div class="detail-title">' + esc(rec.title || rec.slug) + '</div>' +
           playerMarkup(rec.soundcloud, rec.mp3) +
-          (rec.bodyHtml ? '<div class="modem-body">' + rec.bodyHtml + '</div>' : '');
+          (rec.bodyHtml ? '<div class="modem-body">' + lazyLoadIframes(rec.bodyHtml) + '</div>' : '');
         // Fall back to the live radiostudent.si URL if the local mirror 404s
         // (not yet backfilled) — never leave the cover just broken.
         if (localCover) {
