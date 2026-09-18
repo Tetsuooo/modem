@@ -14,6 +14,7 @@ const { generateShowHtml } = require('./generate-html');
 const { previewDraft } = require('./preview');
 const { curlGet } = require('./lib');
 const { checkDuplicate } = require('./duplicate-check');
+const { getNames } = require('./artist-names');
 
 const REPO_ROOT = path.join(__dirname, '..');
 // macOS/Linux don't ship a bare `python` (it's `python3`); Windows has no
@@ -66,6 +67,13 @@ app.get('/next-show-number', (req, res) => {
   } catch (e) {
     res.json({ next: null });
   }
+});
+
+// ---------- /artist-label-names ---------------------------------------------
+// Populates the artist/label edit-field autocomplete in "Your show" — see
+// artist-names.js for how the list is built.
+app.get('/artist-label-names', (req, res) => {
+  res.json({ ok: true, ...getNames() });
 });
 
 // ---------- /scan ----------------------------------------------------------

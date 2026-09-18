@@ -335,6 +335,13 @@
 
   <section class="tab-panel" id="panel-arrange" hidden>
     <h2>Your show (drag to reorder)</h2>
+    <!-- Autocomplete sources for the artist/label/heading edit fields below —
+         populated from /artist-label-names (existing archive credits) so
+         typing a name that's already in use surfaces it instead of the user
+         accidentally spawning a near-duplicate tag. -->
+    <datalist id="artistNamesList"></datalist>
+    <datalist id="labelNamesList"></datalist>
+    <datalist id="headingNamesList"></datalist>
     <div id="selected"><div class="empty">Nothing selected yet.</div></div>
     <div class="actions">
       <button id="downloadBtn">Download selected</button>
@@ -780,7 +787,7 @@ function renderSelected() {
     if (groupStart) { let j = i; while (j + 1 < selected.length && runOf[j + 1] === i) j++; runLen = j - i + 1; }
     const groupBar = groupStart ? `
     <div class="group-heading-bar">
-      <input class="edit-field group-heading-field" data-group-key="${escAttr(it.groupKey)}" placeholder="compilation / release heading" value="${escAttr(it.groupHeading || '')}">
+      <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="compilation / release heading" value="${escAttr(it.groupHeading || '')}">
       <span class="group-heading-hint">shared heading · ${runLen} tracks</span>
     </div>` : '';
     return `${groupBar}
@@ -791,8 +798,8 @@ function renderSelected() {
         <div class="meta">
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
-            <input class="edit-field edit-artist" data-key="${escAttr(it.key)}" placeholder="artist" value="${escAttr(it.artist || '')}">
-            ${grouped ? '' : `<input class="edit-field edit-label" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">`}
+            <input class="edit-field edit-artist" list="artistNamesList" data-key="${escAttr(it.key)}" placeholder="artist" value="${escAttr(it.artist || '')}">
+            ${grouped ? '' : `<input class="edit-field edit-label" list="labelNamesList" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">`}
           </div>
           ${grouped ? '' : `
           <div class="heading-choice">
@@ -2593,6 +2600,22 @@ document.addEventListener('keydown', (e) => {
   toggleMixPlayback();
 });
 
+// Autocomplete data for the artist/label/heading edit fields — fetched once
+// on load, independent of the draft (best-effort: if it fails, the fields
+// just behave like plain text inputs with no suggestions).
+async function loadArtistLabelNames() {
+  try {
+    const j = await (await fetch('/artist-label-names')).json();
+    const artists = j.artists || [];
+    const labels = j.labels || [];
+    const heading = [...new Set([...artists, ...labels])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const fill = (id, names) => { el(id).innerHTML = names.map((n) => `<option value="${escAttr(n)}">`).join(''); };
+    fill('artistNamesList', artists);
+    fill('labelNamesList', labels);
+    fill('headingNamesList', heading);
+  } catch (e) { /* best-effort — see comment above */ }
+}
+loadArtistLabelNames();
 loadDraft();
 </script>
 </body>
