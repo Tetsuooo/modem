@@ -283,6 +283,13 @@
 
     // For shows we've mirrored locally, point the grid link at the on-site archive
     // entry (clean URL /modem-NN) and visually mark it as available.
+    //
+    // `var`, not `let` — this script is re-injected on every SPA navigation into
+    // this page (loadPage()), and a `let` redeclaration on the 2nd+ visit throws
+    // a silent "already been declared" SyntaxError that kills the whole script,
+    // same bug class as [[spa-fragment-remount-bugs]]. `var` re-executing the
+    // assignment on each mount is exactly what's wanted here (fresh per-mount).
+    var archiveDataPromise = null;
     function markLocalArchiveShows() {
       const apply = (data) => {
         const local = new Set(
@@ -299,13 +306,27 @@
           }
         });
       };
-      // Prefer the data the SPA already loaded (instant, no 5MB re-fetch); only fetch
-      // as a fallback. Either way the links already default to the on-site archive.
+      // Prefer the data the SPA already loaded (instant, no 14MB re-fetch); only
+      // fetch as a fallback. Either way the links already default to the on-site
+      // archive. initializeRadioShow() (which calls this) fires several times per
+      // mount (immediate + 50ms/200ms retries + DOMContentLoaded + window 'load')
+      // — archiveDataPromise makes those share ONE in-flight fetch instead of each
+      // independently re-fetching + re-parsing the whole archive (measured: up to
+      // 4 redundant fetches from a single page load before this fix). The fetch
+      // result is also cached onto window.__modemData/__modemArchive so any page
+      // navigated to next (archive, year-end-lists, support, the search overlay)
+      // reuses it instead of fetching again.
       if (window.__modemData && window.__modemData.records) return apply(window.__modemData);
-      fetch('assets/modem-archive.json')
-        .then((r) => r.json())
-        .then(apply)
-        .catch(() => {});
+      if (!archiveDataPromise) {
+        archiveDataPromise = fetch('assets/modem-archive.json')
+          .then((r) => r.json())
+          .then((data) => {
+            window.__modemData = { records: data.records || [], tracks: data.tracks || [] };
+            window.__modemArchive = window.__modemData.records;
+            return window.__modemData;
+          });
+      }
+      archiveDataPromise.then(apply).catch(() => {});
     }
 
     // Clean up interference first

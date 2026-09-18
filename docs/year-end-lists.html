@@ -335,9 +335,7 @@
     // archive entry (clean URL /slug), visually mark it as available, and
     // build the artist/label lookup the hover chips read from.
     function markLocalArchiveLists() {
-      fetch('assets/modem-archive.json', { cache: 'no-cache' })
-        .then((r) => r.json())
-        .then((data) => {
+      function apply(data) {
           const records = (data.records || []).filter((r) => r.type === 'list');
           const local = new Set(records.map((r) => r.slug));
           document.querySelectorAll('.list-item[href]').forEach((a) => {
@@ -431,6 +429,19 @@
             }
           });
           slugChipData = map;
+      }
+      // Reuse the shell's already-fetched archive data if another page
+      // (radio-show, archive, the search overlay) loaded it first — avoids
+      // re-fetching + re-parsing the ~14MB archive JSON on every navigation
+      // into this page. Same window.__modemData cache archive.html/
+      // radio-show.html/index.html already share.
+      if (window.__modemData) { apply(window.__modemData); return; }
+      fetch('assets/modem-archive.json', { cache: 'no-cache' })
+        .then((r) => r.json())
+        .then((data) => {
+          window.__modemData = { records: data.records || [], tracks: data.tracks || [] };
+          window.__modemArchive = window.__modemData.records;
+          apply(data);
         })
         .catch(() => {});
     }

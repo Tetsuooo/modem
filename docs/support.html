@@ -114,8 +114,18 @@
     // a show skipped. Falls back to a rough bi-weekly estimate only if offline.
     const getShowCount = async () => {
       try {
-        const res = await fetch('./assets/modem-archive.json', { cache: 'no-cache' });
-        const data = await res.json();
+        // Reuse the shell's already-fetched archive data if another page
+        // (radio-show, archive, the search overlay) loaded it first — avoids
+        // re-fetching + re-parsing the ~14MB archive JSON just to read the
+        // max show number. Same window.__modemData cache archive.html/
+        // radio-show.html/index.html already share.
+        let data = window.__modemData;
+        if (!data) {
+          const res = await fetch('./assets/modem-archive.json', { cache: 'no-cache' });
+          data = await res.json();
+          window.__modemData = { records: data.records || [], tracks: data.tracks || [] };
+          window.__modemArchive = window.__modemData.records;
+        }
         const nums = (data.records || [])
           .filter((r) => r.type === 'show' && typeof r.number === 'number')
           .map((r) => r.number);
