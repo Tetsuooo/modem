@@ -17,6 +17,11 @@
 //    reference locally-downloaded /downloads/... files that don't travel
 //    with git, so "syncing" them would just point at files that don't exist
 //    on the other machine.
+//  - show-history.json: an append-only log of past shows (written by
+//    "Start fresh" — see server.js's POST /show-history), one entry per show
+//    cleared, on whichever machine cleared it → merge = UNION of entries,
+//    deduped by (showNumber + clearedAt) since each clear event is a fact
+//    that happened once, sorted newest-first for display.
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -26,10 +31,13 @@ const DATA_DIR = path.join(__dirname, 'data');
 const DRAFT_FILE = path.join(DATA_DIR, 'current-draft.json');
 const USED_FILE = path.join(DATA_DIR, 'used-tracks.json');
 const SHARED_DRAFT_FILE = path.join(DATA_DIR, 'shared-draft.json');
+const SHOW_HISTORY_FILE = path.join(DATA_DIR, 'show-history.json');
 
 // Paths as git sees them (relative to REPO_ROOT, forward slashes).
 const USED_REL = 'show-builder/data/used-tracks.json';
 const SHARED_DRAFT_REL = 'show-builder/data/shared-draft.json';
+const SHOW_HISTORY_REL = 'show-builder/data/show-history.json';
+const MANAGED_RELS = [USED_REL, SHARED_DRAFT_REL, SHOW_HISTORY_REL];
 
 function readJson(file, fallback) {
   try {
@@ -91,6 +99,14 @@ function pickNewest(a, b) {
   return (a.savedAt || 0) >= (b.savedAt || 0) ? a : b;
 }
 
+function mergeHistory(local, remote) {
+  const byKey = new Map();
+  for (const entry of [...(local || []), ...(remote || [])]) {
+    byKey.set(`${entry.showNumber}@${entry.clearedAt}`, entry);
+  }
+  return [...byKey.values()].sort((a, b) => (b.clearedAt || '').localeCompare(a.clearedAt || ''));
+}
+
 let syncing = false;
 
 function runSync() {
@@ -99,20 +115,23 @@ function runSync() {
   try {
     const localUsed = readJson(USED_FILE, []);
     const localShared = localSharedDraft();
+    const localHistory = readJson(SHOW_HISTORY_FILE, []);
 
     git(['fetch', 'origin', 'main']);
 
     const remoteUsed = readAtRef('origin/main', USED_REL, []);
     const remoteShared = readAtRef('origin/main', SHARED_DRAFT_REL, null);
+    const remoteHistory = readAtRef('origin/main', SHOW_HISTORY_REL, []);
 
     const mergedUsed = [...new Set([...localUsed, ...remoteUsed])].sort();
     const mergedShared = pickNewest(localShared, remoteShared);
+    const mergedHistory = mergeHistory(localHistory, remoteHistory);
 
-    // Reset the working tree to remote for exactly these two paths so the
+    // Reset the working tree to remote for exactly these managed paths so the
     // upcoming pull has nothing local to conflict with — our own merge
     // (computed above, from local+remote) gets written back over them right
     // after, regardless of what the pull leaves there.
-    for (const relPath of [USED_REL, SHARED_DRAFT_REL]) {
+    for (const relPath of MANAGED_RELS) {
       if (existsAtRef('origin/main', relPath)) git(['checkout', 'origin/main', '--', relPath]);
     }
 
@@ -120,23 +139,24 @@ function runSync() {
 
     writeJson(USED_FILE, mergedUsed);
     if (mergedShared) writeJson(SHARED_DRAFT_FILE, mergedShared);
+    writeJson(SHOW_HISTORY_FILE, mergedHistory);
 
     // Only add paths that actually exist on disk — SHARED_DRAFT_FILE won't
     // if this is the very first sync ever and no draft has been saved yet
     // on either machine (`git add` on a missing pathspec is a hard error).
-    const paths = [USED_REL, SHARED_DRAFT_REL].filter((relPath) => fs.existsSync(path.join(REPO_ROOT, relPath)));
+    const paths = MANAGED_RELS.filter((relPath) => fs.existsSync(path.join(REPO_ROOT, relPath)));
     let pushed = false;
     if (paths.length) {
       git(['add', '--', ...paths]);
       const status = git(['status', '--short', '--', ...paths]);
       if (status.trim()) {
-        git(['commit', '-m', 'show-builder: sync used-tracks + draft [skip ci]']);
+        git(['commit', '-m', 'show-builder: sync used-tracks + draft + history [skip ci]']);
         git(['push']);
         pushed = true;
       }
     }
 
-    return { ok: true, pushed, shared: mergedShared, usedCount: mergedUsed.length };
+    return { ok: true, pushed, shared: mergedShared, usedCount: mergedUsed.length, history: mergedHistory };
   } catch (e) {
     return { ok: false, error: String(e.message || e) };
   } finally {
@@ -144,4 +164,19 @@ function runSync() {
   }
 }
 
-module.exports = { runSync };
+function getHistory() {
+  return readJson(SHOW_HISTORY_FILE, []);
+}
+
+// Called by POST /show-history when "Start fresh" archives the current
+// draft before clearing it. Local-only (like the rest of a plain save) — it
+// only reaches the other machine on the next explicit Sync, same as every
+// other local edit.
+function addHistoryEntry(entry) {
+  const history = getHistory();
+  history.unshift(entry);
+  writeJson(SHOW_HISTORY_FILE, history);
+  return history;
+}
+
+module.exports = { runSync, getHistory, addHistoryEntry };

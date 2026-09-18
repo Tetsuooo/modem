@@ -306,6 +306,12 @@
   .cover-global-adjust label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
   .cover-global-adjust input[type=range] { flex: 1; }
   .cover-global-adjust span { width: 28px; text-align: right; font-size: 11px; color: #9a9ba5; }
+  .history-entry { border: 1px solid #2a2b33; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+  .history-entry-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .history-entry-head h3 { font-size: 14px; margin: 0; }
+  .history-entry-head .status { font-size: 11px; }
+  .history-track-list { margin: 0; padding-left: 18px; font-size: 12px; color: #c7c8d1; }
+  .history-track-list li { margin: 2px 0; }
 </style>
 </head>
 <body>
@@ -317,6 +323,7 @@
     <button class="tab-btn" data-tab="publish">Publish &amp; Edit</button>
     <button class="tab-btn" data-tab="mix">Mix</button>
     <button class="tab-btn" data-tab="covers">Covers</button>
+    <button class="tab-btn" data-tab="history">History</button>
   </nav>
   <div class="header-actions">
     <span id="syncStatus" class="status"></span>
@@ -442,6 +449,12 @@
         <canvas id="coverCanvas"></canvas>
       </div>
     </div>
+  </section>
+
+  <section class="tab-panel" id="panel-history" hidden>
+    <h2>Past shows</h2>
+    <p class="status">A lightweight log — appended whenever "Start fresh" archives a show before clearing it. Track list only, not the full draft (see the Sync feature's design notes).</p>
+    <div id="historyList"><div class="empty">Nothing archived yet.</div></div>
   </section>
 </main>
 
@@ -2444,7 +2457,7 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers'];
+const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'history'];
 // Guards ensureMixAutoFilled()/ensureCoverAutoFilled() from running before
 // loadDraft() has actually populated `selected`/`mixClips`/`coverLayers` —
 // restoreTab() below can switch straight to "mix"/"covers" on page load (a
@@ -2633,6 +2646,7 @@ async function runSyncClick() {
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || 'sync failed');
     if (j.shared) applySyncedDraft(j.shared);
+    if (j.history) renderHistory(j.history);
     status.textContent = j.pushed ? 'synced ✓ (pushed)' : 'synced ✓ (up to date)';
   } catch (e) {
     status.textContent = 'sync failed: ' + (e.message || e);
@@ -2662,11 +2676,49 @@ function applySyncedDraft(shared) {
   saveDraft();
 }
 
+// ---------- Past shows: a lightweight log Start Fresh appends to before it
+// clears the draft, so a cleared show's track list isn't just gone --------
+function renderHistory(history) {
+  const box = el('historyList');
+  if (!history || !history.length) { box.innerHTML = '<div class="empty">Nothing archived yet.</div>'; return; }
+  box.innerHTML = history.map((entry) => {
+    let date = entry.clearedAt || '';
+    try { date = new Date(entry.clearedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { /* keep raw */ }
+    const tracks = (entry.tracks || []).map((t) => `<li>${esc(t.artist || '?')} — ${esc(t.title || '(untitled)')}</li>`).join('');
+    return `<div class="history-entry">
+      <div class="history-entry-head"><h3>modem ${esc(entry.showNumber)}</h3><span class="status">cleared ${esc(date)} · ${(entry.tracks || []).length} tracks</span></div>
+      <ul class="history-track-list">${tracks}</ul>
+    </div>`;
+  }).join('');
+}
+
+async function loadShowHistory() {
+  try {
+    const j = await (await fetch('/show-history')).json();
+    renderHistory(j.history || []);
+  } catch (e) { /* best-effort */ }
+}
+
 // ---------- Start fresh: reset the current draft for a new show cycle -----
 // Deliberately leaves used-tracks.json untouched — that's the permanent
 // cross-show duplicate-detection history, not part of "the current draft".
+// The track list gets archived to show-history.json first (if there's
+// anything to archive) so clearing isn't a full wipe, just a fresh start.
 async function clearDraftClick() {
   if (!confirm('Start a new show? This clears the current track list, mix, and cover layers on this machine. Past-shows history and already-downloaded files are not affected.')) return;
+  if (selected.length) {
+    try {
+      const r = await fetch('/show-history', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          showNumber: el('showNumber').value.trim() || '?',
+          tracks: selected.map((it) => ({ title: it.title, artist: it.artist, url: it.url })),
+        }),
+      });
+      const j = await r.json();
+      if (j.history) renderHistory(j.history);
+    } catch (e) { /* best-effort — clearing still proceeds even if archiving failed */ }
+  }
   selected = [];
   mixClips = [];
   coverLayers = [];
@@ -2695,6 +2747,7 @@ el('syncBtn').addEventListener('click', runSyncClick);
 el('clearDraftBtn').addEventListener('click', clearDraftClick);
 
 loadArtistLabelNames();
+loadShowHistory();
 loadDraft();
 </script>
 </body>

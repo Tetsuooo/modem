@@ -15,7 +15,7 @@ const { previewDraft } = require('./preview');
 const { curlGet } = require('./lib');
 const { checkDuplicate } = require('./duplicate-check');
 const { getNames } = require('./artist-names');
-const { runSync } = require('./sync');
+const { runSync, getHistory, addHistoryEntry } = require('./sync');
 
 const REPO_ROOT = path.join(__dirname, '..');
 // macOS/Linux don't ship a bare `python` (it's `python3`); Windows has no
@@ -150,6 +150,23 @@ app.post('/draft', (req, res) => {
 app.post('/sync', (req, res) => {
   const result = runSync();
   res.status(result.ok ? 200 : 500).json(result);
+});
+
+// ---------- /show-history ----------------------------------------------------
+// A lightweight, append-only log of past shows — written by "Start fresh"
+// right before it clears the active draft, so nothing is silently lost, just
+// archived. Synced across machines via /sync (union merge, see sync.js).
+app.get('/show-history', (req, res) => {
+  res.json({ ok: true, history: getHistory() });
+});
+app.post('/show-history', (req, res) => {
+  const { showNumber, tracks } = req.body || {};
+  if (!showNumber || !Array.isArray(tracks) || !tracks.length) {
+    return res.status(400).json({ ok: false, error: 'showNumber and a non-empty tracks list are required' });
+  }
+  const entry = { showNumber: String(showNumber), clearedAt: new Date().toISOString(), tracks };
+  const history = addHistoryEntry(entry);
+  res.json({ ok: true, history });
 });
 
 // ---------- /download (background job, mirrors server.js's findJob) --------
