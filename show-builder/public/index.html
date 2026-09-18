@@ -15,6 +15,7 @@
     border-bottom: 1px solid #2a2b33; position: sticky; top: 0; background: #14151a; z-index: 5;
   }
   h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+  .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
   button {
     background: #2a2b33; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px;
     padding: 7px 14px; font-size: 13px; cursor: pointer;
@@ -317,6 +318,11 @@
     <button class="tab-btn" data-tab="mix">Mix</button>
     <button class="tab-btn" data-tab="covers">Covers</button>
   </nav>
+  <div class="header-actions">
+    <span id="syncStatus" class="status"></span>
+    <button id="syncBtn" title="pull + push used-tracks and the current draft to/from the other machine">Sync</button>
+    <button id="clearDraftBtn" title="start a new show — clears the track list, mix, and covers on this machine">Start fresh</button>
+  </div>
 </header>
 <div id="errorsBox"></div>
 
@@ -2615,6 +2621,79 @@ async function loadArtistLabelNames() {
     fill('headingNamesList', heading);
   } catch (e) { /* best-effort — see comment above */ }
 }
+// ---------- Sync: reconcile used-tracks + the portable draft subset with
+// whatever's on git (see show-builder/sync.js for the merge strategy) ------
+async function runSyncClick() {
+  const btn = el('syncBtn');
+  const status = el('syncStatus');
+  btn.disabled = true;
+  status.textContent = 'syncing…';
+  try {
+    const r = await fetch('/sync', { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'sync failed');
+    if (j.shared) applySyncedDraft(j.shared);
+    status.textContent = j.pushed ? 'synced ✓ (pushed)' : 'synced ✓ (up to date)';
+  } catch (e) {
+    status.textContent = 'sync failed: ' + (e.message || e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Merge the incoming portable draft into the live UI state, by key —
+// preserves this machine's own `_download` for any track it's already
+// downloaded here, so a sync never breaks a player that was working a
+// second ago. mixClips/coverLayers are untouched — they're machine-local
+// (see sync.js's header comment) and never part of the synced payload.
+function applySyncedDraft(shared) {
+  const localByKey = new Map(selected.map((it) => [it.key, it]));
+  selected = (shared.selected || []).map((incoming) => {
+    const local = localByKey.get(incoming.key);
+    return local && local._download ? Object.assign({}, incoming, { _download: local._download }) : incoming;
+  });
+  if (shared.showNumber) el('showNumber').value = shared.showNumber;
+  if (shared.generatedHtml) {
+    el('outputBox').style.display = '';
+    el('outputText').value = shared.generatedHtml;
+  }
+  renderSelected();
+  renderScanResults();
+  saveDraft();
+}
+
+// ---------- Start fresh: reset the current draft for a new show cycle -----
+// Deliberately leaves used-tracks.json untouched — that's the permanent
+// cross-show duplicate-detection history, not part of "the current draft".
+async function clearDraftClick() {
+  if (!confirm('Start a new show? This clears the current track list, mix, and cover layers on this machine. Past-shows history and already-downloaded files are not affected.')) return;
+  selected = [];
+  mixClips = [];
+  coverLayers = [];
+  coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
+  el('coverContrast').value = 0;
+  el('coverBrightness').value = 0;
+  el('coverSaturation').value = 0;
+  el('coverContrastVal').textContent = 0;
+  el('coverBrightnessVal').textContent = 0;
+  el('coverSaturationVal').textContent = 0;
+  el('outputBox').style.display = 'none';
+  el('outputText').value = '';
+  el('listOutputBox').style.display = 'none';
+  try {
+    const n = await (await fetch('/next-show-number')).json();
+    el('showNumber').value = (n && n.next) || '';
+  } catch (e) { el('showNumber').value = ''; }
+  renderSelected();
+  renderScanResults();
+  renderMixTimeline();
+  renderCoverLayerList();
+  saveDraft();
+}
+
+el('syncBtn').addEventListener('click', runSyncClick);
+el('clearDraftBtn').addEventListener('click', clearDraftClick);
+
 loadArtistLabelNames();
 loadDraft();
 </script>

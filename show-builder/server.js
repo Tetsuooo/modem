@@ -15,6 +15,7 @@ const { previewDraft } = require('./preview');
 const { curlGet } = require('./lib');
 const { checkDuplicate } = require('./duplicate-check');
 const { getNames } = require('./artist-names');
+const { runSync } = require('./sync');
 
 const REPO_ROOT = path.join(__dirname, '..');
 // macOS/Linux don't ship a bare `python` (it's `python3`); Windows has no
@@ -138,6 +139,17 @@ app.get('/draft', (req, res) => {
 app.post('/draft', (req, res) => {
   writeJson(DRAFT_FILE, req.body || {});
   res.json({ ok: true });
+});
+
+// ---------- /sync -----------------------------------------------------------
+// One-click git pull+merge+push for the two cross-machine data files — see
+// sync.js for the merge strategy (union for used-tracks, newest-wins for the
+// portable draft subset). Runs synchronously: a few small-text-file git
+// operations, not a multi-minute pipeline like /publish-run, so no job+poll
+// pattern is needed here.
+app.post('/sync', (req, res) => {
+  const result = runSync();
+  res.status(result.ok ? 200 : 500).json(result);
 });
 
 // ---------- /download (background job, mirrors server.js's findJob) --------
