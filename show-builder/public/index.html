@@ -813,6 +813,16 @@ function renderScanResults() {
   box.querySelectorAll('.expand-btn').forEach((b) => {
     b.addEventListener('click', () => toggleExpand(b.dataset.key));
   });
+  // Double-click anywhere on a row (top-level result or an expanded
+  // sub-track) plays its preview — a faster target than the small ▶ button.
+  // Skips the checkbox and expand-arrow, which already have their own
+  // double-click-unfriendly toggle behavior.
+  box.querySelectorAll('.row[data-key]').forEach((row) => {
+    row.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.select-hit') || e.target.closest('.expand-btn')) return;
+      togglePreview(row.dataset.key);
+    });
+  });
 }
 
 function selectAll() {
