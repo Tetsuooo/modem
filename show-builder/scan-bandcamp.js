@@ -152,9 +152,36 @@ function resolveStreamUrl(url, trackId) {
   if (trackId != null && trackinfo.length > 1) {
     t = trackinfo.find((x) => x.track_id === trackId) || t;
   }
-  if (!t || !t.file) return { url: null };
+  const duration = t && t.duration ? Math.round(t.duration) : null;
+  if (!t || !t.file) return { url: null, duration };
   const fileUrl = t.file['mp3-128'] || Object.values(t.file)[0];
-  return { url: fileUrl || null };
+  return { url: fileUrl || null, duration };
 }
 
-module.exports = { scanWishlistAndLibrary, getFanId, resolveStreamUrl };
+// Same page-fetch-and-parse as checkReleaseStatus()'s album branch, factored
+// out standalone so a "Your show" entry that's a whole album picked before
+// track metadata was cached (item.tracks missing entirely) can still be
+// backfilled on demand — see /release-tracks in server.js and
+// backfillItemDuration() in index.html.
+function fetchAlbumTracks(item) {
+  const html = curlGet(item.url);
+  const m = html.match(/data-tralbum="([^"]*)"/);
+  if (!m) return [];
+  let td;
+  try {
+    td = JSON.parse(decodeEntities(m[1]));
+  } catch (e) {
+    return [];
+  }
+  const trackinfo = td.trackinfo || [];
+  return trackinfo
+    .filter((t) => !t.unreleased_track && t.file && t.title_link)
+    .map((t) => ({
+      id: t.track_id,
+      title: t.title,
+      url: new URL(t.title_link, item.url).href,
+      duration: t.duration ? Math.round(t.duration) : null,
+    }));
+}
+
+module.exports = { scanWishlistAndLibrary, getFanId, resolveStreamUrl, fetchAlbumTracks };

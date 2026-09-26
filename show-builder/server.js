@@ -110,13 +110,19 @@ app.post('/scan', (req, res) => {
 // ---------- /release-tracks (expand a playlist/album into its tracks) ------
 // Bandcamp albums already carry `tracks` from /scan (checkReleaseStatus
 // fetches the release page anyway, for the pre-order flag) — nothing more to
-// resolve. SoundCloud playlists don't, since resolving them costs extra
-// requests only worth paying when a row is actually expanded.
+// resolve normally. SoundCloud playlists don't, since resolving them costs
+// extra requests only worth paying when a row is actually expanded. The
+// scanBandcamp.fetchAlbumTracks() fallback only fires for an album item that
+// somehow never got its `tracks` cached (e.g. a very old "Your show" entry
+// picked before this field existed, or the original scan's page fetch
+// failed) — a fresh re-fetch instead of just reflecting back nothing.
 app.post('/release-tracks', (req, res) => {
   const item = (req.body && req.body.item) || {};
   try {
     const isSc = item.source === 'soundcloud';
-    const tracks = isSc ? scanSoundcloud.resolveTracks(item) : (item.tracks || []);
+    const tracks = isSc
+      ? scanSoundcloud.resolveTracks(item)
+      : (item.tracks && item.tracks.length ? item.tracks : scanBandcamp.fetchAlbumTracks(item));
     // Each sub-track needs its own duplicate check — a Bandcamp album track
     // has its own trackId (checked against the parent's albumId), while a
     // resolved SoundCloud track is checked by its own id directly.
@@ -139,14 +145,18 @@ app.post('/release-tracks', (req, res) => {
 // see scan-soundcloud.js/scan-bandcamp.js's resolveStreamUrl(). Only ever
 // called for a single playable track (see isSingleTrackPreview() client-
 // side) — playlists/whole albums still use the old tracklist iframe.
+// `duration` rides along on every response (even ok:false, e.g. an
+// HLS-only SoundCloud track) since it's already resolved for free — also
+// used to backfill an old "Your show" entry's missing length, see
+// backfillItemDuration() in index.html.
 app.post('/preview-stream', (req, res) => {
   const item = (req.body && req.body.item) || {};
   try {
     const result = item.source === 'soundcloud'
       ? scanSoundcloud.resolveStreamUrl(item.url)
       : scanBandcamp.resolveStreamUrl(item.url, item.trackId);
-    if (!result.url) return res.json({ ok: false, error: 'no direct stream available for this track' });
-    res.json({ ok: true, url: result.url });
+    if (!result.url) return res.json({ ok: false, error: 'no direct stream available for this track', duration: result.duration });
+    res.json({ ok: true, url: result.url, duration: result.duration });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }

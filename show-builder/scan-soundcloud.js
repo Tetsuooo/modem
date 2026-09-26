@@ -189,20 +189,25 @@ function resolveTracks(item) {
 // Two API calls, same shape as everything else here: resolve the permalink
 // to a track object (media.transcodings[]), then GET the chosen
 // transcoding's own url (itself just a pointer, not the audio) to get the
-// real signed stream url. Returns { url: null } if only HLS is available
-// (some tracks/uploaders don't offer a progressive stream) — the caller
-// falls back to the iframe widget in that case.
+// real signed stream url. Returns { url: null, duration } if only HLS is
+// available (some tracks/uploaders don't offer a progressive stream) — the
+// caller falls back to the iframe widget in that case. `duration` (seconds,
+// from the SAME resolve call, no extra request) is returned regardless of
+// whether a playable url was found — also used to backfill an old "Your
+// show" entry's missing length (see backfillItemDuration() in index.html),
+// picked selected before this field existed.
 function resolveStreamUrl(url) {
   let clientId = getClientId(false);
   let { data, clientId: cid } = apiV2Get('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent(url), clientId);
   clientId = cid;
   if (!data || data.kind !== 'track') throw new Error('not a SoundCloud track: ' + url);
+  const duration = data.duration ? Math.round(data.duration / 1000) : null;
   const transcodings = (data.media && data.media.transcodings) || [];
   const progressive = transcodings.find((t) => t.format && t.format.protocol === 'progressive');
-  if (!progressive) return { url: null };
+  if (!progressive) return { url: null, duration };
   const { data: streamData } = apiV2Get(progressive.url, clientId);
-  if (!streamData || !streamData.url) return { url: null };
-  return { url: streamData.url };
+  if (!streamData || !streamData.url) return { url: null, duration };
+  return { url: streamData.url, duration };
 }
 
 module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl };

@@ -995,6 +995,46 @@ function updateShowDuration() {
   const onTarget = total >= targetLow && total <= targetHigh;
   out.textContent = `Total: ${formatDurationLong(total)}` + (unknown ? ` (+${unknown} unknown length)` : '');
   out.className = 'status ' + (onTarget ? 'duration-ok' : 'duration-off');
+  if (unknown) backfillMissingDurations();
+}
+
+// "unknown length" means a track was added to "Your show" before this
+// tool tracked duration at all (scanReposts()/checkReleaseStatus() only
+// started recording it partway through this project) — an old pick just
+// never got the field. Backfilled here on demand rather than requiring a
+// re-scan: reuses /preview-stream's track resolution (already fetches the
+// track's own metadata, which includes duration, for free alongside the
+// stream url) for a single track, falling back to /release-tracks (a
+// whole release's track list, summed) for a still-unexpanded Bandcamp
+// album or SoundCloud playlist that was ALSO picked before its `tracks`
+// got cached. `durationBackfillAttempted` stops a permanently-unresolvable
+// track (dead link, 404) from being retried on every single re-render.
+const durationBackfillAttempted = new Set();
+async function backfillItemDuration(it) {
+  try {
+    const r = await fetch('/preview-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: it }) });
+    const j = await r.json();
+    if (j.duration != null) { it.duration = j.duration; return true; }
+  } catch (e) { /* fall through to the whole-release fallback below */ }
+  if (!it.tracks || !it.tracks.length) {
+    try {
+      const r = await fetch('/release-tracks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: it }) });
+      const j = await r.json();
+      if (j.tracks && j.tracks.length) { it.tracks = j.tracks; return true; }
+    } catch (e) { /* best-effort — leave it unknown */ }
+  }
+  return false;
+}
+
+async function backfillMissingDurations() {
+  const targets = selected.filter((it) => itemDurationSeconds(it) == null && !durationBackfillAttempted.has(it.key));
+  if (!targets.length) return;
+  targets.forEach((it) => durationBackfillAttempted.add(it.key));
+  let changed = false;
+  for (const it of targets) {
+    if (await backfillItemDuration(it)) changed = true;
+  }
+  if (changed) { renderSelected(); saveDraft(); }
 }
 
 function renderSelected() {
@@ -1542,15 +1582,18 @@ async function addJingleBookend() {
 
 // Runs once per page load, the first time the Mix tab is actually opened —
 // gives a populated timeline by default (every selected/downloaded track,
-// in order) without making the user click "+ add" on each one individually,
-// but only when the mix is genuinely empty (a restored draft, or the user
-// having deliberately cleared it, is left alone).
+// in order, bookended by the show jingle — every show starts and ends
+// with it, so that's the default, not an extra step) without making the
+// user click "+ add"/"Bookend with jingle" individually, but only when the
+// mix is genuinely empty (a restored draft, or the user having
+// deliberately cleared it, is left alone).
 let mixAutoFillDone = false;
 async function ensureMixAutoFilled() {
   if (mixAutoFillDone) return;
   mixAutoFillDone = true;
   if (mixClips.length) return;
   await addAllToMix();
+  await addJingleBookend();
 }
 
 // The playhead div gets torn down and rebuilt by renderMixTimeline() (it's
