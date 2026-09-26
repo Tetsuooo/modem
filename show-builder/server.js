@@ -349,26 +349,47 @@ app.post('/publish-run', (req, res) => {
   const show = req.body && req.body.show;
   if (!show) return res.status(400).json({ ok: false, error: 'missing show number' });
 
-  // Refuse to start on top of an already-dirty tree. Each pipeline step
-  // writes straight to disk on its own — there's no single transaction to
-  // roll back if the pipeline gets interrupted partway through (e.g. the
-  // scrape step finishes and writes modem-archive.json, then the run gets
-  // stopped before build-track-index/webpack run). Without this check, a
-  // second run would silently build on top of whatever that half-finished
-  // attempt already left behind instead of starting from the last known-
-  // good, committed state — which is exactly what turned one real
-  // interrupted run (a scrape-modem.js bug re-scraping an unrelated list,
-  // since fixed) into a second, confusing "why is it touching so much"
-  // run right after.
+  // Refuse to start on top of SUSPICIOUS uncommitted changes — but not any
+  // dirty tree at all. Every publish run legitimately leaves modem-archive.json/
+  // used-tracks.json modified and a new cover under modem_covers/ (and docs/
+  // once webpack runs), even if it gets interrupted right after the scrape
+  // step — that's this SAME show's own in-progress output, expected and safe
+  // to just build on by running again (scrape-modem.js re-scraping the same
+  // show is idempotent). What's NOT safe is a stray change to something
+  // unrelated (a year-end list, some other show) left over from a genuinely
+  // different, earlier interrupted attempt silently getting built on top of —
+  // that's the actual incident this is guarding against (a --lists bug,
+  // since fixed, re-scraping best-releases-of-2025 mid an unrelated publish).
+  const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
+  const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
   try {
     const dirty = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
-    if (dirty.trim()) {
+    const dirtyLines = dirty.trim() ? dirty.trim().split(/\r?\n/) : [];
+    const suspicious = dirtyLines.filter((line) => {
+      const filePath = line.slice(3);
+      if (LIST_SLUG_PATTERN.test(filePath)) return true; // the exact residue pattern the incident left behind
+      return !EXPECTED_DIRTY.test(filePath); // anything outside the normal per-publish set — be cautious
+    });
+    // modem-archive.json is ONE file covering every show AND every list —
+    // its PATH is the same regardless of which record inside it actually
+    // changed, so the path-only check above can never catch "this diff
+    // touches an unrelated list" the way it can for other files. Check the
+    // actual diff CONTENT for that one file instead — a direct, robust
+    // test for the literal thing that went wrong (best-releases-of-2025
+    // getting re-scraped alongside an unrelated show).
+    if (dirtyLines.some((l) => /src\/assets\/modem-archive\.json$/.test(l.slice(3)))) {
+      const archiveDiff = execFileSync('git', ['diff', '--', 'src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
+      if (LIST_SLUG_PATTERN.test(archiveDiff)) {
+        suspicious.push('src/assets/modem-archive.json (its diff mentions a year-end list, not just the show being published)');
+      }
+    }
+    if (suspicious.length) {
       return res.status(409).json({
         ok: false,
-        error: 'The repo already has uncommitted changes (likely left over from an earlier run that got interrupted). ' +
-          'Review them with "git status"/"git diff" in the repo folder, then either commit them if intentional or ' +
-          '"git checkout -- <file>" to discard them — before running the pipeline again.',
-        dirtyFiles: dirty.trim().split(/\r?\n/),
+        error: 'The repo has uncommitted changes unrelated to a normal publish run (possibly left over from a ' +
+          'different interrupted attempt). Review with "git status"/"git diff" in the repo folder, then either ' +
+          'commit them if intentional or "git checkout -- <file>" to discard them — before running the pipeline again.',
+        dirtyFiles: suspicious,
       });
     }
   } catch (e) {
