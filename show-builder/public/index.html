@@ -277,6 +277,14 @@
     touch-action: none; /* a touch-drag on a clip moves it, not the page — swipe empty space to scroll instead */
   }
   .mix-clip.dragging { cursor: grabbing; opacity: .85; box-shadow: 0 6px 16px rgba(0,0,0,.5); z-index: 5; }
+  .mix-clip.muted { opacity: .45; }
+  .mix-clip-mute {
+    position: absolute; top: 2px; left: 2px; background: none; border: none; color: #9a9ba5;
+    font-size: 11px; font-weight: 600; line-height: 1; padding: 2px 5px; cursor: pointer; border-radius: 4px;
+    z-index: 4; /* same corner-priority reasoning as .mix-clip-remove, mirrored to the left */
+  }
+  .mix-clip-mute:hover { color: #e8e8ea; background: rgba(0,0,0,.3); }
+  .mix-clip-mute.active { color: #fff; background: #b5442a; }
   .mix-clip-wave { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; }
   .mix-clip-fill {
     position: absolute; inset: 0;
@@ -1551,7 +1559,7 @@ function downloadedFileUrl(relPath) {
 // a real-time AudioContext, export re-schedules the identical graph on an
 // OfflineAudioContext and bounces the result to a WAV Blob (no server
 // round-trip, no encoding library — 16-bit PCM WAV needs neither).
-let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut, manuallyPositioned }
+let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut, manuallyPositioned, muted }
 let mixJingleAutoAdded = false; // see syncMixToShowOrder() — once per session, not once per empty mix
 let mixAudioCtx = null;
 const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
@@ -1843,10 +1851,11 @@ function renderMixTimeline() {
     const fadeInPct = c.duration ? Math.min(50, (c.fadeIn / c.duration) * 100) : 0;
     const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
     return `
-    <div class="mix-clip" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
+    <div class="mix-clip${c.muted ? ' muted' : ''}" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
       <canvas class="mix-clip-wave" width="${width}" height="${MIX_CLIP_H - 8}" data-id="${escAttr(c.id)}"></canvas>
       <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
       <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
+      <button class="mix-clip-mute${c.muted ? ' active' : ''}" data-id="${escAttr(c.id)}" title="${c.muted ? 'unmute' : 'mute'}">M</button>
       <button class="mix-clip-remove" data-id="${escAttr(c.id)}" title="remove">×</button>
       <div class="mix-fade-handle left" data-id="${escAttr(c.id)}" data-side="in" title="drag to set fade-in"></div>
       <div class="mix-fade-handle right" data-id="${escAttr(c.id)}" data-side="out" title="drag to set fade-out"></div>
@@ -1875,6 +1884,25 @@ function renderMixTimeline() {
       // itself instead.
     });
   });
+  timeline.querySelectorAll('.mix-clip-mute').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const clip = mixClips.find((c) => c.id === b.dataset.id);
+      if (!clip) return;
+      pushUndoSnapshot();
+      clip.muted = !clip.muted;
+      // playMix() only reads mute state ONCE, at schedule time — a clip
+      // already scheduled keeps playing regardless of a later mute toggle,
+      // since there's no per-clip handle kept around to silence just one
+      // live source. Restarting from the current position (mixSeekPosition
+      // is kept continuously up to date during playback — see playMix()'s
+      // own tick()) picks up the new mute state immediately instead of
+      // only on the NEXT play.
+      if (mixPlaying) { stopMix(); playMix(); }
+      renderMixTimeline();
+      debouncedSaveDraft();
+    });
+  });
   updateMixPlayheadPosition();
 }
 
@@ -1889,7 +1917,7 @@ function wireMixClipDrag() {
   const timeline = el('mixTimeline');
   timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
     clipEl.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove')) return;
+      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove') || e.target.closest('.mix-clip-mute')) return;
       const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
       if (!clip) return;
       pushUndoSnapshot();
@@ -2114,7 +2142,7 @@ async function playMix() {
   const seekFrom = mixSeekPosition;
   mixPlayStartCtxTime = now;
   mixLog('play: ctx.currentTime=', mixAudioCtx.currentTime, 'ctx.state=', mixAudioCtx.state, 'seekFrom=', seekFrom, 'clips=', mixClips.length);
-  const scheduled = mixClips.filter((clip) => clip.start + clip.duration > seekFrom);
+  const scheduled = mixClips.filter((clip) => !clip.muted && clip.start + clip.duration > seekFrom);
   mixActiveSources = scheduled.map((clip, idx) => {
     const src = scheduleMixClip(mixAudioCtx, clip, now, seekFrom);
     const label = `${clip.title} (scheduled start=${(now - seekFrom + clip.start).toFixed(2)} stop=${(now - seekFrom + clip.start + clip.duration).toFixed(2)})`;
@@ -2157,7 +2185,7 @@ async function renderMixOffline() {
   const sampleRate = 44100;
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
   const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDur * sampleRate), sampleRate);
-  mixClips.forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
+  mixClips.filter((clip) => !clip.muted).forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
   return offlineCtx.startRendering();
 }
 
