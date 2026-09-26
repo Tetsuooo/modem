@@ -29,6 +29,11 @@
   .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
   .tab-panel.tab-panel-wide { max-width: 1400px; }
   .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
+  .show-duration-row { display: flex; align-items: baseline; gap: 10px; }
+  .show-duration-row h2 { margin: 0 0 10px; }
+  #showDuration { margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+  #showDuration.duration-ok { color: #7dffb0; }
+  #showDuration.duration-off { color: #ffb066; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
@@ -368,7 +373,10 @@
   </section>
 
   <section class="tab-panel" id="panel-arrange" hidden>
-    <h2>Your show (drag to reorder)</h2>
+    <div class="show-duration-row">
+      <h2>Your show (drag to reorder)</h2>
+      <span id="showDuration" class="status"></span>
+    </div>
     <!-- Autocomplete sources for the artist/label/heading edit fields below —
          populated from /artist-label-names (existing archive credits) so
          typing a name that's already in use surfaces it instead of the user
@@ -942,10 +950,57 @@ function moveSelectedItem(index, dir) {
   saveDraft();
 }
 
+// A track's length in seconds, best-effort: its own scan-time duration if
+// known (single tracks, subtracks, or an SC playlist item — whose own
+// `duration` from the API is already the WHOLE playlist's total, see
+// scanReposts()), else the sum of `it.tracks[]` when it's a whole Bandcamp
+// album selected as one un-expanded entry (checkReleaseStatus() populates
+// that at scan time). Returns null — "unknown" — rather than 0, so an
+// unresolvable track shows up as a gap in the total instead of silently
+// under-counting it.
+function itemDurationSeconds(it) {
+  if (it.duration != null) return it.duration;
+  if (it.tracks && it.tracks.length) {
+    const sum = it.tracks.reduce((s, t) => s + (t.duration || 0), 0);
+    return sum || null;
+  }
+  return null;
+}
+
+function formatDurationLong(s) {
+  s = Math.round(s);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
+  return (h > 0 ? `${h}:${mm}` : mm) + ':' + String(sec).padStart(2, '0');
+}
+
+// Real modem shows run close to an hour — this is just a rough live gauge
+// while arranging, not a hard requirement, hence the generous ±5min band
+// before flagging it orange rather than green.
+function updateShowDuration() {
+  const out = el('showDuration');
+  if (!out) return;
+  if (!selected.length) { out.textContent = ''; out.className = 'status'; return; }
+  let total = 0;
+  let unknown = 0;
+  selected.forEach((it) => {
+    const d = itemDurationSeconds(it);
+    if (d == null) unknown++;
+    else total += d;
+  });
+  const targetLow = 55 * 60, targetHigh = 65 * 60;
+  const onTarget = total >= targetLow && total <= targetHigh;
+  out.textContent = `Total: ${formatDurationLong(total)}` + (unknown ? ` (+${unknown} unknown length)` : '');
+  out.className = 'status ' + (onTarget ? 'duration-ok' : 'duration-off');
+}
+
 function renderSelected() {
   const badge = el('arrangeCount');
   if (selected.length) { badge.textContent = String(selected.length); badge.hidden = false; }
   else badge.hidden = true;
+  updateShowDuration();
 
   const box = el('selected');
   // FLIP: record where each item currently sits (by stable key) before the
@@ -1137,6 +1192,7 @@ async function keepOnlyDownloadedFile(key, index) {
   if (match) {
     it.title = match.title;
     if (match.artist) it.artist = match.artist;
+    it.duration = match.duration || null;
     if (it.source === 'soundcloud') {
       it.url = match.url;
       if (match.embeddable != null) it.embeddable = match.embeddable;
@@ -1145,8 +1201,13 @@ async function keepOnlyDownloadedFile(key, index) {
     }
   } else {
     it.title = name;
+    it.duration = null;
     console.warn('show-builder: could not match downloaded file to a specific track — the published embed will still cover the whole release', file);
   }
+  // `it.tracks` was the WHOLE release's track list — once trimmed down to
+  // one file it no longer applies (itemDurationSeconds() would otherwise
+  // keep summing every other track's length into the show total).
+  it.tracks = null;
   it._download.files = [file];
   renderSelected();
   saveDraft();
