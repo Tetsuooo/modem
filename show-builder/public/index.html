@@ -1216,8 +1216,8 @@ function renderSelected() {
         <div class="meta">
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
-            <input class="edit-field edit-artist" list="artistNamesList" data-key="${escAttr(it.key)}" placeholder="artist" value="${escAttr(it.artist || '')}">
-            ${grouped ? '' : `<input class="edit-field edit-label" list="labelNamesList" data-key="${escAttr(it.key)}" placeholder="label (optional)" value="${escAttr(it.label || '')}">`}
+            <input class="edit-field edit-artist" list="artistNamesList" data-key="${escAttr(it.key)}" placeholder="artist(s) — comma-separated for more than one" value="${escAttr(it.artist || '')}">
+            ${grouped ? '' : `<input class="edit-field edit-label" list="labelNamesList" data-key="${escAttr(it.key)}" placeholder="label(s), optional — comma-separated" value="${escAttr(it.label || '')}">`}
           </div>
           ${grouped ? '' : `
           <div class="heading-choice">
@@ -2805,6 +2805,14 @@ function dedupedField(field) {
 // distinct real artist in the run bracketed after it (e.g.
 // "mappa [ Visible Cloaks, Les Halles, ... ]") — instead of repeating the
 // same heading once per track.
+// The artist/label edit fields accept more than one name as a plain
+// comma-separated list (e.g. "Artist A, Artist B" for a collab, or two
+// co-releasing labels) — this splits one into its individual trimmed,
+// @-stripped names, dropping anything blank.
+function splitNames(s) {
+  return String(s || '').split(',').map((n) => n.replace(/@/g, '').trim()).filter(Boolean);
+}
+
 function generateArtistListText() {
   const num = el('showNumber').value.trim();
   const header = num ? `///${num}\n\n` : '';
@@ -2820,9 +2828,10 @@ function generateArtistListText() {
       const seenOther = new Set();
       const others = [];
       for (let k = i; k <= j; k++) {
-        const nm = (selected[k].artist || '').replace(/@/g, '').trim();
-        const ok = nm.toLowerCase();
-        if (nm && ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
+        splitNames(selected[k].artist).forEach((nm) => {
+          const ok = nm.toLowerCase();
+          if (ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
+        });
       }
       if (heading) {
         const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
@@ -2833,9 +2842,15 @@ function generateArtistListText() {
     } else {
       const it = selected[i];
       const heading = headingName(it).replace(/@/g, '').trim();
-      const other = (it.headingSource === 'label' ? it.artist : it.label || '').replace(/@/g, '').trim();
+      const headingLower = heading.toLowerCase();
+      const seenOther = new Set();
+      const others = [];
+      splitNames(it.headingSource === 'label' ? it.artist : it.label).forEach((nm) => {
+        const ok = nm.toLowerCase();
+        if (ok !== headingLower && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
+      });
       if (heading) {
-        const line = other && other.toLowerCase() !== heading.toLowerCase() ? `${heading} [ ${other} ]` : heading;
+        const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
         const key = line.toLowerCase();
         if (!seen.has(key)) { seen.add(key); lines.push(line); }
       }
