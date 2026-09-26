@@ -1509,27 +1509,29 @@ const JINGLE_SRC = '/assets/jingle.mp3';
 const JINGLE_KEY = 'jingle';
 
 // One-click "every show starts and ends with this": places a jingle clip
-// at start=0 and another at the current end, shifting every OTHER clip
-// later by the jingle's own length first so the opening one doesn't just
-// overlap whatever was already sitting at 0. Re-runnable: clears any
-// jingle clips already placed before re-adding, so clicking it again after
-// moving things around resets to a clean bookend instead of piling up
-// duplicates.
+// at start=0 and another at the show's end, normalizing every OTHER clip
+// so the earliest one starts exactly at the jingle's own length (shifting
+// forward to make room the first time; shifting back by the same amount a
+// second run would otherwise double-add, so repeated clicks converge on
+// the same clean bookend instead of compounding a growing gap). Clears any
+// jingle clips already placed before recomputing, so it's fully idempotent.
 async function addJingleBookend() {
   el('mixStatus').textContent = 'loading jingle…';
   try {
     const buffer = await getMixBuffer(JINGLE_SRC);
     const jingleDuration = buffer.duration;
-    mixClips = mixClips.filter((c) => c.key !== JINGLE_KEY);
-    mixClips.forEach((c) => { c.start += jingleDuration; });
-    const endOfShow = mixClips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    const others = mixClips.filter((c) => c.key !== JINGLE_KEY);
+    const firstStart = others.length ? Math.min(...others.map((c) => c.start)) : 0;
+    const delta = jingleDuration - firstStart;
+    others.forEach((c) => { c.start += delta; });
+    const endOfShow = others.reduce((max, c) => Math.max(max, c.start + c.duration), jingleDuration);
     const makeJingleClip = (start) => ({
       id: JINGLE_KEY + ':' + start.toFixed(3) + ':' + Date.now(),
       key: JINGLE_KEY, title: 'Show jingle', artist: '', src: JINGLE_SRC,
       sourceDuration: jingleDuration, trimStart: 0, duration: jingleDuration,
       start, fadeIn: 0, fadeOut: 0,
     });
-    mixClips.push(makeJingleClip(0), makeJingleClip(endOfShow));
+    mixClips = [...others, makeJingleClip(0), makeJingleClip(endOfShow)];
     el('mixStatus').textContent = '';
     renderMixTimeline();
     debouncedSaveDraft();
