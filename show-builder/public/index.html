@@ -325,18 +325,31 @@
      (palette + layer list + global grade) fixed-width on the left, canvas
      takes whatever's left. ---- */
   .cover-layout { display: flex; gap: 16px; align-items: flex-start; }
-  .cover-sidebar {
-    flex: 0 0 300px; max-width: 300px; display: flex; flex-direction: column; gap: 8px;
-    max-height: 78vh; overflow-y: auto; padding-right: 4px;
-  }
+  .cover-sidebar { flex: 0 0 300px; max-width: 300px; display: flex; flex-direction: column; gap: 8px; }
+  /* Only the layer list itself scrolls — Adjust (whole-image contrast etc.)
+     sits below it as a fixed, always-visible section instead of getting
+     scrolled out of view once there are enough layers to fill the box. */
+  .cover-layers-scroll { max-height: 60vh; overflow-y: auto; padding-right: 4px; }
   .cover-canvas-wrap { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
-  #coverCanvas { max-width: 100%; height: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #000; }
+  /* max-height (matching the sidebar's own 78vh) + width/height both auto
+     lets the square canvas shrink to fit WHICHEVER of width/height is
+     tighter, same as object-fit:contain — previously only max-width was
+     constrained, so on a shorter viewport the canvas could render taller
+     than the visible area with no way to see the whole cover without
+     scrolling. */
+  #coverCanvas {
+    max-width: 100%; max-height: 78vh; width: auto; height: auto;
+    border: 1px solid #2a2b33; border-radius: 8px; background: #000;
+  }
+  #coverCanvas.erasing { cursor: crosshair; }
+  #coverEraserBtn.active { background: #3a6ff0; border-color: #3a6ff0; }
   .cover-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9a9ba5; margin: 2px 0; }
   .cover-layer-list { display: flex; flex-direction: column; gap: 6px; }
   .cover-layer {
     background: #1c1d24; border: 1px solid #2a2b33; border-radius: 6px; padding: 6px 8px;
   }
   .cover-layer.dragging { opacity: .4; }
+  .cover-layer.selected { border-color: #3a6ff0; }
   .cover-layer-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: grab; }
   .cover-layer-thumb { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex: none; background: #2a2b33; }
   .cover-layer-title { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -514,13 +527,20 @@
     <div class="actions">
       <button id="coverSaveBtn">Save</button>
       <button id="coverExportBtn" class="primary">Export PNG</button>
+      <button id="coverEraserBtn" title="erase parts of the selected layer — click a layer in the list to pick which one">Eraser</button>
+      <span class="mix-zoom">
+        <span class="status">size</span>
+        <input type="range" id="coverEraserSize" min="8" max="200" value="40" title="eraser brush size">
+      </span>
       <span id="coverStatus" class="status"></span>
     </div>
     <p class="status">Covers here always match "Your show" — multiple tracks off the same release only bring in one copy of its cover. Add/remove tracks in Arrange to change which covers show up; drag the layers below to choose which is on top.</p>
     <div class="cover-layout">
       <div class="cover-sidebar">
-        <h3 class="cover-section-title">Layers (top = front)</h3>
-        <div id="coverLayerList" class="cover-layer-list"></div>
+        <div class="cover-layers-scroll">
+          <h3 class="cover-section-title">Layers (top = front)</h3>
+          <div id="coverLayerList" class="cover-layer-list"></div>
+        </div>
         <h3 class="cover-section-title">Adjust (whole image)</h3>
         <div class="cover-global-adjust">
           <label>Contrast <input type="range" id="coverContrast" min="-100" max="100" value="0"><span id="coverContrastVal">0</span></label>
@@ -2256,7 +2276,11 @@ function audioBufferToWav(buffer) {
 // context's own `filter` (same syntax as CSS filter), so both the live
 // preview and the exported PNG reflect it identically — nothing here is a
 // CSS-only effect that would vanish on export.
-let coverLayers = []; // { id, key, title, src, blackPoint, blackRange, whitePoint, whiteRange }
+let coverLayers = []; // { id, key, title, src, blackPoint, blackRange, whitePoint, whiteRange, eraseStrokes }
+let selectedCoverLayerId = null; // which layer the eraser (see wireCoverEraser()) acts on
+let coverEraserActive = false;
+const COVER_ERASER_MIN_R = 8, COVER_ERASER_MAX_R = 200;
+let coverEraserRadius = 40; // canvas-space px (COVER_CANVAS_SIZE=1200 coordinate space)
 let coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
 const coverImageCache = new Map(); // src -> HTMLImageElement
 const COVER_CANVAS_SIZE = 1200;
@@ -2348,13 +2372,24 @@ function renderCoverLayerList() {
   if (!box) return;
   if (!coverLayers.length) {
     box.innerHTML = '<div class="empty">Add a cover above to start the stack.</div>';
+    selectedCoverLayerId = null;
     return;
   }
-  box.innerHTML = coverLayers.map((l) => `
-    <div class="cover-layer" data-id="${escAttr(l.id)}">
-      <div class="cover-layer-head" draggable="true" title="drag to reorder">
+  // Default to the front-most layer so the eraser has something to act on
+  // immediately — re-picked whenever the previously-selected one no longer
+  // exists (removed, or nothing selected yet).
+  if (!coverLayers.some((l) => l.id === selectedCoverLayerId)) selectedCoverLayerId = coverLayers[0].id;
+  box.innerHTML = coverLayers.map((l, i) => `
+    <div class="cover-layer${l.id === selectedCoverLayerId ? ' selected' : ''}" data-id="${escAttr(l.id)}">
+      <div class="cover-layer-head" draggable="true" title="click to select (for the eraser) — drag to reorder">
         <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
         <span class="cover-layer-title">${esc(l.title)}</span>
+        <div class="move-buttons">
+          <button class="move-btn cover-move-btn" data-index="${i}" data-dir="top" title="move to top" ${i === 0 ? 'disabled' : ''}>⇑</button>
+          <button class="move-btn cover-move-btn" data-index="${i}" data-dir="up" title="move up" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button class="move-btn cover-move-btn" data-index="${i}" data-dir="down" title="move down" ${i === coverLayers.length - 1 ? 'disabled' : ''}>▼</button>
+          <button class="move-btn cover-move-btn" data-index="${i}" data-dir="bottom" title="move to bottom" ${i === coverLayers.length - 1 ? 'disabled' : ''}>⇓</button>
+        </div>
         <button class="cover-layer-remove" data-id="${escAttr(l.id)}" title="remove">×</button>
       </div>
       <div class="cover-layer-lumakey">
@@ -2377,14 +2412,47 @@ function renderCoverLayerList() {
   box.querySelectorAll('.cover-layer-remove').forEach((b) => {
     b.addEventListener('click', (e) => {
       e.stopPropagation();
+      pushUndoSnapshot();
       coverLayers = coverLayers.filter((l) => l.id !== b.dataset.id);
       renderCoverLayerList();
       scheduleCoverRender();
       debouncedSaveDraft();
     });
   });
+  box.querySelectorAll('.cover-move-btn').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moveCoverLayer(Number(b.dataset.index), b.dataset.dir);
+    });
+  });
+  // Selecting a layer (for the eraser) is a click anywhere on its head
+  // EXCEPT the controls that already have their own click meaning.
+  box.querySelectorAll('.cover-layer-head').forEach((head) => {
+    head.addEventListener('click', (e) => {
+      if (e.target.closest('.move-buttons') || e.target.closest('.cover-layer-remove')) return;
+      selectedCoverLayerId = head.closest('.cover-layer').dataset.id;
+      renderCoverLayerList();
+    });
+  });
   wireLumaKeyBars();
   wireCoverLayerDrag();
+}
+
+// Same idea as moveSelectedItem() in Arrange — reorders coverLayers
+// directly (list order IS stacking order here, front = index 0).
+function moveCoverLayer(index, dir) {
+  if (index < 0 || index >= coverLayers.length) return;
+  pushUndoSnapshot();
+  const [layer] = coverLayers.splice(index, 1);
+  let newIndex;
+  if (dir === 'up') newIndex = Math.max(0, index - 1);
+  else if (dir === 'down') newIndex = Math.min(coverLayers.length, index + 1);
+  else if (dir === 'top') newIndex = 0;
+  else newIndex = coverLayers.length; // bottom
+  coverLayers.splice(newIndex, 0, layer);
+  renderCoverLayerList();
+  scheduleCoverRender();
+  debouncedSaveDraft();
 }
 
 // ---- Luma key ("Blend If") bar -------------------------------------------
@@ -2524,6 +2592,7 @@ function wireCoverLayerDrag() {
   box.querySelectorAll('.cover-layer-head').forEach((head) => {
     const row = head.closest('.cover-layer');
     head.addEventListener('dragstart', () => {
+      pushUndoSnapshot();
       draggingEl = row;
       row.classList.add('dragging');
     });
@@ -2624,12 +2693,72 @@ async function renderCoverCanvas() {
       applyLumaKey(imageData, layer);
       tctx.putImageData(imageData, 0, 0);
     }
+    // Eraser: a list of strokes (each an array of {x,y,r} points in this
+    // same COVER_CANVAS_SIZE coordinate space — see wireCoverEraser()),
+    // punched out via destination-out so it clears straight through
+    // whatever's already been drawn/keyed on this layer's own tmp canvas,
+    // before it gets composited onto the shared stack below.
+    if (layer.eraseStrokes && layer.eraseStrokes.length) {
+      tctx.save();
+      tctx.globalCompositeOperation = 'destination-out';
+      layer.eraseStrokes.forEach((stroke) => {
+        stroke.forEach((pt) => {
+          tctx.beginPath();
+          tctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+          tctx.fill();
+        });
+      });
+      tctx.restore();
+    }
     octx.drawImage(tmp, 0, 0);
   }
 
   ctx.filter = buildCoverFilterCss();
   ctx.drawImage(offscreen, 0, 0);
   ctx.filter = 'none';
+}
+
+// Simple eraser: while active (see the Eraser button), dragging on the
+// canvas punches a hole through the SELECTED layer only (see
+// selectedCoverLayerId, set by clicking a layer in the sidebar list) —
+// each drag is one stroke, appended to that layer's eraseStrokes (an array
+// of {x,y,r} points in COVER_CANVAS_SIZE coordinates, applied at render
+// time in renderCoverCanvas() above). Wired once at page load — the
+// canvas element itself is never torn down/recreated, unlike the layer
+// list, so this doesn't need re-wiring on every render.
+function wireCoverEraser() {
+  const canvas = el('coverCanvas');
+  let currentStroke = null;
+
+  const toCanvasPoint = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scale = COVER_CANVAS_SIZE / rect.width; // square canvas — one scale factor covers both axes
+    return { x: (e.clientX - rect.left) * scale, y: (e.clientY - rect.top) * scale, r: coverEraserRadius };
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!coverEraserActive) return;
+    const layer = coverLayers.find((l) => l.id === selectedCoverLayerId);
+    if (!layer) return;
+    pushUndoSnapshot();
+    if (!layer.eraseStrokes) layer.eraseStrokes = [];
+    currentStroke = [toCanvasPoint(e)];
+    layer.eraseStrokes.push(currentStroke);
+    canvas.setPointerCapture(e.pointerId);
+    scheduleCoverRender();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!currentStroke) return;
+    currentStroke.push(toCanvasPoint(e));
+    scheduleCoverRender();
+  });
+  const endStroke = () => {
+    if (!currentStroke) return;
+    currentStroke = null;
+    debouncedSaveDraft();
+  };
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
 }
 
 async function exportCoverPng() {
@@ -3235,6 +3364,13 @@ el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
 el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });
 el('coverExportBtn').addEventListener('click', exportCoverPng);
+el('coverEraserSize').addEventListener('input', (e) => { coverEraserRadius = Number(e.target.value); });
+el('coverEraserBtn').addEventListener('click', () => {
+  coverEraserActive = !coverEraserActive;
+  el('coverEraserBtn').classList.toggle('active', coverEraserActive);
+  el('coverCanvas').classList.toggle('erasing', coverEraserActive);
+});
+wireCoverEraser();
 [['coverContrast', 'contrast'], ['coverBrightness', 'brightness'], ['coverSaturation', 'saturation']].forEach(([id, field]) => {
   el(id).addEventListener('input', () => {
     coverAdjust[field] = Number(el(id).value);
