@@ -46,6 +46,11 @@
   }
   .row:hover { background: #1c1d24; }
   .row img { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; background: #2a2b33; flex: none; }
+  /* Wraps the small native checkbox in a padded, still-inline hit target —
+     clicking the padding toggles it too (native label behavior), no extra
+     JS needed. */
+  .select-hit { flex: none; display: flex; align-items: center; justify-content: center; padding: 8px; margin: -8px; cursor: pointer; }
+  .select-hit .selectbox { width: 16px; height: 16px; cursor: pointer; }
   .row .meta { min-width: 0; flex: 1; }
   .row .title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .artist { font-size: 12px; color: #9a9ba5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -468,6 +473,7 @@ let scanResults = [];
 let selected = [];
 let itemRegistry = new Map(); // key -> item object, covers both top-level results and expanded sub-tracks
 let expandedOpen = new Set(); // keys of releases currently expanded into their track list
+let activeTrackAudio = null; // the one .track-player <audio> currently allowed to play — see wireTrackPlayers()
 
 const el = (id) => document.getElementById(id);
 const SOURCE_LABEL = { soundcloud: 'SoundCloud repost', 'bandcamp-wishlist': 'Bandcamp wishlist', 'bandcamp-library': 'Bandcamp library' };
@@ -735,7 +741,7 @@ function renderSubtracks(parent) {
     return `
       <div class="result">
         <div class="row subtrack-row" data-key="${escAttr(sub.key)}">
-          <input type="checkbox" ${isSelected(sub.key) ? 'checked' : ''} data-key="${escAttr(sub.key)}" class="selectbox">
+          <label class="select-hit"><input type="checkbox" ${isSelected(sub.key) ? 'checked' : ''} data-key="${escAttr(sub.key)}" class="selectbox"></label>
           <div class="meta">
             <div class="title">${esc(sub.title)}</div>
             ${sub.artist ? `<div class="artist">${esc(sub.artist)}</div>` : ''}
@@ -767,7 +773,7 @@ function renderScanResults() {
       <div class="result">
         <div class="row" data-key="${escAttr(it.key)}">
           ${expandable ? `<button class="expand-btn" data-key="${escAttr(it.key)}" title="show individual tracks">${open ? '▾' : '▸'}</button>` : '<span class="expand-spacer"></span>'}
-          <input type="checkbox" ${isSelected(it.key) ? 'checked' : ''} data-key="${escAttr(it.key)}" class="selectbox">
+          <label class="select-hit"><input type="checkbox" ${isSelected(it.key) ? 'checked' : ''} data-key="${escAttr(it.key)}" class="selectbox"></label>
           <img class="preview-art" src="${escAttr(it.artwork || '')}" loading="lazy" title="play preview" data-key="${escAttr(it.key)}" onerror="this.style.visibility='hidden'">
           <div class="meta">
             <div class="title">${esc(it.title)}</div>
@@ -1047,8 +1053,19 @@ function wireTrackPlayers(root) {
     };
     audio.addEventListener('loadedmetadata', updateTime);
     audio.addEventListener('timeupdate', updateTime);
-    audio.addEventListener('play', () => { icon.textContent = '⏸'; });
-    audio.addEventListener('pause', () => { icon.textContent = '▶'; });
+    // Only one .track-player plays at a time, page-wide (Scan preview rows
+    // and Arrange's downloaded-track rows share the same `activeTrackAudio`)
+    // — starting this one pauses whatever else was playing, same as clicking
+    // a new track always would in a normal player.
+    audio.addEventListener('play', () => {
+      icon.textContent = '⏸';
+      if (activeTrackAudio && activeTrackAudio !== audio) activeTrackAudio.pause();
+      activeTrackAudio = audio;
+    });
+    audio.addEventListener('pause', () => {
+      icon.textContent = '▶';
+      if (activeTrackAudio === audio) activeTrackAudio = null;
+    });
     audio.addEventListener('ended', () => { icon.textContent = '▶'; });
 
     box.addEventListener('click', (e) => {
