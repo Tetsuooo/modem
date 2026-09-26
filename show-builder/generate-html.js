@@ -3,8 +3,16 @@
 // once the page is live: a "<p>Name ////...</p>" heading followed by a
 // "<p><iframe ...></iframe></p>" embed (the "recent" dialect).
 const { curlGet, escapeHtml } = require('./lib');
+const { INTRO_BANNER_TEXT } = require('./intro-banner');
 
 const SLASHES = '/'.repeat(34);
+// The classic modem intro banner, verified against a real live page (see
+// intro-banner.js) — every generated show opens with it now, same as the
+// ~58 older shows that still carry it. Not run through escapeHtml(): it's
+// already plain text with no HTML-special characters (no <, >, &, "), and
+// escapeHtml() would mangle nothing here anyway but there's no reason to
+// risk it on a string this delicate.
+const INTRO_BANNER = `<p>${INTRO_BANNER_TEXT}&nbsp;</p>\n<p>&nbsp;</p>`;
 
 // Bandcamp's EmbeddedPlayer iframe is fully determined by album/track id —
 // no fetch needed, same URL shape already used in src/assets/modem-archive.json
@@ -152,7 +160,7 @@ function generateShowHtml(items) {
       i++;
     }
   }
-  return blocks.join('\n\n');
+  return INTRO_BANNER + '\n\n' + blocks.join('\n\n');
 }
 
 module.exports = { generateShowHtml, buildBandcampEmbed, buildSoundcloudEmbed, groupRuns, headingName };
