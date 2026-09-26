@@ -254,14 +254,6 @@
   .mix-zoom { display: inline-flex; align-items: center; gap: 6px; }
   .mix-zoom button { padding: 4px 10px; font-size: 13px; }
   .mix-zoom .status { min-width: 52px; text-align: center; }
-  .mix-palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-  .mix-palette-item {
-    display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 6px;
-    background: #1c1d24; border: 1px solid #2a2b33; font-size: 12px;
-  }
-  .mix-palette-item .mp-title { color: #e8e8ea; }
-  .mix-palette-item .mp-artist { color: #9a9ba5; }
-  .mix-palette-item button { padding: 3px 8px; font-size: 11px; }
   .mix-timeline-wrap {
     overflow-x: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #0e0f13;
     touch-action: pan-x; /* only native horizontal panning — leaves 2-finger pinch to our own JS handler instead of also fighting a native page-zoom gesture */
@@ -497,17 +489,18 @@
     <h2>Mix — drag clips to position them, drag their corners to fade, click the ruler to seek</h2>
     <div class="actions">
       <button id="mixPlayToggleBtn" class="primary">▶ Play</button>
-      <button id="mixAddAllBtn">Add all from Your show</button>
-      <button id="mixJingleBtn" title="places the show jingle at the very start and end, pushing everything else back to make room">Bookend with jingle</button>
+      <button id="mixJingleBtn" title="re-snaps the show jingle to the very start and end, pushing everything else back to make room">Bookend with jingle</button>
       <button id="mixExportBtn">Export mix (.wav)</button>
       <span class="mix-zoom">
         <button id="mixZoomOutBtn" title="zoom out">−</button>
         <span id="mixZoomLabel" class="status">10 px/s</span>
         <button id="mixZoomInBtn" title="zoom in">+</button>
       </span>
+      <button id="mixUndoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
+      <button id="mixRedoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
       <span id="mixStatus" class="status"></span>
     </div>
-    <div id="mixPalette" class="mix-palette"></div>
+    <p class="status">Tracks here always match "Your show" — add, remove, or reorder them there. Drag a clip's body to reposition it in time (e.g. for a crossfade); anything else automatically re-flows to match.</p>
     <div id="mixTimelineWrap" class="mix-timeline-wrap">
       <div id="mixRuler" class="mix-ruler"></div>
       <div id="mixTimeline" class="mix-timeline">
@@ -611,9 +604,12 @@ function redoShowChange() {
 }
 
 function updateUndoRedoButtons() {
-  const undoBtn = el('undoBtn'), redoBtn = el('redoBtn');
-  if (undoBtn) undoBtn.disabled = !undoStack.length;
-  if (redoBtn) redoBtn.disabled = !redoStack.length;
+  // One shared undo/redo history across Arrange AND Mix (a snapshot
+  // already covers selected/coverLayers/mixClips together — see
+  // snapshotShowState()) — both tabs just get their own visible buttons
+  // for it, since Ctrl+Z already works globally regardless of active tab.
+  [el('undoBtn'), el('mixUndoBtn')].forEach((b) => { if (b) b.disabled = !undoStack.length; });
+  [el('redoBtn'), el('mixRedoBtn')].forEach((b) => { if (b) b.disabled = !redoStack.length; });
 }
 
 const el = (id) => document.getElementById(id);
@@ -1333,7 +1329,7 @@ function renderSelected() {
       node.style.transform = '';
     });
   });
-  renderMixPalette();
+  syncMixToShowOrder();
   renderCoverPalette();
 }
 
@@ -1531,7 +1527,8 @@ function downloadedFileUrl(relPath) {
 // a real-time AudioContext, export re-schedules the identical graph on an
 // OfflineAudioContext and bounces the result to a WAV Blob (no server
 // round-trip, no encoding library — 16-bit PCM WAV needs neither).
-let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut }
+let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fadeOut, manuallyPositioned }
+let mixJingleAutoAdded = false; // see syncMixToShowOrder() — once per session, not once per empty mix
 let mixAudioCtx = null;
 const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
 const mixWaveformCache = new Map(); // src -> Float32Array of [min,max] pairs, MIX_WAVE_BUCKETS long
@@ -1646,8 +1643,8 @@ async function getMixBuffer(src) {
 }
 
 // Every already-downloaded file across "Your show" (same _download.files
-// that drive the track players there), in show order — the single source
-// of truth for both the palette (below) and addAllToMix()'s default fill.
+// that drive the track players there), in show order — what
+// syncMixToShowOrder() (below) keeps the mix matched to.
 function getMixCandidates() {
   const candidates = [];
   selected.forEach((it) => {
@@ -1665,57 +1662,67 @@ function getMixCandidates() {
   return candidates;
 }
 
-// Nothing to decode yet here, just metadata, so this is cheap to rebuild on
-// every renderSelected().
-function renderMixPalette() {
-  const box = el('mixPalette');
-  if (!box) return;
+// Keeps the mix matched to "Your show" automatically — add/remove buttons
+// aren't needed since a track is either in the show (and so in the mix) or
+// it isn't. Called from renderSelected() on every add/remove/reorder, so it
+// runs constantly; cheap when there's nothing to do (candidates already
+// match 1:1), and only genuinely async work (decoding a newly-added
+// track's buffer) when something's actually missing.
+async function syncMixToShowOrder() {
   const candidates = getMixCandidates();
-  if (!candidates.length) {
-    box.innerHTML = '<div class="empty">Download some tracks first (Download &amp; Arrange tab) — they\'ll show up here to add to the mix.</div>';
-    return;
-  }
-  box.innerHTML = candidates.map((c) => `
-    <div class="mix-palette-item">
-      <span class="mp-title">${esc(c.title)}</span>
-      <span class="mp-artist">${esc(c.artist || '')}</span>
-      <button data-src="${escAttr(c.src)}" data-title="${escAttr(c.title)}" data-artist="${escAttr(c.artist || '')}" data-key="${escAttr(c.key)}">+ add</button>
-    </div>`).join('');
-  box.querySelectorAll('button[data-src]').forEach((b) => {
-    b.addEventListener('click', () => addClipToMix({ src: b.dataset.src, title: b.dataset.title, artist: b.dataset.artist, key: b.dataset.key }));
-  });
-}
+  const candidateKeys = new Set(candidates.map((c) => c.key));
+  const wasEmpty = !mixClips.some((c) => c.key !== JINGLE_KEY);
 
-async function addClipToMix(cand) {
-  el('mixStatus').textContent = 'loading…';
-  try {
-    const buffer = await getMixBuffer(cand.src);
-    const end = mixClips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
-    mixClips.push({
-      id: cand.key + ':' + Date.now(),
-      key: cand.key, title: cand.title, artist: cand.artist, src: cand.src,
-      sourceDuration: buffer.duration, // full track length — trimStart/duration below can only move within this
-      trimStart: 0, duration: buffer.duration, start: end,
-      fadeIn: 0, fadeOut: 0, // no fade by default — only where you actually drag one in
-    });
-    el('mixStatus').textContent = '';
-    renderMixTimeline();
-    debouncedSaveDraft();
-  } catch (e) {
-    el('mixStatus').textContent = 'failed to load: ' + (e.message || e);
-  }
-}
+  // Drop clips whose track left the show — the jingle is a separate, fixed
+  // asset (see JINGLE_KEY below), never touched by this membership sync.
+  mixClips = mixClips.filter((c) => c.key === JINGLE_KEY || candidateKeys.has(c.key));
 
-// Fills the mix with every downloaded track not already in it, in show
-// order, sequentially placed — one at a time (not Promise.all) so they land
-// in "Your show" order regardless of which file finishes decoding first.
-// Safe to re-run any time: already-present tracks (matched by key) are
-// skipped, so it only ever ADDS what's missing, never disturbs clips
-// already positioned/faded.
-async function addAllToMix() {
+  // Add whatever's missing — one at a time (not Promise.all) so multiple
+  // new tracks land in show order regardless of which file decodes first.
   const existingKeys = new Set(mixClips.map((c) => c.key));
-  const missing = getMixCandidates().filter((c) => !existingKeys.has(c.key));
-  for (const c of missing) await addClipToMix(c);
+  const missing = candidates.filter((c) => !existingKeys.has(c.key));
+  for (const cand of missing) {
+    try {
+      const buffer = await getMixBuffer(cand.src);
+      mixClips.push({
+        id: cand.key + ':' + Date.now(),
+        key: cand.key, title: cand.title, artist: cand.artist, src: cand.src,
+        sourceDuration: buffer.duration, trimStart: 0, duration: buffer.duration,
+        start: 0, // placeholder — the reflow pass below places it for real
+        fadeIn: 0, fadeOut: 0,
+      });
+    } catch (e) { /* best-effort — a track whose file can't be decoded just doesn't appear in the mix */ }
+  }
+
+  // Lay out every clip that hasn't been manually dragged, back-to-back, in
+  // the show's CURRENT order — a clip you've manually repositioned (a
+  // deliberate crossfade overlap, say) is left exactly where you put it,
+  // regardless of what else changes elsewhere in the show. The cursor still
+  // advances PAST a manual clip's own end (not just skipping over it), so
+  // the next automatic clip starts after it rather than potentially landing
+  // on top of it too — only the crossfade you actually dragged overlaps.
+  const byKey = new Map(mixClips.map((c) => [c.key, c]));
+  let cursor = 0;
+  for (const cand of candidates) {
+    const clip = byKey.get(cand.key);
+    if (!clip) continue;
+    if (clip.manuallyPositioned) cursor = Math.max(cursor, clip.start + clip.duration);
+    else { clip.start = cursor; cursor += clip.duration; }
+  }
+
+  renderMixTimeline();
+  debouncedSaveDraft();
+
+  // Same "on by default" bookend as before — just no longer gated to "the
+  // first time you open the Mix tab" specifically, since the mix now fills
+  // itself in regardless of whether you've ever opened that tab. Only
+  // fires once per session on the empty -> populated transition, so
+  // deliberately clearing the mix back out doesn't fight you by re-adding
+  // the jingle every time you experiment.
+  if (wasEmpty && candidates.length && !mixJingleAutoAdded) {
+    mixJingleAutoAdded = true;
+    await addJingleBookend();
+  }
 }
 
 // The show's own jingle — committed to the repo (public/assets/jingle.mp3,
@@ -1735,6 +1742,7 @@ async function addJingleBookend() {
   el('mixStatus').textContent = 'loading jingle…';
   try {
     const buffer = await getMixBuffer(JINGLE_SRC);
+    pushUndoSnapshot();
     const jingleDuration = buffer.duration;
     const others = mixClips.filter((c) => c.key !== JINGLE_KEY);
     const firstStart = others.length ? Math.min(...others.map((c) => c.start)) : 0;
@@ -1756,21 +1764,6 @@ async function addJingleBookend() {
   }
 }
 
-// Runs once per page load, the first time the Mix tab is actually opened —
-// gives a populated timeline by default (every selected/downloaded track,
-// in order, bookended by the show jingle — every show starts and ends
-// with it, so that's the default, not an extra step) without making the
-// user click "+ add"/"Bookend with jingle" individually, but only when the
-// mix is genuinely empty (a restored draft, or the user having
-// deliberately cleared it, is left alone).
-let mixAutoFillDone = false;
-async function ensureMixAutoFilled() {
-  if (mixAutoFillDone) return;
-  mixAutoFillDone = true;
-  if (mixClips.length) return;
-  await addAllToMix();
-  await addJingleBookend();
-}
 
 // The playhead div gets torn down and rebuilt by renderMixTimeline() (it's
 // just template text like the clips), so its visibility/position always
@@ -1837,9 +1830,16 @@ function renderMixTimeline() {
   timeline.querySelectorAll('.mix-clip-remove').forEach((b) => {
     b.addEventListener('click', (e) => {
       e.stopPropagation();
+      pushUndoSnapshot();
       mixClips = mixClips.filter((c) => c.id !== b.dataset.id);
       renderMixTimeline();
       debouncedSaveDraft();
+      // Note: since syncMixToShowOrder() keeps the mix matched to "Your
+      // show" automatically, this only removes it from the mix for now —
+      // the next unrelated show change (add/remove/reorder anything) will
+      // add it right back if its track is still actually in the show. To
+      // keep a track out of the mixdown for good, remove it from the show
+      // itself instead.
     });
   });
   updateMixPlayheadPosition();
@@ -1859,6 +1859,7 @@ function wireMixClipDrag() {
       if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove')) return;
       const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
       if (!clip) return;
+      pushUndoSnapshot();
       clipEl.classList.add('dragging');
       const startX = e.clientX;
       const startPos = clip.start;
@@ -1871,6 +1872,12 @@ function wireMixClipDrag() {
         clipEl.classList.remove('dragging');
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        // A clip you've actually dragged to a new time is now "manually
+        // positioned" — the automatic show-order sync (syncMixToShowOrder())
+        // leaves it exactly where you put it from now on, e.g. a deliberate
+        // crossfade overlap, instead of snapping it back into the sequential
+        // back-to-back slot on the next unrelated show change.
+        if (clip.start !== startPos) clip.manuallyPositioned = true;
         renderMixTimeline(); // refresh ruler/scroll extents to the new total length
         debouncedSaveDraft();
       };
@@ -1884,6 +1891,7 @@ function wireMixClipDrag() {
       e.stopPropagation();
       const clip = mixClips.find((c) => c.id === handle.dataset.id);
       if (!clip) return;
+      pushUndoSnapshot();
       const side = handle.dataset.side;
       const startX = e.clientX;
       const startVal = side === 'in' ? clip.fadeIn : clip.fadeOut;
@@ -1918,6 +1926,7 @@ function wireMixClipDrag() {
       e.stopPropagation();
       const clip = mixClips.find((c) => c.id === handle.dataset.id);
       if (!clip) return;
+      pushUndoSnapshot();
       // Backfill for a clip saved before trimming existed (no sourceDuration
       // field) — permanently, on the clip itself, not just a local fallback,
       // so a SECOND trim later doesn't mistake the already-trimmed duration
@@ -2610,6 +2619,13 @@ function wireDragAndDrop() {
       row.classList.remove('dragging');
       draggingItem = null;
       syncSelectedFromDom();
+      // Drag reordering deliberately skips renderSelected() (see its own
+      // comment — a full rebuild there would kill any playing audio), so
+      // the mix's own show-order sync needs its own explicit nudge here;
+      // the duration total is unaffected by pure reordering (same tracks,
+      // same total either way) and auto-advance already reads live DOM
+      // order directly, so neither needs a nudge.
+      syncMixToShowOrder();
       saveDraft();
     });
   });
@@ -2780,7 +2796,6 @@ async function loadDraft() {
     if (coverLayers.length) scheduleCoverRender();
   } catch (e) { /* first run, no draft yet */ }
   draftLoaded = true;
-  if (!el('panel-mix').hidden) ensureMixAutoFilled();
   if (!el('panel-covers').hidden) ensureCoverAutoFilled();
 }
 
@@ -3068,11 +3083,12 @@ async function confirmPush() {
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
 const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'history'];
-// Guards ensureMixAutoFilled()/ensureCoverAutoFilled() from running before
-// loadDraft() has actually populated `selected`/`mixClips`/`coverLayers` —
-// restoreTab() below can switch straight to "mix"/"covers" on page load (a
-// remembered tab), well before that async load resolves; loadDraft()
-// re-checks and fires the auto-fill itself once ready.
+// Guards ensureCoverAutoFilled() from running before loadDraft() has
+// actually populated `selected`/`coverLayers` — restoreTab() below can
+// switch straight to "covers" on page load (a remembered tab), well before
+// that async load resolves; loadDraft() re-checks and fires the auto-fill
+// itself once ready. Mix no longer needs this — syncMixToShowOrder() runs
+// off renderSelected() regardless of which tab is even visible.
 let draftLoaded = false;
 function switchTab(tab) {
   if (!TABS.includes(tab)) tab = 'scan';
@@ -3081,7 +3097,6 @@ function switchTab(tab) {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
-  if (tab === 'mix' && draftLoaded) ensureMixAutoFilled();
   if (tab === 'covers' && draftLoaded) ensureCoverAutoFilled();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
@@ -3160,8 +3175,9 @@ el('checkLiveBtn').addEventListener('click', checkLive);
 el('runPublishBtn').addEventListener('click', runPublish);
 el('confirmPushBtn').addEventListener('click', confirmPush);
 el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
-el('mixAddAllBtn').addEventListener('click', addAllToMix);
 el('mixJingleBtn').addEventListener('click', addJingleBookend);
+el('mixUndoBtn').addEventListener('click', undoShowChange);
+el('mixRedoBtn').addEventListener('click', redoShowChange);
 el('mixExportBtn').addEventListener('click', exportMix);
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
@@ -3396,6 +3412,7 @@ async function clearDraftClick() {
   undoStack = [];
   redoStack = [];
   updateUndoRedoButtons();
+  mixJingleAutoAdded = false; // a new show gets its own fresh auto-bookend
   coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
   el('coverContrast').value = 0;
   el('coverBrightness').value = 0;
