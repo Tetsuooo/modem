@@ -70,6 +70,11 @@
   .multi-files { padding: 4px 8px 4px 8px; }
   .file-row { padding: 3px 0 8px; }
   .file-name { font-size: 12px; color: #9a9ba5; display: block; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-row-head { display: flex; align-items: center; gap: 8px; }
+  .file-row-head .file-name { flex: 1; min-width: 0; margin-bottom: 0; }
+  .file-keep-btn { flex: none; padding: 2px 8px; font-size: 11px; }
+  .file-drop-btn { flex: none; background: none; border: none; color: #6f7080; font-size: 15px; padding: 0 4px; cursor: pointer; }
+  .file-drop-btn:hover { color: #ff8080; }
 
   /* Custom track player: the whole rectangle is the play/pause hit target,
      the scrub bar is a strip pinned to its bottom edge (kept clear via
@@ -605,16 +610,52 @@ function previewEmbedHtml(it) {
   return `<iframe style="width:400px;height:${it.albumId ? 472 : 150}px" src="${parts.join('')}" seamless></iframe>`;
 }
 
+// True for anything that's just ONE playable track — a plain SoundCloud
+// track repost, any Bandcamp track (top-level single or an expanded album's
+// sub-track), or an already-resolved SoundCloud playlist sub-track. False
+// for a playlist or a whole not-yet-expanded multi-track album/compilation,
+// where previewing "the whole thing" via the platform's own tracklist
+// widget is still the more useful preview.
+function isSingleTrackPreview(it) {
+  if (it.isPlaylist) return false;
+  if (it.albumId && !it.trackId && it.tracks && it.tracks.length > 1) return false;
+  return true;
+}
+
+// A single track previews with the SAME plain <audio>-based rectangle used
+// for a downloaded track (trackPlayerHtml/wireTrackPlayers) instead of the
+// source platform's own widget iframe — fetches a direct stream URL
+// (/preview-stream) so several previews open at once don't turn into a wall
+// of big branded embeds, just compact rows that play quietly in the
+// background. Falls back to the old iframe embed if no direct stream could
+// be resolved (e.g. SoundCloud-only-HLS tracks) or the fetch fails.
+async function playSingleTrackPreview(frame, item) {
+  frame.innerHTML = '<div class="status">loading preview…</div>';
+  try {
+    const r = await fetch('/preview-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item }) });
+    const j = await r.json();
+    if (!j.ok || !j.url) throw new Error(j.error || 'no stream url');
+    frame.innerHTML = trackPlayerHtml(j.url);
+    wireTrackPlayers(frame);
+    const audio = frame.querySelector('audio');
+    if (audio) audio.play().catch(() => {});
+  } catch (e) {
+    frame.innerHTML = previewEmbedHtml(item);
+  }
+}
+
 function togglePreview(key) {
   const frame = document.querySelector(`.preview-frame[data-key="${cssEsc(key)}"]`);
   if (!frame) return;
   if (frame.hidden) {
     const item = itemRegistry.get(key);
-    if (item) frame.innerHTML = previewEmbedHtml(item);
+    if (!item) return;
     frame.hidden = false;
+    if (isSingleTrackPreview(item)) playSingleTrackPreview(frame, item);
+    else frame.innerHTML = previewEmbedHtml(item);
   } else {
     frame.hidden = true;
-    frame.innerHTML = ''; // drop the iframe so playback actually stops
+    frame.innerHTML = ''; // drop the iframe/audio so playback actually stops
   }
 }
 
@@ -839,6 +880,13 @@ function renderSelected() {
     selected.splice(Number(b.dataset.index), 1);
     renderSelected(); renderScanResults(); saveDraft();
   }));
+  box.querySelectorAll('.file-drop-btn').forEach((b) => b.addEventListener('click', () => {
+    const it = selected.find((s) => s.key === b.dataset.key);
+    if (!it || !it._download || !it._download.files) return;
+    it._download.files.splice(Number(b.dataset.index), 1);
+    renderSelected(); saveDraft();
+  }));
+  box.querySelectorAll('.file-keep-btn').forEach((b) => b.addEventListener('click', () => keepOnlyDownloadedFile(b.dataset.key, Number(b.dataset.index))));
   // Editing artist/label/heading-choice updates the underlying data silently
   // (no re-render) so typing doesn't lose focus/cursor position — only
   // structural changes (add/remove/reorder) rebuild the DOM.
@@ -905,13 +953,63 @@ function playerRow(it) {
   if (files.length === 1) {
     return `<div class="player-row">${trackPlayerHtml(downloadedFileUrl(files[0]))}</div>`;
   }
-  // Rare now that individual tracks can be picked directly (see
-  // subtrackItem) — a whole release downloaded as one candidate still gets
-  // one full-size player per resulting file rather than a collapsed badge.
-  return `<div class="multi-files">${files.map((f) => {
+  // A whole release downloaded as one candidate still lists every resulting
+  // file — each with "keep only this" (promote just this track to the
+  // actual selected entry, dropping the rest — see keepOnlyDownloadedFile())
+  // and "×" (drop just this one file, keep the others), so a full-album
+  // download can be trimmed down to the one or two tracks actually wanted
+  // without redoing the pick from Scan.
+  return `<div class="multi-files">${files.map((f, i) => {
     const name = String(f).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '');
-    return `<div class="file-row"><span class="file-name">${esc(name)}</span>${trackPlayerHtml(downloadedFileUrl(f))}</div>`;
+    return `<div class="file-row">
+      <div class="file-row-head">
+        <span class="file-name">${esc(name)}</span>
+        <button class="file-keep-btn" data-key="${escAttr(it.key)}" data-index="${i}" title="drop every other track, keep only this one">keep only this</button>
+        <button class="file-drop-btn" data-key="${escAttr(it.key)}" data-index="${i}" title="drop this track">×</button>
+      </div>
+      ${trackPlayerHtml(downloadedFileUrl(f))}
+    </div>`;
   }).join('')}</div>`;
+}
+
+// "keep only this" on a multi-file (whole-album) row: drops every other
+// downloaded file and, where possible, promotes the row from "whole
+// release" to "this one track" so the actual published embed narrows down
+// too, not just the local file list. Matches the kept file against
+// `it.tracks` by filename (mirrors modem_download.py's sanitize_filename(),
+// same as sanitizeForCoverGuess below) to find that track's real id/url;
+// falls back to just trimming the file list if no confident match turns up
+// (e.g. a download made before track metadata was cached) — the published
+// embed then still covers the whole release, so a console warning flags it.
+async function keepOnlyDownloadedFile(key, index) {
+  const it = selected.find((s) => s.key === key);
+  if (!it || !it._download || !it._download.files) return;
+  const file = it._download.files[index];
+  if (!it.tracks) {
+    try {
+      const r = await fetch('/release-tracks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: it }) });
+      const j = await r.json();
+      it.tracks = j.tracks || [];
+    } catch (e) { it.tracks = []; }
+  }
+  const name = String(file).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '');
+  const match = it.tracks.find((t) => sanitizeForCoverGuess(t.title) === name);
+  if (match) {
+    it.title = match.title;
+    if (match.artist) it.artist = match.artist;
+    if (it.source === 'soundcloud') {
+      it.url = match.url;
+      if (match.embeddable != null) it.embeddable = match.embeddable;
+    } else {
+      it.trackId = match.id;
+    }
+  } else {
+    it.title = name;
+    console.warn('show-builder: could not match downloaded file to a specific track — the published embed will still cover the whole release', file);
+  }
+  it._download.files = [file];
+  renderSelected();
+  saveDraft();
 }
 
 function trackPlayerHtml(src) {

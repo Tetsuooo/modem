@@ -132,6 +132,26 @@ app.post('/release-tracks', (req, res) => {
   }
 });
 
+// ---------- /preview-stream (inline background preview, Scan tab) ----------
+// Resolves a single track to a directly-playable audio URL so the Scan tab
+// can preview it with the same plain <audio>-based track-player UI used for
+// downloaded tracks, instead of an embedded platform widget per preview —
+// see scan-soundcloud.js/scan-bandcamp.js's resolveStreamUrl(). Only ever
+// called for a single playable track (see isSingleTrackPreview() client-
+// side) — playlists/whole albums still use the old tracklist iframe.
+app.post('/preview-stream', (req, res) => {
+  const item = (req.body && req.body.item) || {};
+  try {
+    const result = item.source === 'soundcloud'
+      ? scanSoundcloud.resolveStreamUrl(item.url)
+      : scanBandcamp.resolveStreamUrl(item.url, item.trackId);
+    if (!result.url) return res.json({ ok: false, error: 'no direct stream available for this track' });
+    res.json({ ok: true, url: result.url });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
 // ---------- draft persistence ----------------------------------------------
 app.get('/draft', (req, res) => {
   res.json(readJson(DRAFT_FILE, { selected: [], order: [], generatedHtml: null }));

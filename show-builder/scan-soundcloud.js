@@ -179,4 +179,27 @@ function resolveTracks(item) {
     }));
 }
 
-module.exports = { scanReposts, getClientId, resolveTracks };
+// Resolves a single track permalink to a directly-playable progressive
+// (plain mp3, not HLS) CDN URL — used for the Scan tab's inline preview
+// player so it can use the same plain <audio>-based UI as a downloaded
+// track instead of embedding SoundCloud's own widget iframe per preview.
+// Two API calls, same shape as everything else here: resolve the permalink
+// to a track object (media.transcodings[]), then GET the chosen
+// transcoding's own url (itself just a pointer, not the audio) to get the
+// real signed stream url. Returns { url: null } if only HLS is available
+// (some tracks/uploaders don't offer a progressive stream) — the caller
+// falls back to the iframe widget in that case.
+function resolveStreamUrl(url) {
+  let clientId = getClientId(false);
+  let { data, clientId: cid } = apiV2Get('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent(url), clientId);
+  clientId = cid;
+  if (!data || data.kind !== 'track') throw new Error('not a SoundCloud track: ' + url);
+  const transcodings = (data.media && data.media.transcodings) || [];
+  const progressive = transcodings.find((t) => t.format && t.format.protocol === 'progressive');
+  if (!progressive) return { url: null };
+  const { data: streamData } = apiV2Get(progressive.url, clientId);
+  if (!streamData || !streamData.url) return { url: null };
+  return { url: streamData.url };
+}
+
+module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl };

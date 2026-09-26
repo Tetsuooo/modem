@@ -130,4 +130,27 @@ function scanWishlistAndLibrary(cutoffDate) {
   return items;
 }
 
-module.exports = { scanWishlistAndLibrary, getFanId };
+// Resolves a track's own page to a directly-playable stream URL — same
+// data-tralbum blob checkReleaseStatus already reads (trackinfo[].file is
+// truthy only when the track is currently streamable), just pulling the
+// actual mp3-128 url out instead of only checking presence. Used for the
+// Scan tab's inline preview player, so it can use the same plain
+// <audio>-based UI as a downloaded track instead of Bandcamp's own widget
+// iframe per preview. `trackId` disambiguates on the rare page whose
+// trackinfo covers more than this one track; falls back to the first entry.
+function resolveStreamUrl(url, trackId) {
+  const html = curlGet(url);
+  const m = html.match(/data-tralbum="([^"]*)"/);
+  if (!m) throw new Error('could not read Bandcamp track data');
+  const td = JSON.parse(decodeEntities(m[1]));
+  const trackinfo = td.trackinfo || [];
+  let t = trackinfo[0];
+  if (trackId != null && trackinfo.length > 1) {
+    t = trackinfo.find((x) => x.track_id === trackId) || t;
+  }
+  if (!t || !t.file) return { url: null };
+  const fileUrl = t.file['mp3-128'] || Object.values(t.file)[0];
+  return { url: fileUrl || null };
+}
+
+module.exports = { scanWishlistAndLibrary, getFanId, resolveStreamUrl };
