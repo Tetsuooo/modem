@@ -42,6 +42,8 @@
   }
   .arrange-sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6f7080; margin-bottom: 4px; }
   .arrange-main { flex: 1 1 0; min-width: 0; }
+  .undo-redo-row { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2b33; }
+  .undo-redo-row button { flex: 1 1 0; padding: 5px 4px; font-size: 12px; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
@@ -385,6 +387,10 @@
       <aside class="arrange-sidebar">
         <div class="arrange-sidebar-label">Show length</div>
         <div id="showDuration" class="status"></div>
+        <div class="undo-redo-row">
+          <button id="undoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
+          <button id="redoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
+        </div>
       </aside>
       <div class="arrange-main">
         <h2>Your show (drag to reorder)</h2>
@@ -508,6 +514,66 @@ let itemRegistry = new Map(); // key -> item object, covers both top-level resul
 let expandedOpen = new Set(); // keys of releases currently expanded into their track list
 let activeTrackAudio = null; // the one .track-player <audio> currently allowed to play — see wireTrackPlayers()
 
+// Undo/redo for "Your show" — a plain snapshot stack (not per-action inverse
+// functions) because it's simplest and correct for free across every kind
+// of structural change: add/remove a track (Scan checkbox or the Arrange
+// remove button), reorder (drag or the move buttons), and trimming a
+// multi-file album down to one track. Deliberately NOT hooked into the
+// artist/label/heading text fields — those already get native undo from the
+// browser while the input is focused, and tracking every keystroke here
+// would make one Ctrl+Z undo a single typed character instead of a real
+// structural step. `selected`/`coverLayers`/`mixClips` travel together
+// (removing a track also prunes its cover layer — see the .remove handler —
+// so undoing the removal needs to bring the layer back too, not just the
+// track).
+let undoStack = [];
+let redoStack = [];
+const UNDO_STACK_LIMIT = 50;
+
+function snapshotShowState() {
+  return JSON.parse(JSON.stringify({ selected, coverLayers, mixClips }));
+}
+
+// Call BEFORE mutating selected/coverLayers/mixClips, from every entry
+// point that does so structurally.
+function pushUndoSnapshot() {
+  undoStack.push(snapshotShowState());
+  if (undoStack.length > UNDO_STACK_LIMIT) undoStack.shift();
+  redoStack = []; // a fresh action invalidates whatever redo history there was
+  updateUndoRedoButtons();
+}
+
+function restoreShowState(snap) {
+  selected = snap.selected;
+  coverLayers = snap.coverLayers;
+  mixClips = snap.mixClips;
+  renderSelected();
+  renderScanResults();
+  renderCoverLayerList();
+  scheduleCoverRender();
+  renderMixTimeline();
+  saveDraft();
+  updateUndoRedoButtons();
+}
+
+function undoShowChange() {
+  if (!undoStack.length) return;
+  redoStack.push(snapshotShowState());
+  restoreShowState(undoStack.pop());
+}
+
+function redoShowChange() {
+  if (!redoStack.length) return;
+  undoStack.push(snapshotShowState());
+  restoreShowState(redoStack.pop());
+}
+
+function updateUndoRedoButtons() {
+  const undoBtn = el('undoBtn'), redoBtn = el('redoBtn');
+  if (undoBtn) undoBtn.disabled = !undoStack.length;
+  if (redoBtn) redoBtn.disabled = !redoStack.length;
+}
+
 const el = (id) => document.getElementById(id);
 const SOURCE_LABEL = { soundcloud: 'SoundCloud repost', 'bandcamp-wishlist': 'Bandcamp wishlist', 'bandcamp-library': 'Bandcamp library' };
 const SOURCE_TAG = { soundcloud: 'sc', 'bandcamp-wishlist': 'bcw', 'bandcamp-library': 'bcl' };
@@ -556,6 +622,7 @@ function groupRuns(items) {
 // the list — nothing else in a Scan row depends on selection state besides
 // that one checkbox, which is already correct without one.
 function toggleSelect(item) {
+  pushUndoSnapshot();
   const i = selected.findIndex((it) => it.key === item.key);
   if (i === -1) selected.push(makeSelectedEntry(item));
   else selected.splice(i, 1);
@@ -932,6 +999,7 @@ function wireScanResultRows(root) {
 }
 
 function selectAll() {
+  pushUndoSnapshot();
   scanResults.forEach((it) => { if (!isSelected(it.key)) selected.push(makeSelectedEntry(it)); });
   renderSelected();
   renderScanResults();
@@ -939,6 +1007,7 @@ function selectAll() {
 }
 
 function deselectAll() {
+  pushUndoSnapshot();
   const keys = new Set(scanResults.map((it) => it.key));
   selected = selected.filter((it) => !keys.has(it.key));
   renderSelected();
@@ -953,6 +1022,7 @@ function deselectAll() {
 // grouping (groupRuns()) picks up the new order identically either way.
 function moveSelectedItem(index, dir) {
   if (index < 0 || index >= selected.length) return;
+  pushUndoSnapshot();
   const [item] = selected.splice(index, 1);
   let newIndex;
   if (dir === 'up') newIndex = Math.max(0, index - 1);
@@ -1118,6 +1188,7 @@ function renderSelected() {
     moveSelectedItem(Number(b.dataset.index), b.dataset.dir);
   }));
   box.querySelectorAll('.remove').forEach((b) => b.addEventListener('click', () => {
+    pushUndoSnapshot();
     const removedKey = selected[Number(b.dataset.index)].key;
     selected.splice(Number(b.dataset.index), 1);
     // A cover already added for this track shouldn't linger in the Covers
@@ -1132,6 +1203,7 @@ function renderSelected() {
   box.querySelectorAll('.file-drop-btn').forEach((b) => b.addEventListener('click', () => {
     const it = selected.find((s) => s.key === b.dataset.key);
     if (!it || !it._download || !it._download.files) return;
+    pushUndoSnapshot();
     it._download.files.splice(Number(b.dataset.index), 1);
     renderSelected(); saveDraft();
   }));
@@ -1233,6 +1305,7 @@ function playerRow(it) {
 async function keepOnlyDownloadedFile(key, index) {
   const it = selected.find((s) => s.key === key);
   if (!it || !it._download || !it._download.files) return;
+  pushUndoSnapshot();
   const file = it._download.files[index];
   if (!it.tracks) {
     try {
@@ -2433,6 +2506,7 @@ function wireDragAndDrop() {
   box.querySelectorAll('.selected-item').forEach((item) => {
     const row = item.querySelector('.row');
     row.addEventListener('dragstart', () => {
+      pushUndoSnapshot();
       draggingItem = item;
       row.classList.add('dragging');
     });
@@ -2922,6 +2996,20 @@ el('scanBtn').addEventListener('click', scan);
 el('selectAllBtn').addEventListener('click', selectAll);
 el('deselectAllBtn').addEventListener('click', deselectAll);
 el('downloadBtn').addEventListener('click', startDownload);
+el('undoBtn').addEventListener('click', undoShowChange);
+el('redoBtn').addEventListener('click', redoShowChange);
+// Global shortcuts, not scoped to a particular tab (the underlying
+// "Your show" state is shared regardless of which one is active) — but
+// left alone while a text field has focus, so the browser's own native
+// undo for whatever you're typing (artist/label/heading edits) still
+// works normally instead of being hijacked.
+document.addEventListener('keydown', (e) => {
+  if (!e.ctrlKey && !e.metaKey) return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undoShowChange(); }
+  else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) { e.preventDefault(); redoShowChange(); }
+});
 el('generateBtn').addEventListener('click', generateHtml);
 el('copyBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(el('outputText').value);
@@ -3148,6 +3236,12 @@ async function clearDraftClick() {
   selected = [];
   mixClips = [];
   coverLayers = [];
+  // A new show shouldn't be one Ctrl+Z away from resurrecting the show that
+  // was just archived — Start fresh has its own confirm()+archive safety
+  // net already, distinct from the lightweight per-edit undo stack.
+  undoStack = [];
+  redoStack = [];
+  updateUndoRedoButtons();
   coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
   el('coverContrast').value = 0;
   el('coverBrightness').value = 0;
