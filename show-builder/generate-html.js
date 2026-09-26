@@ -21,11 +21,20 @@ const SLASHES = '/'.repeat(34);
 // empty gap under the actual compact widget — both in this tool's own
 // Preview tab and, since that's literally the HTML pasted into
 // radioštudent, on the real published show page too.
-function buildBandcampEmbed(item) {
+// `small`: when several tracks off the SAME release share one heading (see
+// groupRuns()), each gets the SMALL Bandcamp player instead of the large
+// one — confirmed against real precedent (modem-242's "Cold Storage",
+// modem-246's "mappa"): every real multi-track group in the archive uses
+// `size=small` (no tracklist/artwork params — Bandcamp's small size
+// doesn't have room for either), never several large players stacked.
+// Large stays the default for a single standalone track.
+function buildBandcampEmbed(item, opts) {
+  const small = !!(opts && opts.small);
   const parts = ['https://bandcamp.com/EmbeddedPlayer/'];
   if (item.albumId) parts.push(`album=${item.albumId}/`);
+  parts.push(small ? 'size=small/bgcol=ffffff/linkcol=0687f5/' : 'size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/');
   if (item.trackId) parts.push(`track=${item.trackId}/`);
-  parts.push('size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/');
+  parts.push('transparent=true/');
   const src = parts.join('');
   const label = escapeHtml(`${item.title} by ${item.artist}`);
   return `<iframe src="${src}"><a href="${escapeHtml(item.url)}">${label}</a></iframe>`;
@@ -43,10 +52,21 @@ function buildBandcampEmbed(item) {
 // iframe). `item.embeddable === false` (set at scan time — see
 // scan-soundcloud.js) skips the doomed oEmbed round-trip outright; the
 // catch below is defense-in-depth for anything that slips past that flag.
-function buildSoundcloudEmbed(item) {
+// `small`: same idea as buildBandcampEmbed()'s — several SoundCloud tracks
+// off one release sharing a heading get the compact "classic" player
+// (visual=false, shorter) instead of the full visual one with its big
+// artwork banner, so a multi-track group doesn't stack several tall
+// players on radioštudent's own page (the archive site's normalizeEmbeds()
+// converts EVERY SoundCloud embed to visual=false at render time anyway,
+// so this only actually changes how it looks on radioštudent itself before
+// that mirroring happens — see src/archive.html). No real precedent for
+// this in the archive (every group so far has been Bandcamp), so this is a
+// reasonable default mirroring Bandcamp's, not a confirmed convention.
+function buildSoundcloudEmbed(item, opts) {
+  const small = !!(opts && opts.small);
   const plainLink = () => `<a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a>`;
   if (item.embeddable === false) return plainLink();
-  const oembed = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(item.url)}`;
+  const oembed = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(item.url)}` + (small ? '&maxheight=100' : '');
   const body = curlGet(oembed);
   let data;
   try {
@@ -55,12 +75,12 @@ function buildSoundcloudEmbed(item) {
     return plainLink();
   }
   if (!data || !data.html) return plainLink();
-  return data.html;
+  return small ? data.html.replace('visual=true', 'visual=false') : data.html;
 }
 
-function buildEmbed(item) {
-  if (item.source === 'soundcloud') return buildSoundcloudEmbed(item);
-  if (item.source === 'bandcamp-wishlist' || item.source === 'bandcamp-library') return buildBandcampEmbed(item);
+function buildEmbed(item, opts) {
+  if (item.source === 'soundcloud') return buildSoundcloudEmbed(item, opts);
+  if (item.source === 'bandcamp-wishlist' || item.source === 'bandcamp-library') return buildBandcampEmbed(item, opts);
   throw new Error('unknown item source: ' + item.source);
 }
 
@@ -114,13 +134,16 @@ function generateShowHtml(items) {
   let i = 0;
   while (i < items.length) {
     if (runOf[i] === i) {
-      // start of a 2+ item group: one shared heading, then one embed per track
+      // start of a 2+ item group: one shared heading, then one shared <p>
+      // holding every track's (small/compact) embed — confirmed against
+      // real precedent (modem-242, modem-246): a group's embeds sit
+      // space-separated in ONE paragraph, not one <p> each.
       let j = i;
       while (j + 1 < items.length && runOf[j + 1] === i) j++;
       const heading = `<p>${escapeHtml(items[i].groupHeading || headingName(items[i]))} ${SLASHES}</p>`;
       const embeds = [];
-      for (let k = i; k <= j; k++) embeds.push(`<p>${buildEmbed(items[k])}</p>`);
-      blocks.push(heading + '\n' + embeds.join('\n'));
+      for (let k = i; k <= j; k++) embeds.push(buildEmbed(items[k], { small: true }));
+      blocks.push(heading + '\n' + `<p>${embeds.join(' ')}</p>`);
       i = j + 1;
     } else {
       const heading = `<p>${escapeHtml(headingName(items[i]))} ${SLASHES}</p>`;
