@@ -125,6 +125,9 @@ function scanReposts(cutoffDate) {
         releaseDate: track.display_date || track.release_date || track.created_at || null,
         isPlaylist,
         trackCount: isPlaylist ? (track.track_count || (track.tracks || []).length || null) : null,
+        // Free — already on the track/playlist object, no extra request.
+        // For a playlist this is its total length, not one track's.
+        duration: track.duration ? Math.round(track.duration / 1000) : null,
       });
     }
     if (hitOld || !items.length) break;

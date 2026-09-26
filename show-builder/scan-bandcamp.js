@@ -83,6 +83,10 @@ function checkReleaseStatus(item) {
         url: new URL(t.title_link, item.url).href,
         duration: t.duration ? Math.round(t.duration) : null,
       }));
+  } else {
+    // A single-track item's own length — same trackinfo already parsed
+    // above for the pre-order check, just reading one more field off it.
+    item.duration = trackinfo[0] && trackinfo[0].duration ? Math.round(trackinfo[0].duration) : null;
   }
 }
 

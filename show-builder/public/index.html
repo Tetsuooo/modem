@@ -55,6 +55,13 @@
   .row .title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .artist { font-size: 12px; color: #9a9ba5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .date { font-size: 11px; color: #6f7080; flex: none; }
+  .track-duration { font-size: 11px; color: #6f7080; flex: none; font-variant-numeric: tabular-nums; }
+  /* Marks the one sub-track Bandcamp itself designates as "featured" on an
+     album (plays first if you hit play on the album page directly) — a
+     faint tint, not a loud badge, since it's just a hint, not a flag. */
+  .subtrack-row.featured { background: rgba(255, 209, 102, 0.07); border-radius: 6px; }
+  .subtrack-row.featured:hover { background: rgba(255, 209, 102, 0.13); }
+  .featured-star { color: #ffd166; font-size: 10px; margin-left: 5px; }
   .row .preorder { font-size: 11px; color: #ffb066; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .playlist-note { font-size: 11px; color: #66b0ff; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .age-flag { font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -767,7 +774,23 @@ function subtrackItem(parent, t) {
     groupLabel: parent.artist || '',
     albumId: isBandcamp ? parent.albumId : undefined,
     trackId: isBandcamp ? t.id : undefined,
+    duration: t.duration || null,
+    // Bandcamp's fancollection API tells us which track it designates as
+    // "featured" on an album (the one that plays if you just hit play on
+    // the album page itself, without picking a track) — captured as the
+    // ALBUM item's own `trackId` at scan time (see mapItem() in
+    // scan-bandcamp.js). Compare ids here so that one specific expanded
+    // sub-track can be marked as it.
+    featured: isBandcamp && parent.trackId != null && t.id === parent.trackId,
   };
+}
+
+// Track length (seconds) shown next to the preview button, visible before
+// ever clicking play — reuses formatTime()'s "M:SS" formatting, same as the
+// track-player's own time readout, for a consistent look.
+function trackDurationNote(it) {
+  if (!it.duration) return '';
+  return `<span class="track-duration">${formatTime(it.duration)}</span>`;
 }
 
 function renderSubtracks(parent) {
@@ -778,15 +801,16 @@ function renderSubtracks(parent) {
     itemRegistry.set(sub.key, sub);
     return `
       <div class="result">
-        <div class="row subtrack-row" data-key="${escAttr(sub.key)}">
+        <div class="row subtrack-row${sub.featured ? ' featured' : ''}" data-key="${escAttr(sub.key)}">
           <label class="select-hit"><input type="checkbox" ${isSelected(sub.key) ? 'checked' : ''} data-key="${escAttr(sub.key)}" class="selectbox"></label>
           <div class="meta">
-            <div class="title">${esc(sub.title)}</div>
+            <div class="title">${esc(sub.title)}${sub.featured ? '<span class="featured-star" title="Bandcamp\'s featured track — plays first on the album page">★</span>' : ''}</div>
             ${sub.artist ? `<div class="artist">${esc(sub.artist)}</div>` : ''}
             ${ageFlagNote(sub)}
             ${duplicateNote(sub)}
             ${embedFlagNote(sub)}
           </div>
+          ${trackDurationNote(sub)}
           <button class="preview-btn" data-key="${escAttr(sub.key)}" title="preview">▶</button>
         </div>
         <div class="preview-frame" data-key="${escAttr(sub.key)}" hidden></div>
@@ -823,6 +847,7 @@ function renderScanResults() {
             ${embedFlagNote(it)}
           </div>
           <span class="date">${fmtDate(it.date)}</span>
+          ${trackDurationNote(it)}
           <button class="preview-btn" data-key="${escAttr(it.key)}" title="preview">▶</button>
         </div>
         <div class="preview-frame" data-key="${escAttr(it.key)}" hidden></div>
