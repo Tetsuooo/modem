@@ -44,6 +44,28 @@
   .arrange-main { flex: 1 1 0; min-width: 0; }
   .undo-redo-row { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2b33; }
   .undo-redo-row button { flex: 1 1 0; padding: 5px 4px; font-size: 12px; }
+  .compact-toggle {
+    display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid #2a2b33; font-size: 12px; color: #c7c8d1; cursor: pointer;
+  }
+  /* Compact view: settings/editing chrome and the player hidden, tracks
+     still fully drag/move/remove-able — just a class toggle on #selected,
+     no change to what's actually rendered underneath it. */
+  #selected.compact .row { padding: 3px 8px; gap: 8px; }
+  #selected.compact .selected-item { margin-bottom: 1px; }
+  #selected.compact img,
+  #selected.compact .badge,
+  #selected.compact .heading-choice,
+  #selected.compact .player-row,
+  #selected.compact .multi-files,
+  #selected.compact .group-heading-bar { display: none; }
+  /* Artist/label stay visible (not really a "setting", just info) but blend
+     into plain text until you actually hover/focus one to edit it. */
+  #selected.compact .edit-field {
+    background: transparent; border-color: transparent; padding: 2px 0;
+  }
+  #selected.compact .edit-field:hover,
+  #selected.compact .edit-field:focus { background: #0e0f13; border-color: #3a3b45; padding: 4px 6px; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
@@ -391,6 +413,9 @@
           <button id="undoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
           <button id="redoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
         </div>
+        <label class="compact-toggle" title="hides artist/label/heading editing and the player, so more tracks fit on screen at once — still drag/move/remove-able">
+          <input type="checkbox" id="compactViewToggle"> Compact view
+        </label>
       </aside>
       <div class="arrange-main">
         <h2>Your show (drag to reorder)</h2>
@@ -3019,6 +3044,20 @@ el('deselectAllBtn').addEventListener('click', deselectAll);
 el('downloadBtn').addEventListener('click', startDownload);
 el('undoBtn').addEventListener('click', undoShowChange);
 el('redoBtn').addEventListener('click', redoShowChange);
+// Compact view is a per-viewer display preference, not show data — kept in
+// localStorage (wrapped, since a private window/blocked storage can throw
+// or just come back empty) rather than the synced draft.
+(function initCompactToggle() {
+  const toggle = el('compactViewToggle');
+  let saved = false;
+  try { saved = localStorage.getItem('sb-arrange-compact') === '1'; } catch (e) { /* ignore */ }
+  toggle.checked = saved;
+  el('selected').classList.toggle('compact', saved);
+  toggle.addEventListener('change', () => {
+    el('selected').classList.toggle('compact', toggle.checked);
+    try { localStorage.setItem('sb-arrange-compact', toggle.checked ? '1' : '0'); } catch (e) { /* ignore */ }
+  });
+})();
 // Global shortcuts, not scoped to a particular tab (the underlying
 // "Your show" state is shared regardless of which one is active) — but
 // left alone while a text field has focus, so the browser's own native
