@@ -72,8 +72,8 @@
   .row .embed-flag { font-size: 11px; color: #ff6666; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .preview-art { cursor: pointer; }
   .preview-art:hover { outline: 2px solid #3a6ff0; outline-offset: -2px; }
-  .expand-btn, .expand-spacer { flex: none; width: 18px; }
-  .expand-btn { background: none; border: none; color: #9a9ba5; padding: 0; font-size: 12px; cursor: pointer; }
+  .expand-btn, .expand-spacer { flex: none; width: 22px; }
+  .expand-btn { background: none; border: none; color: #9a9ba5; padding: 4px 0; font-size: 17px; line-height: 1; cursor: pointer; }
   .expand-btn:hover:not(:disabled) { color: #e8e8ea; background: none; }
   .subtracks { padding-left: 44px; border-left: 1px solid #2a2b33; margin: 2px 0 4px 18px; }
   .subtrack-row { padding: 3px 8px; }
@@ -719,15 +719,23 @@ function isExpandable(it) {
   return it.isPlaylist || (it.albumId && (!it.tracks || it.tracks.length > 1));
 }
 
+// Expands/collapses one album/playlist's track list in place — inserts or
+// removes just that release's own `.subtracks` block rather than calling
+// renderScanResults() (which used to rebuild the WHOLE list's DOM here,
+// killing any preview playing elsewhere in it — same class of bug already
+// fixed for the Scan checkbox, see toggleSelect()).
 async function toggleExpand(key) {
+  const btn = document.querySelector(`.expand-btn[data-key="${cssEsc(key)}"]`);
+  const result = btn ? btn.closest('.result') : null;
   if (expandedOpen.has(key)) {
     expandedOpen.delete(key);
-    renderScanResults();
+    if (btn) btn.textContent = '▸';
+    const subtracks = result && result.querySelector('.subtracks');
+    if (subtracks) subtracks.remove();
     return;
   }
   const parent = itemRegistry.get(key);
   if (!parent) return;
-  const btn = document.querySelector(`.expand-btn[data-key="${cssEsc(key)}"]`);
   if (!parent.tracks) {
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
     try {
@@ -741,7 +749,12 @@ async function toggleExpand(key) {
     }
   }
   expandedOpen.add(key);
-  renderScanResults();
+  if (btn) { btn.disabled = false; btn.textContent = '▾'; }
+  if (result) {
+    result.insertAdjacentHTML('beforeend', renderSubtracks(parent));
+    const subtracks = result.querySelector('.subtracks');
+    if (subtracks) wireScanResultRows(subtracks);
+  }
 }
 
 function subtrackItem(parent, t) {
@@ -856,26 +869,35 @@ function renderScanResults() {
     }).join('');
   }
   box.innerHTML = html || '<div class="empty">Nothing in the last 14 days.</div>';
-  box.querySelectorAll('.selectbox').forEach((cb) => {
+  wireScanResultRows(box);
+}
+
+// Wires selectbox/preview-btn/preview-art/expand-btn/row-dblclick under
+// `root` — called once over the whole list after a full renderScanResults(),
+// and again just over a single newly-inserted sub-track block after
+// toggleExpand() (see below) so expanding/collapsing one album doesn't need
+// a full re-render of everything else.
+function wireScanResultRows(root) {
+  root.querySelectorAll('.selectbox').forEach((cb) => {
     cb.addEventListener('change', () => {
       const item = itemRegistry.get(cb.dataset.key);
       if (item) toggleSelect(item);
     });
   });
-  box.querySelectorAll('.preview-btn').forEach((b) => {
+  root.querySelectorAll('.preview-btn').forEach((b) => {
     b.addEventListener('click', () => togglePreview(b.dataset.key));
   });
-  box.querySelectorAll('.preview-art').forEach((img) => {
+  root.querySelectorAll('.preview-art').forEach((img) => {
     img.addEventListener('click', () => togglePreview(img.dataset.key));
   });
-  box.querySelectorAll('.expand-btn').forEach((b) => {
+  root.querySelectorAll('.expand-btn').forEach((b) => {
     b.addEventListener('click', () => toggleExpand(b.dataset.key));
   });
   // Double-click anywhere on a row (top-level result or an expanded
   // sub-track) plays its preview — a faster target than the small ▶ button.
   // Skips the checkbox and expand-arrow, which already have their own
   // double-click-unfriendly toggle behavior.
-  box.querySelectorAll('.row[data-key]').forEach((row) => {
+  root.querySelectorAll('.row[data-key]').forEach((row) => {
     row.addEventListener('dblclick', (e) => {
       if (e.target.closest('.select-hit') || e.target.closest('.expand-btn')) return;
       togglePreview(row.dataset.key);
