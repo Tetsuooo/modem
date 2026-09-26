@@ -646,6 +646,11 @@ async function playSingleTrackPreview(frame, item) {
     const audio = frame.querySelector('audio');
     if (audio) audio.play().catch(() => {});
   } catch (e) {
+    // Falls back quietly in the UI on purpose (a 404 because the server
+    // hasn't been restarted since this endpoint was added looks the same
+    // here as a genuinely HLS-only track) — but log it, since otherwise
+    // "why is this still showing the iframe" has no visible cause at all.
+    console.warn('preview-stream failed, falling back to iframe embed:', e);
     frame.innerHTML = previewEmbedHtml(item);
   }
 }
