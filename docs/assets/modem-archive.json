@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T23:36:51.491Z",
+  "generatedAt": "2026-09-26T23:58:38.109Z",
   "source": "https://radiostudent.si/glasba/modem",
   "counts": {
     "total": 269,
@@ -134991,30 +134991,6 @@
       "searchText": "本州モノグラフ / Honshu Monograph \n Kelmanix \n New Masterpiece \n modem 18 \n 18"
     },
     {
-      "key": "sc:2403313518",
-      "kind": "soundcloud",
-      "title": "A City in the Corner of a Garden",
-      "artist": "kęnåi iiii i i i i i i",
-      "artUrl": "https://i1.sndcdn.com/artworks-p8Ukv25WXyqa9t58-XtFCxw-t500x500.jpg",
-      "link": "https://soundcloud.com/kenaiiiiiiii",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2403313518&show_artwork=true",
-      "shows": [
-        {
-          "number": 248,
-          "slug": "modem-248",
-          "date": "28. 9. 2026",
-          "type": "show",
-          "seg": 15,
-          "segLabel": "kęnåi, IRIGINO",
-          "labels": []
-        }
-      ],
-      "searchText": "A City in the Corner of a Garden \n kęnåi \n kęnåi, IRIGINO \n modem 248 \n 248"
-    },
-    {
       "key": "bc:3470721751:-",
       "kind": "bandcamp",
       "title": "the way things flow",
@@ -135037,6 +135013,30 @@
         }
       ],
       "searchText": "the way things flow \n kęnåi & 261ssh \n kęnåi & 261ssh \n modem 244 \n 244"
+    },
+    {
+      "key": "sc:2403313518",
+      "kind": "soundcloud",
+      "title": "A City in the Corner of a Garden",
+      "artist": "kęnåi iiii i i i i i i",
+      "artUrl": "https://i1.sndcdn.com/artworks-p8Ukv25WXyqa9t58-XtFCxw-t500x500.jpg",
+      "link": "https://soundcloud.com/kenaiiiiiiii",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2403313518&show_artwork=true",
+      "shows": [
+        {
+          "number": 248,
+          "slug": "modem-248",
+          "date": "28. 9. 2026",
+          "type": "show",
+          "seg": 15,
+          "segLabel": "kęnåi, IRIGINO",
+          "labels": []
+        }
+      ],
+      "searchText": "A City in the Corner of a Garden \n kęnåi iiii i i i i i i \n kęnåi, IRIGINO \n modem 248 \n 248"
     },
     {
       "key": "bc:3833525937:1337470989",
@@ -198709,5 +198709,5 @@
       "searchText": "Nazo House \n 食品まつり a.k.a. foodman \n Diskotopia \n modem 26 \n 26"
     }
   ],
-  "tracksGeneratedAt": "2026-09-26T23:36:51.491Z"
+  "tracksGeneratedAt": "2026-09-26T23:58:38.109Z"
 }
