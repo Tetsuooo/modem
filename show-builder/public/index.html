@@ -1548,10 +1548,19 @@ function fmtMixTime(t) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+// Keeps the playhead centered in the visible scroll area after zooming —
+// a fixed scrollLeft pixel value would otherwise land on a different TIME
+// once px/sec changes, which is what made the +/- buttons feel like they
+// jumped around. zoomMixAtCursor() (below) overrides scrollLeft again
+// right after calling this, anchoring to the mouse/pinch point instead —
+// this default only actually applies to the plain +/- buttons, which have
+// no cursor-on-the-timeline position to anchor to instead.
 function zoomMix(factor) {
+  const wrap = el('mixTimelineWrap');
   MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, MIX_PX_PER_SEC * factor));
   el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
   renderMixTimeline();
+  wrap.scrollLeft = Math.max(0, mixSeekPosition * MIX_PX_PER_SEC - wrap.clientWidth / 2);
 }
 
 // Same zoom, but keeps whatever time was under `clientX` still under it
