@@ -11,7 +11,8 @@
       "isPlaylist": false,
       "trackCount": null,
       "label": "",
-      "headingSource": "artist"
+      "headingSource": "artist",
+      "duration": 109
     },
     {
       "source": "soundcloud",
@@ -24,7 +25,8 @@
       "isPlaylist": false,
       "trackCount": null,
       "label": "",
-      "headingSource": "artist"
+      "headingSource": "artist",
+      "duration": 139
     },
     {
       "source": "soundcloud",
@@ -53,23 +55,8 @@
       "releaseDate": "2026-07-21T05:26:07Z",
       "previouslyPlayed": null,
       "groupKey": "scset:sc:2271140696",
-      "groupLabel": "NikitaPromised You✟"
-    },
-    {
-      "label": "",
-      "headingSource": "artist",
-      "groupHeading": "NikitaPromised You✟",
-      "source": "soundcloud",
-      "key": "sc:2364990755",
-      "title": "05 Presence",
-      "artist": "Minoyimn",
-      "url": "https://soundcloud.com/nkieve8/05x-5",
-      "artwork": "https://i1.sndcdn.com/artworks-tjbHhZZsSpigleWL-2CCIsQ-large.jpg",
-      "date": "2026-09-13T14:45:59Z",
-      "releaseDate": "2026-07-21T05:26:07Z",
-      "previouslyPlayed": null,
-      "groupKey": "scset:sc:2271140696",
-      "groupLabel": "NikitaPromised You✟"
+      "groupLabel": "NikitaPromised You✟",
+      "duration": 36
     },
     {
       "label": "",
@@ -85,10 +72,28 @@
       "releaseDate": "2026-07-21T05:26:07Z",
       "previouslyPlayed": null,
       "groupKey": "scset:sc:2271140696",
-      "groupLabel": "NikitaPromised You✟"
+      "groupLabel": "NikitaPromised You✟",
+      "duration": 94
+    },
+    {
+      "label": "",
+      "headingSource": "artist",
+      "groupHeading": "NikitaPromised You✟",
+      "source": "soundcloud",
+      "key": "sc:2364990755",
+      "title": "05 Presence",
+      "artist": "Minoyimn",
+      "url": "https://soundcloud.com/nkieve8/05x-5",
+      "artwork": "https://i1.sndcdn.com/artworks-tjbHhZZsSpigleWL-2CCIsQ-large.jpg",
+      "date": "2026-09-13T14:45:59Z",
+      "releaseDate": "2026-07-21T05:26:07Z",
+      "previouslyPlayed": null,
+      "groupKey": "scset:sc:2271140696",
+      "groupLabel": "NikitaPromised You✟",
+      "duration": 96
     }
   ],
   "showNumber": "245",
   "generatedHtml": "<p>4h4 //////////////////////////////////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2398733514&show_artwork=true\"></iframe></p>\n\n<p>YNO //////////////////////////////////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2391809136&show_artwork=true\"></iframe></p>\n\n<p>student of life 🧬🧪🦠 //////////////////////////////////</p>\n<p><a href=\"https://soundcloud.com/mazin-976721269/this-song-is-cursed-be-careful\">https://soundcloud.com/mazin-976721269/this-song-is-cursed-be-careful</a></p>\n\n<p>NikitaPromised You✟ //////////////////////////////////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2364990728&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2364990755&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2364990758&show_artwork=true\"></iframe></p>",
-  "savedAt": 1790422976839.7522
+  "savedAt": 1790448357496.8784
 }
