@@ -2714,6 +2714,14 @@ async function renderCoverCanvas() {
   offscreen.width = COVER_CANVAS_SIZE;
   offscreen.height = COVER_CANVAS_SIZE;
   const octx = offscreen.getContext('2d');
+  // Opaque background FIRST — any area a layer doesn't fully cover (luma-key
+  // masking, the eraser, or just not enough layers to fill the frame) then
+  // exports as solid black instead of genuinely transparent. SoundCloud
+  // (confirmed) doesn't handle transparent cover art properly — this is the
+  // actual difference between a PNG that uploads fine and one that doesn't,
+  // not anything about PNG itself being an unsupported format.
+  octx.fillStyle = '#000';
+  octx.fillRect(0, 0, COVER_CANVAS_SIZE, COVER_CANVAS_SIZE);
 
   // Draw bottom-to-top (list index 0 = front, so walk the array backwards).
   for (let i = coverLayers.length - 1; i >= 0; i--) {
