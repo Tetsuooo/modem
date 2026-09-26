@@ -48,15 +48,14 @@
     display: flex; align-items: center; gap: 6px; margin-top: 10px; padding-top: 10px;
     border-top: 1px solid #2a2b33; font-size: 12px; color: #c7c8d1; cursor: pointer;
   }
-  /* Compact view: settings/editing chrome and the player hidden, tracks
-     still fully drag/move/remove-able — just a class toggle on #selected,
-     no change to what's actually rendered underneath it. */
+  /* Compact view: settings/editing chrome hidden, tracks still fully
+     drag/move/remove-able AND still playable/seekable — just a class
+     toggle on #selected, no change to what's actually rendered
+     underneath it. */
   #selected.compact .row { padding: 3px 8px; gap: 8px; }
   #selected.compact .selected-item { margin-bottom: 1px; }
   #selected.compact .badge,
   #selected.compact .heading-choice,
-  #selected.compact .player-row,
-  #selected.compact .multi-files,
   #selected.compact .group-heading-bar { display: none; }
   /* Artist/label stay visible (not really a "setting", just info) but blend
      into plain text until you actually hover/focus one to edit it. */
@@ -65,6 +64,21 @@
   }
   #selected.compact .edit-field:hover,
   #selected.compact .edit-field:focus { background: #0e0f13; border-color: #3a3b45; padding: 4px 6px; }
+  /* The player itself shrinks down to just its scrub bar (title/time text
+     hidden), sitting flush against the row's own bottom edge instead of
+     a separate full-size block — still the exact same audio element +
+     click-to-play + drag-to-seek behavior underneath, just visually tiny. */
+  #selected.compact .player-row,
+  #selected.compact .multi-files { padding: 0 8px 3px; }
+  #selected.compact .file-row { padding: 0 0 2px; }
+  #selected.compact .file-row-head { display: none; }
+  #selected.compact .track-player {
+    height: 10px; padding: 0; gap: 0; background: transparent; border: none; border-radius: 0;
+  }
+  #selected.compact .track-player-icon,
+  #selected.compact .track-player-time { display: none; }
+  #selected.compact .scrub-bar { height: 4px; }
+  #selected.compact .track-player:hover .scrub-bar { height: 6px; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
