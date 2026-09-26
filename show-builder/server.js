@@ -364,7 +364,16 @@ app.post('/publish-run', (req, res) => {
   const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
   try {
     const dirty = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
-    const dirtyLines = dirty.trim() ? dirty.trim().split(/\r?\n/) : [];
+    // NOT dirty.trim().split(...) — an unstaged modification's status code is
+    // a LEADING SPACE (" M path"), and .trim()-ing the whole multi-line
+    // string before splitting eats that space off only the first line,
+    // shifting it by one character. line.slice(3) below (which strips git's
+    // fixed 2-status-char + 1-space prefix) then cuts into the path itself
+    // instead, so a perfectly normal first entry like " M show-builder/data/
+    // used-tracks.json" silently became "how-builder/data/used-tracks.json"
+    // and failed the allow-list regex — a real false-positive hit in
+    // production, not just a hypothetical.
+    const dirtyLines = dirty.split(/\r?\n/).filter((l) => l.length > 0);
     const suspicious = dirtyLines.filter((line) => {
       const filePath = line.slice(3);
       if (LIST_SLUG_PATTERN.test(filePath)) return true; // the exact residue pattern the incident left behind
