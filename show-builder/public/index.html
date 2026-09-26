@@ -274,7 +274,7 @@
   .mix-timeline { position: relative; min-height: 60px; padding: 8px 0; }
   .mix-empty { padding: 30px; text-align: center; color: #6f7080; font-size: 12px; }
   .mix-clip {
-    position: absolute; height: 46px; border-radius: 6px; overflow: hidden; cursor: grab;
+    position: absolute; height: 76px; border-radius: 6px; overflow: hidden; cursor: grab;
     background: #24304a; border: 1px solid #3a5080; user-select: none;
     touch-action: none; /* a touch-drag on a clip moves it, not the page — swipe empty space to scroll instead */
   }
@@ -1539,8 +1539,14 @@ let mixSeekPosition = 0; // seconds — where the next Play starts from; click t
 let MIX_PX_PER_SEC = 10; // zoom level — mutable, see zoomMix()
 const MIX_PX_PER_SEC_MIN = 2;
 const MIX_PX_PER_SEC_MAX = 60;
-const MIX_LANE_H = 54;
-const MIX_CLIP_H = 46; // must match .mix-clip's CSS height
+// Only 2 lanes total (not one per clip) — consecutive clips (by start time)
+// alternate top/bottom, same idea as brick-laying, so overlapping/adjacent
+// clips stay visually distinguishable without needing a lane each. Frees up
+// the vertical space one-lane-per-clip used to eat, so each rectangle is
+// bigger too (was 46/54).
+const MIX_LANE_COUNT = 2;
+const MIX_LANE_H = 84;
+const MIX_CLIP_H = 76; // must match .mix-clip's CSS height
 const MIX_WAVE_BUCKETS = 800; // resolution the full-buffer peaks are cached at; resampled to actual on-screen width when drawn
 
 function fmtMixTime(t) {
@@ -1787,17 +1793,23 @@ function renderMixTimeline() {
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration), 30);
   const widthPx = Math.ceil(totalDur * MIX_PX_PER_SEC) + 60;
   timeline.style.width = widthPx + 'px';
-  timeline.style.height = (mixClips.length * MIX_LANE_H + 8) + 'px';
+  timeline.style.height = (MIX_LANE_COUNT * MIX_LANE_H + 8) + 'px';
   ruler.style.width = widthPx + 'px';
 
   let rulerHtml = '';
   for (let t = 0; t <= totalDur + 10; t += 10) rulerHtml += `<span style="left:${t * MIX_PX_PER_SEC}px">${fmtMixTime(t)}</span>`;
   ruler.innerHTML = rulerHtml;
 
-  timeline.innerHTML = mixClips.map((c, i) => {
+  // Lane = position in START-TIME order, not array/insertion order — so
+  // alternation always tracks left-to-right position on the timeline
+  // itself, regardless of the order clips were added or last dragged in.
+  const laneOf = new Map();
+  [...mixClips].sort((a, b) => a.start - b.start).forEach((c, idx) => laneOf.set(c.id, idx % MIX_LANE_COUNT));
+
+  timeline.innerHTML = mixClips.map((c) => {
     const left = Math.round(c.start * MIX_PX_PER_SEC);
     const width = Math.max(20, Math.round(c.duration * MIX_PX_PER_SEC));
-    const top = i * MIX_LANE_H;
+    const top = laneOf.get(c.id) * MIX_LANE_H;
     const fadeInPct = c.duration ? Math.min(50, (c.fadeIn / c.duration) * 100) : 0;
     const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
     return `
