@@ -437,6 +437,7 @@
     <div class="actions">
       <button id="mixPlayToggleBtn" class="primary">▶ Play</button>
       <button id="mixAddAllBtn">Add all from Your show</button>
+      <button id="mixJingleBtn" title="places the show jingle at the very start and end, pushing everything else back to make room">Bookend with jingle</button>
       <button id="mixExportBtn">Export mix (.wav)</button>
       <span class="mix-zoom">
         <button id="mixZoomOutBtn" title="zoom out">−</button>
@@ -1499,6 +1500,42 @@ async function addAllToMix() {
   const existingKeys = new Set(mixClips.map((c) => c.key));
   const missing = getMixCandidates().filter((c) => !existingKeys.has(c.key));
   for (const c of missing) await addClipToMix(c);
+}
+
+// The show's own jingle — committed to the repo (public/assets/jingle.mp3,
+// so it survives "Start fresh" and travels with the code, not the
+// per-show/gitignored downloads/draft) rather than picked from a scan.
+const JINGLE_SRC = '/assets/jingle.mp3';
+const JINGLE_KEY = 'jingle';
+
+// One-click "every show starts and ends with this": places a jingle clip
+// at start=0 and another at the current end, shifting every OTHER clip
+// later by the jingle's own length first so the opening one doesn't just
+// overlap whatever was already sitting at 0. Re-runnable: clears any
+// jingle clips already placed before re-adding, so clicking it again after
+// moving things around resets to a clean bookend instead of piling up
+// duplicates.
+async function addJingleBookend() {
+  el('mixStatus').textContent = 'loading jingle…';
+  try {
+    const buffer = await getMixBuffer(JINGLE_SRC);
+    const jingleDuration = buffer.duration;
+    mixClips = mixClips.filter((c) => c.key !== JINGLE_KEY);
+    mixClips.forEach((c) => { c.start += jingleDuration; });
+    const endOfShow = mixClips.reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+    const makeJingleClip = (start) => ({
+      id: JINGLE_KEY + ':' + start.toFixed(3) + ':' + Date.now(),
+      key: JINGLE_KEY, title: 'Show jingle', artist: '', src: JINGLE_SRC,
+      sourceDuration: jingleDuration, trimStart: 0, duration: jingleDuration,
+      start, fadeIn: 0, fadeOut: 0,
+    });
+    mixClips.push(makeJingleClip(0), makeJingleClip(endOfShow));
+    el('mixStatus').textContent = '';
+    renderMixTimeline();
+    debouncedSaveDraft();
+  } catch (e) {
+    el('mixStatus').textContent = 'failed to load jingle: ' + (e.message || e);
+  }
 }
 
 // Runs once per page load, the first time the Mix tab is actually opened —
@@ -2853,6 +2890,7 @@ el('runPublishBtn').addEventListener('click', runPublish);
 el('confirmPushBtn').addEventListener('click', confirmPush);
 el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixAddAllBtn').addEventListener('click', addAllToMix);
+el('mixJingleBtn').addEventListener('click', addJingleBookend);
 el('mixExportBtn').addEventListener('click', exportMix);
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
