@@ -905,7 +905,15 @@ function renderSelected() {
   wireDragAndDrop();
   wireTrackPlayers(box);
   box.querySelectorAll('.remove').forEach((b) => b.addEventListener('click', () => {
+    const removedKey = selected[Number(b.dataset.index)].key;
     selected.splice(Number(b.dataset.index), 1);
+    // A cover already added for this track shouldn't linger in the Covers
+    // tab once it's no longer actually in the show — otherwise the layer
+    // list only ever grows to match everything ever downloaded, never
+    // shrinks back down to match removals.
+    coverLayers = coverLayers.filter((l) => l.key !== removedKey);
+    renderCoverLayerList();
+    scheduleCoverRender();
     renderSelected(); renderScanResults(); saveDraft();
   }));
   box.querySelectorAll('.file-drop-btn').forEach((b) => b.addEventListener('click', () => {
