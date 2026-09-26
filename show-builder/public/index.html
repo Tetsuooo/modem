@@ -325,13 +325,6 @@
   }
   .cover-canvas-wrap { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
   #coverCanvas { max-width: 100%; height: auto; border: 1px solid #2a2b33; border-radius: 8px; background: #000; }
-  .cover-palette { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cover-palette-item {
-    display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 6px;
-    background: #1c1d24; border: 1px solid #2a2b33; font-size: 12px;
-  }
-  .cover-palette-item img { width: 22px; height: 22px; object-fit: cover; border-radius: 4px; background: #2a2b33; }
-  .cover-palette-item button { padding: 3px 8px; font-size: 11px; }
   .cover-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9a9ba5; margin: 2px 0; }
   .cover-layer-list { display: flex; flex-direction: column; gap: 6px; }
   .cover-layer {
@@ -512,14 +505,13 @@
   <section class="tab-panel tab-panel-wide" id="panel-covers" hidden>
     <h2>Cover Generator — drag layers to reorder, luma key masks each by its own brightness</h2>
     <div class="actions">
-      <button id="coverAddAllBtn">Add all covers</button>
       <button id="coverSaveBtn">Save</button>
       <button id="coverExportBtn" class="primary">Export PNG</button>
       <span id="coverStatus" class="status"></span>
     </div>
+    <p class="status">Covers here always match "Your show" — multiple tracks off the same release only bring in one copy of its cover. Add/remove tracks in Arrange to change which covers show up; drag the layers below to choose which is on top.</p>
     <div class="cover-layout">
       <div class="cover-sidebar">
-        <div id="coverPalette" class="cover-palette"></div>
         <h3 class="cover-section-title">Layers (top = front)</h3>
         <div id="coverLayerList" class="cover-layer-list"></div>
         <h3 class="cover-section-title">Adjust (whole image)</h3>
@@ -1330,7 +1322,7 @@ function renderSelected() {
     });
   });
   syncMixToShowOrder();
-  renderCoverPalette();
+  syncCoverLayersToShowOrder();
 }
 
 // Only a compact status badge lives inline in the row now — once a file is
@@ -2209,12 +2201,22 @@ function sanitizeForCoverGuess(name) {
   return String(name).replace(/[:/\\<>"|?*]/g, '_').trim();
 }
 
+// Deduped by release, not by track: several tracks off the same
+// album/compilation (subtracks expanded from the same parent — see
+// subtrackItem()'s groupKey) share one cover, so only the FIRST one
+// contributes a candidate. A whole album picked as one un-expanded entry
+// has no groupKey and is already just one `selected` item, so it's
+// unaffected either way.
 function getCoverCandidates() {
+  const seen = new Set();
   const candidates = [];
   selected.forEach((it) => {
     if (!it._download || !it._download.files || !it._download.files.length) return;
+    const dedupeKey = it.groupKey || it.key;
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
     const coverPath = it._download.cover || ('downloads/_covers/' + sanitizeForCoverGuess(it.title) + '_cover.jpg');
-    candidates.push({ key: it.key, title: it.title, src: downloadedFileUrl(coverPath) });
+    candidates.push({ key: dedupeKey, title: it.groupHeading || it.title, src: downloadedFileUrl(coverPath) });
   });
   return candidates;
 }
@@ -2229,25 +2231,6 @@ function getCoverImage(src) {
   });
   coverImageCache.set(src, promise);
   return promise;
-}
-
-function renderCoverPalette() {
-  const box = el('coverPalette');
-  if (!box) return;
-  const candidates = getCoverCandidates();
-  if (!candidates.length) {
-    box.innerHTML = '<div class="empty">Download some tracks first (Download &amp; Arrange tab) — their covers show up here.</div>';
-    return;
-  }
-  box.innerHTML = candidates.map((c) => `
-    <div class="cover-palette-item">
-      <img src="${escAttr(c.src)}" loading="lazy" onerror="this.style.visibility='hidden'">
-      <span>${esc(c.title)}</span>
-      <button data-src="${escAttr(c.src)}" data-title="${escAttr(c.title)}" data-key="${escAttr(c.key)}">+ add</button>
-    </div>`).join('');
-  box.querySelectorAll('button[data-src]').forEach((b) => {
-    b.addEventListener('click', () => addCoverLayer({ src: b.dataset.src, title: b.dataset.title, key: b.dataset.key }));
-  });
 }
 
 async function addCoverLayer(cand) {
@@ -2271,18 +2254,23 @@ async function addCoverLayer(cand) {
   }
 }
 
-async function addAllCovers() {
+// Keeps the layer stack matched to "Your show" automatically (deduped by
+// release, see getCoverCandidates()) — no add button needed, a cover is
+// either for a release actually in the show or it isn't. Only touches
+// SET MEMBERSHIP, never reorders existing layers — stacking order ("which
+// is on top") and each layer's luma-key settings stay exactly as the user
+// left them; only brand-new layers get added (to the front, same
+// convention as a manual add always used), same pattern as
+// syncMixToShowOrder().
+async function syncCoverLayersToShowOrder() {
+  const candidates = getCoverCandidates();
+  const candidateKeys = new Set(candidates.map((c) => c.key));
+  const removedAny = coverLayers.some((l) => !candidateKeys.has(l.key));
+  coverLayers = coverLayers.filter((l) => candidateKeys.has(l.key));
+  if (removedAny) { renderCoverLayerList(); scheduleCoverRender(); debouncedSaveDraft(); }
   const existingKeys = new Set(coverLayers.map((l) => l.key));
-  const missing = getCoverCandidates().filter((c) => !existingKeys.has(c.key));
+  const missing = candidates.filter((c) => !existingKeys.has(c.key));
   for (const c of missing) await addCoverLayer(c);
-}
-
-let coverAutoFillDone = false;
-async function ensureCoverAutoFilled() {
-  if (coverAutoFillDone) return;
-  coverAutoFillDone = true;
-  if (coverLayers.length) return;
-  await addAllCovers();
 }
 
 function renderCoverLayerList() {
@@ -2795,8 +2783,6 @@ async function loadDraft() {
     renderCoverLayerList();
     if (coverLayers.length) scheduleCoverRender();
   } catch (e) { /* first run, no draft yet */ }
-  draftLoaded = true;
-  if (!el('panel-covers').hidden) ensureCoverAutoFilled();
 }
 
 async function preloadMixBuffers() {
@@ -3083,13 +3069,9 @@ async function confirmPush() {
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
 const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'history'];
-// Guards ensureCoverAutoFilled() from running before loadDraft() has
-// actually populated `selected`/`coverLayers` — restoreTab() below can
-// switch straight to "covers" on page load (a remembered tab), well before
-// that async load resolves; loadDraft() re-checks and fires the auto-fill
-// itself once ready. Mix no longer needs this — syncMixToShowOrder() runs
-// off renderSelected() regardless of which tab is even visible.
-let draftLoaded = false;
+// Neither Mix nor Covers needs a tab-switch-triggered auto-fill anymore —
+// syncMixToShowOrder()/syncCoverLayersToShowOrder() both run off
+// renderSelected() regardless of which tab is even visible.
 function switchTab(tab) {
   if (!TABS.includes(tab)) tab = 'scan';
   TABS.forEach((t) => { el('panel-' + t).hidden = t !== tab; });
@@ -3097,7 +3079,6 @@ function switchTab(tab) {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
-  if (tab === 'covers' && draftLoaded) ensureCoverAutoFilled();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -3181,7 +3162,6 @@ el('mixRedoBtn').addEventListener('click', redoShowChange);
 el('mixExportBtn').addEventListener('click', exportMix);
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
-el('coverAddAllBtn').addEventListener('click', addAllCovers);
 el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });
 el('coverExportBtn').addEventListener('click', exportCoverPng);
 [['coverContrast', 'contrast'], ['coverBrightness', 'brightness'], ['coverSaturation', 'saturation']].forEach(([id, field]) => {
