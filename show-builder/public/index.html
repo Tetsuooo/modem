@@ -540,6 +540,8 @@
         <span class="status">size</span>
         <input type="range" id="coverEraserSize" min="8" max="200" value="40" title="eraser brush size">
       </span>
+      <button id="coverUndoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
+      <button id="coverRedoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
       <span id="coverStatus" class="status"></span>
     </div>
     <p class="status">Covers here always match "Your show" — multiple tracks off the same release only bring in one copy of its cover. Add/remove tracks in Arrange to change which covers show up; drag the layers below to choose which is on top.</p>
@@ -598,11 +600,11 @@ let redoStack = [];
 const UNDO_STACK_LIMIT = 50;
 
 function snapshotShowState() {
-  return JSON.parse(JSON.stringify({ selected, coverLayers, mixClips }));
+  return JSON.parse(JSON.stringify({ selected, coverLayers, mixClips, coverAdjust }));
 }
 
-// Call BEFORE mutating selected/coverLayers/mixClips, from every entry
-// point that does so structurally.
+// Call BEFORE mutating selected/coverLayers/mixClips/coverAdjust, from
+// every entry point that does so structurally.
 function pushUndoSnapshot() {
   undoStack.push(snapshotShowState());
   if (undoStack.length > UNDO_STACK_LIMIT) undoStack.shift();
@@ -614,6 +616,13 @@ function restoreShowState(snap) {
   selected = snap.selected;
   coverLayers = snap.coverLayers;
   mixClips = snap.mixClips;
+  coverAdjust = snap.coverAdjust;
+  el('coverContrast').value = coverAdjust.contrast;
+  el('coverBrightness').value = coverAdjust.brightness;
+  el('coverSaturation').value = coverAdjust.saturation;
+  el('coverContrastVal').textContent = coverAdjust.contrast;
+  el('coverBrightnessVal').textContent = coverAdjust.brightness;
+  el('coverSaturationVal').textContent = coverAdjust.saturation;
   renderSelected();
   renderScanResults();
   renderCoverLayerList();
@@ -636,12 +645,12 @@ function redoShowChange() {
 }
 
 function updateUndoRedoButtons() {
-  // One shared undo/redo history across Arrange AND Mix (a snapshot
-  // already covers selected/coverLayers/mixClips together — see
-  // snapshotShowState()) — both tabs just get their own visible buttons
+  // One shared undo/redo history across Arrange, Mix, AND Covers (a
+  // snapshot covers selected/coverLayers/mixClips/coverAdjust together —
+  // see snapshotShowState()) — each tab just gets its own visible buttons
   // for it, since Ctrl+Z already works globally regardless of active tab.
-  [el('undoBtn'), el('mixUndoBtn')].forEach((b) => { if (b) b.disabled = !undoStack.length; });
-  [el('redoBtn'), el('mixRedoBtn')].forEach((b) => { if (b) b.disabled = !redoStack.length; });
+  [el('undoBtn'), el('mixUndoBtn'), el('coverUndoBtn')].forEach((b) => { if (b) b.disabled = !undoStack.length; });
+  [el('redoBtn'), el('mixRedoBtn'), el('coverRedoBtn')].forEach((b) => { if (b) b.disabled = !redoStack.length; });
 }
 
 const el = (id) => document.getElementById(id);
@@ -3394,6 +3403,8 @@ el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixJingleBtn').addEventListener('click', addJingleBookend);
 el('mixUndoBtn').addEventListener('click', undoShowChange);
 el('mixRedoBtn').addEventListener('click', redoShowChange);
+el('coverUndoBtn').addEventListener('click', undoShowChange);
+el('coverRedoBtn').addEventListener('click', redoShowChange);
 el('mixExportBtn').addEventListener('click', () => exportMix('wav'));
 el('mixExportMp3Btn').addEventListener('click', () => exportMix('mp3'));
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
@@ -3408,6 +3419,11 @@ el('coverEraserBtn').addEventListener('click', () => {
 });
 wireCoverEraser();
 [['coverContrast', 'contrast'], ['coverBrightness', 'brightness'], ['coverSaturation', 'saturation']].forEach(([id, field]) => {
+  // One snapshot per drag, taken BEFORE the value moves at all (pointerdown
+  // fires once per press) — not per 'input' tick, which fires continuously
+  // while dragging and would otherwise flood the undo stack with one entry
+  // per pixel of slider movement.
+  el(id).addEventListener('pointerdown', pushUndoSnapshot);
   el(id).addEventListener('input', () => {
     coverAdjust[field] = Number(el(id).value);
     el(id + 'Val').textContent = coverAdjust[field];
