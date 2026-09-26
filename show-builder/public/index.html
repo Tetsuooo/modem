@@ -483,7 +483,8 @@
     <div class="actions">
       <button id="mixPlayToggleBtn" class="primary">▶ Play</button>
       <button id="mixJingleBtn" title="re-snaps the show jingle to the very start and end, pushing everything else back to make room">Bookend with jingle</button>
-      <button id="mixExportBtn">Export mix (.wav)</button>
+      <button id="mixExportBtn">Export (.wav)</button>
+      <button id="mixExportMp3Btn">Export (.mp3)</button>
       <span class="mix-zoom">
         <button id="mixZoomOutBtn" title="zoom out">−</button>
         <span id="mixZoomLabel" class="status">10 px/s</span>
@@ -534,6 +535,11 @@
   </section>
 </main>
 
+<!-- Vendored (not CDN, so export still works offline like the rest of this
+     tool): lamejs, a pure-JS port of LAME, LGPL — see vendor/LAME-LICENSE.txt.
+     Only used for the Mix tab's "Export (.mp3)" button; WAV export needs no
+     library at all (see audioBufferToWav()). -->
+<script src="/vendor/lame.min.js"></script>
 <script>
 let scanResults = [];
 let selected = [];
@@ -2117,32 +2123,81 @@ function stopMix() {
   updateMixPlayheadPosition(); // leaves the playhead wherever playback stopped — Play resumes from there
 }
 
-async function exportMix() {
+// Renders the whole mix down to one AudioBuffer via an OfflineAudioContext
+// (same clip-scheduling function real-time playback uses, see
+// scheduleMixClip()) — shared by both export formats below.
+async function renderMixOffline() {
+  await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
+  const sampleRate = 44100;
+  const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
+  const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDur * sampleRate), sampleRate);
+  mixClips.forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
+  return offlineCtx.startRendering();
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// format: 'wav' | 'mp3'
+async function exportMix(format) {
   if (!mixClips.length) return;
-  el('mixExportBtn').disabled = true;
+  const btn = format === 'mp3' ? el('mixExportMp3Btn') : el('mixExportBtn');
+  btn.disabled = true;
   el('mixStatus').textContent = 'rendering…';
   try {
-    await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
-    const sampleRate = 44100;
-    const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
-    const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDur * sampleRate), sampleRate);
-    mixClips.forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
-    const rendered = await offlineCtx.startRendering();
-    const wavBlob = audioBufferToWav(rendered);
-    const url = URL.createObjectURL(wavBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `modem-mix-${el('showNumber').value.trim() || Date.now()}.wav`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    const rendered = await renderMixOffline();
+    el('mixStatus').textContent = format === 'mp3' ? 'encoding mp3…' : 'writing wav…';
+    const blob = format === 'mp3' ? audioBufferToMp3(rendered) : audioBufferToWav(rendered);
+    // Named after the SHOW, not "the mix" — this is what actually gets
+    // published/shared, "modem-mix-N" was just an internal-sounding leftover.
+    downloadBlob(blob, `modem-${el('showNumber').value.trim() || Date.now()}.${format}`);
     el('mixStatus').textContent = 'exported ✓';
   } catch (e) {
     el('mixStatus').textContent = 'export failed: ' + (e.message || e);
   } finally {
-    el('mixExportBtn').disabled = false;
+    btn.disabled = false;
   }
+}
+
+// MP3 via lamejs (vendored — public/vendor/lame.min.js, a pure-JS port of
+// LAME, LGPL, see public/vendor/LAME-LICENSE.txt). WAV needs no library at
+// all (below) since it's just a header in front of raw interleaved
+// samples; MP3 is a real encoded format with no native browser encoder, so
+// there's no equivalent shortcut. Encodes at a fixed 192kbps — plenty for
+// a spoken+music radio mix, and simpler than exposing a bitrate choice
+// nobody asked for.
+function audioBufferToMp3(buffer, bitrateKbps = 192) {
+  const sampleRate = buffer.sampleRate;
+  const numChannels = Math.min(2, buffer.numberOfChannels);
+  const encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, bitrateKbps);
+  const toInt16 = (data) => {
+    const out = new Int16Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const s = Math.max(-1, Math.min(1, data[i]));
+      out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    }
+    return out;
+  };
+  const left = toInt16(buffer.getChannelData(0));
+  const right = numChannels > 1 ? toInt16(buffer.getChannelData(1)) : null;
+  const CHUNK = 1152; // lamejs's own block size — one MP3 frame's worth of samples
+  const chunks = [];
+  for (let i = 0; i < left.length; i += CHUNK) {
+    const l = left.subarray(i, i + CHUNK);
+    const mp3buf = right ? encoder.encodeBuffer(l, right.subarray(i, i + CHUNK)) : encoder.encodeBuffer(l);
+    if (mp3buf.length > 0) chunks.push(mp3buf);
+  }
+  const end = encoder.flush();
+  if (end.length > 0) chunks.push(end);
+  return new Blob(chunks, { type: 'audio/mpeg' });
 }
 
 // Plain 16-bit PCM WAV from an AudioBuffer — no encoding library needed
@@ -3168,7 +3223,8 @@ el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixJingleBtn').addEventListener('click', addJingleBookend);
 el('mixUndoBtn').addEventListener('click', undoShowChange);
 el('mixRedoBtn').addEventListener('click', redoShowChange);
-el('mixExportBtn').addEventListener('click', exportMix);
+el('mixExportBtn').addEventListener('click', () => exportMix('wav'));
+el('mixExportMp3Btn').addEventListener('click', () => exportMix('mp3'));
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
 el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });
