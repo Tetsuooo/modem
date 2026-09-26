@@ -248,6 +248,12 @@
   #previewPane .chip.label-chip { background: rgba(224,224,255,0.96); }
   #previewPane .modem-body iframe { max-width: 100%; border: 0; margin: 0.25rem 0 1rem; display: block; width: 100%; max-width: 560px; height: 120px; }
   #previewPane .modem-body iframe[src*="bandcamp"] { height: 120px; }
+  /* Mirrors src/archive.html's own override exactly — a small Bandcamp
+     embed (used for a multi-track group, see generate-html.js) is a thin
+     ~42px bar, not a 120px card; without this, the iframe BOX still sat at
+     120px while the actual widget only filled the top 42px of it, reading
+     as a big gap under (and between, once several sit stacked) each one. */
+  #previewPane .modem-body iframe[src*="bandcamp"][src*="size=small"] { height: 42px; }
 
   /* ---- Mix tab: a rudimentary DAW — one lane per clip, horizontal = time,
      drag the body to reposition, drag a corner handle to fade. ---- */
