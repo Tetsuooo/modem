@@ -514,12 +514,19 @@ function groupRuns(items) {
   return runOf;
 }
 
+// Only ever called from a scan-result checkbox's own 'change' handler, i.e.
+// after the browser has already flipped that checkbox's checked state
+// itself — so, unlike selectAll()/deselectAll() (which touch many rows at
+// once and do need a re-render), this doesn't re-render the Scan list at
+// all. It used to, but a full re-render tears down and rebuilds every row's
+// DOM, which was killing any track currently playing a preview elsewhere in
+// the list — nothing else in a Scan row depends on selection state besides
+// that one checkbox, which is already correct without one.
 function toggleSelect(item) {
   const i = selected.findIndex((it) => it.key === item.key);
   if (i === -1) selected.push(makeSelectedEntry(item));
   else selected.splice(i, 1);
   renderSelected();
-  renderScanResults();
   saveDraft();
 }
 
