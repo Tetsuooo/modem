@@ -651,7 +651,10 @@ async function playSingleTrackPreview(frame, item) {
     frame.innerHTML = trackPlayerHtml(j.url);
     wireTrackPlayers(frame);
     const audio = frame.querySelector('audio');
-    if (audio) audio.play().catch(() => {});
+    if (audio) {
+      audio.play().catch(() => {});
+      audio.addEventListener('ended', () => advanceToNextSubtrack(frame));
+    }
   } catch (e) {
     // Falls back quietly in the UI on purpose (a 404 because the server
     // hasn't been restarted since this endpoint was added looks the same
@@ -662,15 +665,38 @@ async function playSingleTrackPreview(frame, item) {
   }
 }
 
+// Opens (or re-opens) a track's preview and plays it — unlike togglePreview,
+// never closes an already-open one. Used for manual clicks via togglePreview
+// below, and for auto-advance (advanceToNextSubtrack()), which needs "play
+// this specific one" rather than "flip whatever this one currently is".
+function playPreviewByKey(key) {
+  const frame = document.querySelector(`.preview-frame[data-key="${cssEsc(key)}"]`);
+  const item = itemRegistry.get(key);
+  if (!frame || !item) return;
+  frame.hidden = false;
+  if (isSingleTrackPreview(item)) playSingleTrackPreview(frame, item);
+  else frame.innerHTML = previewEmbedHtml(item);
+}
+
+// When a subtrack's preview finishes playing, auto-advance into the next
+// track of the same expanded album/playlist — same as a real album playing
+// through track by track. Only fires for a subtrack (its preview-frame sits
+// inside a `.subtracks` list, per renderSubtracks()); a top-level release's
+// own preview has no well-defined "next track" to chain into.
+function advanceToNextSubtrack(frame) {
+  const result = frame.closest('.subtracks > .result');
+  if (!result) return;
+  const next = result.nextElementSibling;
+  if (!next || !next.classList.contains('result')) return;
+  const nextFrame = next.querySelector('.preview-frame');
+  if (nextFrame) playPreviewByKey(nextFrame.dataset.key);
+}
+
 function togglePreview(key) {
   const frame = document.querySelector(`.preview-frame[data-key="${cssEsc(key)}"]`);
   if (!frame) return;
   if (frame.hidden) {
-    const item = itemRegistry.get(key);
-    if (!item) return;
-    frame.hidden = false;
-    if (isSingleTrackPreview(item)) playSingleTrackPreview(frame, item);
-    else frame.innerHTML = previewEmbedHtml(item);
+    playPreviewByKey(key);
   } else {
     frame.hidden = true;
     frame.innerHTML = ''; // drop the iframe/audio so playback actually stops
@@ -1096,7 +1122,18 @@ function wireTrackPlayers(root) {
       icon.textContent = '▶';
       if (activeTrackAudio === audio) activeTrackAudio = null;
     });
-    audio.addEventListener('ended', () => { icon.textContent = '▶'; });
+    audio.addEventListener('ended', () => {
+      icon.textContent = '▶';
+      // Auto-advance through a downloaded album's file list, same as a real
+      // album playing through track by track — only applies to a multi-file
+      // "Your show" row (a whole release downloaded as one candidate, see
+      // playerRow()); a lone downloaded track has no "next" to chain into.
+      const group = box.closest('.multi-files');
+      if (!group) return;
+      const players = [...group.querySelectorAll('.track-player')];
+      const nextAudio = players[players.indexOf(box) + 1]?.querySelector('audio');
+      if (nextAudio) nextAudio.play().catch(() => {});
+    });
 
     box.addEventListener('click', (e) => {
       if (scrubBar.contains(e.target)) return;
