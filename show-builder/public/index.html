@@ -1127,6 +1127,20 @@ function renderSelected() {
   updateShowDuration();
 
   const box = el('selected');
+  // This rebuild (box.innerHTML = ...) below recreates every row's DOM,
+  // including any live <audio> element — even for a plain reorder (the
+  // move up/down/top/bottom buttons), which was silently stopping whatever
+  // was actually playing. Remember it by its resolved `.src` (works
+  // whichever row it's in, including a specific file within a multi-file
+  // album row) and resume the same position in its freshly-recreated
+  // element once wireTrackPlayers() below has rewired it. Drag-and-drop's
+  // OWN live reordering doesn't go through this function at all (it moves
+  // the existing DOM nodes directly — see wireDragAndDrop()), so it was
+  // never affected; this only ever needed fixing here.
+  let resumePlayback = null;
+  if (activeTrackAudio && !activeTrackAudio.paused && box.contains(activeTrackAudio)) {
+    resumePlayback = { src: activeTrackAudio.src, time: activeTrackAudio.currentTime };
+  }
   // FLIP: record where each item currently sits (by stable key) before the
   // re-render, then animate from there to its new position after — this is
   // what makes reordering read as "cards sliding into place" instead of an
@@ -1184,6 +1198,13 @@ function renderSelected() {
   }).join('');
   wireDragAndDrop();
   wireTrackPlayers(box);
+  if (resumePlayback) {
+    const audio = [...box.querySelectorAll('.track-player audio')].find((a) => a.src === resumePlayback.src);
+    if (audio) {
+      audio.currentTime = resumePlayback.time;
+      audio.play().catch(() => {});
+    }
+  }
   box.querySelectorAll('.move-btn').forEach((b) => b.addEventListener('click', () => {
     moveSelectedItem(Number(b.dataset.index), b.dataset.dir);
   }));
