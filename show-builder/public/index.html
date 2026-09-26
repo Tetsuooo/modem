@@ -313,7 +313,7 @@
   .mix-fade-handle.left::after { left: 4px; }
   .mix-fade-handle.right::after { right: 4px; }
   .mix-trim-handle {
-    position: absolute; top: 14px; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2;
+    position: absolute; top: 14px; bottom: 0; width: 14px; cursor: ew-resize; z-index: 2;
     touch-action: none;
   }
   .mix-trim-handle.left { left: 0; }
@@ -1292,11 +1292,15 @@ function renderSelected() {
   // (no re-render) so typing doesn't lose focus/cursor position — only
   // structural changes (add/remove/reorder) rebuild the DOM.
   box.querySelectorAll('.edit-field:not(.group-heading-field)').forEach((input) => {
+    const isArtist = input.classList.contains('edit-artist');
+    const names = isArtist ? artistNameList : labelNameList;
+    input.addEventListener('focus', () => refreshMultiNameDatalist(input, names));
     input.addEventListener('input', () => {
       const item = selected.find((s) => s.key === input.dataset.key);
       if (!item) return;
-      if (input.classList.contains('edit-artist')) item.artist = input.value;
+      if (isArtist) item.artist = input.value;
       else item.label = input.value;
+      refreshMultiNameDatalist(input, names);
       debouncedSaveDraft();
     });
   });
@@ -3256,18 +3260,47 @@ document.addEventListener('keydown', (e) => {
 
 // Autocomplete data for the artist/label/heading edit fields — fetched once
 // on load, independent of the draft (best-effort: if it fails, the fields
-// just behave like plain text inputs with no suggestions).
+// just behave like plain text inputs with no suggestions). Kept around
+// (not just written into the datalists) so the multi-name fields can
+// rebuild their own datalist on the fly — see refreshMultiNameDatalist().
+let artistNameList = [];
+let labelNameList = [];
 async function loadArtistLabelNames() {
   try {
     const j = await (await fetch('/artist-label-names')).json();
-    const artists = j.artists || [];
-    const labels = j.labels || [];
-    const heading = [...new Set([...artists, ...labels])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    artistNameList = j.artists || [];
+    labelNameList = j.labels || [];
+    const heading = [...new Set([...artistNameList, ...labelNameList])].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     const fill = (id, names) => { el(id).innerHTML = names.map((n) => `<option value="${escAttr(n)}">`).join(''); };
-    fill('artistNamesList', artists);
-    fill('labelNamesList', labels);
+    fill('artistNamesList', artistNameList);
+    fill('labelNamesList', labelNameList);
     fill('headingNamesList', heading);
   } catch (e) { /* best-effort — see comment above */ }
+}
+
+// The artist/label fields accept several comma-separated names (see
+// splitNames()), but a native <input list=datalist> only ever matches
+// candidate options against the WHOLE current field value — so past the
+// first name, nothing you've already typed would ever match anything.
+// Worked around by rewriting the datalist's own options to each be
+// "whatever's already typed up to the last comma" + "a candidate name",
+// so the browser's substring match against the full field value ends up
+// matching on the part AFTER the comma, the same way it already does for
+// a single plain name. Filters out names already used earlier in the
+// same field, so it doesn't suggest a duplicate. Assumes a space after
+// each comma (the normal way to type one) — typing "A,B" with no space
+// just won't get suggestions for B, which is a soft miss, not a break.
+function refreshMultiNameDatalist(input, names) {
+  const datalist = el(input.getAttribute('list'));
+  if (!datalist) return;
+  const value = input.value;
+  const lastComma = value.lastIndexOf(',');
+  const prefix = lastComma === -1 ? '' : value.slice(0, lastComma + 1) + ' ';
+  const usedSoFar = new Set(
+    value.slice(0, lastComma + 1).split(',').map((n) => n.trim().toLowerCase()).filter(Boolean)
+  );
+  const candidates = names.filter((n) => !usedSoFar.has(n.toLowerCase()));
+  datalist.innerHTML = candidates.map((n) => `<option value="${escAttr(prefix + n)}">`).join('');
 }
 // ---------- Sync: reconcile used-tracks + the portable draft subset with
 // whatever's on git (see show-builder/sync.js for the merge strategy) ------
