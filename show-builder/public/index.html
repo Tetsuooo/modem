@@ -52,28 +52,32 @@
      drag/move/remove-able AND still playable/seekable — just a class
      toggle on #selected, no change to what's actually rendered
      underneath it. */
-  #selected.compact .row { padding: 3px 8px; gap: 8px; }
+  #selected.compact .row { padding: 3px 8px; gap: 8px; margin-bottom: 0; }
   #selected.compact .selected-item { margin-bottom: 1px; }
   #selected.compact .badge,
   #selected.compact .heading-choice,
   #selected.compact .group-heading-bar { display: none; }
-  /* Artist/label stay visible (not really a "setting", just info) but blend
-     into plain text until you actually hover/focus one to edit it. */
+  /* Artist/label stay visible (not really a "setting", just info) — just
+     not editable here (no hover/focus reveal, unlike an earlier version of
+     this): double-clicking the rectangle plays the track instead, so the
+     field can't grab that click for text selection either. */
   #selected.compact .edit-field {
     background: transparent; border-color: transparent; padding: 2px 0;
+    pointer-events: none; cursor: default;
   }
-  #selected.compact .edit-field:hover,
-  #selected.compact .edit-field:focus { background: #0e0f13; border-color: #3a3b45; padding: 4px 6px; }
   /* The player itself shrinks down to just its scrub bar (title/time text
-     hidden), sitting flush against the row's own bottom edge instead of
-     a separate full-size block — still the exact same audio element +
-     click-to-play + drag-to-seek behavior underneath, just visually tiny. */
+     hidden), sitting flush against the row's own bottom edge (margin-bottom
+     above is 0 for exactly this) instead of a separate full-size block —
+     still the exact same audio element + click-to-play + drag-to-seek
+     behavior underneath, just visually tiny. Double-clicking the row
+     itself (below) also toggles play/pause, since the strip alone is a
+     small target once shrunk this far. */
   #selected.compact .player-row,
-  #selected.compact .multi-files { padding: 0 8px 3px; }
-  #selected.compact .file-row { padding: 0 0 2px; }
+  #selected.compact .multi-files { padding: 0 8px 2px; }
+  #selected.compact .file-row { padding: 0 0 1px; }
   #selected.compact .file-row-head { display: none; }
   #selected.compact .track-player {
-    height: 10px; padding: 0; gap: 0; background: transparent; border: none; border-radius: 0;
+    height: 8px; padding: 0; gap: 0; background: transparent; border: none; border-radius: 0;
   }
   #selected.compact .track-player-icon,
   #selected.compact .track-player-time { display: none; }
@@ -1246,6 +1250,23 @@ function renderSelected() {
   box.querySelectorAll('.move-btn').forEach((b) => b.addEventListener('click', () => {
     moveSelectedItem(Number(b.dataset.index), b.dataset.dir);
   }));
+  // Compact view only: the scrub-bar strip beneath a row is a small target
+  // once shrunk that far down, so double-clicking the row rectangle itself
+  // also toggles play/pause on its first (or only) downloaded file — same
+  // audio element wireTrackPlayers() above already wired, so "only one
+  // plays at a time" and auto-advance-to-next both still apply untouched.
+  // Ignored outside compact mode, and on the parts of the row that already
+  // have their own double-click-unfriendly behavior (remove, move buttons,
+  // the artist/label fields — even though those are pointer-events:none in
+  // compact anyway, guarding here too costs nothing).
+  box.querySelectorAll('.selected-item[data-key] > .row').forEach((row) => {
+    row.addEventListener('dblclick', (e) => {
+      if (!box.classList.contains('compact')) return;
+      if (e.target.closest('.remove') || e.target.closest('.move-buttons') || e.target.closest('.edit-field')) return;
+      const audio = row.parentElement.querySelector('.track-player audio');
+      if (audio) { if (audio.paused) audio.play(); else audio.pause(); }
+    });
+  });
   box.querySelectorAll('.remove').forEach((b) => b.addEventListener('click', () => {
     pushUndoSnapshot();
     const removedKey = selected[Number(b.dataset.index)].key;
