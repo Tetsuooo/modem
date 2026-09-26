@@ -1202,13 +1202,22 @@ function wireTrackPlayers(root) {
     });
     audio.addEventListener('ended', () => {
       icon.textContent = '▶';
-      // Auto-advance through a downloaded album's file list, same as a real
-      // album playing through track by track — only applies to a multi-file
-      // "Your show" row (a whole release downloaded as one candidate, see
-      // playerRow()); a lone downloaded track has no "next" to chain into.
-      const group = box.closest('.multi-files');
-      if (!group) return;
-      const players = [...group.querySelectorAll('.track-player')];
+      // Auto-advance to the next downloaded track in the WHOLE show's
+      // current order (not just within one multi-file album row) — so
+      // playing through "Your show" lets you actually hear how consecutive
+      // tracks flow into each other, the point of asking for this. Only
+      // applies inside the Arrange tab's #selected list; a Scan-tab preview
+      // chains via advanceToNextSubtrack() instead (see playSingleTrackPreview()).
+      const showList = box.closest('#selected');
+      if (!showList) return;
+      // Recomputed fresh from the live DOM every time, deliberately not
+      // memoized — #selected's DOM order always matches `selected`'s
+      // CURRENT order (renderSelected() rebuilds it on every reorder), so a
+      // drag or a move up/down/top/bottom button used between plays is
+      // picked up automatically; "next" always means next in whatever the
+      // order is right now, never a stale snapshot from when this one
+      // started playing.
+      const players = [...showList.querySelectorAll('.track-player')];
       const nextAudio = players[players.indexOf(box) + 1]?.querySelector('audio');
       if (nextAudio) nextAudio.play().catch(() => {});
     });
