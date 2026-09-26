@@ -3276,7 +3276,25 @@ async function runPublish() {
   el('runPublishBtn').disabled = true;
   el('runPublishBtn').textContent = 'Running…';
   el('publishDiffBox').style.display = 'none';
-  await fetch('/publish-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show }) });
+  el('errorsBox').innerHTML = '';
+  let startResult;
+  try {
+    const r = await fetch('/publish-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show }) });
+    startResult = await r.json();
+  } catch (e) {
+    startResult = { ok: false, error: 'could not reach the server: ' + (e.message || e) };
+  }
+  // A rejection here (e.g. an already-dirty repo — see server.js's
+  // /publish-run) means the pipeline never actually started, so polling
+  // /publish-status would just see the PREVIOUS job (or nothing) and show
+  // no error at all — check the start response itself before polling.
+  if (!startResult.ok) {
+    el('runPublishBtn').disabled = false;
+    el('runPublishBtn').textContent = 'Run publish pipeline';
+    const extra = startResult.dirtyFiles ? '<br>' + startResult.dirtyFiles.map(esc).join('<br>') : '';
+    el('errorsBox').innerHTML = `<div class="errors">${esc(startResult.error || 'could not start the publish pipeline')}${extra}</div>`;
+    return;
+  }
   const poll = setInterval(async () => {
     const j = await (await fetch('/publish-status')).json();
     el('publishLog').textContent = (j.log || []).join('\n');

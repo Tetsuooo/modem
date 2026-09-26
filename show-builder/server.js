@@ -349,6 +349,32 @@ app.post('/publish-run', (req, res) => {
   const show = req.body && req.body.show;
   if (!show) return res.status(400).json({ ok: false, error: 'missing show number' });
 
+  // Refuse to start on top of an already-dirty tree. Each pipeline step
+  // writes straight to disk on its own — there's no single transaction to
+  // roll back if the pipeline gets interrupted partway through (e.g. the
+  // scrape step finishes and writes modem-archive.json, then the run gets
+  // stopped before build-track-index/webpack run). Without this check, a
+  // second run would silently build on top of whatever that half-finished
+  // attempt already left behind instead of starting from the last known-
+  // good, committed state — which is exactly what turned one real
+  // interrupted run (a scrape-modem.js bug re-scraping an unrelated list,
+  // since fixed) into a second, confusing "why is it touching so much"
+  // run right after.
+  try {
+    const dirty = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    if (dirty.trim()) {
+      return res.status(409).json({
+        ok: false,
+        error: 'The repo already has uncommitted changes (likely left over from an earlier run that got interrupted). ' +
+          'Review them with "git status"/"git diff" in the repo folder, then either commit them if intentional or ' +
+          '"git checkout -- <file>" to discard them — before running the pipeline again.',
+        dirtyFiles: dirty.trim().split(/\r?\n/),
+      });
+    }
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'could not check git status: ' + String(e.message || e) });
+  }
+
   publishJob = { running: true, done: false, error: null, log: [`publishing modem-${show}…`], show, diffSummary: null };
   const node = process.execPath;
   const steps = [
