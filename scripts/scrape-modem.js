@@ -83,7 +83,14 @@ function showSlug(n) {
 }
 const showSlugs = [];
 for (let n = lo; n <= hi; n++) showSlugs.push(showSlug(n));
-const listSlugs = (argVal('--lists') || 'best-releases-of-2025').split(',');
+// Year-end lists are deliberately manual-only (see the project notes) — no
+// default here means a plain `--shows N-N` run (what show-builder's
+// /publish-run and the scheduled auto-update Action both do) touches ONLY
+// the show(s) actually asked for. An earlier version defaulted this to
+// 'best-releases-of-2025', which meant every single-show publish silently
+// re-scraped that list too as a side effect — pass --lists explicitly
+// (comma-separated slugs) when a list actually needs (re-)scraping.
+const listSlugs = argVal('--lists') ? argVal('--lists').split(',') : [];
 
 // ---------- tiny helpers -------------------------------------------------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
