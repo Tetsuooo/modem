@@ -3175,19 +3175,27 @@ function injectSegTagsPreview(root, items) {
       // branch, matching the live site's "chips identify the entry, name is
       // redundant" convention) — so the group's own shared heading needs a
       // chip of its own too, or it vanishes entirely once the name is gone
-      // and only the per-track real artists remain.
+      // and only the per-track real artists remain. Order matters here:
+      // the live site's real injectSegTags() always renders every artist
+      // chip first, then the label chip last (never mixed) — a grouped
+      // heading can be EITHER, e.g. "Cold Storage" heading its own 3-track
+      // album (an artist name) vs "mappa" heading a various-artists
+      // compilation (a label name) — so it only gets its own separate
+      // label-chip when it ISN'T already one of the group's own artists;
+      // when it IS, it's just covered by that artist chip instead of also
+      // appearing a second time styled as a label.
       const seen = new Set();
-      const parts = [];
-      const heading = (group[0].groupHeading || '').trim();
-      if (heading) { parts.push(chip('label-chip', heading)); seen.add(heading.toLowerCase()); }
+      const artistParts = [];
       group.forEach((item) => {
         const nm = (item.artist || '').trim();
         const key = nm.toLowerCase();
         if (!nm || seen.has(key)) return;
         seen.add(key);
-        parts.push(chip('artist-chip', nm));
+        artistParts.push(chip('artist-chip', nm));
       });
-      chips = parts.join('');
+      const heading = (group[0].groupHeading || '').trim();
+      const labelParts = (heading && !seen.has(heading.toLowerCase())) ? [chip('label-chip', heading)] : [];
+      chips = artistParts.join('') + labelParts.join('');
     } else {
       const item = group[0];
       chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
