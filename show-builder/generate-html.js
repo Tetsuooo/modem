@@ -9,6 +9,18 @@ const SLASHES = '/'.repeat(34);
 // Bandcamp's EmbeddedPlayer iframe is fully determined by album/track id —
 // no fetch needed, same URL shape already used in src/assets/modem-archive.json
 // (see scripts/build-track-index.js's resolveBandcamp()).
+//
+// Deliberately NO inline style/width/height/seamless attribute — checked
+// against real already-published modem posts (grepped modem-archive.json's
+// bodyHtml) and every one is a bare `<iframe src="...">`, sized entirely by
+// whatever page displays it (the archive site's own `.modem-body
+// iframe[src*="bandcamp"] { height: 120px }`, see src/archive.html). An
+// earlier version of this hardcoded `style="...height: 470px"` (a size only
+// correct for tracklist=true, not the tracklist=false used here), which
+// overrode that 120px rule via inline-style specificity and left a big
+// empty gap under the actual compact widget — both in this tool's own
+// Preview tab and, since that's literally the HTML pasted into
+// radioštudent, on the real published show page too.
 function buildBandcampEmbed(item) {
   const parts = ['https://bandcamp.com/EmbeddedPlayer/'];
   if (item.albumId) parts.push(`album=${item.albumId}/`);
@@ -16,7 +28,7 @@ function buildBandcampEmbed(item) {
   parts.push('size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/transparent=true/');
   const src = parts.join('');
   const label = escapeHtml(`${item.title} by ${item.artist}`);
-  return `<iframe style="border: 0; width: 350px; height: 470px;" src="${src}" seamless><a href="${escapeHtml(item.url)}">${label}</a></iframe>`;
+  return `<iframe src="${src}"><a href="${escapeHtml(item.url)}">${label}</a></iframe>`;
 }
 
 // SoundCloud's iframe is always fetched ready-made via oEmbed — same call
