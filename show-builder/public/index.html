@@ -29,11 +29,19 @@
   .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
   .tab-panel.tab-panel-wide { max-width: 1400px; }
   .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
-  .show-duration-row { display: flex; align-items: baseline; gap: 10px; }
-  .show-duration-row h2 { margin: 0 0 10px; }
-  #showDuration { margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+  #showDuration { font-variant-numeric: tabular-nums; font-size: 13px; }
   #showDuration.duration-ok { color: #7dffb0; }
   #showDuration.duration-off { color: #ffb066; }
+  /* Sticks to the left of "Your show" regardless of how far down the list
+     you've scrolled — top offset clears the sticky header (see `header`'s
+     own position:sticky above) so it settles just beneath it, not under it. */
+  .arrange-layout { display: flex; gap: 20px; align-items: flex-start; }
+  .arrange-sidebar {
+    flex: 0 0 130px; position: sticky; top: 66px;
+    padding: 10px 12px; background: #1a1b21; border: 1px solid #2a2b33; border-radius: 8px;
+  }
+  .arrange-sidebar-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6f7080; margin-bottom: 4px; }
+  .arrange-main { flex: 1 1 0; min-width: 0; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
@@ -373,23 +381,28 @@
   </section>
 
   <section class="tab-panel" id="panel-arrange" hidden>
-    <div class="show-duration-row">
-      <h2>Your show (drag to reorder)</h2>
-      <span id="showDuration" class="status"></span>
+    <div class="arrange-layout">
+      <aside class="arrange-sidebar">
+        <div class="arrange-sidebar-label">Show length</div>
+        <div id="showDuration" class="status"></div>
+      </aside>
+      <div class="arrange-main">
+        <h2>Your show (drag to reorder)</h2>
+        <!-- Autocomplete sources for the artist/label/heading edit fields below —
+             populated from /artist-label-names (existing archive credits) so
+             typing a name that's already in use surfaces it instead of the user
+             accidentally spawning a near-duplicate tag. -->
+        <datalist id="artistNamesList"></datalist>
+        <datalist id="labelNamesList"></datalist>
+        <datalist id="headingNamesList"></datalist>
+        <div id="selected"><div class="empty">Nothing selected yet.</div></div>
+        <div class="actions">
+          <button id="downloadBtn">Download selected</button>
+          <button id="openCoversBtn" title="downloads/_covers">Open covers folder</button>
+        </div>
+        <div id="downloadLog" class="log"></div>
+      </div>
     </div>
-    <!-- Autocomplete sources for the artist/label/heading edit fields below —
-         populated from /artist-label-names (existing archive credits) so
-         typing a name that's already in use surfaces it instead of the user
-         accidentally spawning a near-duplicate tag. -->
-    <datalist id="artistNamesList"></datalist>
-    <datalist id="labelNamesList"></datalist>
-    <datalist id="headingNamesList"></datalist>
-    <div id="selected"><div class="empty">Nothing selected yet.</div></div>
-    <div class="actions">
-      <button id="downloadBtn">Download selected</button>
-      <button id="openCoversBtn" title="downloads/_covers">Open covers folder</button>
-    </div>
-    <div id="downloadLog" class="log"></div>
   </section>
 
   <section class="tab-panel" id="panel-publish" hidden>
