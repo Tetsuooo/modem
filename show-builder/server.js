@@ -17,6 +17,13 @@ const { checkDuplicate } = require('./duplicate-check');
 const { getNames } = require('./artist-names');
 const { runSync, getHistory, addHistoryEntry } = require('./sync');
 
+// Shared between /publish-run's pre-flight guard and /publish-push's
+// pre-commit guard below — the residue pattern from a real incident (a
+// scrape-modem.js bug re-scraping best-releases-of-2025 alongside an
+// unrelated show, since fixed) that both checks exist to catch.
+const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
+const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
+
 const REPO_ROOT = path.join(__dirname, '..');
 // macOS/Linux don't ship a bare `python` (it's `python3`); Windows has no
 // `python3` by default. Everything else here (Node, curl, git) is already
@@ -360,8 +367,6 @@ app.post('/publish-run', (req, res) => {
   // different, earlier interrupted attempt silently getting built on top of —
   // that's the actual incident this is guarding against (a --lists bug,
   // since fixed, re-scraping best-releases-of-2025 mid an unrelated publish).
-  const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
-  const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
   try {
     const dirty = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
     // NOT dirty.trim().split(...) — an unstaged modification's status code is
@@ -451,6 +456,20 @@ app.post('/publish-push', (req, res) => {
   if (!publishJob || !publishJob.done) return res.status(400).json({ ok: false, error: 'run the publish pipeline first' });
   const show = publishJob.show;
   try {
+    // The "Review before pushing" box only ever showed `git diff --stat` —
+    // line-count totals, not content — so a human glancing at it has no real
+    // way to tell "big diff because the tracks array re-sorted" apart from
+    // "big diff because it touched something unrelated." Actually check the
+    // content of the one shared file where that distinction matters, right
+    // before it goes live, instead of trusting the stat alone.
+    const archiveDiff = execFileSync('git', ['diff', '--', 'src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    if (LIST_SLUG_PATTERN.test(archiveDiff)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'src/assets/modem-archive.json\'s diff mentions a year-end list, not just modem-' + show +
+          '. Refusing to push — review "git diff -- src/assets/modem-archive.json" in the repo folder first.',
+      });
+    }
     execFileSync('git', ['add', '-A'], { cwd: REPO_ROOT });
     const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (!status.trim()) return res.json({ ok: true, pushed: false, message: 'nothing to commit' });
