@@ -414,6 +414,11 @@ app.post('/publish-run', (req, res) => {
   const node = process.execPath;
   const steps = [
     [node, [path.join(REPO_ROOT, 'scripts', 'scrape-modem.js'), '--shows', `${show}-${show}`]],
+    // Override radiostudent.si's own (often never-filled-in) artist/label
+    // taxonomy fields with the ones already typed into this show's Arrange
+    // tab — see scripts/apply-draft-tags.js for why. No-ops if no local
+    // draft matches this show number.
+    [node, [path.join(REPO_ROOT, 'scripts', 'apply-draft-tags.js'), '--show', String(show)]],
     [node, [path.join(REPO_ROOT, 'scripts', 'build-track-index.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-sc-matches.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-overrides.js')]],
