@@ -68,8 +68,11 @@ function checkDuplicate(item) {
     return entry ? { matchType: 'track', shows: showNumbers([entry]) } : null;
   }
 
-  const albumId = item.albumId || null;
-  const trackId = item.trackId || null;
+  // Scan results carry these as numbers (straight off Bandcamp's JSON), but
+  // bcByAlbum is keyed by the string parsed out of the index key — a numeric
+  // albumId silently never matched, so album-level flags never fired.
+  const albumId = item.albumId ? String(item.albumId) : null;
+  const trackId = item.trackId ? String(item.trackId) : null;
   if (!albumId && !trackId) return null;
 
   const exact = idx.bcByKey.get('bc:' + (albumId || '-') + ':' + (trackId || '-'));
