@@ -44,7 +44,7 @@ function buildBandcampEmbed(item, opts) {
   if (item.trackId) parts.push(`track=${item.trackId}/`);
   parts.push('transparent=true/');
   const src = parts.join('');
-  const label = escapeHtml(`${item.title} by ${item.artist}`);
+  const label = escapeHtml(`${item.title} by ${namesOf(item, 'artist').join(' & ')}`);
   return `<iframe src="${src}"><a href="${escapeHtml(item.url)}">${label}</a></iframe>`;
 }
 
@@ -99,9 +99,31 @@ function buildEmbed(item, opts) {
 // label Cudighi tagged separately) — never both combined in the heading
 // text. item.headingSource ('artist'|'label', default 'artist') is that
 // per-track editorial choice; the other name still gets its own tag field.
+//
+// A track can credit more than one artist (a collab) or label (a co-release):
+// item.artist/item.label hold the first name, item.extraArtists/extraLabels
+// any more — each one its own separate tag, never comma-split out of one
+// string (a stylized name can legitimately contain a comma, see
+// build-record-tags.js). A multi-name heading joins them the way the live
+// archive already does: "galen tipton & Junior Astronaut" (modem-238) for
+// artists, "Artetetra / Crash Symbols" (modem-83) for labels.
+function namesOf(item, field) {
+  const extra = field === 'label' ? item.extraLabels : item.extraArtists;
+  const seen = new Set();
+  const out = [];
+  [item[field], ...(Array.isArray(extra) ? extra : [])].forEach((n) => {
+    const name = String(n || '').trim();
+    const key = name.toLowerCase();
+    if (name && !seen.has(key)) { seen.add(key); out.push(name); }
+  });
+  return out;
+}
+
 function headingName(item) {
-  if (item.headingSource === 'label' && item.label) return item.label;
-  return item.artist || item.label || '';
+  const artists = namesOf(item, 'artist');
+  const labels = namesOf(item, 'label');
+  if (item.headingSource === 'label' && labels.length) return labels.join(' / ');
+  return artists.length ? artists.join(' & ') : labels.join(' / ');
 }
 
 // Real modem shows also do this: when several tracks come off the SAME
@@ -163,4 +185,4 @@ function generateShowHtml(items) {
   return INTRO_BANNER + '\n\n' + blocks.join('\n\n');
 }
 
-module.exports = { generateShowHtml, buildBandcampEmbed, buildSoundcloudEmbed, groupRuns, headingName };
+module.exports = { generateShowHtml, buildBandcampEmbed, buildSoundcloudEmbed, groupRuns, headingName, namesOf };

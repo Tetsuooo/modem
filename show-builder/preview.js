@@ -3,7 +3,7 @@
 // with the same field wrapper divs scripts/scrape-modem.js's fieldByClass()
 // looks for, then runs the REAL parsePage() against it — not a reimplementation.
 const { parsePage } = require('../scripts/scrape-modem.js');
-const { generateShowHtml, groupRuns, headingName } = require('./generate-html');
+const { generateShowHtml, groupRuns, headingName, namesOf } = require('./generate-html');
 const { escapeHtml } = require('./lib');
 
 // items: ordered, selected candidates (same shape /generate takes — each may
@@ -77,8 +77,8 @@ function buildWarnings(record, items) {
       warnings.push(`${label}: heading came out as "${heading}", expected "${expected}" — check for unusual characters in the name.`);
     }
     if (runOf[i] === -1) {
-      const other = item.headingSource === 'label' ? item.artist : item.label;
-      if (other && other.trim()) notes.push(i);
+      const other = namesOf(item, item.headingSource === 'label' ? 'artist' : 'label');
+      if (other.length) notes.push(i);
     }
   });
   if (notes.length) {

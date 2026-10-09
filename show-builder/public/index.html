@@ -55,6 +55,7 @@
   #selected.compact .row { padding: 3px 8px; gap: 8px; margin-bottom: 0; }
   #selected.compact .selected-item { margin-bottom: 1px; }
   #selected.compact .badge,
+  #selected.compact .name-btn,
   #selected.compact .heading-choice,
   #selected.compact .group-heading-bar { display: none; }
   /* Artist/label stay visible (not really a "setting", just info) — just
@@ -195,6 +196,14 @@
     padding: 4px 6px; font-size: 12px; flex: 1; min-width: 0;
   }
   .edit-field:focus { border-color: #3a6ff0; outline: none; }
+  .name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .name-line { display: flex; gap: 3px; align-items: center; }
+  .name-btn {
+    flex: none; width: 20px; height: 20px; padding: 0; line-height: 1; font-size: 13px;
+    background: none; color: #6f7080; border: 1px solid #3a3b45; border-radius: 4px; cursor: pointer;
+  }
+  .name-btn:hover { color: #e8e8ea; border-color: #6f7080; }
+  .name-btn.name-del:hover { color: #ff8080; border-color: #ff8080; }
   .heading-choice { font-size: 11px; color: #6f7080; margin-top: 3px; display: flex; gap: 10px; align-items: center; }
   .heading-choice label { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
   .badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; flex: none; }
@@ -662,6 +671,34 @@ function fmtDate(d) {
 }
 
 function isSelected(key) { return selected.some((it) => it.key === key); }
+
+// The extra-names list (collab artists / co-release labels) for one field,
+// created on first use.
+function extraNames(it, field) {
+  const prop = field === 'label' ? 'extraLabels' : 'extraArtists';
+  if (!Array.isArray(it[prop])) it[prop] = [];
+  return it[prop];
+}
+
+// One artist or label column in a "Your show" row: the main field with a
+// "+" to credit another name (a collab, or a release out on two labels),
+// then one field + "×" per extra name. Each name becomes its own tag.
+function nameFieldsHtml(it, field) {
+  const isArtist = field === 'artist';
+  const attrs = `list="${isArtist ? 'artistNamesList' : 'labelNamesList'}" data-key="${escAttr(it.key)}" data-field="${field}"`;
+  const extras = (isArtist ? it.extraArtists : it.extraLabels) || [];
+  const noun = isArtist ? 'artist' : 'label';
+  return `<div class="name-col">
+    <div class="name-line">
+      <input class="edit-field edit-${field}" ${attrs} placeholder="${isArtist ? 'artist' : 'label, optional'}" value="${escAttr(it[field] || '')}">
+      <button class="name-btn name-add" data-key="${escAttr(it.key)}" data-field="${field}" title="add another ${noun}">+</button>
+    </div>
+    ${extras.map((n, x) => `<div class="name-line">
+      <input class="edit-field edit-${field}" ${attrs} data-extra="${x}" placeholder="another ${noun}" value="${escAttr(n || '')}">
+      <button class="name-btn name-del" data-key="${escAttr(it.key)}" data-field="${field}" data-extra="${x}" title="remove this ${noun}">×</button>
+    </div>`).join('')}
+  </div>`;
+}
 
 // label + headingSource are editable per track in "Your show" — real modem
 // headings are either the artist's or (for a label-curated/various-artists
@@ -1253,8 +1290,8 @@ function renderSelected() {
         <div class="meta">
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
-            <input class="edit-field edit-artist" list="artistNamesList" data-key="${escAttr(it.key)}" placeholder="artist(s) — comma-separated for more than one" value="${escAttr(it.artist || '')}">
-            ${grouped ? '' : `<input class="edit-field edit-label" list="labelNamesList" data-key="${escAttr(it.key)}" placeholder="label(s), optional — comma-separated" value="${escAttr(it.label || '')}">`}
+            ${nameFieldsHtml(it, 'artist')}
+            ${grouped ? '' : nameFieldsHtml(it, 'label')}
           </div>
           ${grouped ? '' : `
           <div class="heading-choice">
@@ -1329,18 +1366,34 @@ function renderSelected() {
   // (no re-render) so typing doesn't lose focus/cursor position — only
   // structural changes (add/remove/reorder) rebuild the DOM.
   box.querySelectorAll('.edit-field:not(.group-heading-field)').forEach((input) => {
-    const isArtist = input.classList.contains('edit-artist');
-    const names = isArtist ? artistNameList : labelNameList;
-    input.addEventListener('focus', () => refreshMultiNameDatalist(input, names));
     input.addEventListener('input', () => {
       const item = selected.find((s) => s.key === input.dataset.key);
       if (!item) return;
-      if (isArtist) item.artist = input.value;
-      else item.label = input.value;
-      refreshMultiNameDatalist(input, names);
+      const field = input.dataset.field;
+      if (input.dataset.extra == null) item[field] = input.value;
+      else extraNames(item, field)[Number(input.dataset.extra)] = input.value;
       debouncedSaveDraft();
     });
   });
+  // Adding/removing an extra artist/label name IS structural (a field
+  // appears or disappears), so unlike typing it re-renders — then focuses
+  // the newly added field so you can type straight into it.
+  box.querySelectorAll('.name-add').forEach((b) => b.addEventListener('click', () => {
+    const item = selected.find((s) => s.key === b.dataset.key);
+    if (!item) return;
+    const list = extraNames(item, b.dataset.field);
+    list.push('');
+    renderSelected(); saveDraft();
+    const added = box.querySelector(`.edit-field[data-key="${CSS.escape(item.key)}"][data-field="${b.dataset.field}"][data-extra="${list.length - 1}"]`);
+    if (added) added.focus();
+  }));
+  box.querySelectorAll('.name-del').forEach((b) => b.addEventListener('click', () => {
+    const item = selected.find((s) => s.key === b.dataset.key);
+    if (!item) return;
+    pushUndoSnapshot();
+    extraNames(item, b.dataset.field).splice(Number(b.dataset.extra), 1);
+    renderSelected(); saveDraft();
+  }));
   // A group's shared heading lives on every member (groupHeading), kept in
   // sync by group key rather than by index, since indices shift on reorder.
   box.querySelectorAll('.group-heading-field').forEach((input) => {
@@ -1704,7 +1757,7 @@ function getMixCandidates() {
       candidates.push({
         key: it.key + (multi ? ':' + i : ''),
         title: multi ? String(f).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '') : it.title,
-        artist: it.artist,
+        artist: namesOf(it, 'artist').join(' & '),
         src: downloadedFileUrl(f),
       });
     });
@@ -3037,9 +3090,27 @@ async function preloadMixBuffers() {
 // Mirrors generate-html.js's headingName(): a real modem heading is always
 // ONE name — the artist's, or (for a label-curated/various-artists post)
 // the label's — chosen per track via headingSource, never both combined.
+// A collab/co-release credits extra names via extraArtists/extraLabels —
+// mirrors generate-html.js's namesOf(): every distinct name, first field
+// first, each its own tag; a multi-name heading joins them " & " (artists)
+// or " / " (labels), matching the live archive's own collab headings.
+function namesOf(it, field) {
+  const extra = field === 'label' ? it.extraLabels : it.extraArtists;
+  const seen = new Set();
+  const out = [];
+  [it[field], ...(Array.isArray(extra) ? extra : [])].forEach((n) => {
+    const name = String(n || '').trim();
+    const key = name.toLowerCase();
+    if (name && !seen.has(key)) { seen.add(key); out.push(name); }
+  });
+  return out;
+}
+
 function headingName(it) {
-  if (it.headingSource === 'label' && it.label) return it.label;
-  return it.artist || it.label || '';
+  const artists = namesOf(it, 'artist');
+  const labels = namesOf(it, 'label');
+  if (it.headingSource === 'label' && labels.length) return labels.join(' / ');
+  return artists.length ? artists.join(' & ') : labels.join(' / ');
 }
 
 // Deduped names in show order, with any "@" stripped (handles/labels are
@@ -3051,9 +3122,11 @@ function dedupedField(field) {
   const seen = new Set();
   const names = [];
   selected.forEach((it) => {
-    const name = (it[field] || '').replace(/@/g, '').trim();
-    const key = name.toLowerCase();
-    if (name && !seen.has(key)) { seen.add(key); names.push(name); }
+    namesOf(it, field).forEach((n) => {
+      const name = n.replace(/@/g, '').trim();
+      const key = name.toLowerCase();
+      if (name && !seen.has(key)) { seen.add(key); names.push(name); }
+    });
   });
   return names;
 }
@@ -3066,12 +3139,11 @@ function dedupedField(field) {
 // distinct real artist in the run bracketed after it (e.g.
 // "mappa [ Visible Cloaks, Les Halles, ... ]") — instead of repeating the
 // same heading once per track.
-// The artist/label edit fields accept more than one name as a plain
-// comma-separated list (e.g. "Artist A, Artist B" for a collab, or two
-// co-releasing labels) — this splits one into its individual trimmed,
-// @-stripped names, dropping anything blank.
-function splitNames(s) {
-  return String(s || '').split(',').map((n) => n.replace(/@/g, '').trim()).filter(Boolean);
+// A track's artist (or label) names — first field plus any extras added
+// for a collab/co-release — @-stripped. Deliberately not comma-split: a
+// stylized name can contain a literal comma (see build-record-tags.js).
+function creditNames(it, field) {
+  return namesOf(it, field).map((n) => n.replace(/@/g, '').trim()).filter(Boolean);
 }
 
 function generateArtistListText() {
@@ -3089,7 +3161,7 @@ function generateArtistListText() {
       const seenOther = new Set();
       const others = [];
       for (let k = i; k <= j; k++) {
-        splitNames(selected[k].artist).forEach((nm) => {
+        creditNames(selected[k], 'artist').forEach((nm) => {
           const ok = nm.toLowerCase();
           if (ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
         });
@@ -3106,7 +3178,7 @@ function generateArtistListText() {
       const headingLower = heading.toLowerCase();
       const seenOther = new Set();
       const others = [];
-      splitNames(it.headingSource === 'label' ? it.artist : it.label).forEach((nm) => {
+      creditNames(it, it.headingSource === 'label' ? 'artist' : 'label').forEach((nm) => {
         const ok = nm.toLowerCase();
         if (ok !== headingLower && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
       });
@@ -3232,18 +3304,20 @@ function injectSegTagsPreview(root, items) {
       const seen = new Set();
       const artistParts = [];
       group.forEach((item) => {
-        const nm = (item.artist || '').trim();
-        const key = nm.toLowerCase();
-        if (!nm || seen.has(key)) return;
-        seen.add(key);
-        artistParts.push(chip('artist-chip', nm));
+        namesOf(item, 'artist').forEach((nm) => {
+          const key = nm.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          artistParts.push(chip('artist-chip', nm));
+        });
       });
       const heading = (group[0].groupHeading || '').trim();
       const labelParts = (heading && !seen.has(heading.toLowerCase())) ? [chip('label-chip', heading)] : [];
       chips = artistParts.join('') + labelParts.join('');
     } else {
       const item = group[0];
-      chips = (item.artist ? chip('artist-chip', item.artist) : '') + (item.label ? chip('label-chip', item.label) : '');
+      chips = namesOf(item, 'artist').map((n) => chip('artist-chip', n)).join('') +
+        namesOf(item, 'label').map((n) => chip('label-chip', n)).join('');
     }
     const slashes = `<span class="seg-slashes"> ${'/'.repeat(60)}</span>`;
     p.innerHTML = slashes + (chips ? `<span class="seg-tags">${chips}</span>` : '');
@@ -3541,9 +3615,7 @@ document.addEventListener('keydown', (e) => {
 
 // Autocomplete data for the artist/label/heading edit fields — fetched once
 // on load, independent of the draft (best-effort: if it fails, the fields
-// just behave like plain text inputs with no suggestions). Kept around
-// (not just written into the datalists) so the multi-name fields can
-// rebuild their own datalist on the fly — see refreshMultiNameDatalist().
+// just behave like plain text inputs with no suggestions).
 let artistNameList = [];
 let labelNameList = [];
 async function loadArtistLabelNames() {
@@ -3559,30 +3631,6 @@ async function loadArtistLabelNames() {
   } catch (e) { /* best-effort — see comment above */ }
 }
 
-// The artist/label fields accept several comma-separated names (see
-// splitNames()), but a native <input list=datalist> only ever matches
-// candidate options against the WHOLE current field value — so past the
-// first name, nothing you've already typed would ever match anything.
-// Worked around by rewriting the datalist's own options to each be
-// "whatever's already typed up to the last comma" + "a candidate name",
-// so the browser's substring match against the full field value ends up
-// matching on the part AFTER the comma, the same way it already does for
-// a single plain name. Filters out names already used earlier in the
-// same field, so it doesn't suggest a duplicate. Assumes a space after
-// each comma (the normal way to type one) — typing "A,B" with no space
-// just won't get suggestions for B, which is a soft miss, not a break.
-function refreshMultiNameDatalist(input, names) {
-  const datalist = el(input.getAttribute('list'));
-  if (!datalist) return;
-  const value = input.value;
-  const lastComma = value.lastIndexOf(',');
-  const prefix = lastComma === -1 ? '' : value.slice(0, lastComma + 1) + ' ';
-  const usedSoFar = new Set(
-    value.slice(0, lastComma + 1).split(',').map((n) => n.trim().toLowerCase()).filter(Boolean)
-  );
-  const candidates = names.filter((n) => !usedSoFar.has(n.toLowerCase()));
-  datalist.innerHTML = candidates.map((n) => `<option value="${escAttr(prefix + n)}">`).join('');
-}
 // ---------- Sync: reconcile used-tracks + the portable draft subset with
 // whatever's on git (see show-builder/sync.js for the merge strategy) ------
 async function runSyncClick() {
@@ -3661,7 +3709,7 @@ async function clearDraftClick() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           showNumber: el('showNumber').value.trim() || '?',
-          tracks: selected.map((it) => ({ title: it.title, artist: it.artist, url: it.url })),
+          tracks: selected.map((it) => ({ title: it.title, artist: namesOf(it, 'artist').join(' & '), url: it.url })),
         }),
       });
       const j = await r.json();

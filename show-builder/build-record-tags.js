@@ -10,7 +10,7 @@
 // gone into RS's own admin fields to tag artists/labels there, so
 // scrape-modem.js's field-umetniki/field-zalozba scrape correctly found
 // nothing to attach.
-const { groupRuns, headingName } = require('./generate-html');
+const { groupRuns, headingName, namesOf } = require('./generate-html');
 
 // Deliberately NOT split on commas: a track's artist/label field is treated
 // as ONE atomic tag string, matching both injectSegTagsPreview() (what the
@@ -23,6 +23,9 @@ const { groupRuns, headingName } = require('./generate-html');
 // "﴾◣.,,.◢﴿, tgwog, supersheep", which splitting mangled into 4 garbage
 // fragments) — safer to under-split (one combined tag for a genuine
 // multi-artist credit) than to corrupt a name that isn't actually a list.
+// A genuine collab/co-release is entered as separate names instead
+// (extraArtists/extraLabels, see generate-html.js's namesOf()) — each of
+// those becomes its own tag.
 //
 // items: the draft's ordered `selected` array (same shape generateShowHtml()
 // takes). Returns { artists, labels }, each a list of {name, url, seg} — the
@@ -52,11 +55,12 @@ function buildRecordTags(items) {
       // various-artists compilation like "mappa").
       const seen = new Set();
       group.forEach((it) => {
-        const nm = (it.artist || '').trim();
-        const key = nm.toLowerCase();
-        if (!nm || seen.has(key)) return;
-        seen.add(key);
-        artists.push({ name: nm, url: null, seg });
+        namesOf(it, 'artist').forEach((nm) => {
+          const key = nm.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          artists.push({ name: nm, url: null, seg });
+        });
       });
       const heading = (group[0].groupHeading || headingName(group[0])).trim();
       if (heading && !seen.has(heading.toLowerCase())) {
@@ -65,10 +69,8 @@ function buildRecordTags(items) {
       i = j + 1;
     } else {
       const it = items[i];
-      const artist = (it.artist || '').trim();
-      const label = (it.label || '').trim();
-      if (artist) artists.push({ name: artist, url: null, seg });
-      if (label) labels.push({ name: label, url: null, seg });
+      namesOf(it, 'artist').forEach((nm) => artists.push({ name: nm, url: null, seg }));
+      namesOf(it, 'label').forEach((nm) => labels.push({ name: nm, url: null, seg }));
       i++;
     }
     seg++;
