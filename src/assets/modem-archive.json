@@ -5,7 +5,7 @@
     "total": 270,
     "shows": 249,
     "lists": 21,
-    "withSoundcloud": 245,
+    "withSoundcloud": 247,
     "lastScraped": [
       "modem-249"
     ],
@@ -25,7 +25,12 @@
       "date": "12. 10. 2026",
       "cover": "https://radiostudent.si/sites/default/files/2026-10/modem-cover-249-1.png",
       "mp3": null,
-      "soundcloud": null,
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-249",
+        "api": "https://api.soundcloud.com/tracks/2416007517",
+        "title": "modem ///249 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-Kks9R9L8gpg76Xol-NihJYA-t500x500.jpg"
+      },
       "artists": [
         {
           "name": "Andy Loebs",
@@ -296,8 +301,13 @@
       "url": "https://radiostudent.si/glasba/modem/modem-248",
       "date": "28. 9. 2026",
       "cover": "https://radiostudent.si/sites/default/files/2026-09/modem-cover-248.png",
-      "mp3": null,
-      "soundcloud": null,
+      "mp3": "https://radiostudent.si/sites/default/files/posnetki/modem/2026-09-28-modem-modem-248.mp3",
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-248",
+        "api": "https://api.soundcloud.com/tracks/2408353464",
+        "title": "modem ///248 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-h92tk8qAUH4VAzId-XtxIkA-t500x500.jpg"
+      },
       "artists": [
         {
           "name": "bogdan sėkalski",

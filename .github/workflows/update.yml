@@ -79,6 +79,13 @@ jobs:
         if: github.event_name != 'push' && (github.event_name != 'schedule' || steps.cadence.outputs.on_cadence == 'true')
         run: node scripts/auto-update.js
 
+      # Shows get archived before they air, so their full-episode mp3 and
+      # SoundCloud upload only exist later. Check the recent ones on every
+      # scheduled/manual run (not just show weeks) and fill in what's appeared.
+      - name: Backfill episode audio on recent shows
+        if: github.event_name != 'push'
+        run: node scripts/backfill-show-audio.js
+
       - name: Build docs/
         run: npm run build
 

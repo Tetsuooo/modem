@@ -368,10 +368,12 @@ function attachSegments(list, segments) {
 }
 
 // ---------- cached fetch (curl) -----------------------------------------
-function cachedCurl(cacheKey, url, isLive) {
+const cacheFileFor = (cacheKey) => path.join(CACHE_DIR, cacheKey.replace(/[^\w.-]/g, '_'));
+
+function cachedCurl(cacheKey, url, isLive, force) {
   if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
-  const cacheFile = path.join(CACHE_DIR, cacheKey.replace(/[^\w.-]/g, '_'));
-  if (!FRESH && fs.existsSync(cacheFile)) {
+  const cacheFile = cacheFileFor(cacheKey);
+  if (!FRESH && !force && fs.existsSync(cacheFile)) {
     return { body: fs.readFileSync(cacheFile, 'utf8'), cached: true };
   }
   const body = execFileSync(
@@ -426,22 +428,33 @@ function resolveSoundcloud(number, live) {
   const scSlug = SC_SLUG_OVERRIDES[number] || 'modem-' + pad(number);
   const trackUrl = `${SC_USER}/${scSlug}`;
   const oembed = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(trackUrl)}`;
-  let res;
+  // Cache key follows the actual slug (not just the number) so a stale
+  // cached failure from the old guessed URL can't mask a fixed override —
+  // it just becomes an orphaned, ignored cache file instead.
+  const cacheKey = `sc-${scSlug}.json`;
+  const parse = (body) => {
+    try {
+      const d = JSON.parse(body);
+      return d && d.html ? d : null;
+    } catch (e) {
+      return null; // 404 pages aren't JSON
+    }
+  };
+  let data = null;
   try {
-    // Cache key follows the actual slug (not just the number) so a stale
-    // cached failure from the old guessed URL can't mask a fixed override —
-    // it just becomes an orphaned, ignored cache file instead.
-    res = cachedCurl(`sc-${scSlug}.json`, oembed, live);
+    const res = cachedCurl(cacheKey, oembed, live);
+    data = parse(res.body);
+    // A new show is published before its SoundCloud upload exists, so a miss
+    // is often only "not yet": re-check a cached miss live, and never keep a
+    // miss in the cache, or the show would stay player-less forever.
+    if (!data && res.cached) data = parse(cachedCurl(cacheKey, oembed, live, true).body);
   } catch (e) {
+    data = null;
+  }
+  if (!data) {
+    try { fs.unlinkSync(cacheFileFor(cacheKey)); } catch (_) {}
     return null;
   }
-  let data;
-  try {
-    data = JSON.parse(res.body);
-  } catch (e) {
-    return null; // 404 pages aren't JSON
-  }
-  if (!data || !data.html) return null;
   const src = firstMatch(/src="([^"]+)"/, data.html);
   const apiUrl = src ? firstMatch(/[?&]url=([^&"]+)/, src) : null;
   return {
@@ -451,6 +464,9 @@ function resolveSoundcloud(number, live) {
     artwork: data.thumbnail_url || null,
   };
 }
+
+// The full broadcast mp3 link — only appears once the show has aired.
+const findMp3 = (html) => abs(firstMatch(/href="(\/sites\/default\/files\/posnetki\/[^"]+\.mp3)"/, html));
 
 // ---------- parse one page ----------------------------------------------
 function parsePage(slug, html, type, soundcloud) {
@@ -469,7 +485,7 @@ function parsePage(slug, html, type, soundcloud) {
   );
   const dateShort = dateRaw ? dateRaw.split(/\s[–—-]\s/)[0].trim() : null; // drop the "– 22.00" time
 
-  const mp3 = abs(firstMatch(/href="(\/sites\/default\/files\/posnetki\/[^"]+\.mp3)"/, html));
+  const mp3 = findMp3(html);
 
   const rawBody = fieldByClass(html, /<div class="field field--name-body[^"]*field__item">/) || '';
   // Videos frequently live in a SEPARATE Drupal field ("field-video", a
@@ -679,4 +695,5 @@ if (require.main === module) {
 module.exports = {
   parsePage, cleanBody, extractEmbeds, annotateAndSegment, attachSegments,
   splitStrayEmbeds, fieldByClass, stripTags, decodeEntities, firstMatch, abs,
+  resolveSoundcloud, findMp3,
 };
