@@ -265,6 +265,11 @@
     // (including the href-rewrite below) from that point on. See home.html's
     // IIFE-wrapped globals for the same guard applied differently.
     var slugChipData = null;
+    // Same as the shell's (index.html); defined here too so a cached older shell
+    // without it can't break the href rewrite below.
+    window.prettySlug = window.prettySlug || function (slug) {
+      return String(slug || '').replace(/(-\d{4})-\d+$/, '$1');
+    };
 
     function initializeYearEndListsHover() {
       const previewWrap = document.getElementById('preview-wrap');
