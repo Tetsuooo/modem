@@ -444,6 +444,11 @@
 
   <script src="https://w.soundcloud.com/player/api.js"></script>
   <script>
+    // Same as the shell's (index.html); defined here too so a cached older shell
+    // without it can't break this page.
+    window.prettySlug = window.prettySlug || function (slug) {
+      return String(slug || '').replace(/(-\d{4})-\d+$/, '$1');
+    };
     window.initArchive = function initArchive() {
       const detailView = document.getElementById('archive-detail-view');
       const searchView = document.getElementById('archive-search-view');
