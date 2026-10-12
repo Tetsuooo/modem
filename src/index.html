@@ -242,6 +242,15 @@
     <a href="/support">support</a>
   </nav>
   <script>
+    // Public URL for an archive record. Radio Študent's CMS suffixed a clashing
+    // slug ("best-releases-of-2024-0": "best-releases-of-2024" was taken by the
+    // labels list); the data keeps their slug, our links drop the suffix.
+    // archive.html resolves both forms and rewrites the old one.
+    window.prettySlug = function (slug) {
+      return String(slug || '').replace(/(-\d{4})-\d+$/, '$1');
+    };
+  </script>
+  <script>
     // Expose nav's real rendered height as --nav-h so fixed full-viewport
     // overlays (show detail / search) can stop their own top edge there
     // instead of running full-height behind nav's translucent background.
@@ -630,7 +639,7 @@
 
       // ---- Path-based routing --------------------------------------------------
       // Known page fragments; EVERY other path segment is an archive record slug
-      // (e.g. /modem-142, /best-releases-of-2024-0). A slug loads the archive
+      // (e.g. /modem-142, /best-releases-of-2024). A slug loads the archive
       // fragment, whose own router then reads the slug from location.pathname and
       // renders that detail. Back-compat: legacy /archive#slug still resolves via
       // archive.html's slugFromHash().
@@ -1155,7 +1164,7 @@
       function trackRow(tk) {
         // real track art only — no show-cover fallback (blank square if missing)
         const cover = tk.artUrl || '';
-        const badges = (tk.shows || []).map((s) => '<a class="track-show" href="/' + esc(s.slug) + '">' + esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>').join('');
+        const badges = (tk.shows || []).map((s) => '<a class="track-show" href="/' + esc(prettySlug(s.slug)) + '">' + esc(s.type === 'list' ? prettySlug(s.slug).replace(/-/g, ' ') : 'modem ' + s.number) + '</a>').join('');
         const playable = canPlay(tk);
         const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' + (cover ? '<img class="track-thumb" loading="lazy" src="' + esc(cover) + '" alt="">' : '<span class="track-thumb"></span>') + '</span>';
         return '<div class="track-row" data-key="' + esc(tk.key) + '">' + thumb +

@@ -470,7 +470,7 @@
         if (!slug) return;
         // Clean path URL (/modem-142); re-route in place. The shell's popstate
         // handler re-routes when the user navigates back across these entries.
-        history.pushState({}, '', '/' + slug);
+        history.pushState({}, '', '/' + prettySlug(slug));
         withData(route);
       }
       prevBtn.onclick = () => goToSlug(prevBtn.dataset.slug);
@@ -2081,8 +2081,8 @@
         function trackRow(tk) {
           const cover = tk.artUrl || ''; // real track art only; blank square if missing
           const badges = (tk.shows || []).map((s) =>
-            '<a class="track-show" href="/' + esc(s.slug) + '">' +
-            esc(s.type === 'list' ? String(s.slug).replace(/-0$/, '').replace(/-/g, ' ') : 'modem ' + s.number) + '</a>'
+            '<a class="track-show" href="/' + esc(prettySlug(s.slug)) + '">' +
+            esc(s.type === 'list' ? prettySlug(s.slug).replace(/-/g, ' ') : 'modem ' + s.number) + '</a>'
           ).join('');
           const playable = (tk.kind === 'soundcloud' || !!tk.scPlay) && (tk.shows || []).some((s) => s.type === 'show');
           const thumb = '<span class="track-thumb-wrap' + (playable ? ' play' : '') + '">' +
@@ -2158,7 +2158,15 @@
         }
         if (raw.indexOf('q=') === 0) return renderSearch(data, { query: decodeURIComponent(raw.slice(2)) });
         const slug = slugFromPath() || slugFromHash();
-        if (slug && bySlug[slug]) renderDetail(bySlug[slug], records);
+        // clean URLs (/best-releases-of-2024) map back to the record's own slug
+        const rec = slug && (bySlug[slug] || records.find((r) => prettySlug(r.slug) === slug));
+        if (rec) {
+          // old suffixed path (/best-releases-of-2024-0) → show the clean one
+          if (slugFromPath() && slugFromPath() !== prettySlug(rec.slug) && history.replaceState) {
+            history.replaceState(history.state, '', '/' + prettySlug(rec.slug) + location.search + location.hash);
+          }
+          renderDetail(rec, records);
+        }
         else renderSearch(data, {});
       }
 

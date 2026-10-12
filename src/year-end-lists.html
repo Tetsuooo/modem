@@ -451,7 +451,7 @@
           document.querySelectorAll('.list-item[href]').forEach((a) => {
             const slug = (a.getAttribute('href') || '').split('/').pop();
             if (slug && local.has(slug)) {
-              a.setAttribute('href', '/' + slug);
+              a.setAttribute('href', '/' + prettySlug(slug));
               a.classList.add('in-archive');
             }
           });
