@@ -7,21 +7,12 @@
 // picks the edits up at the next publish, whose pipeline always ends with
 // apply-overrides.js — and, when an edit was taken back since the last publish,
 // first re-derives the archive from source (see server.js /publish-run and
-// undoesSomething() below). The archive itself is therefore only ever changed by
+// scripts/overrides-diff.js). The archive itself is therefore only ever changed by
 // a publish and pushed straight after; left modified for days it would make
 // every Sync's `git pull` fail as soon as the automatic GitHub update commits its own copy.
 const { getArchive, getOverrides, writeJsonAtomic, OVERRIDES_FILE } = require('./archive-cache');
-
-// True when `next` takes something back that `prev` had applied: a merge removed
-// or pointed at a different name, an edit reset, a segment edit dropped. The
-// archive no longer holds the original spelling in those cases, so applying the
-// overrides on top isn't enough — it has to be re-derived from source
-// (scrape-modem.js --reparse, bracketed by scripts/reparse-guard.js).
-function undoesSomething(prev, next) {
-  prev = prev || {}; next = next || {};
-  const gone = (a, b, same) => Object.keys(a || {}).some((k) => !(k in (b || {})) || (same && JSON.stringify(a[k]) !== JSON.stringify(b[k])));
-  return gone(prev.tagMerges, next.tagMerges, true) || gone(prev.tagEdits, next.tagEdits, false) || gone(prev.segEdits, next.segEdits, false);
-}
+// Does a save TAKE BACK something already applied? (see scripts/overrides-diff.js)
+const { undoesSomething } = require('../scripts/overrides-diff');
 
 function mount(app) {
   // ---------- /tags/summary — every artist/label tag with its use count ----

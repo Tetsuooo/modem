@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { execFileSync, spawn } = require('child_process');
+const { undoesSomething } = require('./scripts/overrides-diff');
 const app = express();
 
 app.use(express.json({ limit: '4mb' }));
@@ -75,20 +76,38 @@ const ADMIN_PW = process.env.ADMIN_PW || 'modem'; // dev default — set ADMIN_P
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'src', 'admin.html'));
 });
-// Admin save: write the human-edit overrides, then re-derive the archive from
-// source (reparse cache → rebuild → re-apply SC links → apply overrides) so the
-// edit is durable and un-merges revert cleanly. All cache-only → fast.
+// Admin save (the /admin page and the inline editor on show pages): write the
+// human-edit overrides, then apply them to the archive so the local preview
+// shows the result. Same rule as the show builder's publish pipeline:
+//   • new merges / new or changed edits → just apply-overrides.js on the
+//     archive as it is, nothing else moves;
+//   • something TAKEN BACK (a merge undone, an edit reset) → re-derive from
+//     source first so the original spelling returns — scrape-modem.js
+//     --reparse, bracketed by reparse-guard.js. A bare --reparse used to run on
+//     EVERY save here, and it silently wiped what the radioštudent pages don't
+//     carry: the draft-sourced tags of modem-248/249, backfilled audio, the
+//     segment-marker fixes (see scripts/reparse-guard.js).
+// For the actual site, the show builder's Tags tab + publish is the way; this
+// stays for previewing locally.
 app.post('/save-overrides', (req, res) => {
     try {
         if (!req.body || req.body.password !== ADMIN_PW) return res.status(401).json({ ok: false, error: 'wrong password' });
         const overrides = req.body.overrides || { tagMerges: {} };
-        fs.writeFileSync(path.join(__dirname, 'src', 'assets', 'overrides.json'), JSON.stringify(overrides, null, 2));
+        const file = path.join(__dirname, 'src', 'assets', 'overrides.json');
+        let previous = {};
+        try { previous = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { /* first save */ }
+        const rederive = undoesSomething(previous, overrides);
+        fs.writeFileSync(file, JSON.stringify(overrides, null, 2));
         const run = (script, args = []) => execFileSync(process.execPath, [path.join(__dirname, 'scripts', script), ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-        run('scrape-modem.js', ['--reparse']);
-        run('build-track-index.js');
-        run('apply-sc-matches.js');
+        if (rederive) {
+            run('reparse-guard.js', ['--snapshot']);
+            run('scrape-modem.js', ['--reparse']);
+            run('reparse-guard.js', ['--restore']);
+            run('build-track-index.js');
+            run('apply-sc-matches.js');
+        }
         const log = run('apply-overrides.js');
-        res.json({ ok: true, log });
+        res.json({ ok: true, log, rederived: rederive });
     } catch (e) {
         res.status(500).json({ ok: false, error: String(e.message || e) });
     }

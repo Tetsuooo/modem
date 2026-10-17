@@ -156,12 +156,14 @@ function runSync() {
     const localShared = localSharedDraft();
     const localHistory = readJson(SHOW_HISTORY_FILE, []);
 
-    // An unpushed publish run is the only thing that leaves the archive modified.
+    // Only two things leave the archive modified: a publish run that wasn't
+    // pushed, or a save on the main dev server's local preview (/admin there).
     if (git(['status', '--short', '--', ARCHIVE_REL]).trim()) {
       return {
         ok: false,
-        error: 'There is a publish run that hasn\'t been pushed yet (the site\'s archive is modified on this machine). ' +
-          'Finish it with "Confirm & push" in Publish & Edit first — or, to drop it, run "git checkout -- src/assets/modem-archive.json docs" in the repo folder — then Sync again.',
+        error: 'The site\'s archive is modified on this machine — a publish run that hasn\'t been pushed yet, or a save on the local preview (localhost:8085/admin). ' +
+          'Finish a publish with "Confirm & push" in Publish & Edit — or, to drop the change, run "git checkout -- src/assets/modem-archive.json docs" in the repo folder ' +
+          '(saved tag edits stay saved and still go out with your next publish) — then Sync again.',
       };
     }
 

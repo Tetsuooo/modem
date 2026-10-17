@@ -145,8 +145,9 @@ Same file format as the site's own `/admin` page, so either can be used.
 
 **Sync** never fails on unsaved-to-the-site decisions: if both machines changed
 `approvals.json`/`overrides.json`, Sync merges them entry by entry and keeps this machine's
-edits waiting for its next publish. Sync stops (with an explanation) only if this machine
-has a publish run that wasn't pushed — finish it with **Confirm & push** first.
+edits waiting for its next publish. Sync stops (with an explanation) only if the site's
+archive is modified on this machine — a publish run that wasn't pushed (finish it with
+**Confirm & push**), or a save on the local website preview's `/admin` (see "Older tools").
 
 **Nothing reaches the site until you publish** (Run publish pipeline → Confirm & push), or
 a manual `git push`. (Exception to know about: if decisions have been pushed, the automatic
@@ -199,9 +200,17 @@ from a draft before 2026-10-17 (248, 249) — its original isn't on any page.
 - `show-builder/sync.js` — Sync (now also merges the two decision files, carries the air date).
 
 ### Older tools still around
-The main dev server (`node server.js`, :8085) still has `/match-review` and `/admin`. They
-work, but its `/save-overrides` does an *unguarded* re-derive (loses 248/249's tags) — use
-the Tags tab here instead.
+The main dev server (`node server.js`, :8085 — the local preview of the website) still has
+`/match-review` and `/admin`. Both work, but they're for previewing locally; for the real
+site use the SoundCloud links and Tags tabs here.
+
+- Its `/admin` save follows the same rule as the publish pipeline: new merges/edits are just
+  applied; only an *undo* re-derives, protected by `reparse-guard.js` (until 2026-10-17 it
+  did an unprotected re-derive on every save, which wiped 248/249's tags).
+- Unlike the Tags tab, it changes the site's archive on this machine straight away (so the
+  preview shows it). Sync will then ask you to either publish or drop that change with
+  `git checkout -- src/assets/modem-archive.json docs` — the saved edits themselves stay.
+- `scripts/overrides-diff.js` holds the "is this an undo?" check all three places share.
 
 ### 2026-10-17 change log
 - SoundCloud links: per-track picker + "Find links" in Arrange; backlog tab with free-text
@@ -212,3 +221,4 @@ the Tags tab here instead.
 - Sync merges `approvals.json`/`overrides.json` and carries the air date; explains instead of
   failing on an unpushed publish.
 - `reparse-guard.js` protects draft tags, backfilled audio and segment fixes in a re-derive.
+- The main dev server's `/admin` save no longer re-derives unprotected on every save.
