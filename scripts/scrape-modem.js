@@ -37,6 +37,14 @@ const COVERS_DIR = path.join(ROOT, 'src', 'assets', 'modem_covers');
 function coverFileName(r) {
   return (r.type === 'show' ? `modem${pad(r.number)}` : r.slug) + '.webp';
 }
+// Shows built in the show builder (scripts/add-show-from-draft.js) are NOT scraped:
+// their record comes from the draft that built them, and a copy exactly as built
+// (before tag merges/edits) lives here. A --reparse re-derives them from that copy
+// instead of a radioštudent page, and a plain scrape leaves them alone.
+const BUILDER_FILE = path.join(ROOT, 'src', 'assets', 'builder-shows.json');
+function loadBuilderShows() {
+  try { return JSON.parse(fs.readFileSync(BUILDER_FILE, 'utf8')); } catch (e) { return {}; }
+}
 const BASE = 'https://radiostudent.si';
 const SC_USER = 'https://soundcloud.com/modemodemodem';
 const UA =
@@ -396,7 +404,7 @@ function cachedCurl(cacheKey, url, isLive, force) {
 // there.
 async function ensureCoverArt(records) {
   if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
-  const withCover = records.filter((r) => r.cover && (r.type !== 'show' || r.number));
+  const withCover = records.filter((r) => r.cover && /^https?:/i.test(r.cover) && (r.type !== 'show' || r.number));
   const missing = withCover.filter((r) => !fs.existsSync(path.join(COVERS_DIR, coverFileName(r))));
   if (!missing.length) return;
   console.log(`\nCover art: ${missing.length} record(s) missing a local cover mirror, fetching...`);
@@ -577,7 +585,19 @@ async function main() {
 
   const records = [];
   let liveHits = 0;
+  const builderShows = loadBuilderShows();
   for (const t of targets) {
+    if (builderShows[t.slug]) {
+      if (argv.includes('--reparse')) {
+        const rec = JSON.parse(JSON.stringify(builderShows[t.slug]));
+        if (!rec.soundcloud) rec.soundcloud = resolveSoundcloud(rec.number, { hit: false }); // the upload may have appeared since
+        records.push(rec);
+        console.log(`  ✓ ${t.slug.padEnd(24)} (show builder) artists:${String(rec.artists.length).padStart(2)} labels:${String(rec.labels.length).padStart(2)} embeds:${String(rec.embeds.length).padStart(2)}`);
+      } else {
+        console.log(`  - ${t.slug}: built in the show builder — not re-scraped, kept as is`);
+      }
+      continue;
+    }
     try {
       const live = { hit: false };
       const { body: html, cached } = cachedCurl(`${t.slug}.html`, `${BASE}/glasba/modem/${t.slug}`, live);

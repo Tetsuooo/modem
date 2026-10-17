@@ -409,6 +409,7 @@
   .history-track-list { margin: 0; padding-left: 18px; font-size: 12px; color: #c7c8d1; }
   .history-track-list li { margin: 2px 0; }
 </style>
+<link rel="stylesheet" href="/tools.css">
 </head>
 <body>
 <header>
@@ -419,6 +420,8 @@
     <button class="tab-btn" data-tab="publish">Publish &amp; Edit</button>
     <button class="tab-btn" data-tab="mix">Mix</button>
     <button class="tab-btn" data-tab="covers">Covers</button>
+    <button class="tab-btn" data-tab="sc">SoundCloud links</button>
+    <button class="tab-btn" data-tab="tags">Tags</button>
     <button class="tab-btn" data-tab="history">History</button>
   </nav>
   <div class="header-actions">
@@ -454,6 +457,15 @@
         <label class="compact-toggle" title="hides artist/label/heading editing and the player, so more tracks fit on screen at once — still drag/move/remove-able">
           <input type="checkbox" id="compactViewToggle"> Compact view
         </label>
+        <!-- Bandcamp tracks can stream from a matching SoundCloud upload on the
+             live site — see public/sc-links.js. Per-track picker is the
+             "SoundCloud" line under each Bandcamp row; this finds them all. -->
+        <div class="sc-sidebar-block">
+          <div class="arrange-sidebar-label">SoundCloud links</div>
+          <div id="scSummary" class="status"></div>
+          <button id="scFindAllBtn" title="search SoundCloud for every Bandcamp track below that has no link yet; exact matches are linked automatically, the rest are left for you to review">🔗 Find links</button>
+          <div id="scFindStatus" class="status"></div>
+        </div>
       </aside>
       <div class="arrange-main">
         <h2>Your show (drag to reorder)</h2>
@@ -477,6 +489,7 @@
   <section class="tab-panel" id="panel-publish" hidden>
     <div class="actions">
       <label class="show-num-label">Show # <input type="text" id="showNumber" placeholder="245" size="4"></label>
+      <label class="show-num-label" title="when the show airs — shown on the site. Filled in from the two-week schedule; change it if this show is off-schedule">Air date <input type="text" id="airDate" placeholder="26. 10. 2026" size="11" style="width:92px"></label>
       <button id="generateBtn" class="primary">Generate HTML</button>
       <button id="generateListBtn">Generate artist list</button>
       <button id="previewBtn">Preview</button>
@@ -497,13 +510,16 @@
       <div id="previewPane"></div>
     </div>
     <div id="publishBox">
-      <h2>Publish (after pasting into radioštudent)</h2>
+      <h2>Publish to the site</h2>
+      <p class="status">Builds this show's page on the site straight from your draft — tracklist, artist/label tags, cover — so it doesn't need to be live on radioštudent first. Paste the HTML into radioštudent as before; that's for the radio's own page.</p>
+      <div id="pubCoverStatus" class="status"></div>
       <div class="actions">
-        <button id="checkLiveBtn">Check if live</button>
+        <button id="checkLiveBtn" title="if the show is already on radioštudent, lists anything that differs from your draft (a track dropped, swapped, a heading retyped there…)">Compare with radioštudent</button>
         <span id="liveStatus" class="status"></span>
       </div>
+      <div id="compareOut" class="log" style="max-height:none"></div>
       <div class="actions">
-        <button id="runPublishBtn" disabled>Run publish pipeline</button>
+        <button id="runPublishBtn" class="primary">Run publish pipeline</button>
       </div>
       <div id="publishLog" class="log"></div>
       <div id="publishDiffBox" style="display:none">
@@ -571,6 +587,16 @@
         <canvas id="coverCanvas"></canvas>
       </div>
     </div>
+  </section>
+
+  <section class="tab-panel" id="panel-sc" hidden>
+    <h2>SoundCloud links — Bandcamp tracks from past shows that can stream from SoundCloud</h2>
+    <div id="scTab"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="tab-panel" id="panel-tags" hidden>
+    <h2>Tags — find and merge doubled artist / label tags</h2>
+    <div id="tagsTab"><div class="empty">Loading…</div></div>
   </section>
 
   <section class="tab-panel" id="panel-history" hidden>
@@ -1266,7 +1292,7 @@ function renderSelected() {
     prevRects.set(node.dataset.key, node.getBoundingClientRect());
   });
 
-  if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; return; }
+  if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; if (window.scAfterRender) scAfterRender(); return; }
 
   // Runs of 2+ adjacent items off the same release share one heading — see
   // groupRuns()'s comment. runOf[i] === i marks the first item of such a run.
@@ -1310,6 +1336,7 @@ function renderSelected() {
         <button class="remove" data-index="${i}" title="remove">×</button>
       </div>
       ${playerRow(it)}
+      ${window.scRowHtml ? scRowHtml(it) : ''}
     </div>`;
   }).join('');
   wireDragAndDrop();
@@ -1425,6 +1452,7 @@ function renderSelected() {
   });
   syncMixToShowOrder();
   syncCoverLayersToShowOrder();
+  if (window.scAfterRender) scAfterRender();
 }
 
 // Only a compact status badge lives inline in the row now — once a file is
@@ -2867,6 +2895,15 @@ async function exportCoverPng() {
     await renderCoverCanvas();
     const blob = await new Promise((resolve) => el('coverCanvas').toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('canvas produced no image data');
+    // Keep a copy on the server too — the publish step puts THIS cover on the site.
+    let kept = false;
+    const showNum = el('showNumber').value.trim();
+    if (/^\d+$/.test(showNum)) {
+      try {
+        const r = await fetch(`/cover-save?show=${showNum}`, { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: blob });
+        kept = !!(await r.json()).ok;
+      } catch (e) { /* the download below still happens */ }
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2875,7 +2912,8 @@ async function exportCoverPng() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    el('coverStatus').textContent = 'exported ✓';
+    el('coverStatus').textContent = kept ? 'exported ✓ — and kept for the site' : (/^\d+$/.test(showNum) ? 'exported ✓ (could not keep a copy for the site)' : 'exported ✓ — set the Show # (Publish tab) to also keep it for the site');
+    refreshCoverStatus();
   } catch (e) {
     el('coverStatus').textContent = 'export failed: ' + (e.message || e);
   } finally {
@@ -3036,6 +3074,7 @@ async function saveDraft() {
       body: JSON.stringify({
         selected, mixClips, coverLayers, coverAdjust,
         generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null,
+        airDate: el('airDate').value || null,
       }),
     });
   } catch (e) { /* best-effort */ }
@@ -3061,6 +3100,12 @@ async function loadDraft() {
         if (n && n.next) el('showNumber').value = n.next;
       } catch (e2) { /* leave blank */ }
     }
+    if (j.airDate) {
+      el('airDate').value = j.airDate;
+      // a saved date that isn't the scheduled one was typed by hand — don't overwrite it on a Show # change
+      airDateTouched = j.airDate !== scheduledAirDate(Number(el('showNumber').value));
+    } else refreshAirDateDefault();
+    refreshCoverStatus();
     renderSelected();
     renderMixTimeline();
     // A restored mixClips only carries plain descriptors (see saveDraft's
@@ -3335,33 +3380,71 @@ function renderPreviewPane(record, items) {
   }
 }
 
-// ---------- Publish (after the show is live on radioštudent) ---------------
-async function checkLive() {
+// ---------- Publish ----------------------------------------------------------
+// The site's page for a show is built from the draft (scripts/add-show-from-draft.js),
+// not from the radioštudent page — so "is it live there yet" no longer gates anything.
+// This only compares: if the page IS up, does it still match the draft?
+async function compareLive() {
   const show = el('showNumber').value.trim();
-  if (!show) return;
+  const out = el('compareOut');
+  out.textContent = '';
+  if (!show || !selected.length) { el('liveStatus').textContent = 'needs a Show # and some tracks first'; return; }
   el('checkLiveBtn').disabled = true;
-  el('liveStatus').textContent = 'checking…';
+  el('liveStatus').textContent = 'checking radioštudent…';
   try {
-    const j = await (await fetch(`/publish-check?show=${encodeURIComponent(show)}`)).json();
-    el('liveStatus').textContent = j.live ? `✓ modem-${show} is live` : `✗ not live yet — paste into radioštudent first`;
-    el('runPublishBtn').disabled = !j.live;
+    const j = await (await fetch('/publish-compare', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show, items: selected }),
+    })).json();
+    if (!j.ok) throw new Error(j.error || 'compare failed');
+    if (!j.live) el('liveStatus').textContent = `radioštudent doesn't have modem-${show} yet — nothing to compare (that's fine, the site doesn't need it)`;
+    else if (j.same) el('liveStatus').textContent = `✓ radioštudent matches your draft (${j.headings} headings)`;
+    else {
+      el('liveStatus').textContent = '⚠ radioštudent differs from your draft:';
+      out.textContent = j.differences.join('\n') + '\n\nThe site is built from your draft. To keep radioštudent in step, generate the HTML again and re-paste it there.';
+    }
   } catch (e) {
-    el('liveStatus').textContent = 'check failed: ' + (e.message || e);
+    el('liveStatus').textContent = 'compare failed: ' + (e.message || e);
   } finally {
     el('checkLiveBtn').disabled = false;
   }
 }
 
-async function runPublish() {
+// The two-week schedule (249 aired 12. 10. 2026) — only a default for the air date,
+// same formula as scripts/add-show-from-draft.js.
+function scheduledAirDate(n) {
+  const d = new Date(Date.UTC(2026, 9, 12) + (n - 249) * 14 * 86400000);
+  return `${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${d.getUTCFullYear()}`;
+}
+let airDateTouched = false; // true once the date was typed by hand (or loaded and differs from the schedule)
+function refreshAirDateDefault() {
+  const n = Number(el('showNumber').value.trim());
+  if (!Number.isInteger(n) || n <= 0) return;
+  if (!airDateTouched || !el('airDate').value) { el('airDate').value = scheduledAirDate(n); airDateTouched = false; }
+}
+async function refreshCoverStatus() {
+  const box = el('pubCoverStatus');
+  const n = el('showNumber').value.trim();
+  if (!/^\d+$/.test(n)) { box.textContent = ''; return; }
+  try {
+    const j = await (await fetch(`/cover-status?show=${n}`)).json();
+    box.textContent = j.exists
+      ? `✓ cover exported ${new Date(j.mtime).toLocaleString()} — that's the cover the site will use`
+      : '✗ no cover exported yet for this show — Covers → Export PNG (without one, the site takes the cover from radioštudent if the page is already up there, else has none)';
+  } catch (e) { box.textContent = ''; }
+}
+
+async function runPublish(replace) {
   const show = el('showNumber').value.trim();
   if (!show) return;
+  if (!selected.length) { el('errorsBox').innerHTML = '<div class="errors">there are no tracks in the show yet</div>'; return; }
+  await saveDraft(); // the pipeline reads the draft from disk — make sure it has the latest edits
   el('runPublishBtn').disabled = true;
   el('runPublishBtn').textContent = 'Running…';
   el('publishDiffBox').style.display = 'none';
   el('errorsBox').innerHTML = '';
   let startResult;
   try {
-    const r = await fetch('/publish-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show }) });
+    const r = await fetch('/publish-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show, date: el('airDate').value.trim() || null, replace: !!replace }) });
     startResult = await r.json();
   } catch (e) {
     startResult = { ok: false, error: 'could not reach the server: ' + (e.message || e) };
@@ -3373,6 +3456,12 @@ async function runPublish() {
   if (!startResult.ok) {
     el('runPublishBtn').disabled = false;
     el('runPublishBtn').textContent = 'Run publish pipeline';
+    if (startResult.code === 'exists') {
+      if (confirm(`modem-${show} is already on the site (it was scraped from radioštudent).
+
+Replace it with the version built here from your draft?`)) return runPublish(true);
+      return;
+    }
     const extra = startResult.dirtyFiles ? '<br>' + startResult.dirtyFiles.map(esc).join('<br>') : '';
     el('errorsBox').innerHTML = `<div class="errors">${esc(startResult.error || 'could not start the publish pipeline')}${extra}</div>`;
     return;
@@ -3412,7 +3501,7 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'history'];
+const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'history'];
 // Neither Mix nor Covers needs a tab-switch-triggered auto-fill anymore —
 // syncMixToShowOrder()/syncCoverLayersToShowOrder() both run off
 // renderSelected() regardless of which tab is even visible.
@@ -3423,6 +3512,11 @@ function switchTab(tab) {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
+  // The SoundCloud-links and Tags tabs load their data the first time they're
+  // opened (see public/sc-links.js, public/tags.js).
+  if (tab === 'publish') { refreshAirDateDefault(); refreshCoverStatus(); }
+  if (tab === 'sc' && window.scTabActivated) scTabActivated();
+  if (tab === 'tags' && window.tagsTabActivated) tagsTabActivated();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -3493,11 +3587,13 @@ el('copyListBtn').addEventListener('click', () => {
   setTimeout(() => (el('copyListBtn').textContent = 'Copy to clipboard'), 1200);
 });
 el('previewBtn').addEventListener('click', runPreview);
+el('showNumber').addEventListener('input', () => { refreshAirDateDefault(); refreshCoverStatus(); debouncedSaveDraft(); });
+el('airDate').addEventListener('input', () => { airDateTouched = true; debouncedSaveDraft(); });
 el('openCoversBtn').addEventListener('click', () => {
   fetch('/open-covers-folder', { method: 'POST' }).catch(() => {});
 });
-el('checkLiveBtn').addEventListener('click', checkLive);
-el('runPublishBtn').addEventListener('click', runPublish);
+el('checkLiveBtn').addEventListener('click', compareLive);
+el('runPublishBtn').addEventListener('click', () => runPublish(false));
 el('confirmPushBtn').addEventListener('click', confirmPush);
 el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixJingleBtn').addEventListener('click', addJingleBookend);
@@ -3646,7 +3742,8 @@ async function runSyncClick() {
     if (j.history) renderHistory(j.history);
     status.textContent = j.pushed ? 'synced ✓ (pushed)' : 'synced ✓ (up to date)';
   } catch (e) {
-    status.textContent = 'sync failed: ' + (e.message || e);
+    status.textContent = 'sync failed — see the message above';
+    el('errorsBox').innerHTML = `<div class="errors">sync failed: ${esc(e.message || e)}</div>`;
   } finally {
     btn.disabled = false;
   }
@@ -3663,7 +3760,8 @@ function applySyncedDraft(shared) {
     const local = localByKey.get(incoming.key);
     return local && local._download ? Object.assign({}, incoming, { _download: local._download }) : incoming;
   });
-  if (shared.showNumber) el('showNumber').value = shared.showNumber;
+  if (shared.showNumber) { el('showNumber').value = shared.showNumber; airDateTouched = false; refreshAirDateDefault(); refreshCoverStatus(); }
+  if (shared.airDate) { el('airDate').value = shared.airDate; airDateTouched = shared.airDate !== scheduledAirDate(Number(el('showNumber').value)); }
   if (shared.generatedHtml) {
     el('outputBox').style.display = '';
     el('outputText').value = shared.generatedHtml;
@@ -3740,6 +3838,10 @@ async function clearDraftClick() {
     const n = await (await fetch('/next-show-number')).json();
     el('showNumber').value = (n && n.next) || '';
   } catch (e) { el('showNumber').value = ''; }
+  airDateTouched = false;
+  el('airDate').value = '';
+  refreshAirDateDefault();
+  refreshCoverStatus();
   renderSelected();
   renderScanResults();
   renderMixTimeline();
@@ -3750,6 +3852,13 @@ async function clearDraftClick() {
 el('syncBtn').addEventListener('click', runSyncClick);
 el('clearDraftBtn').addEventListener('click', clearDraftClick);
 
+</script>
+<!-- Tool tabs: loaded after the inline script above (they share its globals)
+     and BEFORE the startup calls below, so the very first render of "Your show"
+     already includes their per-track rows. -->
+<script src="/sc-links.js"></script>
+<script src="/tags.js"></script>
+<script>
 loadArtistLabelNames();
 loadShowHistory();
 loadDraft();

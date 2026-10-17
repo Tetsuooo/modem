@@ -22,6 +22,18 @@
 //    cleared, on whichever machine cleared it → merge = UNION of entries,
 //    deduped by (showNumber + clearedAt) since each clear event is a fact
 //    that happened once, sorted newest-first for display.
+//
+// Two more files ride along WITHOUT being pushed by Sync: scripts/approvals.json
+// and src/assets/overrides.json, the decisions the SoundCloud-links and Tags tabs
+// save locally. They go out with the next publish (that's when the site applies
+// them), but a pull mustn't fail on them — or lose them — when the other machine
+// has published decisions of its own in the meantime. So they're merged here,
+// three-way per entry: start from the remote copy, then re-apply every entry
+// THIS machine changed since its last commit (added, changed or removed).
+//
+// The site's archive (src/assets/modem-archive.json) is never merged: it's only
+// modified locally by a publish run that hasn't been pushed yet, and Sync stops
+// with a plain explanation in that case instead of git's conflict message.
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -90,7 +102,7 @@ function localSharedDraft() {
   });
   let savedAt = 0;
   try { savedAt = fs.statSync(DRAFT_FILE).mtimeMs; } catch (e) { /* no draft yet */ }
-  return { selected, showNumber: draft.showNumber || null, generatedHtml: draft.generatedHtml || null, savedAt };
+  return { selected, showNumber: draft.showNumber || null, airDate: draft.airDate || null, generatedHtml: draft.generatedHtml || null, savedAt };
 }
 
 function pickNewest(a, b) {
@@ -107,6 +119,33 @@ function mergeHistory(local, remote) {
   return [...byKey.values()].sort((a, b) => (b.clearedAt || '').localeCompare(a.clearedAt || ''));
 }
 
+// Three-way merge of a flat { key: value } map: the remote copy, with every key
+// this machine changed since `base` (its last commit) re-applied on top.
+function merge3(base, local, remote) {
+  base = base || {}; local = local || {};
+  const out = { ...(remote || {}) };
+  for (const k of new Set([...Object.keys(base), ...Object.keys(local)])) {
+    if (JSON.stringify(local[k]) === JSON.stringify(base[k])) continue; // untouched here
+    if (k in local) out[k] = local[k]; else delete out[k];
+  }
+  return out;
+}
+
+const DECISION_FILES = [
+  { rel: 'scripts/approvals.json', merge: merge3 },
+  {
+    rel: 'src/assets/overrides.json',
+    merge: (base, local, remote) => {
+      const out = { ...(remote || {}), ...(local || {}) };
+      for (const sec of ['tagMerges', 'tagEdits', 'segEdits']) {
+        out[sec] = merge3((base || {})[sec], (local || {})[sec], (remote || {})[sec]);
+      }
+      return out;
+    },
+  },
+];
+const ARCHIVE_REL = 'src/assets/modem-archive.json';
+
 let syncing = false;
 
 function runSync() {
@@ -117,7 +156,27 @@ function runSync() {
     const localShared = localSharedDraft();
     const localHistory = readJson(SHOW_HISTORY_FILE, []);
 
+    // An unpushed publish run is the only thing that leaves the archive modified.
+    if (git(['status', '--short', '--', ARCHIVE_REL]).trim()) {
+      return {
+        ok: false,
+        error: 'There is a publish run that hasn\'t been pushed yet (the site\'s archive is modified on this machine). ' +
+          'Finish it with "Confirm & push" in Publish & Edit first — or, to drop it, run "git checkout -- src/assets/modem-archive.json docs" in the repo folder — then Sync again.',
+      };
+    }
+
     git(['fetch', 'origin', 'main']);
+
+    // Decision files changed here since the last commit: merge with the remote
+    // copy now, put back after the pull (see the header comment).
+    const decisions = [];
+    for (const d of DECISION_FILES) {
+      const file = path.join(REPO_ROOT, d.rel);
+      const local = readJson(file, null);
+      const base = readAtRef('HEAD', d.rel, null);
+      if (!local || JSON.stringify(local) === JSON.stringify(base)) continue;
+      decisions.push({ rel: d.rel, file, merged: d.merge(base, local, readAtRef('origin/main', d.rel, null)) });
+    }
 
     const remoteUsed = readAtRef('origin/main', USED_REL, []);
     const remoteShared = readAtRef('origin/main', SHARED_DRAFT_REL, null);
@@ -131,11 +190,18 @@ function runSync() {
     // upcoming pull has nothing local to conflict with — our own merge
     // (computed above, from local+remote) gets written back over them right
     // after, regardless of what the pull leaves there.
-    for (const relPath of MANAGED_RELS) {
+    for (const relPath of [...MANAGED_RELS, ...decisions.map((d) => d.rel)]) {
       if (existsAtRef('origin/main', relPath)) git(['checkout', 'origin/main', '--', relPath]);
     }
 
     git(['pull', 'origin', 'main']);
+
+    // Back to this machine's decisions, merged with whatever came in. Left
+    // uncommitted on purpose: they're pushed by the next publish, not by Sync.
+    for (const d of decisions) {
+      writeJson(d.file, d.merged);
+      git(['reset', '-q', '--', d.rel]); // unstage the checkout above — keep it out of Sync's own commit
+    }
 
     writeJson(USED_FILE, mergedUsed);
     if (mergedShared) writeJson(SHARED_DRAFT_FILE, mergedShared);

@@ -3,6 +3,14 @@
 // modem_download.py as-is), drag into order, generate the tracklist HTML to
 // paste into radioštudent. Standalone from the main site's server.js/:8085 —
 // own port, own process, nothing here touches the live site.
+//
+// Also hosts the site-maintenance tools that used to live on :8085 / the
+// site's admin page, so a show can be built and the site tidied in one place:
+//   • per-track + backlog Bandcamp→SoundCloud linking   (sc-links.js, /sc/*)
+//   • doubled-tag finder / merger / per-release editor  (tag-tools.js, /tags/*)
+// Those two DO write to the site's own data (scripts/approvals.json,
+// src/assets/overrides.json, src/assets/modem-archive.json) — the edits go
+// live with the next publish push, like everything else in the working tree.
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -16,12 +24,22 @@ const { curlGet } = require('./lib');
 const { checkDuplicate } = require('./duplicate-check');
 const { getNames } = require('./artist-names');
 const { runSync, getHistory, addHistoryEntry } = require('./sync');
+const scLinks = require('./sc-links');
+const tagTools = require('./tag-tools');
+const { undoesSomething } = tagTools;
+const { compareWithLive } = require('./compare-live');
+const { getArchive } = require('./archive-cache');
 
 // Shared between /publish-run's pre-flight guard and /publish-push's
 // pre-commit guard below — the residue pattern from a real incident (a
 // scrape-modem.js bug re-scraping best-releases-of-2025 alongside an
 // unrelated show, since fixed) that both checks exist to catch.
-const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
+// scripts/approvals.json + src/assets/overrides.json are the files the
+// SoundCloud-links and Tags tabs write (see sc-links.js / tag-tools.js) — their
+// edits are meant to ride along with the next publish, not block it. Same for
+// src/assets/builder-shows.json, the as-built copy of each show published from
+// the draft (scripts/add-show-from-draft.js).
+const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
 const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
 
 const REPO_ROOT = path.join(__dirname, '..');
@@ -83,6 +101,11 @@ app.get('/next-show-number', (req, res) => {
 app.get('/artist-label-names', (req, res) => {
   res.json({ ok: true, ...getNames() });
 });
+
+// ---------- SoundCloud links + tag cleanup tabs ------------------------------
+// Both sets of routes live in their own modules (/sc/* and /tags/*).
+scLinks.mount(app);
+tagTools.mount(app);
 
 // ---------- /scan ----------------------------------------------------------
 app.post('/scan', (req, res) => {
@@ -332,11 +355,49 @@ app.get('/publish-check', (req, res) => {
   }
 });
 
+// ---------- /publish-compare --------------------------------------------------
+// Publishing no longer reads the radioštudent page — the site is built from the
+// draft — so this is the safety net: if the page is live, does it still match
+// the draft? (see compare-live.js). Informational only.
+app.post('/publish-compare', (req, res) => {
+  const { show, items } = req.body || {};
+  if (!show || !Array.isArray(items) || !items.length) return res.status(400).json({ ok: false, error: 'show number and a non-empty track list are required' });
+  try {
+    res.json({ ok: true, ...compareWithLive(String(show), items) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
+});
+
+// ---------- cover export, kept for the site -----------------------------------
+// The Covers tab's "Export PNG" also sends the image here, so publishing can put
+// that exact cover on the site (add-show-from-draft.js converts it to the site's
+// WebP mirror). Lives under downloads/ (gitignored, like every other download).
+const SHOW_COVERS_DIR = path.join(__dirname, 'downloads', '_show_covers');
+app.post('/cover-save', express.raw({ type: '*/*', limit: '40mb' }), (req, res) => {
+  const show = String(req.query.show || '').trim();
+  if (!/^\d+$/.test(show)) return res.status(400).json({ ok: false, error: 'a numeric show number is required' });
+  if (!Buffer.isBuffer(req.body) || req.body.length < 1000) return res.status(400).json({ ok: false, error: 'no image data' });
+  fs.mkdirSync(SHOW_COVERS_DIR, { recursive: true });
+  fs.writeFileSync(path.join(SHOW_COVERS_DIR, `modem-${show}.png`), req.body);
+  res.json({ ok: true, bytes: req.body.length });
+});
+app.get('/cover-status', (req, res) => {
+  const show = String(req.query.show || '').trim();
+  if (!/^\d+$/.test(show)) return res.json({ ok: true, exists: false });
+  try {
+    const st = fs.statSync(path.join(SHOW_COVERS_DIR, `modem-${show}.png`));
+    res.json({ ok: true, exists: true, mtime: st.mtime.toISOString() });
+  } catch (e) {
+    res.json({ ok: true, exists: false });
+  }
+});
+
 // ---------- /publish-run (background job) + /publish-push --------------------
 // Two separate steps, on purpose (confirmed with the user): /publish-run does
-// everything local — scrape the now-live page, rebuild the archive, rebuild
-// docs/ — and stops at a git diff summary. Only /publish-push, a distinct
-// button click, actually commits + pushes to the live site's repo.
+// everything local — build the show's record from the draft, rebuild the
+// archive, rebuild docs/ — and stops at a git diff summary. Only /publish-push,
+// a distinct button click, actually commits + pushes to the live site's repo.
 let publishJob = null; // { running, done, error, log, show, diffSummary }
 
 function runStep(cmd, args, cwd, onDone) {
@@ -353,8 +414,27 @@ function runStep(cmd, args, cwd, onDone) {
 
 app.post('/publish-run', (req, res) => {
   if (publishJob && publishJob.running) return res.json({ ok: true, already: true });
-  const show = req.body && req.body.show;
+  const show = String((req.body && req.body.show) || '').trim();
   if (!show) return res.status(400).json({ ok: false, error: 'missing show number' });
+  if (!/^\d+$/.test(show)) return res.status(400).json({ ok: false, error: 'the show number must be a plain number' });
+  const airDate = req.body.date ? String(req.body.date).trim() : null;
+  if (airDate && !/^\d{1,2}\. ?\d{1,2}\. ?\d{4}$/.test(airDate)) {
+    return res.status(400).json({ ok: false, error: 'the air date must look like 12. 10. 2026' });
+  }
+
+  // A show that's already on the site because it was SCRAPED from radioštudent
+  // (every show before the show builder started publishing from the draft) is not
+  // replaced unless the page says so explicitly — a wrong Show # shouldn't be able
+  // to overwrite an old show with this draft.
+  try {
+    const rec = ((getArchive().records) || []).find((r) => r.slug === `modem-${show}`);
+    if (rec && rec.origin !== 'show-builder' && !req.body.replace) {
+      return res.status(409).json({
+        ok: false, code: 'exists',
+        error: `modem-${show} is already on the site (it was scraped from radioštudent).`,
+      });
+    }
+  } catch (e) { /* archive unreadable — the pipeline will say so itself */ }
 
   // Refuse to start on top of SUSPICIOUS uncommitted changes — but not any
   // dirty tree at all. Every publish run legitimately leaves modem-archive.json/
@@ -410,15 +490,37 @@ app.post('/publish-run', (req, res) => {
     return res.status(500).json({ ok: false, error: 'could not check git status: ' + String(e.message || e) });
   }
 
+  // Tag edits saved in the Tags tab since the last publish are applied by
+  // apply-overrides.js below. If one of them TAKES BACK something already on the
+  // site (a merge undone, an edit reset), the archive no longer has the original
+  // spelling, so it's re-derived from source first — scrape-modem.js --reparse,
+  // bracketed by reparse-guard.js so nothing the pages don't carry is lost.
+  // "Since the last publish" = against the committed overrides.json.
+  let rederive = false;
+  try {
+    const committed = JSON.parse(execFileSync('git', ['show', 'HEAD:src/assets/overrides.json'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }));
+    const working = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'src', 'assets', 'overrides.json'), 'utf8'));
+    rederive = undoesSomething(committed, working);
+  } catch (e) { /* no committed copy / unreadable — nothing to take back */ }
+
   publishJob = { running: true, done: false, error: null, log: [`publishing modem-${show}…`], show, diffSummary: null };
   const node = process.execPath;
+  const script = (name, ...args) => [node, [path.join(REPO_ROOT, 'scripts', name), ...args]];
   const steps = [
-    [node, [path.join(REPO_ROOT, 'scripts', 'scrape-modem.js'), '--shows', `${show}-${show}`]],
-    // Override radiostudent.si's own (often never-filled-in) artist/label
-    // taxonomy fields with the ones already typed into this show's Arrange
-    // tab — see scripts/apply-draft-tags.js for why. No-ops if no local
-    // draft matches this show number.
-    [node, [path.join(REPO_ROOT, 'scripts', 'apply-draft-tags.js'), '--show', String(show)]],
+    // The show's record is built straight from the draft (tracklist HTML, every
+    // artist/label credit, the exported cover) with the same parser the scraper
+    // uses — the radioštudent page is NOT read, so it needn't be live yet and any
+    // edit made only there can't leak in. See scripts/add-show-from-draft.js.
+    // (The old route — scrape-modem.js, then apply-draft-tags.js to put the
+    // draft's tags over radioštudent's — still exists for shows not built here.)
+    [node, [path.join(REPO_ROOT, 'scripts', 'add-show-from-draft.js'), '--show', show,
+      ...(airDate ? ['--date', airDate] : []), ...(req.body.replace ? ['--replace-existing'] : [])]],
+    ...(rederive ? [script('reparse-guard.js', '--snapshot'), script('scrape-modem.js', '--reparse'), script('reparse-guard.js', '--restore')] : []),
+    // Carry the SoundCloud links picked in "Your show" into approvals.json —
+    // must run before apply-sc-matches.js below, which is what turns
+    // approvals.json into `scPlay` on the archive's tracks. No-ops when no
+    // local draft matches this show number.
+    [node, [path.join(REPO_ROOT, 'scripts', 'apply-draft-sc.js'), '--show', show]],
     [node, [path.join(REPO_ROOT, 'scripts', 'build-track-index.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-sc-matches.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-overrides.js')]],

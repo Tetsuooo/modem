@@ -1,0 +1,121 @@
+/* Styles for the SoundCloud-links picker (Arrange), the SoundCloud links tab
+   and the Tags tab — loaded after index.html's own <style>, reuses its palette:
+   #14151a page, #1a1b21 panels, #2a2b33 borders, #3a6ff0 accent. */
+
+/* ---------- shared: small inputs / pills ---------- */
+.sc-input, .tg-input {
+  background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px;
+  padding: 6px 9px; font-size: 13px; font-family: inherit;
+}
+.sc-input:focus, .tg-input:focus { border-color: #3a6ff0; outline: none; }
+.pill-btn { padding: 2px 9px; font-size: 11px; border-radius: 999px; }
+button.accent { background: #3a6ff0; border-color: #3a6ff0; }
+button.accent:hover:not(:disabled) { background: #4a7dff; }
+button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
+.sc-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; flex: none; }
+.sc-badge.ok { background: #1a3a2a; color: #7dffb0; }
+.sc-badge.auto { background: #1a2a3a; color: #66b0ff; }
+.sc-badge.none { background: #2a2b33; color: #9a9ba5; }
+.sc-badge.todo { background: #3a2a1a; color: #ffb066; }
+
+/* ---------- Arrange: per-track SoundCloud row ---------- */
+.sc-row { margin: 0 8px 10px 8px; font-size: 12px; }
+.sc-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #9a9ba5; }
+.sc-line .sc-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6f7080; flex: none; }
+.sc-line .sc-what { color: #c7c8d1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46ch; }
+.sc-line a { color: #66b0ff; text-decoration: none; }
+.sc-line a:hover { text-decoration: underline; }
+.sc-line button { padding: 2px 9px; font-size: 11px; }
+.sc-panel { margin-top: 6px; padding: 8px; background: #1a1b21; border: 1px solid #2a2b33; border-radius: 8px; }
+.sc-panel .sc-panel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: #9a9ba5; }
+.sc-panel .sc-panel-head .grow { flex: 1; }
+.sc-cand { display: flex; flex-direction: column; padding: 6px; margin-bottom: 6px; border: 1px solid #2a2b33; border-radius: 6px; background: #14151a; }
+.sc-cand.picked { border-color: #3ad07a; box-shadow: 0 0 0 1px #3ad07a; }
+.sc-cand-main { display: flex; align-items: center; gap: 10px; }
+.sc-cand-main img, .sc-cand-main .sc-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; background: #2a2b33; flex: none; display: block; }
+.sc-cand-main .meta { flex: 1; min-width: 0; }
+.sc-cand-main .ttl { font-size: 13px; color: #e8e8ea; word-break: break-word; }
+.sc-cand-main .sub { font-size: 12px; color: #9a9ba5; }
+.sc-cand-main .dur { font-size: 11px; color: #6f7080; }
+.sc-cand-main .dur .good { color: #7dffb0; }
+.sc-cand-main .dur .bad { color: #ff8080; }
+.sc-cand-main .dur a { color: #66b0ff; text-decoration: none; }
+.sc-cand-main .canon { color: #7dffb0; }
+.sc-cand-btns { display: flex; gap: 6px; flex: none; }
+.sc-cand-btns button { padding: 4px 10px; font-size: 12px; }
+.sc-frame { margin-top: 6px; }
+.sc-frame iframe { width: 100%; height: 120px; border: 0; border-radius: 6px; display: block; }
+.sc-manual { display: flex; gap: 6px; margin-top: 6px; }
+.sc-manual .sc-input { flex: 1; min-width: 0; }
+.sc-note { font-size: 11px; color: #6f7080; }
+.sc-note.err { color: #ff8080; }
+#selected.compact .sc-row { display: none; }
+.sc-sidebar-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2b33; }
+.sc-sidebar-block button { width: 100%; padding: 5px 4px; font-size: 12px; }
+#scFindStatus { margin-top: 6px; font-size: 11px; line-height: 1.35; }
+
+/* ---------- SoundCloud links tab ---------- */
+.sc-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.sc-bar .sc-input { flex: 1 1 220px; min-width: 160px; }
+.sc-bar .grow { flex: 1; }
+.sc-bar button { padding: 5px 10px; font-size: 12px; }
+.sc-bar button.on { background: #3a3b45; border-color: #3a6ff0; }
+.sc-bar kbd { background: #2a2b33; border-radius: 3px; padding: 0 5px; font-size: 11px; color: #c7c8d1; }
+.sc-bc { display: flex; gap: 12px; align-items: flex-start; padding: 10px; background: #1a1b21; border: 1px solid #3a3b45; border-radius: 8px; }
+.sc-bc > img, .sc-bc > .sc-bc-noimg { width: 96px; height: 96px; object-fit: cover; background: #2a2b33; border-radius: 4px; flex: none; }
+.sc-bc .meta { flex: 1; min-width: 0; }
+.sc-bc .tagline { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #6f7080; }
+.sc-bc .ttl { font-size: 16px; font-weight: 600; word-break: break-word; }
+.sc-bc .sub { font-size: 13px; color: #9a9ba5; word-break: break-word; }
+.sc-bc .dur { font-size: 12px; color: #6f7080; }
+.sc-bc .dur a { color: #66b0ff; text-decoration: none; }
+.sc-bc iframe { width: 100%; height: 120px; border: 0; margin-top: 8px; border-radius: 6px; }
+.sc-h { margin: 14px 0 6px; font-size: 12px; color: #9a9ba5; }
+.sc-actions { display: flex; gap: 8px; align-items: center; margin: 10px 0 24px; flex-wrap: wrap; }
+.sc-donemsg { text-align: center; padding: 40px 10px; color: #9a9ba5; }
+.sc-unsaved { color: #ffb066; }
+
+/* ---------- Tags tab ---------- */
+.tg-sub { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+.tg-sub .grow { flex: 1; }
+.tg-sub button.on { background: #3a3b45; border-color: #3a6ff0; }
+.tg-savebar { display: none; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 12px; background: #2a2616; border: 1px solid #6a5a22; border-radius: 8px; color: #ffd166; }
+.tg-savebar.show { display: flex; }
+.tg-savebar .grow { flex: 1; }
+.tg-h { margin: 18px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; }
+.tg-hint { font-size: 12px; color: #6f7080; margin-bottom: 8px; }
+.tg-cluster { background: #1a1b21; border: 1px solid #3a3b45; border-radius: 8px; padding: 9px 11px; margin-bottom: 8px; }
+.tg-cluster.possible { border-style: dashed; border-color: #4a4b55; }
+.tg-cluster .variants { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.tg-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tg-kind { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; border: 1px solid #4a4b55; border-radius: 4px; padding: 0 5px; color: #9a9ba5; }
+.tg-maybe { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; border: 1px solid #6a4a22; border-radius: 4px; padding: 0 5px; color: #ffb066; }
+.tg-variant {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid #4a4b55; border-radius: 999px;
+  padding: 2px 10px; font-size: 13px; cursor: pointer; background: #14151a; color: #e8e8ea;
+}
+.tg-variant.canon { background: #12301f; border-color: #3ad07a; }
+.tg-variant.sel { background: #3a3416; border-color: #ffd166; }
+.tg-variant .cnt { color: #6f7080; font-size: 11px; }
+.tg-fuzzy-head { margin: 18px 0 8px; font-size: 12px; color: #9a9ba5; }
+.tg-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 320px; overflow-y: auto; padding: 8px; border: 1px solid #2a2b33; border-radius: 8px; background: #101117; }
+.tg-builder { position: sticky; bottom: 0; background: #14151a; padding: 10px 0; border-top: 1px solid #2a2b33; margin-top: 10px; }
+.tg-merge-list { background: #1a1b21; border: 1px solid #2a2b33; border-radius: 8px; }
+.tg-merge-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid #2a2b33; font-size: 13px; }
+.tg-merge-row:last-child { border-bottom: 0; }
+.tg-merge-row .from { text-decoration: line-through; color: #9a9ba5; }
+.tg-merge-row .to { font-weight: 600; }
+.tg-merge-row .grow { flex: 1; }
+.tg-card { background: #1a1b21; border: 1px solid #3a3b45; border-radius: 8px; padding: 9px 11px; margin-bottom: 8px; }
+.tg-card.edited { border-color: #3a6ff0; box-shadow: 0 0 0 1px #3a6ff0; }
+.tg-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tg-card-head img, .tg-card-head .tg-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; background: #2a2b33; flex: none; display: block; }
+.tg-card-title { font-weight: 600; word-break: break-word; }
+.tg-card-sub { font-size: 12px; color: #6f7080; }
+.tg-field { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.tg-field > label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6f7080; width: 50px; flex: none; }
+.tg-field .tg-input { flex: 1 1 200px; }
+.tg-labs { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.tg-lab { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border: 1px solid #4a4b55; border-radius: 999px; padding: 1px 4px 1px 10px; background: #14151a; }
+.tg-lab button { border: 0; background: transparent; color: #ff8080; padding: 0 5px; font-size: 14px; line-height: 1; }
+.tg-addlab { min-width: 130px; flex: 0 1 160px !important; border-style: dashed !important; }
