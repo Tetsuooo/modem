@@ -10,6 +10,49 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-10-17)
+
+**State**
+- Everything below is committed and pushed (commits `7429c81`, `d4282b6`, `2bc989f`).
+  Nothing on the live site has changed yet — the first show published the new way will be
+  the first change.
+- **Desktop:** working copy clean. Restart the show builder before using it (the copy that
+  was running still had the old code).
+- **Surface:** `git pull`, then restart the show builder.
+- Your 3 SoundCloud picks from the review tab are committed; they show up on the site with
+  the next publish.
+- 16 new automatic SoundCloud matches were found on the desktop (tracks added since July).
+  They get recorded in `approvals.json` the next time you press **save** in the SoundCloud
+  links tab **on the desktop** — the candidate list they come from only exists there.
+
+**Checklist for the first real publish (show 250)**
+1. Both machines: pulled + show builder restarted.
+2. Build the show. **Covers → Export PNG with the Show # already set.**
+3. Publish & Edit: check **Show #** and **Air date** (250 → 26. 10. 2026 by the schedule).
+4. Generate HTML → paste into radioštudent. Optional: **Compare with radioštudent**.
+5. **Run publish pipeline** → read the summary. Expect: `src/assets/modem-archive.json`,
+   `docs/…`, `src/assets/builder-shows.json`, the new cover `modem_covers/modem250.webp`,
+   possibly `scripts/approvals.json`.
+6. **Confirm & push**, then look at the show's page on the site.
+Nothing is live until step 6 — if anything looks off before that, just stop.
+
+**Open items / ideas**
+- **modem-249 doesn't match its saved draft.** The draft has a track ("Mifu") and two
+  heading spellings ("4h4, vaber66", "Ein (@ein.garden)") that the radioštudent page — and
+  so the site — doesn't, and two tracks (seaketa / хмора) in the other order. If the draft
+  is the right version, 249 can be re-published from the show builder (it asks before
+  replacing the old page). That draft isn't the one currently open, so ask for help.
+- **A "push site edits" button** — SoundCloud/tag decisions now go live only together with
+  a show publish (or a manual `git push`). A small button to publish just those could be added.
+- **Surface backlog:** the SoundCloud links tab there has no (or a July) candidate list.
+  Run **⟲ find new matches** once on the Surface (several minutes) to review the backlog there.
+- The old preview-server tools (`localhost:8085/match-review`, `/admin`) could be retired now
+  that the show builder has both.
+- `scripts/apply-draft-tags.js` is no longer used by the publish pipeline (kept for the old
+  scrape route, e.g. if a show is ever published the old way again).
+
+---
+
 ## Starting it
 
 - Double-click **`show-builder\start.bat`** — opens a console window (the server)
@@ -212,13 +255,65 @@ site use the SoundCloud links and Tags tabs here.
   `git checkout -- src/assets/modem-archive.json docs` — the saved edits themselves stay.
 - `scripts/overrides-diff.js` holds the "is this an undo?" check all three places share.
 
-### 2026-10-17 change log
-- SoundCloud links: per-track picker + "Find links" in Arrange; backlog tab with free-text
-  search; decisions saved to `approvals.json`, applied at publish.
-- Tags tab (merge duplicates / edit a release), saved to `overrides.json`, applied at publish.
-- Publishing builds a new show from the draft instead of scraping radioštudent; air date
-  field; exported cover used directly; "Compare with radioštudent"; replace-confirm for old shows.
-- Sync merges `approvals.json`/`overrides.json` and carries the air date; explains instead of
-  failing on an unpushed publish.
-- `reparse-guard.js` protects draft tags, backfilled audio and segment fixes in a re-derive.
-- The main dev server's `/admin` save no longer re-derives unprotected on every save.
+---
+
+## Decision log
+
+**2026-10-17 — SoundCloud matching moved into the show builder.** Before: a separate review
+page on the website's preview server (`/match-review`). Now: a SoundCloud line per Bandcamp
+track in Arrange (+ "Find links"), and the backlog as its own tab with a free-text search.
+*Why:* point each track at its SoundCloud version while building the show, and work through
+the ~690 unlinked old tracks in the same tool.
+
+**2026-10-17 — Tag tools moved into the show builder.** The `/admin` tag merge + per-release
+editor became the Tags tab, same `overrides.json` format. *Why:* find doubled tags in the
+same place. While porting: the old editor dropped the `artists` list (collab credits) and
+`title` fixes of 178 existing edits when it saved one — the new one keeps them.
+
+**2026-10-17 — New shows are published from the draft, not scraped from radioštudent.**
+*Why:* Matej edits shows only in the show builder. Scraping meant waiting for the page to be
+live, losing tags whenever radioštudent's own tag fields were empty (the modem-248 incident),
+and picking up hand-edits made only there — a check found 249's page and draft had drifted
+apart. Old shows (≤ 249) stay as scraped. Safety nets: "Compare with radioštudent", a warning
+when the copied HTML is older than the draft, a confirm before replacing an old show.
+
+**2026-10-17 — The SoundCloud and Tags tabs save decisions only; the publish applies them.**
+First version applied them to the site's archive immediately. *Why changed:* an archive left
+modified on one machine made Sync's `git pull` fail as soon as the automatic GitHub update
+committed its own copy. Also keeps the rule simple: nothing reaches the site until you publish.
+Sync now merges the two decision files entry by entry instead.
+
+**2026-10-17 — Automatic exact SoundCloud matches are written into `approvals.json` on save.**
+*Why:* the candidate list is a local file per machine, so a match living only there would be
+dropped again by a publish from the other machine. (The old review page did the same.)
+Checked: all 1,562 links already on the site were recorded, so none were at risk.
+
+**2026-10-17 — Re-derive from the radioštudent pages only when an edit is undone, and always
+guarded.** *Why:* a bare `scrape-modem.js --reparse` (which the old admin ran on every save)
+wiped modem-248/249's tags, 249's episode audio, and shifted heading labels on 195/224/244.
+`reparse-guard.js` puts those back; shows built from the draft use their as-built copy.
+
+**2026-10-17 — The website preview server's `/admin` save fixed the same way** (it still
+updates the local archive right away, so the preview shows it).
+
+---
+
+## How it was tested (2026-10-17)
+
+All in throwaway copies of the repo against the real data, never the real working copy:
+- Batch SoundCloud finder before vs after moving its code into a shared module: identical
+  output for all 3,101 Bandcamp tracks.
+- Arrange: find, "Find links" (adopts links already on record, auto-links exact matches),
+  preview, pick, paste, none; picks survive a reload; hidden in Compact view.
+- SoundCloud links tab: keyboard picks, search, save.
+- Tags tab: merge, edit a release (existing collab lists and title fixes kept), save.
+- A test show 250 built from the 249 draft through the real UI: record, 20 tracks indexed,
+  cover, `docs/` rebuilt, page rendered in the website preview; refused to replace the old
+  scraped 249 without confirmation; survives a later re-derive; never re-scraped.
+- Undo path: the un-merged spelling comes back; 248/249 tags and audio and the 195/224/244
+  headings unchanged; no year-end list touched (so the push guard stays quiet).
+- Two machines with a fake GitHub: decisions on one while the other publishes → Sync merges
+  both; Sync explains instead of failing on an unpushed publish; the air date travels.
+- Old preview-server `/admin` save: additive and undo.
+
+Not tested: a real publish to the live site — the first one will be show 250.
