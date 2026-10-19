@@ -10,6 +10,19 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-10-19, late)
+
+**New: the site has a live tracklist under every show** (now playing, start times, jump to
+a track; slim version in the floating player). For this tool that means:
+- **Tracklist tab** (new): fix track start times by hand while listening. Save → **Publish
+  site edits**. See "Tracklist: fixing start times by hand" below.
+- **Publishing a show** now also writes its exact track times from the **Mix tab**. Publish
+  from the machine where you mixed (the mix isn't synced), and upload the exact export to
+  SoundCloud.
+- **Before using it:** restart the show builder (`start.bat`) on this PC and `git pull` +
+  restart on the Surface. The new tab and the publish steps only exist after a restart.
+- How the times were made, and the data: `scripts/tracklists/README.md`.
+
 ## Where we left off (2026-10-19)
 
 **New: the Edit site tab** (was "Tags") — see "Edit site" below.

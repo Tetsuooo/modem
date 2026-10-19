@@ -112,20 +112,36 @@ and yt-dlp.
 - **Show 162's 28 estimates** are a ringtone medley (~30 ten-second pieces at 52–59 min) with
   5 of them matched, so the estimates are within seconds.
 
-## Where we left off (2026-10-19 evening)
+## Where we left off (2026-10-19, late)
 
-- Everything is on the branch `live-tracklist`, **uncommitted and not pushed**: `src/archive.html`,
-  `src/index.html`, `src/assets/show-timestamps.json`, and this folder. Matej OK'd the look on a
-  phone. Push only when he says so.
-- The full run over all 249 shows was still going (log: `E:/ART/websites/modem-tracklists-work/run.log`).
-  When it ends:
-  1. run `site_json` into `src/assets/show-timestamps.json`
-  2. rebuild the preview
-  3. look at the weak spots: shows with many estimated tracks, playlists that didn't fit
-  4. give Matej a breakdown
-- `src/assets/overrides.json` shows as modified from line endings only. Leave it out of commits.
-- Open idea: copy the Mac's `~/Music/iTunes/iTunes Media` to this PC and re-run. About 2300
-  playlist tracks lived there, which would fill most of the estimated gaps.
+**All live and pushed.** Commits on main:
+- `b98a6f8` live tracklist + data for 243 shows + timestamps from the Mix tab on publish
+- `bc03a00` floating player shows artist, then title, then label
+- `a5af27a` show builder **Tracklist** tab for fixing start times by hand
+- `df7c58a` ignore `__pycache__` (an untracked one made the publish check refuse)
+
+Checked on the live site: show 60's list, jumping to a track, no page errors.
+
+**Next (Matej, 2026-10-20):**
+1. Restart the show builder on this PC (the one open then was the old code), and pull on the
+   Surface.
+2. Fix estimated starts in the Tracklist tab, then **Publish site edits**.
+   - Worth the effort: early 2017–2018 shows (11, 21, 24, 26 …) and 130–140 (no playlist,
+     page order).
+   - Not worth it: 162 looks bad, but its estimates are a ringtone medley, already within
+     seconds.
+
+**Good to know:**
+- The work folder `E:/ART/websites/modem-tracklists-work` (fingerprints, result.json per show,
+  run.log) makes re-runs quick. Keep it; it's a few GB. Re-run one show by deleting its
+  `result.json`.
+- The Mac (`\192.168.100.6`) must be on with File Sharing and logged in from Windows for runs
+  to read its files. With `MODEM_MAC=''` runs skip it.
+- About 170 playlist tracks weren't found anywhere (not on D:, not on the Mac, no stream). They
+  stay estimated unless fixed by hand.
+- Ideas not done:
+  - verify a builder-timed show against its SoundCloud upload once one is published
+  - a "check this show" button that re-runs matching for one show from the Tracklist tab
 
 ## New shows: timed by the show builder
 
