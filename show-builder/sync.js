@@ -137,7 +137,7 @@ const DECISION_FILES = [
     rel: 'src/assets/overrides.json',
     merge: (base, local, remote) => {
       const out = { ...(remote || {}), ...(local || {}) };
-      for (const sec of ['tagMerges', 'tagEdits', 'segEdits']) {
+      for (const sec of ['tagMerges', 'tagEdits', 'segEdits', 'timeEdits']) {
         out[sec] = merge3((base || {})[sec], (local || {})[sec], (remote || {})[sec]);
       }
       return out;

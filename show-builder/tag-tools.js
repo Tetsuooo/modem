@@ -61,6 +61,10 @@ function mount(app) {
       return res.status(400).json({ ok: false, error: 'overrides must be an object with a tagMerges map' });
     }
     try {
+      // The Tracklist tab's start-time fixes (timeEdits) are saved by its own route
+      // (time-tools.js); this tab may hold an older copy of them — keep what's on disk.
+      const onDisk = getOverrides();
+      if (onDisk.timeEdits) o.timeEdits = onDisk.timeEdits; else delete o.timeEdits;
       writeJsonAtomic(OVERRIDES_FILE, o);
       res.json({ ok: true });
     } catch (e) {

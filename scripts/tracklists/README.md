@@ -93,6 +93,25 @@ and yt-dlp.
 - Weakest: 162 (51 short pieces, 23 matched) and the early 2017–2018 shows (fewer files). Shows
   130–140 have no iTunes playlist and use the page order.
 
+## Fixing start times by hand (show builder → Tracklist tab)
+
+- **Where fixes live:** `src/assets/overrides.json` → `"timeEdits"`, a flat map
+  `"<slug>::<rowId>": seconds | false` (false = not played, hidden on the site). rowId = the
+  track's key, or `n:<artist title>` for a track that isn't on the show page.
+- **Saving:** the tab saves through `show-builder/time-tools.js` (`/times/*`), merged into the
+  file on disk. The Edit site tab's save and the local site preview's `/save-overrides` keep
+  `timeEdits` as they are on disk. Sync merges it per entry (`show-builder/sync.js`).
+- **Applying:** `apply-timestamp-edits.js` puts them into `show-timestamps.json`. An edited row
+  keeps its own time in `t0`/`approx0`, so a fix taken back restores it, and it can run any
+  number of times. It runs in both publish pipelines, `/publish-discard` resets the file, and
+  `build_tracklists.py`'s `site_json` re-applies it after regenerating the file. The site skips
+  `hidden` rows.
+- **Tested (2026-10-19, throwaway worktree, builder on :8190):** played show 162; set a start
+  with "now", nudged it, marked one "not played", saved, saved tags (the fixes stayed),
+  applied, built the site. Show 162 then showed 50 tracks, the fixed one at 0:05 without "~".
+- **Show 162's 28 estimates** are a ringtone medley (~30 ten-second pieces at 52–59 min) with
+  5 of them matched, so the estimates are within seconds.
+
 ## Where we left off (2026-10-19 evening)
 
 - Everything is on the branch `live-tracklist`, **uncommitted and not pushed**: `src/archive.html`,

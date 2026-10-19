@@ -27,6 +27,7 @@ const { runSync, getHistory, addHistoryEntry } = require('./sync');
 const scLinks = require('./sc-links');
 const tagTools = require('./tag-tools');
 const siteTools = require('./site-tools');
+const timeTools = require('./time-tools');
 const { undoesSomething } = tagTools;
 const { compareWithLive } = require('./compare-live');
 const { getArchive } = require('./archive-cache');
@@ -105,9 +106,10 @@ app.get('/artist-label-names', (req, res) => {
 });
 
 // ---------- SoundCloud links + Edit site tabs --------------------------------
-// The routes live in their own modules (/sc/*, /tags/*, /site/*).
+// The routes live in their own modules (/sc/*, /tags/*, /site/*, /times/*).
 scLinks.mount(app);
 tagTools.mount(app);
+timeTools.mount(app);
 siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------
@@ -612,6 +614,8 @@ app.post('/publish-run', (req, res) => {
     [node, [path.join(REPO_ROOT, 'scripts', 'build-track-index.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-sc-matches.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-overrides.js')]],
+    // hand-set tracklist start times (Tracklist tab) over the show's timestamps
+    [node, [path.join(REPO_ROOT, 'scripts', 'tracklists', 'apply-timestamp-edits.js')]],
     WEBPACK_STEP,
   ];
   runJob(steps);
@@ -671,6 +675,7 @@ app.post('/publish-edits-run', (req, res) => {
     script('build-track-index.js'),
     script('apply-sc-matches.js'),
     script('apply-overrides.js'),
+    script(path.join('tracklists', 'apply-timestamp-edits.js')),
     WEBPACK_STEP,
   ]);
   res.json({ ok: true, started: true });
@@ -685,7 +690,7 @@ app.post('/publish-discard', (req, res) => {
   try {
     const files = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
     if (files.some((f) => SHOW_PUBLISH_OUTPUT.test(f))) return res.status(409).json({ ok: false, error: 'a show publish is waiting to be pushed — not touching it' });
-    execFileSync('git', ['checkout', '--', 'src/assets/modem-archive.json', 'docs'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    execFileSync('git', ['checkout', '--', 'src/assets/modem-archive.json', 'src/assets/show-timestamps.json', 'docs'], { cwd: REPO_ROOT, encoding: 'utf8' });
     publishJob = null;
     res.json({ ok: true });
   } catch (e) {

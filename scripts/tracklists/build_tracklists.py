@@ -464,6 +464,11 @@ def site_json(work, out_path):
         shows[r['slug']] = {'source': 'audio-match', 'tracks': tr}
     shows.update(builder)
     json.dump({'version': 1, 'shows': shows}, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    # Matej's hand-set start times (show builder's Tracklist tab) go back on top
+    repo_file = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'src', 'assets', 'show-timestamps.json'))
+    if os.path.abspath(out_path) == repo_file:
+        r = subprocess.run(['node', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'apply-timestamp-edits.js')], capture_output=True, text=True)
+        print((r.stdout or r.stderr).strip())
     return len(shows)
 
 

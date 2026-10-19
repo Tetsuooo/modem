@@ -126,7 +126,32 @@ The page may need a hard refresh (Ctrl+F5) the first time.
 | **Covers** | Cover generator. **Export PNG** also keeps a copy for the site. |
 | **SoundCloud links** | The backlog: every Bandcamp track from past shows that could stream from SoundCloud. |
 | **Edit site** | How each show is tagged (per heading, per track); merge doubled tags; fix one release's tags; **Publish site edits**. |
+| **Tracklist** | Set where tracks start in a show (the site's live tracklist), while listening to it. See below. |
 | **History** | Past shows archived by "Start fresh". |
+
+### Tracklist: fixing start times by hand
+
+Every show page has a live tracklist (`scripts/tracklists/README.md`). Most start times were
+found by matching the audio; the ones it couldn't find are estimated and marked **~**. Shows
+published from the Mix tab are exact already.
+
+1. **Tracklist** tab → pick a show. The list puts the shows with the most estimates first.
+2. **▶ play**. It's the show's own SoundCloud upload, the same audio the site plays. Click the
+   timeline to jump. Markers: white = matched, orange = estimated, green = set by you.
+3. For a track:
+   - **now** sets its start to where the show is playing (press it as the track begins)
+   - or type the time (`12:34.5`, Enter)
+   - **−1 / +1** nudge it
+   - **▶** plays from just before it
+   - **not played** hides it on the site (for playlists that held tracks that weren't
+     actually in the show)
+   - **↺** takes your fix back
+4. **Save fixes**, then **Publish site edits** (Edit site tab) to put them online, like tag
+   edits.
+
+The fixes are saved in `src/assets/overrides.json` → `timeEdits` and travel with **Sync** like
+tag edits. A publish applies them (`scripts/tracklists/apply-timestamp-edits.js`), and a later
+matching run never loses them.
 
 ---
 

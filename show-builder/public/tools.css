@@ -163,3 +163,27 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .se-tedit.on { border-color: #3a6ff0; }
 .se-tcard { margin: 4px 0 6px 30px; }
 .se-untied { margin-top: 12px; }
+
+/* ---------- Tracklist tab (public/timestamps.js) ---------- */
+.tt-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 10px 0 14px; }
+.tt-bar select { max-width: 560px; }
+.tt-player { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; position: sticky; top: 58px; z-index: 3; background: #14151a; padding: 8px 0; }
+.tt-player .grow { flex: 1; }
+.tt-clock { font-variant-numeric: tabular-nums; font-size: 15px; min-width: 130px; }
+.tt-timeline { position: relative; height: 40px; background: #1a1b21; border: 1px solid #2a2b33; border-radius: 6px; cursor: pointer; margin: 6px 0 4px; overflow: hidden; }
+.tt-mark { position: absolute; top: 6px; bottom: 6px; width: 2px; margin-left: -1px; background: #c7c8d1; }
+.tt-mark.est { background: #ffb066; }
+.tt-mark.fixed { background: #3ad07a; }
+.tt-head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #3a6ff0; left: 0; box-shadow: 0 0 0 1px rgba(58,111,240,.4); }
+.tt-rows { display: flex; flex-direction: column; gap: 4px; }
+.tt-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #1a1b21; border: 1px solid #2a2b33; border-radius: 6px; }
+.tt-row.est { border-color: #6a4a22; }
+.tt-row.current { box-shadow: 0 0 0 2px #3a6ff0; }
+.tt-row.hidden { opacity: .45; }
+.tt-row img, .tt-row .tt-noart { width: 30px; height: 30px; object-fit: cover; border-radius: 3px; background: #2a2b33; flex: none; }
+.tt-row .tt-time { width: 78px; font-variant-numeric: tabular-nums; text-align: right; flex: none; }
+.tt-row .tt-time.bad { border-color: #ff6b6b; }
+.tt-row .tt-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-row .tt-artist { color: #9a9ba5; }
+.tt-row button { padding: 3px 9px; font-size: 12px; flex: none; }
+.tt-row .sc-badge { width: 84px; text-align: center; }

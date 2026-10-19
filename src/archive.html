@@ -1116,7 +1116,7 @@
           const byKey = new Map(tracks.map((t) => [t.key, t]));
           // a row is either one of the page's tracks (key -> its art + links) or a track
           // that was played but isn't on the page (just its title/artist, from the playlist)
-          rows = entry.tracks.map((x) => {
+          rows = entry.tracks.filter((x) => !x.hidden).map((x) => { // hidden: marked "not played" in the show builder
             const tk = x.key && byKey.get(x.key);
             return { t: x.t, approx: !!x.approx, playlistOnly: !tk, tk: tk || { title: x.title, artist: x.artist } };
           });
