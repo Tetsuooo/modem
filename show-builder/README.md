@@ -26,8 +26,22 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   edit was not searchable under the new name; and the text came out differently after an
   undo); a heading edited to have no label clears its tracks' labels in the same build.
 
-**State:** committed locally, not pushed. Your next push (Publish site edits or a show
-publish) takes it along. The Surface gets it with `git pull` + restart, as usual.
+**State (end of 2026-10-19):** pushed to GitHub (`f7de956` code, then these notes).
+- **Desktop:** up to date; the show builder running there already has the new tab.
+- **Surface:** close the show builder → `git pull` → `start.bat` (no `npm install` needed —
+  no new packages). Ctrl+F5 in the browser if the tab still says "Tags".
+- **The live site did not change** — this was tool code only (`show-builder/`, `scripts/`;
+  GitHub only rebuilds the site for `src/**`). The two pipeline fixes in
+  `scripts/apply-overrides.js` reach the site's data with the next rebuild: your next
+  Publish site edits / show publish, or the automatic Monday/Tuesday update (it runs the
+  scripts from the repo). Expected effect then: modem-249's "Ein" track searchable as
+  "Ein" (was "Ein (@ein.garden)"), nothing else visible.
+- Nothing is waiting to be published (`overrides.json` shows as modified in git only
+  because a save rewrote it with different line endings — same content).
+
+**First real use (suggested):** 249 → heading 3 "Log Planter" → the track's **credits** →
+artist "Log Planter" (it says "Musique Muscle", the uploading account) → ✔ save →
+Publish site edits → preview → Push. Then search the live site for "Log Planter".
 
 **Not done / ideas**
 - Tags that aren't under any heading (e.g. 247's "Minoyimn", most old shows have some)
@@ -181,12 +195,56 @@ and a paste box. **⟲ find new matches** runs the slow batch search for tracks 
 the last one (minutes; runs in the background).
 
 **✔ save** writes your decisions to `scripts/approvals.json` only. **They reach the site
-with your next publish** (the pipeline applies them). Saving also records the airtight
-automatic matches in `approvals.json`, so they're the same on every machine.
+with your next publish** — **Edit site → Publish site edits**, or a show publish (the
+pipeline applies them). Saving also records the airtight automatic matches in
+`approvals.json`, so they're the same on every machine.
 
 ---
 
 ## Edit site (how shows are tagged, doubled tags, publishing)
+
+### Step by step: fixing a show's tags
+1. **Edit site** tab → **Edit a show** (it opens on the last show you looked at).
+2. Type the show number in the box (e.g. `249`) and press Enter. ◀ ▶ = older / newer.
+3. Find the heading. Fix its tags (see "Common fixes" below). Changed headings get a
+   yellow **unsaved** badge; **reset to original** undoes a heading.
+4. **✔ save** (top of the tab). The badge turns green: **not on the site yet**, and the bar
+   at the top says what's waiting ("Saved, not on the site yet: 1 heading · 1 release").
+5. **Publish site edits.** A log runs (about a minute; a few minutes if you undid
+   something). Then a list: what would change on the site, show by show.
+6. **preview on this computer ↗** — the whole site, rebuilt, opened on that show. Check it.
+7. **Push to the live site.** It says "Pushed"; the live page updates within a minute or
+   two (GitHub Pages). Or **discard this build** if you changed your mind — your saved edits
+   stay, nothing went anywhere.
+
+You can fix several shows before publishing — one Publish takes all saved edits.
+
+### Common fixes
+| What you see | What to do |
+|---|---|
+| A label shown as an artist (or the other way round) | **⇄** on that chip |
+| Two names stuck in one chip ("kęnåi, IRIGINO") | click the name → rename to the first; type the second in **+ artist** |
+| A typo / wrong spelling on one heading | click the name, fix, Enter |
+| The same name spelled differently across shows | **Merge duplicates** (fixes it everywhere) instead |
+| A missing tag | type it in **+ artist** / **+ label**, Enter — pick the existing spelling from the suggestions |
+| A track credited to the uploading account (e.g. 249's Log Planter track says "Musique Muscle") | that track's **credits** → artist |
+| An edit you regret | **reset to original** (heading) / **reset to original** in the track's credits |
+
+Rule of thumb: the **heading** chips are what visitors see on the show page; a track's
+**credits** are what search and the player use. A heading with one track updates that
+track too.
+
+### When something goes wrong
+- **"save your changes first"** next to the Publish button — press ✔ save.
+- **"A show publish was run but not pushed yet"** — go to Publish & Edit, finish it with
+  **Confirm & push**; it takes your saved edits along.
+- **"Edits were saved after this run finished"** — press **Publish site edits** again, then push.
+- **"the rebuild failed"** — nothing changed on the site. The log shows the step; your
+  saved edits are still saved. Ask for help with the log.
+- **Sync says the archive is modified** — a Publish site edits build is waiting: push it or
+  **discard this build**.
+- **A chip you expected isn't on the live page after pushing** — wait two minutes and
+  reload with Ctrl+F5 (GitHub Pages caches).
 
 ### Edit a show
 Pick a show (type its number, e.g. `249`, or a list's name; ◀ ▶ step through). Each
