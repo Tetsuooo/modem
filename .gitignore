@@ -13,3 +13,6 @@ show-builder/data/.cache
 show-builder/data/current-draft.json
 show-builder/data/download-manifest.jsonl
 show-builder/data/download-urls.txt
+
+# Python bytecode (scripts/tracklists/*.py)
+__pycache__/
