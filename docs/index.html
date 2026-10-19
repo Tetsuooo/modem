@@ -1578,12 +1578,18 @@
         const tg = window.modemTrackTags(r.tk, r.slug);
         const link = (kind, n) => '<a class="mp-tl-tag" data-kind="' + kind + '" data-name="' + tlEsc(n) + '">' + tlEsc(n) + '</a>';
         const ok = (n) => !r.playlistOnly || window.modemKnownArtist(n);
-        const a = tg.artists.map((n) => (ok(n) ? link('artist', n) : tlEsc(n))).join(' &amp; ');
-        const l = tg.labels.map((n) => link('label', n)).join(', ');
-        return a + (l ? ' · ' + l : '');
+        return {
+          artists: tg.artists.map((n) => (ok(n) ? link('artist', n) : tlEsc(n))).join(' &amp; '),
+          labels: tg.labels.map((n) => link('label', n)).join(', '),
+        };
       };
-      const tlLine = (r) => '<span class="mp-tl-t' + (r.approx ? ' approx' : '') + '">' + tlFmt(r.t) + '</span>' +
-        '<span class="mp-tl-name"><b>' + tlEsc(r.title) + '</b> <i>' + tlTags(r) + '</i></span>';
+      // artist first, then the title, then the label(s)
+      const tlLine = (r) => {
+        const tg = tlTags(r);
+        return '<span class="mp-tl-t' + (r.approx ? ' approx' : '') + '">' + tlFmt(r.t) + '</span>' +
+          '<span class="mp-tl-name">' + (tg.artists ? '<i>' + tg.artists + '</i> ' : '') + '<b>' + tlEsc(r.title) + '</b>' +
+          (tg.labels ? ' <i>· ' + tg.labels + '</i>' : '') + '</span>';
+      };
       function tlSetup(item) {
         tlRows = []; tlCur = -1; tlFor = item; tlLastMs = 0;
         tlEl.hidden = true; tlList.hidden = true;
