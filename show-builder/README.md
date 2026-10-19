@@ -4,9 +4,40 @@ The local tool for putting a modem show together and getting it onto the site:
 scan new music → pick and order tracks → download, mix, make the cover → generate
 the tracklist HTML for radioštudent → publish the show's page on the site. It also
 holds the site-maintenance tools: SoundCloud links for Bandcamp tracks, and the
-doubled-tag finder.
+**Edit site** tab — how every show is tagged, doubled tags, and publishing those edits.
 
-Runs on your own computer only (nothing here is public). Last big update: 2026-10-17.
+Runs on your own computer only (nothing here is public). Last big update: 2026-10-19.
+
+---
+
+## Where we left off (2026-10-19)
+
+**New: the Edit site tab** (was "Tags") — see "Edit site" below.
+- **Edit a show:** pick any show or year-end list; every heading shows the tags the site
+  gives it (checked against the live site: all 270 shows and lists match exactly). Add /
+  rename / remove a tag, ⇄ flips it between artist and label, **credits** fixes one
+  track's own artist/labels. Same data the pencils on the site's local preview wrote —
+  that preview (`node server.js` + `/admin`) isn't needed any more.
+- **Publish site edits:** saved tag edits and SoundCloud-link decisions go live without
+  waiting for a show: rebuild → a list of what changes, in words → **preview on this
+  computer** → **Push to the live site** (or **discard this build**).
+- Fixed on the way: resetting ONE heading of a show with other edited headings now comes
+  back on publish; a track's search text is rebuilt after edits (an artist fixed in an
+  edit was not searchable under the new name; and the text came out differently after an
+  undo); a heading edited to have no label clears its tracks' labels in the same build.
+
+**State:** committed locally, not pushed. Your next push (Publish site edits or a show
+publish) takes it along. The Surface gets it with `git pull` + restart, as usual.
+
+**Not done / ideas**
+- Tags that aren't under any heading (e.g. 247's "Minoyimn", most old shows have some)
+  are only listed, not editable — they'd need a new kind of override.
+- The heading TEXT (e.g. 249's "Log Planter" vs label-first) isn't editable here — the
+  site shows tags instead of that text, so it only matters for radioštudent / the artist
+  list. Fix those in the draft before generating.
+- The automatic GitHub update rebuilds without this computer's `scripts/.cache`, so it
+  drops some SoundCloud playback titles that a rebuild here adds back (seen as "other
+  track details" in a publish summary). Harmless; older than this tab.
 
 ---
 
@@ -42,12 +73,11 @@ Nothing is live until step 6 — if anything looks off before that, just stop.
   so the site — doesn't, and two tracks (seaketa / хмора) in the other order. If the draft
   is the right version, 249 can be re-published from the show builder (it asks before
   replacing the old page). That draft isn't the one currently open, so ask for help.
-- **A "push site edits" button** — SoundCloud/tag decisions now go live only together with
-  a show publish (or a manual `git push`). A small button to publish just those could be added.
+- ~~**A "push site edits" button**~~ — done 2026-10-19 (Edit site → Publish site edits).
 - **Surface backlog:** the SoundCloud links tab there has no (or a July) candidate list.
   Run **⟲ find new matches** once on the Surface (several minutes) to review the backlog there.
 - The old preview-server tools (`localhost:8085/match-review`, `/admin`) could be retired now
-  that the show builder has both.
+  that the show builder has both (and, since 2026-10-19, the per-heading editor too).
 - `scripts/apply-draft-tags.js` is no longer used by the publish pipeline (kept for the old
   scrape route, e.g. if a show is ever published the old way again).
 
@@ -81,7 +111,7 @@ The page may need a hard refresh (Ctrl+F5) the first time.
 | **Mix** | Timeline mix + export (.wav/.mp3). |
 | **Covers** | Cover generator. **Export PNG** also keeps a copy for the site. |
 | **SoundCloud links** | The backlog: every Bandcamp track from past shows that could stream from SoundCloud. |
-| **Tags** | Find and merge doubled artist/label tags; fix one release's tags. |
+| **Edit site** | How each show is tagged (per heading, per track); merge doubled tags; fix one release's tags; **Publish site edits**. |
 | **History** | Past shows archived by "Start fresh". |
 
 ---
@@ -156,8 +186,27 @@ automatic matches in `approvals.json`, so they're the same on every machine.
 
 ---
 
-## Tags (doubled artist/label tags)
+## Edit site (how shows are tagged, doubled tags, publishing)
 
+### Edit a show
+Pick a show (type its number, e.g. `249`, or a list's name; ◀ ▶ step through). Each
+**heading** shows the tags it has on the site — the site shows these chips in place of the
+heading text. White = artist, lavender = label.
+- **click a name** to rename it · **⇄** switch it between artist and label · **×** remove ·
+  type in **+ artist / + label** and Enter to add (suggestions come from existing tags, so
+  you don't make a near-duplicate).
+- An edit replaces that heading's tags as a whole (`segEdits`). **reset to original**
+  drops the edit; the scraped tags come back when you publish.
+- Under each heading: its tracks. **credits** fixes that one track's own artist/labels
+  (`tagEdits`) — what search and the player show. A heading's edit also fixes its track
+  when it has just one.
+- Badges: **unsaved** (press ✔ save) · **not on the site yet** (saved, not published) ·
+  **edited** (an edit that's live).
+- Tags that aren't under any heading are listed at the bottom (the site only shows them in
+  the "all tags" line). Not editable yet.
+- Year-end lists have no headings — their tracks are listed for **credits**.
+
+### Merge duplicates / Edit a release's tags
 - **Merge duplicates**: near-identical spellings found automatically (case, spacing,
   invisible characters, accents), plus looser "possible" guesses (suffixes like
   "Records", one-letter typos). Click the spelling to keep (green), **merge**. Or
@@ -165,12 +214,25 @@ automatic matches in `approvals.json`, so they're the same on every machine.
 - Build a merge by hand from the tag list; undo any active merge.
 - **Edit a release's tags**: find a release, change its artist / labels.
 
-**✔ save** writes `src/assets/overrides.json` only. **They reach the site with your next
-publish.** If you *undid* something since the last publish (removed a merge, reset an
-edit), that publish also rebuilds the site's data from the source pages first, so the old
-spelling comes back — protected so nothing gets lost (see "Technical notes").
+### Saving and publishing
+**✔ save** writes `src/assets/overrides.json` only. Then either:
+- **Publish site edits** (the bar at the top of the tab — it says what's saved but not on
+  the site yet): rebuilds the site with your saved edits **and** any SoundCloud-link
+  decisions, then lists what would change ("modem-249: heading 10 (artists, labels)", how
+  many tracks' credits). **preview on this computer ↗** opens the rebuilt site at
+  `localhost:8091` on the show you're editing. **Push to the live site** commits + pushes;
+  **discard this build** puts the site files back (your saved edits stay).
+- or just wait: a show publish takes all saved edits along.
 
-Same file format as the site's own `/admin` page, so either can be used.
+If you *undid* something since the last publish (removed a merge, reset an edit), the
+rebuild first re-derives the site's data from the source pages, so the old spelling comes
+back — protected so nothing gets lost (see "Technical notes"). It takes a minute longer.
+
+Publish site edits refuses while a show publish is waiting to be pushed (finish that one —
+it takes the edits along), and the push refuses if you saved more edits after the rebuild
+(run it again).
+
+Same file format as the site's own `/admin` page and its pencils, so any of them can be used.
 
 ---
 
@@ -181,8 +243,8 @@ Same file format as the site's own `/admin` page, so either can be used.
 | The code | git | `git pull` (see "Getting the latest version") |
 | Current show (tracks, order, names, SoundCloud picks, show #, air date) | `data/shared-draft.json` | **Sync** |
 | Used tracks, past-shows history | `data/used-tracks.json`, `data/show-history.json` | **Sync** |
-| SoundCloud decisions (backlog tab) | `scripts/approvals.json` | your next **publish** (then Sync/pull on the other one) |
-| Tag merges/edits | `src/assets/overrides.json` | your next **publish** |
+| SoundCloud decisions (backlog tab) | `scripts/approvals.json` | **Publish site edits** or your next show publish (then Sync/pull on the other one) |
+| Tag merges/edits, heading + track edits | `src/assets/overrides.json` | **Publish site edits** or your next show publish |
 | Downloads, mix, cover layers, exported cover | `downloads/`, `data/current-draft.json` | not synced — machine-local |
 | SoundCloud search cache, candidate list | `scripts/.cache/`, `scripts/sc-match-candidates.json` | not synced — rebuilt per machine |
 
@@ -190,10 +252,11 @@ Same file format as the site's own `/admin` page, so either can be used.
 `approvals.json`/`overrides.json`, Sync merges them entry by entry and keeps this machine's
 edits waiting for its next publish. Sync stops (with an explanation) only if the site's
 archive is modified on this machine — a publish run that wasn't pushed (finish it with
-**Confirm & push**), or a save on the local website preview's `/admin` (see "Older tools").
+**Confirm & push** / **Push to the live site**, or **discard this build**), or a save on the
+local website preview's `/admin` (see "Older tools").
 
-**Nothing reaches the site until you publish** (Run publish pipeline → Confirm & push), or
-a manual `git push`. (Exception to know about: if decisions have been pushed, the automatic
+**Nothing reaches the site until you publish** (Run publish pipeline → Confirm & push, or
+Edit site → Publish site edits → Push to the live site), or a manual `git push`. (Exception to know about: if decisions have been pushed, the automatic
 GitHub update applies them too when it adds a new show.)
 
 ---
@@ -208,6 +271,12 @@ GitHub update applies them too when it adds a new show.)
   show publish shouldn't. Look at `git diff -- src/assets/modem-archive.json` before pushing.
 - **"modem-N is already on the site (scraped from radioštudent)"** — confirm only if you
   really mean to replace that old show with your draft.
+- **Publish site edits: "A show publish was run but not pushed yet"** — push (or finish)
+  that show first; it takes the saved edits along.
+- **"Edits were saved after this run finished"** — the rebuilt site doesn't have them;
+  press Publish site edits again, then push.
+- (Publish site edits doesn't do the year-end-list check: a tag merge rightly renames a
+  tag on a list too. Its review lists every changed show/list by name instead.)
 
 ---
 
@@ -224,6 +293,17 @@ GitHub update applies them too when it adds a new show.)
 3. `apply-draft-sc.js --show N` — draft SoundCloud picks → `approvals.json`.
 4. `build-track-index.js` → `apply-sc-matches.js` → `apply-overrides.js` → webpack.
 
+**Publish site edits** (`/publish-edits-run`) is the same without steps 1 and 3; same job,
+same `/publish-status`, same `/publish-push` (commit message "Site edits … via
+show-builder"). `/publish-discard` = `git checkout -- src/assets/modem-archive.json docs`.
+Each run ends with a per-show comparison of the committed and rebuilt archive (the review
+list) and a fingerprint of the two decision files, which `/publish-push` checks.
+
+`apply-overrides.js` rebuilds every track's `searchText` last (same formula as
+`build-track-index.js` + the SoundCloud title/artist `apply-sc-matches.js` appends), so
+edited names are searchable and a re-derive gives the same archive as a normal rebuild
+(checked: identical). On the 2026-10-19 data this changed one track (modem-249 "Ein").
+
 ### Why the re-derive needs a guard
 `scrape-modem.js --reparse` rebuilds every record from cached radioštudent pages. Some
 things aren't on those pages: tags that came from a show-builder draft (e.g. 248, 249),
@@ -237,15 +317,19 @@ from a draft before 2026-10-17 (248, 249) — its original isn't on any page.
 - `scripts/sc-search.js` — SoundCloud lookup/scoring, shared by `find-sc-matches.js` (batch)
   and the show builder (one track at a time). Cache in `scripts/.cache/`.
 - `show-builder/sc-links.js` — `/sc/*` routes. `tag-tools.js` — `/tags/*`.
+  `site-tools.js` — `/site/*`: a show's headings with their chips (`headingsFor()` mirrors
+  `src/archive.html`'s `injectSegTags()` — keep them in step), what's saved but not live,
+  and the local preview of `docs/` on :8091 (`PREVIEW_PORT`).
   `compare-live.js` — "Compare with radioštudent". `jobs.js` — background job queue.
   `archive-cache.js` — the parsed archive, cached.
-- `show-builder/public/sc-links.js`, `tags.js`, `tools.css` — the new tabs' front end.
+- `show-builder/public/sc-links.js`, `tags.js` (the Edit site tab), `tools.css` — the tabs' front end.
 - `show-builder/sync.js` — Sync (now also merges the two decision files, carries the air date).
 
 ### Older tools still around
 The main dev server (`node server.js`, :8085 — the local preview of the website) still has
-`/match-review` and `/admin`. Both work, but they're for previewing locally; for the real
-site use the SoundCloud links and Tags tabs here.
+`/match-review` and `/admin` (and the pencils on show pages once logged in there). All work,
+but they're for previewing locally; for the real site use the SoundCloud links and Edit
+site tabs here.
 
 - Its `/admin` save follows the same rule as the publish pipeline: new merges/edits are just
   applied; only an *undo* re-derives, protected by `reparse-guard.js` (until 2026-10-17 it
@@ -253,7 +337,8 @@ site use the SoundCloud links and Tags tabs here.
 - Unlike the Tags tab, it changes the site's archive on this machine straight away (so the
   preview shows it). Sync will then ask you to either publish or drop that change with
   `git checkout -- src/assets/modem-archive.json docs` — the saved edits themselves stay.
-- `scripts/overrides-diff.js` holds the "is this an undo?" check all three places share.
+- `scripts/overrides-diff.js` holds the "is this an undo?" check all three places share
+  (per heading since 2026-10-19: resetting one heading of a show is an undo too).
 
 ---
 
@@ -296,7 +381,48 @@ wiped modem-248/249's tags, 249's episode audio, and shifted heading labels on 1
 **2026-10-17 — The website preview server's `/admin` save fixed the same way** (it still
 updates the local archive right away, so the preview shows it).
 
+**2026-10-19 — The per-heading editor moved into the show builder ("Edit a show").** Before:
+the pencils on show pages, only when the website's local preview server ran (`node
+server.js` + logging in at `/admin`). Now: the Edit site tab (the Tags tab renamed) shows a
+whole show's headings with their chips, editing the same `segEdits`/`tagEdits`. *Why:*
+Matej asked for site editing without running a script. Its chips are computed the way the
+site computes them (verified: all 270 records identical to the live site), so what you edit
+is what visitors see. Added ⇄ (artist↔label), since a mixed-up artist/label is the common fix.
+
+**2026-10-19 — "Publish site edits": tag and SoundCloud decisions can go live on their own.**
+Same rebuild as a show publish, minus the show; the review lists changed shows/headings in
+words (a line count said nothing); a local preview of the built site before pushing.
+*Why:* decisions otherwise waited up to two weeks for the next show. Refuses while a show
+publish is unpushed (one commit per kind of change); refuses the push if edits were saved
+after the build. Skips the year-end-list push guard — merges rightly touch lists.
+
+**2026-10-19 — Search text rebuilt after the overrides; empty heading labels cascade.**
+*Why:* a track's `searchText` was built before any edit, so a fixed artist wasn't searchable
+under the new name, and an undo rebuild (raw page spellings) gave ~140 tracks different
+search text than a normal one — noise in every review. Same for a heading edited to "no
+label": its tracks kept the old label until a second build. Both checked on the real data:
+1 track's search text changes (the fix itself), 0 labels.
+
 ---
+
+## How it was tested (2026-10-19)
+
+In a throwaway clone with a fake GitHub remote (node_modules + scripts/.cache linked in,
+`reparse-guard-snapshot.json` backed up and restored), against the real data:
+- Chips: `headingsFor()` vs the live site's rendered chips for every show and list (270):
+  identical, incl. packed compilations, empty headings, link-filled old headings.
+- Through the real UI in Chrome: pick by number / list name / ◀ ▶; ⇄, rename, add, remove,
+  track credits, reset of a live edit (→ re-derive path), save; badges.
+- Publish site edits end to end: review ("modem-249: heading 10 (artists, labels)", …),
+  preview on :8191 showed the edited chips, push → one commit on the fake remote with only
+  archive/docs/overrides; the real repo untouched. Second run without an undo; discard
+  restores archive + docs and keeps the saved edit.
+- Guards: nothing to publish; an unpushed show publish; an unrelated file; a save after the
+  build (push refused, nothing reached the remote).
+- `apply-overrides.js`: normal rebuild vs undo rebuild → identical archives; old vs new script
+  on the committed archive → 1 search text differs.
+
+Not tested: a real push to the live site — the first Publish site edits will be the first.
 
 ## How it was tested (2026-10-17)
 

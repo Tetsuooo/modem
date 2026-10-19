@@ -119,3 +119,47 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .tg-lab { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border: 1px solid #4a4b55; border-radius: 999px; padding: 1px 4px 1px 10px; background: #14151a; }
 .tg-lab button { border: 0; background: transparent; color: #ff8080; padding: 0 5px; font-size: 14px; line-height: 1; }
 .tg-addlab { min-width: 130px; flex: 0 1 160px !important; border-style: dashed !important; }
+
+/* ---- Edit site → Edit a show + Publish site edits (tags.js) ---- */
+.se-pub { background: #15161c; border: 1px solid #2a2b33; border-radius: 8px; padding: 9px 11px; margin-bottom: 14px; }
+.se-warn { color: #ffd166; }
+.se-log { max-height: 140px; margin-top: 8px; }
+.se-review { margin-top: 8px; font-size: 13px; }
+.se-changes { margin: 6px 0 8px; padding-left: 20px; font-size: 12px; color: #c8c9d0; }
+.se-pick { margin-bottom: 12px; }
+.se-pick #seSearch { flex: 1 1 260px; max-width: 420px; }
+.se-pick a.pill-btn { text-decoration: none; color: inherit; border: 1px solid #3a3b45; }
+.se-rec { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+.se-rec img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; background: #2a2b33; }
+.se-head { background: #1a1b21; border: 1px solid #3a3b45; border-radius: 8px; padding: 8px 11px 9px; margin-bottom: 8px; }
+.se-head.edited { border-color: #3a6ff0; }
+.se-head.reset { border-style: dashed; }
+.se-top { margin-bottom: 2px; }
+.se-n { font-size: 11px; color: #6f7080; min-width: 18px; }
+.se-text { font-weight: 600; word-break: break-word; }
+.se-slashes { color: #4a4b55; font-weight: 400; }
+.se-badge { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; border: 1px solid #3a6ff0; color: #8fb0ff; border-radius: 4px; padding: 0 5px; }
+.se-badge.unsaved { border-color: #6a5a22; color: #ffd166; }
+.se-badge.pending { border-color: #2f7a52; color: #6fe0a0; }
+.se-field { margin-top: 4px; }
+.se-chips { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+/* chips look like the site's: white = artist, lavender = label */
+.se-chip { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: #000; background: #f4f4f4; border: 1.5px solid #000; border-radius: 999px; padding: 1px 3px 1px 9px; }
+.se-chip.label { background: #e0e0ff; }
+.se-chip.ro { padding-right: 9px; opacity: .7; font-weight: 600; margin: 0 4px 4px 0; }
+.se-chip .se-name { cursor: text; }
+.se-chip button { border: 0; background: transparent; color: #444; padding: 0 4px; font-size: 13px; line-height: 1; cursor: pointer; }
+.se-chip button:hover { color: #000; }
+.se-chip .se-rm { color: #c03030; }
+.se-add { min-width: 120px; flex: 0 1 170px !important; border-style: dashed !important; }
+.se-rename { min-width: 160px; flex: 0 1 220px !important; }
+.se-tracks { margin-top: 7px; border-top: 1px solid #2a2b33; padding-top: 5px; }
+.se-track { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 2px 0; }
+.se-track img, .se-track .tg-thumb { width: 22px; height: 22px; object-fit: cover; border-radius: 3px; background: #2a2b33; flex: none; display: inline-block; }
+.se-track.edited .se-tcred { color: #8fb0ff; }
+.se-ttitle { color: #c8c9d0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.se-tcred { color: #8a8b95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.se-track a.pill-btn { text-decoration: none; color: inherit; border: 1px solid #3a3b45; }
+.se-tedit.on { border-color: #3a6ff0; }
+.se-tcard { margin: 4px 0 6px 30px; }
+.se-untied { margin-top: 12px; }

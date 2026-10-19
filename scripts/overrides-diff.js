@@ -18,7 +18,11 @@ function undoesSomething(prev, next) {
   next = next || {};
   const gone = (a, b, same) =>
     Object.keys(a || {}).some((k) => !(k in (b || {})) || (same && JSON.stringify(a[k]) !== JSON.stringify(b[k])));
-  return gone(prev.tagMerges, next.tagMerges, true) || gone(prev.tagEdits, next.tagEdits, false) || gone(prev.segEdits, next.segEdits, false);
+  // segEdits is two levels deep (show → heading): resetting ONE heading of a show
+  // that keeps other edited headings is a take-back too — apply-overrides.js only
+  // rewrites the headings still listed, so the reset one would keep its edit.
+  const segGone = Object.keys(prev.segEdits || {}).some((slug) => gone(prev.segEdits[slug], (next.segEdits || {})[slug], false));
+  return gone(prev.tagMerges, next.tagMerges, true) || gone(prev.tagEdits, next.tagEdits, false) || segGone;
 }
 
 module.exports = { undoesSomething };

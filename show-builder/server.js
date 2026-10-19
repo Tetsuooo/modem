@@ -26,6 +26,7 @@ const { getNames } = require('./artist-names');
 const { runSync, getHistory, addHistoryEntry } = require('./sync');
 const scLinks = require('./sc-links');
 const tagTools = require('./tag-tools');
+const siteTools = require('./site-tools');
 const { undoesSomething } = tagTools;
 const { compareWithLive } = require('./compare-live');
 const { getArchive } = require('./archive-cache');
@@ -102,10 +103,11 @@ app.get('/artist-label-names', (req, res) => {
   res.json({ ok: true, ...getNames() });
 });
 
-// ---------- SoundCloud links + tag cleanup tabs ------------------------------
-// Both sets of routes live in their own modules (/sc/* and /tags/*).
+// ---------- SoundCloud links + Edit site tabs --------------------------------
+// The routes live in their own modules (/sc/*, /tags/*, /site/*).
 scLinks.mount(app);
 tagTools.mount(app);
+siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------
 app.post('/scan', (req, res) => {
@@ -398,12 +400,108 @@ app.get('/cover-status', (req, res) => {
 // everything local — build the show's record from the draft, rebuild the
 // archive, rebuild docs/ — and stops at a git diff summary. Only /publish-push,
 // a distinct button click, actually commits + pushes to the live site's repo.
-let publishJob = null; // { running, done, error, log, show, diffSummary }
+// The same job also runs "Publish site edits" (kind 'edits', no show — the Edit
+// site and SoundCloud links decisions on their own, see /publish-edits-run).
+let publishJob = null; // { kind, running, done, error, log, show, diffSummary, changed }
+
+const WEBPACK_STEP = [process.execPath, [path.join(REPO_ROOT, 'node_modules', 'webpack', 'bin', 'webpack.js'), '--config', path.join(REPO_ROOT, 'webpack.js')]];
+
+// Tag edits saved since the last publish are applied by apply-overrides.js. If
+// one of them TAKES BACK something already on the site (a merge undone, an edit
+// reset), the archive no longer has the original spelling, so it's re-derived
+// from source first — scrape-modem.js --reparse, bracketed by reparse-guard.js
+// so nothing the pages don't carry is lost. "Since the last publish" = against
+// the committed overrides.json.
+function tagUndoSinceLastPublish() {
+  try {
+    const committed = JSON.parse(execFileSync('git', ['show', 'HEAD:src/assets/overrides.json'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }));
+    const working = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'src', 'assets', 'overrides.json'), 'utf8'));
+    return undoesSomething(committed, working);
+  } catch (e) { return false; } // no committed copy / unreadable — nothing to take back
+}
+
+// Which shows/lists a run changed, in words — compares every record of the
+// committed archive with the rebuilt one, so the review before pushing says
+// "modem-247: heading 1 (artists, labels)" instead of a line count.
+function describeArchiveChanges() {
+  const before = JSON.parse(execFileSync('git', ['show', 'HEAD:src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }));
+  const after = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'src', 'assets', 'modem-archive.json'), 'utf8'));
+  const bySlug = (d) => Object.fromEntries((d.records || []).map((r) => [r.slug, r]));
+  const A = bySlug(before), B = bySlug(after);
+  const tagsOf = (r, field, seg) => JSON.stringify((r[field] || []).filter((t) => t.seg === seg).map((t) => t.name));
+  const out = [];
+  for (const slug of Object.keys(B)) {
+    const a = A[slug], b = B[slug];
+    if (!a) { out.push(`${slug}: new`); continue; }
+    if (JSON.stringify(a) === JSON.stringify(b)) continue;
+    const segs = new Set([...(a.artists || []), ...(a.labels || []), ...(b.artists || []), ...(b.labels || [])].map((t) => t.seg));
+    const bits = [];
+    [...segs].sort((x, y) => (x == null) - (y == null) || x - y).forEach((seg) => {
+      const what = ['artists', 'labels'].filter((f) => tagsOf(a, f, seg) !== tagsOf(b, f, seg));
+      if (what.length) bits.push(`${seg == null ? 'tags not under a heading' : 'heading ' + (seg + 1)} (${what.join(', ')})`);
+    });
+    for (const f of ['title', 'date', 'cover', 'mp3', 'bodyHtml']) if (JSON.stringify(a[f]) !== JSON.stringify(b[f])) bits.push(f);
+    if (JSON.stringify(a.soundcloud) !== JSON.stringify(b.soundcloud)) bits.push('soundcloud');
+    out.push(`${slug}: ${bits.length ? bits.join('; ') : 'other details'}`);
+  }
+  for (const slug of Object.keys(A)) if (!B[slug]) out.push(`${slug}: REMOVED`);
+  // Tracks: their credits (what a tag edit changes) counted apart from the rest.
+  // A rebuild on this computer also refreshes details the automatic GitHub
+  // update can't fill in (it has no scripts/.cache): SoundCloud playback info,
+  // fuller search text — harmless, but it would swamp the count.
+  const CREDIT_FIELDS = ['title', 'artist', 'artists', 'shows'];
+  const TA = Object.fromEntries((before.tracks || []).map((t) => [t.key, t]));
+  const TB = Object.fromEntries((after.tracks || []).map((t) => [t.key, t]));
+  let trackCredits = 0, trackDetails = 0;
+  for (const k of new Set([...Object.keys(TA), ...Object.keys(TB)])) {
+    const a = TA[k], b = TB[k];
+    if (JSON.stringify(a) === JSON.stringify(b)) continue;
+    if (!a || !b || CREDIT_FIELDS.some((f) => JSON.stringify(a[f]) !== JSON.stringify(b[f]))) trackCredits++;
+    else trackDetails++;
+  }
+  return { records: out, trackCredits, trackDetails };
+}
+
+// The two decision files as they were when a run finished — /publish-push
+// refuses if they changed since (see there).
+function decisionsFingerprint() {
+  const read = (rel) => { try { return fs.readFileSync(path.join(REPO_ROOT, rel)); } catch (e) { return Buffer.alloc(0); } };
+  return require('crypto').createHash('sha1').update(read('src/assets/overrides.json')).update('\u0000').update(read('scripts/approvals.json')).digest('hex');
+}
+
+// Run a list of [cmd, args] steps one after the other into publishJob's log,
+// then stop at a summary of what changed. Nothing is committed here.
+function runJob(steps) {
+  (function runNext(i) {
+    if (!publishJob.running) return; // a step already failed
+    if (i >= steps.length) {
+      try {
+        const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
+        const diffStat = execFileSync('git', ['diff', '--stat'], { cwd: REPO_ROOT, encoding: 'utf8' });
+        publishJob.diffSummary = (status.trim() ? status + '\n' : '(no changes)\n') + diffStat;
+      } catch (e) {
+        publishJob.diffSummary = 'could not compute git diff: ' + String(e.message || e);
+      }
+      try { publishJob.changed = describeArchiveChanges(); } catch (e) { publishJob.changed = null; }
+      publishJob.decisions = decisionsFingerprint();
+      publishJob.running = false;
+      publishJob.done = true;
+      return;
+    }
+    const [cmd, args] = steps[i];
+    publishJob.log.push('→ ' + args.join(' ').split(/[/\\]/).pop());
+    runStep(cmd, args, REPO_ROOT, (code) => {
+      if (code !== 0) { publishJob.running = false; publishJob.error = args[0] + ' exited ' + code; return; }
+      runNext(i + 1);
+    });
+  })(0);
+}
 
 function runStep(cmd, args, cwd, onDone) {
   const child = spawn(cmd, args, { cwd });
   const push = (buf) => {
-    String(buf).split(/\r?\n/).forEach((l) => { if (l.trim()) publishJob.log.push(l.trim()); });
+    // eslint-disable-next-line no-control-regex
+    String(buf).replace(/\x1b\[[0-9;]*m/g, '').split(/\r?\n/).forEach((l) => { if (l.trim()) publishJob.log.push(l.trim()); }); // no terminal colour codes in the page's log
     if (publishJob.log.length > 500) publishJob.log = publishJob.log.slice(-500);
   };
   child.stdout.on('data', push);
@@ -490,20 +588,9 @@ app.post('/publish-run', (req, res) => {
     return res.status(500).json({ ok: false, error: 'could not check git status: ' + String(e.message || e) });
   }
 
-  // Tag edits saved in the Tags tab since the last publish are applied by
-  // apply-overrides.js below. If one of them TAKES BACK something already on the
-  // site (a merge undone, an edit reset), the archive no longer has the original
-  // spelling, so it's re-derived from source first — scrape-modem.js --reparse,
-  // bracketed by reparse-guard.js so nothing the pages don't carry is lost.
-  // "Since the last publish" = against the committed overrides.json.
-  let rederive = false;
-  try {
-    const committed = JSON.parse(execFileSync('git', ['show', 'HEAD:src/assets/overrides.json'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }));
-    const working = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'src', 'assets', 'overrides.json'), 'utf8'));
-    rederive = undoesSomething(committed, working);
-  } catch (e) { /* no committed copy / unreadable — nothing to take back */ }
+  const rederive = tagUndoSinceLastPublish();
 
-  publishJob = { running: true, done: false, error: null, log: [`publishing modem-${show}…`], show, diffSummary: null };
+  publishJob = { kind: 'show', running: true, done: false, error: null, log: [`publishing modem-${show}…`], show, diffSummary: null };
   const node = process.execPath;
   const script = (name, ...args) => [node, [path.join(REPO_ROOT, 'scripts', name), ...args]];
   const steps = [
@@ -524,44 +611,91 @@ app.post('/publish-run', (req, res) => {
     [node, [path.join(REPO_ROOT, 'scripts', 'build-track-index.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-sc-matches.js')]],
     [node, [path.join(REPO_ROOT, 'scripts', 'apply-overrides.js')]],
-    [node, [path.join(REPO_ROOT, 'node_modules', 'webpack', 'bin', 'webpack.js'), '--config', path.join(REPO_ROOT, 'webpack.js')]],
+    WEBPACK_STEP,
   ];
-  (function runNext(i) {
-    if (!publishJob.running) return; // a step already failed
-    if (i >= steps.length) {
-      try {
-        const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
-        const diffStat = execFileSync('git', ['diff', '--stat'], { cwd: REPO_ROOT, encoding: 'utf8' });
-        publishJob.diffSummary = (status.trim() ? status + '\n' : '(no changes)\n') + diffStat;
-      } catch (e) {
-        publishJob.diffSummary = 'could not compute git diff: ' + String(e.message || e);
-      }
-      publishJob.running = false;
-      publishJob.done = true;
-      return;
-    }
-    const [cmd, args] = steps[i];
-    publishJob.log.push('→ ' + args.join(' ').split(/[/\\]/).pop());
-    runStep(cmd, args, REPO_ROOT, (code) => {
-      if (code !== 0) { publishJob.running = false; publishJob.error = args[0] + ' exited ' + code; return; }
-      runNext(i + 1);
-    });
-  })(0);
-
+  runJob(steps);
   res.json({ ok: true, started: true });
 });
 
 app.get('/publish-status', (req, res) => {
   if (!publishJob) return res.json({ running: false, done: false, log: [] });
   res.json({
+    kind: publishJob.kind, show: publishJob.show || null,
     running: publishJob.running, done: publishJob.done, error: publishJob.error,
-    log: publishJob.log.slice(-25), diffSummary: publishJob.diffSummary,
+    log: publishJob.log.slice(-25), diffSummary: publishJob.diffSummary, changed: publishJob.changed || null,
   });
+});
+
+// ---------- /publish-edits-run — "Publish site edits" -------------------------
+// The Edit site tab's tag edits and the SoundCloud links tab's decisions on
+// their own, without a new show: the same rebuild a show publish ends with
+// (re-derive only if something was taken back, track index, SoundCloud links,
+// tag edits, webpack), then the same review → /publish-push. Refuses while a
+// show publish is waiting to be pushed, so the two never end up in one commit.
+const SHOW_PUBLISH_OUTPUT = /(^|\/)(src\/assets\/builder-shows\.json|show-builder\/data\/used-tracks\.json)$|(^|\/)src\/assets\/modem_covers\//;
+app.post('/publish-edits-run', (req, res) => {
+  if (publishJob && publishJob.running) return res.json({ ok: true, already: true });
+  let dirtyLines;
+  try {
+    dirtyLines = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' }).split(/\r?\n/).filter((l) => l.length > 0);
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'could not check git status: ' + String(e.message || e) });
+  }
+  const files = dirtyLines.map((l) => l.slice(3)); // NOT trimmed first — see /publish-run
+  if (files.some((f) => SHOW_PUBLISH_OUTPUT.test(f))) {
+    return res.status(409).json({
+      ok: false,
+      error: 'A show publish was run but not pushed yet. Finish it first (Publish & Edit → Confirm & push) — ' +
+        'it takes your saved site edits along with it.',
+    });
+  }
+  const unrelated = files.filter((f) => !EXPECTED_DIRTY.test(f));
+  if (unrelated.length) {
+    return res.status(409).json({
+      ok: false,
+      error: 'The repo has uncommitted changes that aren\'t site edits. Commit or discard them first (git status in the repo folder).',
+      dirtyFiles: unrelated,
+    });
+  }
+  if (!files.some((f) => /(^|\/)(src\/assets\/overrides\.json|scripts\/approvals\.json)$/.test(f))) {
+    return res.status(400).json({ ok: false, error: 'Nothing to publish — there are no saved tag edits or SoundCloud-link decisions that aren\'t on the site yet.' });
+  }
+
+  const rederive = tagUndoSinceLastPublish();
+  publishJob = { kind: 'edits', running: true, done: false, error: null, log: ['rebuilding the site with your saved edits…'], show: null, diffSummary: null };
+  if (rederive) publishJob.log.push('(an edit was taken back — re-deriving from the source pages first, protected)');
+  const script = (name, ...args) => [process.execPath, [path.join(REPO_ROOT, 'scripts', name), ...args]];
+  runJob([
+    ...(rederive ? [script('reparse-guard.js', '--snapshot'), script('scrape-modem.js', '--reparse'), script('reparse-guard.js', '--restore')] : []),
+    script('build-track-index.js'),
+    script('apply-sc-matches.js'),
+    script('apply-overrides.js'),
+    WEBPACK_STEP,
+  ]);
+  res.json({ ok: true, started: true });
+});
+
+// ---------- /publish-discard — throw away an unpushed "Publish site edits" build
+// Puts the site's archive and docs/ back to the last commit. The saved edits
+// themselves (overrides.json, approvals.json) stay, ready for the next run.
+app.post('/publish-discard', (req, res) => {
+  if (publishJob && publishJob.running) return res.status(409).json({ ok: false, error: 'a run is still going' });
+  if (publishJob && publishJob.kind !== 'edits') return res.status(409).json({ ok: false, error: 'only a "Publish site edits" build can be discarded here' });
+  try {
+    const files = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
+    if (files.some((f) => SHOW_PUBLISH_OUTPUT.test(f))) return res.status(409).json({ ok: false, error: 'a show publish is waiting to be pushed — not touching it' });
+    execFileSync('git', ['checkout', '--', 'src/assets/modem-archive.json', 'docs'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    publishJob = null;
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
 });
 
 app.post('/publish-push', (req, res) => {
   if (!publishJob || !publishJob.done) return res.status(400).json({ ok: false, error: 'run the publish pipeline first' });
   const show = publishJob.show;
+  const edits = publishJob.kind === 'edits';
   try {
     // The "Review before pushing" box only ever showed `git diff --stat` —
     // line-count totals, not content — so a human glancing at it has no real
@@ -569,7 +703,9 @@ app.post('/publish-push', (req, res) => {
     // "big diff because it touched something unrelated." Actually check the
     // content of the one shared file where that distinction matters, right
     // before it goes live, instead of trusting the stat alone.
-    const archiveDiff = execFileSync('git', ['diff', '--', 'src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    // (Not for a site-edits run: a tag merge legitimately renames a tag on a
+    // year-end list too — its review lists every changed show/list by name.)
+    const archiveDiff = edits ? '' : execFileSync('git', ['diff', '--', 'src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (LIST_SLUG_PATTERN.test(archiveDiff)) {
       return res.status(409).json({
         ok: false,
@@ -577,10 +713,16 @@ app.post('/publish-push', (req, res) => {
           '. Refusing to push — review "git diff -- src/assets/modem-archive.json" in the repo folder first.',
       });
     }
+    // Edits saved (or brought in by Sync) after the run finished aren't in the
+    // rebuilt site — pushing now would put them in the commit but not on the page.
+    if (publishJob.decisions && publishJob.decisions !== decisionsFingerprint()) {
+      return res.status(409).json({ ok: false, error: 'Edits were saved after this run finished, so they aren\'t in it. Run it again, then push.' });
+    }
     execFileSync('git', ['add', '-A'], { cwd: REPO_ROOT });
     const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (!status.trim()) return res.json({ ok: true, pushed: false, message: 'nothing to commit' });
-    execFileSync('git', ['commit', '-m', `Publish modem-${show} via show-builder [skip ci]`], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const message = edits ? 'Site edits (tags / SoundCloud links) via show-builder [skip ci]' : `Publish modem-${show} via show-builder [skip ci]`;
+    execFileSync('git', ['commit', '-m', message], { cwd: REPO_ROOT, encoding: 'utf8' });
     const log = execFileSync('git', ['push'], { cwd: REPO_ROOT, encoding: 'utf8' });
     publishJob = null; // require a fresh /publish-run before another push is allowed
     res.json({ ok: true, pushed: true, log });
