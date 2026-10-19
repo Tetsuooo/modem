@@ -144,6 +144,9 @@ page is no longer read. The show builder is the single source of truth: tweak th
 4. **Generate HTML** → copy → paste into radioštudent (for the radio's own page).
 5. **Run publish pipeline.** Doesn't need the radioštudent page to be live. It:
    - builds the show's record from the draft (`scripts/add-show-from-draft.js`),
+   - times every track for the site's **live tracklist** straight from the Mix tab: each
+     clip's start = the track's time in the show (`src/assets/show-timestamps.json`, see
+     `scripts/tracklists/README.md`),
    - carries the SoundCloud links you picked in Arrange into `approvals.json`,
    - rebuilds the track index, applies all SoundCloud links and tag edits,
    - rebuilds the site (`docs/`), then shows a summary of what changed.
@@ -162,6 +165,11 @@ Good to know:
 - Publishing a show number that's already on the site *from before* (scraped from
   radioštudent) asks you to confirm before replacing it — a typo can't overwrite an old show.
 - Re-publishing a show built here simply rebuilds it (e.g. after fixing a tag).
+- **Live tracklist times come from the Mix tab**, and the mix lives only on the machine
+  where you made it (it isn't synced). Publish from that machine, and upload the exact file
+  you exported to SoundCloud. If the timeline changes after you export, publish again so the
+  times match. A draft with no mix publishes fine; the log says "no timestamps yet", and
+  that show can be timed from the audio later.
 - Old shows (up to 249) are untouched; they keep coming from their radioštudent pages.
 
 ---

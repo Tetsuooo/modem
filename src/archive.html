@@ -129,6 +129,39 @@
     .sc-fallback { display: none; color: #000; font-weight: bold; text-transform: lowercase; font-size: 0.95rem; text-decoration: underline; margin: 0 0 1.6rem; }
     .sc-fallback.show { display: inline-block; }
 
+    /* ---- live tracklist under the full-show player (setupTracklist(), data in
+       assets/show-timestamps.json): a "now playing" row + a toggle that opens the
+       whole list. Joined to the player box, so the player gives up its bottom gap. */
+    .sc-player.has-tracklist { margin-bottom: 0; }
+    .sc-tracklist { background: #fff; color: #000; margin: 0 0 8rem; border-top: 1px solid #000; }
+    .tl-now, .tl-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.7rem; }
+    .tl-now[hidden] { display: none; }
+    .tl-now[hidden] + .tl-toggle { border-top: 0; } /* the box's own top line is enough */
+    .tl-art { width: 2.4rem; height: 2.4rem; flex: none; object-fit: cover; background: #eee; display: block; }
+    .tl-row .tl-art { width: 2rem; height: 2rem; }
+    .tl-meta { flex: 1; min-width: 0; }
+    .tl-title { font-weight: bold; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-artist { font-size: 0.76rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-tag { color: inherit; text-decoration: none; cursor: pointer; }
+    .tl-out { opacity: 0.7; }
+    .tl-time { flex: none; min-width: 2.6rem; font-size: 0.72rem; color: #888; font-variant-numeric: tabular-nums; }
+    .tl-time.approx::before { content: "~"; }
+    .tl-links { display: flex; gap: 0.25rem; flex: none; }
+    .tl-link { font-size: 0.68rem; font-weight: bold; text-decoration: none; text-transform: lowercase; border: 1px solid #000; border-radius: 999px; padding: 0.06rem 0.45rem; color: #000; background: #fff; }
+    .tl-toggle { display: block; width: 100%; border: 0; border-top: 1px solid #000; background: #fff; color: #000; font: inherit; font-weight: bold; font-size: 0.75rem; text-transform: lowercase; padding: 0.45rem 0.7rem; text-align: left; cursor: pointer; }
+    /* position: relative so a row's offsetTop is measured from the list (setCurrent's scroll) */
+    .tl-list { position: relative; list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; border-top: 1px solid #000; }
+    .tl-list[hidden] { display: none; }
+    .tl-row { cursor: pointer; }
+    .tl-row + .tl-row { border-top: 1px solid #eee; }
+    /* mouse only: on touch screens :hover sticks after a tap */
+    @media (hover: hover) {
+      .tl-link:hover, .tl-toggle:hover { background: #ffff00; }
+      .tl-tag:hover { text-decoration: underline; opacity: 1; color: #000; }
+      .tl-row:hover { background: #f4f4f4; }
+    }
+    .tl-row.current { background: #ffff00; }
+
     /* prev / next show navigation — both in the top-right corner */
     .detail-nav {
       position: fixed; top: 3.05rem; z-index: 199999;
@@ -1004,6 +1037,123 @@
         bar.addEventListener('pointerup', endScrub);
         bar.addEventListener('pointercancel', () => { scrubbing = false; });
       }
+
+      // ---- live tracklist under the full-show player ----
+      // assets/show-timestamps.json: { shows: { <slug>: { tracks: [{ t, key | title+artist, approx? }] } } }
+      // — where each track starts in the show's SoundCloud upload (found by matching
+      // the audio, scripts/tracklists/build_tracklists.py; later written by the show
+      // builder when it exports a show). `approx` = a track the matching couldn't
+      // place, spread over the gap between its neighbours by length. Titles/art/links
+      // come from the archive's own track index by key; tracks that aren't on the
+      // show page carry their own title/artist (from the playlist that was played).
+      // Loaded once, the first time a show page with a SoundCloud player opens —
+      // through the shell's window.modemTimestamps (shared with the floating player).
+      let timestampsPromise = null;
+      function loadTimestamps() {
+        if (window.modemTimestamps) return window.modemTimestamps();
+        if (!timestampsPromise) {
+          timestampsPromise = fetch('/assets/show-timestamps.json', { cache: 'no-cache' })
+            .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        }
+        return timestampsPromise;
+      }
+      // Builds the box under `wrap` (the .sc-player) if this show has timestamps.
+      // seekMs(ms) jumps the show (and starts it if paused). Returns { update(ms) },
+      // called with the player position as it plays.
+      function setupTracklist(rec, wrap, seekMs) {
+        let rows = [], current = -1, nowEl = null, listEl = null, toggleEl = null, lastMs = 0;
+        const fmtS = (s) => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+        const linksOf = (tk) => {
+          const out = [];
+          if (tk.kind === 'bandcamp' && tk.link) out.push(['bc', tk.link]);
+          if (tk.kind === 'soundcloud' && tk.link) out.push(['sc', tk.link]);
+          if (tk.kind === 'bandcamp' && typeof tk.scPlay === 'string' && /^https?:/.test(tk.scPlay)) out.push(['sc', tk.scPlay]);
+          return out.map(([label, href]) => '<a class="tl-link" href="' + esc(href) + '" target="_blank" rel="noopener">' + label + '</a>').join('');
+        };
+        // artists + labels, each a link that opens the search on that tag (see the
+        // box's click handler); names the archive doesn't know stay plain text
+        const tagsOf = (r) => {
+          const tg = window.modemTrackTags ? window.modemTrackTags(r.tk, rec.slug) : { artists: r.tk.artist ? [r.tk.artist] : [], labels: [] };
+          const link = (kind, n) => '<a class="tl-tag" data-kind="' + kind + '" data-name="' + esc(n) + '">' + esc(n) + '</a>';
+          const ok = (n) => !r.playlistOnly || (window.modemKnownArtist && window.modemKnownArtist(n));
+          const a = tg.artists.map((n) => (ok(n) ? link('artist', n) : esc(n))).join(' & ');
+          const l = tg.labels.map((n) => link('label', n)).join(', ');
+          return a + (l ? ' <span class="tl-out">· out on</span> ' + l : '');
+        };
+        const rowInner = (r) =>
+          '<span class="tl-time' + (r.approx ? ' approx' : '') + '">' + fmtS(r.t) + '</span>' +
+          (r.tk.artUrl ? '<img class="tl-art" src="' + esc(r.tk.artUrl) + '" alt="" loading="lazy">' : '<span class="tl-art"></span>') +
+          '<div class="tl-meta"><div class="tl-title">' + esc(r.tk.title || 'untitled') + '</div><div class="tl-artist">' + tagsOf(r) + '</div></div>' +
+          '<span class="tl-links">' + linksOf(r.tk) + '</span>';
+        function setCurrent(i) {
+          if (i === current || !rows[i]) return;
+          current = i;
+          nowEl.innerHTML = rowInner(rows[i]);
+          listEl.querySelectorAll('.tl-row').forEach((li, k) => li.classList.toggle('current', k === i));
+          if (!listEl.hidden) {
+            // keep the current row in view inside the list (never scroll the page itself)
+            const li = listEl.children[i];
+            if (li.offsetTop < listEl.scrollTop || li.offsetTop + li.offsetHeight > listEl.scrollTop + listEl.clientHeight) {
+              listEl.scrollTop = li.offsetTop - listEl.clientHeight / 3;
+            }
+          }
+        }
+        function update(ms) {
+          lastMs = ms;
+          if (!rows.length) return;
+          // the "now playing" row only appears once the show is actually playing;
+          // before that the box is just the tracklist toggle
+          if (ms > 0 && nowEl.hidden) nowEl.hidden = false;
+          const s = ms / 1000 + 0.5;
+          let i = 0;
+          while (i + 1 < rows.length && rows[i + 1].t <= s) i++;
+          setCurrent(i);
+        }
+        loadTimestamps().then((data) => {
+          const entry = data && data.shows && data.shows[rec.slug];
+          const tracks = (window.__modemData && window.__modemData.tracks) || [];
+          if (!entry || !entry.tracks || !entry.tracks.length || !wrap.isConnected) return;
+          const byKey = new Map(tracks.map((t) => [t.key, t]));
+          // a row is either one of the page's tracks (key -> its art + links) or a track
+          // that was played but isn't on the page (just its title/artist, from the playlist)
+          rows = entry.tracks.map((x) => {
+            const tk = x.key && byKey.get(x.key);
+            return { t: x.t, approx: !!x.approx, playlistOnly: !tk, tk: tk || { title: x.title, artist: x.artist } };
+          });
+          const box = document.createElement('div');
+          box.className = 'sc-tracklist';
+          box.innerHTML =
+            '<div class="tl-now" hidden></div>' +
+            '<button class="tl-toggle" type="button" aria-expanded="false"></button>' +
+            '<ol class="tl-list" hidden>' + rows.map((r) => '<li class="tl-row">' + rowInner(r) + '</li>').join('') + '</ol>';
+          wrap.insertAdjacentElement('afterend', box);
+          wrap.classList.add('has-tracklist');
+          nowEl = box.querySelector('.tl-now');
+          listEl = box.querySelector('.tl-list');
+          toggleEl = box.querySelector('.tl-toggle');
+          const label = () => { toggleEl.textContent = 'tracklist · ' + rows.length + ' tracks ' + (listEl.hidden ? '▾' : '▴'); toggleEl.setAttribute('aria-expanded', String(!listEl.hidden)); };
+          toggleEl.onclick = () => { listEl.hidden = !listEl.hidden; label(); const c = current; current = -1; setCurrent(Math.max(0, c)); };
+          label();
+          // an artist / label (in a row or the now-playing line) opens the search on it
+          box.addEventListener('click', (e) => {
+            const tag = e.target.closest('.tl-tag');
+            if (!tag || !window.modemSearch) return;
+            e.preventDefault();
+            window.modemSearch.open({ tag: { kind: tag.dataset.kind, name: tag.dataset.name } }, tag);
+          });
+          listEl.addEventListener('click', (e) => {
+            if (e.target.closest('a')) return; // bc / sc links just open; artists / labels: above
+            const li = e.target.closest('.tl-row');
+            if (!li) return;
+            const i = [...listEl.children].indexOf(li);
+            setCurrent(i);
+            seekMs(rows[i].t * 1000);
+          });
+          update(lastMs);
+        });
+        return { update };
+      }
+
       function initPlayer() {
         const wrap = detailInner.querySelector('.sc-player');
         if (!wrap) return;
@@ -1031,8 +1181,18 @@
         // generous than the tracklist-embed check (10s here vs. that one's 6s) since
         // this is a single widget, not up to a dozen on the page at once.
         let widget = null, durationMs = 0, readyTimer = null, currentPositionMs = 0, scrubbing = false;
+        let playing = false, pendingSeekMs = null;
         function showFallback() { wrap.style.display = 'none'; if (fallback) fallback.classList.add('show'); }
         function restoreFromFallback() { wrap.style.display = ''; if (fallback) fallback.classList.remove('show'); }
+        // Jump to a position from the tracklist. A widget that hasn't started yet
+        // ignores seekTo, so start it first and seek once PLAY fires.
+        function seekTo(ms) {
+          if (!widget) return;
+          if (playing) { widget.seekTo(ms); return; }
+          pendingSeekMs = ms;
+          widget.play();
+        }
+        const tracklist = currentDetailRec ? setupTracklist(currentDetailRec, wrap, seekTo) : null;
         function ready() {
           widget = SC.Widget(iframe);
           readyTimer = setTimeout(showFallback, 10000);
@@ -1041,12 +1201,17 @@
             restoreFromFallback();
             widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); });
           });
-          widget.bind(SC.Widget.Events.PLAY, () => { toggle.innerHTML = ICON_PAUSE; });
-          widget.bind(SC.Widget.Events.PAUSE, () => { toggle.innerHTML = ICON_PLAY; });
-          widget.bind(SC.Widget.Events.FINISH, () => { toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
+          widget.bind(SC.Widget.Events.PLAY, () => {
+            playing = true;
+            toggle.innerHTML = ICON_PAUSE;
+            if (pendingSeekMs != null) { widget.seekTo(pendingSeekMs); pendingSeekMs = null; }
+          });
+          widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggle.innerHTML = ICON_PLAY; });
+          widget.bind(SC.Widget.Events.FINISH, () => { playing = false; toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
           widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
             if (!scrubbing) seek(e.relativePosition); // don't fight the user's drag
             curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition;
+            if (tracklist) tracklist.update(e.currentPosition);
           });
         }
         toggle.onclick = () => { if (widget) widget.toggle(); };
@@ -1067,6 +1232,7 @@
           const frac = fracAt(e.clientX);
           seek(frac);
           widget.seekTo(frac * durationMs);
+          if (tracklist) tracklist.update(frac * durationMs);
         };
         bar.addEventListener('pointerup', endScrub);
         bar.addEventListener('pointercancel', () => { scrubbing = false; });

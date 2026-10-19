@@ -1429,6 +1429,36 @@
     .mp-min { display: none; }
     .mp-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
 
+    /* ---- slim live tracklist, only while a whole show plays (same data as the show
+       page's tracklist: assets/show-timestamps.json). One "now playing" line; its ▾
+       opens a short one-line-per-track list. See tlSetup() below. ---- */
+    .mp-tl[hidden], .mp-tl-list[hidden] { display: none; }
+    .mp-tl { margin-top: 0.4rem; }
+    .mp-tl-now {
+      display: flex; align-items: baseline; gap: 0.45rem; width: 100%; box-sizing: border-box;
+      border: 0; border-top: 1px solid #000; background: transparent; color: #000;
+      font: inherit; font-size: 0.75rem; padding: 0.35rem 0 0.1rem; text-align: left; cursor: pointer;
+    }
+    .mp-tl-t { flex: none; min-width: 2.4rem; color: #888; font-variant-numeric: tabular-nums; }
+    .mp-tl-t.approx::before { content: "~"; }
+    .mp-tl-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mp-tl-name i { font-style: normal; opacity: 0.6; }
+    .mp-tl-tag { color: inherit; text-decoration: none; cursor: pointer; }
+    .mp-tl-chev { flex: none; font-size: 1.1rem; line-height: 0.8; padding: 0 0.15rem; }
+    .mp-tl-list {
+      position: relative; /* rows' offsetTop measured from the list (tlUpdate's scroll) */
+      list-style: none; margin: 0.25rem 0 0; padding: 0; max-height: 9.5rem; overflow-y: auto;
+      border-top: 1px solid #e5e5e5; font-size: 0.72rem; cursor: default;
+    }
+    .mp-tl-row { display: flex; gap: 0.45rem; padding: 0.22rem 0.2rem; cursor: pointer; }
+    .mp-tl-row.current { background: #ffff00; }
+    @media (hover: hover) {
+      .mp-tl-row:hover { background: #f4f4f4; }
+      .mp-tl-row.current:hover { background: #ffff00; }
+      .mp-tl-now:hover .mp-tl-chev { color: #888; }
+      .mp-tl-tag:hover { text-decoration: underline; color: #000; }
+    }
+
     /* ---- full-screen "now playing" on phones ---- */
     @media (max-width: 600px) {
       .modem-player {
@@ -1532,6 +1562,20 @@
       /* shorter playhead tick to match the thin mini timeline — the full-screen
          one (11px, ±4px past the bar) would loom over this slim bar otherwise */
       .modem-player.mp-mini .mp-playhead { top: -1px; bottom: -1px; }
+
+      /* slim tracklist: centred in the full-screen player; in the mini bar just the
+         current track, in place of the show's date */
+      .modem-player .mp-tl { width: 100%; box-sizing: border-box; padding: 0 0.6rem; margin-top: 0.7rem; }
+      .modem-player .mp-tl-now { font-size: 0.85rem; justify-content: center; align-items: center; }
+      .modem-player .mp-tl-chev { font-size: 1.35rem; padding: 0 0.3rem; }
+      .modem-player .mp-tl-name { flex: 0 1 auto; }
+      .modem-player .mp-tl-list { max-height: 22vh; font-size: 0.8rem; text-align: left; }
+      .modem-player.mp-mini .mp-panel.has-tl .mp-meta,
+      .modem-player.mp-mini .mp-tl-list,
+      .modem-player.mp-mini .mp-tl-chev,
+      .modem-player.mp-mini .mp-tl-t { display: none; }
+      .modem-player.mp-mini .mp-tl { grid-area: meta; margin: 0; padding: 0; min-width: 0; }
+      .modem-player.mp-mini .mp-tl-now { border: 0; padding: 0; font-size: 0.78rem; justify-content: flex-start; }
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
@@ -1563,6 +1607,34 @@
 
   <script src="https://w.soundcloud.com/player/api.js"></script>
   <script>
+    // Live-tracklist timestamps (where each track starts in each show's SoundCloud
+    // upload — scripts/tracklists/README.md), fetched once and shared by the show
+    // page's tracklist (archive.html) and the floating player's slim one below.
+    (function () {
+      let p = null;
+      window.modemTimestamps = () => p || (p = fetch('/assets/show-timestamps.json', { cache: 'no-cache' })
+        .then((r) => (r.ok ? r.json() : null)).catch(() => null));
+      // The tracklists' artist / label links open the search filtered to that tag
+      // (same as the floating player's). Each credited name is its own link
+      // ("Kuthi Jin & Talpah" -> two); labels are the ones tagged in THAT show.
+      const nk = (s) => String(s == null ? '' : s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+      window.modemTrackTags = (tk, slug) => {
+        const artists = (Array.isArray(tk.artists) && tk.artists.length) ? tk.artists : (tk.artist ? [tk.artist] : []);
+        const s = (tk.shows || []).find((x) => x.slug === slug);
+        return { artists, labels: (s && s.labels) || [] };
+      };
+      // only link a name the search can actually find (tracks that were played but
+      // aren't on any show page carry names the archive may not know)
+      let known = null;
+      window.modemKnownArtist = (name) => {
+        const tracks = (window.__modemData && window.__modemData.tracks) || [];
+        if (!known && tracks.length) {
+          known = new Set();
+          tracks.forEach((t) => { known.add(nk(t.artist)); (t.artists || []).forEach((n) => known.add(nk(n))); });
+        }
+        return !!known && known.has(nk(name));
+      };
+    })();
     (function () {
       const el = document.getElementById('modem-player');
       if (!el) return;
@@ -1603,6 +1675,109 @@
       // restarting from 0:00.
       let pendingSeekMs = null;
       const LOAD_OPTS = { visual: false, show_comments: false, show_artwork: false, buying: false, sharing: false, download: false, hide_related: true };
+
+      // ---- slim live tracklist, only while a whole show plays ----
+      // A "now playing" line under the show's date; its ▾ opens a short list (one line
+      // per track) where a tap jumps the show there. In the phone's mini bar only the
+      // line shows, in place of the date (CSS). Same data as the show page's tracklist.
+      const tlEl = document.createElement('div');
+      tlEl.className = 'mp-tl';
+      tlEl.hidden = true;
+      // the now-playing line is a div (role=button), not a <button>: it holds artist / label links
+      tlEl.innerHTML = '<div class="mp-tl-now" role="button" tabindex="0" aria-expanded="false"></div><ol class="mp-tl-list" hidden></ol>';
+      el.querySelector('.mp-meta').insertAdjacentElement('afterend', tlEl);
+      const tlNow = tlEl.querySelector('.mp-tl-now');
+      const tlList = tlEl.querySelector('.mp-tl-list');
+      const tlEsc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const tlFmt = (s) => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+      let tlRows = [], tlCur = -1, tlFor = null, tlLastMs = 0;
+      // artists + labels as links to the search (each credited name on its own);
+      // names the archive doesn't know (played, but on no show page) stay plain text
+      const tlTags = (r) => {
+        const tg = window.modemTrackTags(r.tk, r.slug);
+        const link = (kind, n) => '<a class="mp-tl-tag" data-kind="' + kind + '" data-name="' + tlEsc(n) + '">' + tlEsc(n) + '</a>';
+        const ok = (n) => !r.playlistOnly || window.modemKnownArtist(n);
+        const a = tg.artists.map((n) => (ok(n) ? link('artist', n) : tlEsc(n))).join(' &amp; ');
+        const l = tg.labels.map((n) => link('label', n)).join(', ');
+        return a + (l ? ' · ' + l : '');
+      };
+      const tlLine = (r) => '<span class="mp-tl-t' + (r.approx ? ' approx' : '') + '">' + tlFmt(r.t) + '</span>' +
+        '<span class="mp-tl-name"><b>' + tlEsc(r.title) + '</b> <i>' + tlTags(r) + '</i></span>';
+      function tlSetup(item) {
+        tlRows = []; tlCur = -1; tlFor = item; tlLastMs = 0;
+        tlEl.hidden = true; tlList.hidden = true;
+        el.querySelector('.mp-panel').classList.remove('has-tl');
+        if (!item || item.kind !== 'show' || !window.modemTimestamps) return;
+        window.modemTimestamps().then((data) => {
+          const entry = data && data.shows && data.shows[item.slug];
+          if (tlFor !== item || !entry || !entry.tracks || !entry.tracks.length) return;
+          withData((d) => {
+            if (tlFor !== item) return; // the player moved on meanwhile
+            const byKey = new Map((d.tracks || []).map((t) => [t.key, t]));
+            tlRows = entry.tracks.map((x) => {
+              const tk = x.key && byKey.get(x.key);
+              return { t: x.t, approx: !!x.approx, slug: item.slug, playlistOnly: !tk,
+                tk: tk || { artist: x.artist || '' }, title: (tk && tk.title) || x.title || 'untitled' };
+            });
+            tlList.innerHTML = tlRows.map((r) => '<li class="mp-tl-row">' + tlLine(r) + '</li>').join('');
+            tlEl.hidden = false;
+            el.querySelector('.mp-panel').classList.add('has-tl');
+            tlUpdate(tlLastMs, true);
+          });
+        });
+      }
+      function tlUpdate(ms, force) {
+        tlLastMs = ms;
+        if (!tlRows.length) return;
+        const s = ms / 1000 + 0.5;
+        let i = 0;
+        while (i + 1 < tlRows.length && tlRows[i + 1].t <= s) i++;
+        if (i === tlCur && !force) return;
+        tlCur = i;
+        tlNow.innerHTML = tlLine(tlRows[i]) + '<span class="mp-tl-chev">' + (tlList.hidden ? '▾' : '▴') + '</span>';
+        [...tlList.children].forEach((li, k) => li.classList.toggle('current', k === i));
+        if (!tlList.hidden) {
+          const li = tlList.children[i];
+          if (li.offsetTop < tlList.scrollTop || li.offsetTop + li.offsetHeight > tlList.scrollTop + tlList.clientHeight) {
+            tlList.scrollTop = li.offsetTop - tlList.clientHeight / 3;
+          }
+        }
+      }
+      // jump the show; a widget that isn't playing ignores seekTo, so start it and
+      // let the PLAY handler apply the seek (pendingSeekMs)
+      function tlSeek(ms) {
+        if (!widget) return;
+        if (playing) widget.seekTo(ms); else { pendingSeekMs = ms; widget.play(); }
+        tlUpdate(ms);
+      }
+      // an artist / label opens the search on it (like the player's own artist link)
+      function tlTag(e) {
+        const tag = e.target.closest('.mp-tl-tag');
+        if (!tag) return false;
+        e.preventDefault(); e.stopPropagation();
+        openSearchFromPlayer({ kind: tag.dataset.kind, name: tag.dataset.name });
+        return true;
+      }
+      function tlToggle() {
+        tlList.hidden = !tlList.hidden;
+        tlNow.setAttribute('aria-expanded', String(!tlList.hidden));
+        tlUpdate(tlLastMs, true);
+      }
+      tlNow.addEventListener('click', (e) => {
+        if (el.classList.contains('mp-mini')) return; // the mini bar's own tap expands the player
+        if (tlTag(e)) return;
+        e.stopPropagation();
+        tlToggle();
+      });
+      tlNow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tlToggle(); } });
+      tlList.addEventListener('click', (e) => {
+        if (tlTag(e)) return;
+        const li = e.target.closest('.mp-tl-row');
+        if (!li) return;
+        e.stopPropagation();
+        const i = [...tlList.children].indexOf(li);
+        if (tlRows[i]) tlSeek(tlRows[i].t * 1000);
+      });
 
       function shuffleArr(a) {
         a = a.slice();
@@ -1742,6 +1917,7 @@
         setProgress(0);
         durationMs = 0;
         timeEl.textContent = '0:00 / –:––';
+        tlSetup(item);
       }
 
       function bindWidget() {
@@ -1760,6 +1936,7 @@
           if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
           if (!durationMs && e.relativePosition > 0) durationMs = e.currentPosition / e.relativePosition;
           timeEl.textContent = fmtT(e.currentPosition) + ' / ' + fmtT(durationMs);
+          tlUpdate(e.currentPosition);
         });
       }
 
@@ -1945,7 +2122,7 @@
         scrubbing = false;
         const frac = fracAt(e.clientX);
         setProgress(frac); // immediate feedback; PLAY_PROGRESS then keeps it in sync
-        widget.getDuration((d) => widget.seekTo(frac * d));
+        widget.getDuration((d) => { widget.seekTo(frac * d); tlUpdate(frac * d); });
       };
       bar.addEventListener('pointerup', endScrub);
       bar.addEventListener('pointercancel', () => { scrubbing = false; });
@@ -1976,7 +2153,7 @@
         let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false, moved = false;
         function down(cx, cy, target) {
           if (window.matchMedia('(max-width: 600px)').matches) return false; // fixed full-screen / bottom bar on phones
-          if (target.closest('button, .mp-bar, iframe')) return false;
+          if (target.closest('button, .mp-bar, iframe, .mp-tl')) return false;
           // links behave as links — except the artwork, which doubles as a drag handle
           if (target.closest('a') && !target.closest('.mp-art')) return false;
           const r = el.getBoundingClientRect();

@@ -39,8 +39,9 @@ const { getArchive } = require('./archive-cache');
 // SoundCloud-links and Tags tabs write (see sc-links.js / tag-tools.js) — their
 // edits are meant to ride along with the next publish, not block it. Same for
 // src/assets/builder-shows.json, the as-built copy of each show published from
-// the draft (scripts/add-show-from-draft.js).
-const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
+// the draft (scripts/add-show-from-draft.js), and src/assets/show-timestamps.json,
+// the live tracklist's track times that same script takes from the Mix tab.
+const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json|src\/assets\/show-timestamps\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
 const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
 
 const REPO_ROOT = path.join(__dirname, '..');

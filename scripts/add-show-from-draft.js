@@ -23,6 +23,9 @@
  *             backfill-show-audio.js, as for every show
  *   soundcloud the full-show upload, looked up by show number (not on radioštudent)
  *
+ * If the draft has a mix (the Mix tab), each track's start in it goes into
+ * src/assets/show-timestamps.json for the live tracklist (scripts/tracklists/).
+ *
  * The record is marked `origin: "show-builder"`, and a copy of it exactly as built
  * (before tag merges / edits are applied on top) is kept in
  * src/assets/builder-shows.json. scrape-modem.js uses that copy when it re-derives
@@ -47,6 +50,7 @@ const sharp = require('sharp');
 const { parsePage, resolveSoundcloud, stripTags, firstMatch } = require('./scrape-modem');
 const { generateShowHtml } = require('../show-builder/generate-html');
 const { buildRecordTags } = require('../show-builder/build-record-tags');
+const { timestampsFromDraft, writeShowTimestamps } = require('./tracklists/draft-timestamps');
 
 const ROOT = path.resolve(__dirname, '..');
 const ARCHIVE_FILE = path.join(ROOT, 'src', 'assets', 'modem-archive.json');
@@ -55,6 +59,7 @@ const COVERS_DIR = path.join(ROOT, 'src', 'assets', 'modem_covers');
 const CURRENT_DRAFT = path.join(ROOT, 'show-builder', 'data', 'current-draft.json');
 const SHARED_DRAFT = path.join(ROOT, 'show-builder', 'data', 'shared-draft.json');
 const COVER_EXPORT_DIR = path.join(ROOT, 'show-builder', 'downloads', '_show_covers');
+const TIMESTAMPS_FILE = path.join(ROOT, 'src', 'assets', 'show-timestamps.json');
 const BASE = 'https://radiostudent.si';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
@@ -187,6 +192,17 @@ function scheduledDate(number) {
     lastScraped: [slug],
   };
   fs.writeFileSync(ARCHIVE_FILE, JSON.stringify(archive, null, 2));
+
+  // ---- live tracklist: each track's start straight from the Mix tab ----
+  // (no mix in this draft → leave the show alone; its timestamps come from audio
+  // matching later, scripts/tracklists/build_tracklists.py)
+  const stamps = timestampsFromDraft(draft);
+  if (stamps) {
+    writeShowTimestamps(TIMESTAMPS_FILE, slug, stamps);
+    console.log(`live tracklist: ${stamps.length} tracks timed from the Mix tab → src/assets/show-timestamps.json`);
+  } else {
+    console.log('live tracklist: this draft has no mix (Mix tab), so no timestamps yet — they can be matched from the audio later');
+  }
 
   console.log(
     `add-show-from-draft: ${slug} ← ${source} — ${rec.embeds.length} embeds, ${rec.segments.length} segments, ` +
