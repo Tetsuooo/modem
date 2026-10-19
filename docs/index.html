@@ -124,9 +124,13 @@
       position: fixed;
       top: 0;
       z-index: 200000;
-      flex-wrap: wrap; /* Stay one line normally; wrap to a second line only when too narrow to fit (e.g. folded phones) */
+      /* ONE row, always — never a second line. On narrow screens the text shrinks
+         instead: --nav-fs (the link text size, set per screen size below) and, as a
+         last resort, --nav-fit from fitNav() (script right after <nav>). */
+      flex-wrap: nowrap;
       align-items: center; /* Center items vertically */
       min-height: clamp(20px, 2.5vw, 28px); /* Reduced height */
+      --nav-fs: clamp(0.75rem, 2vw, 0.9rem);
       box-sizing: border-box; /* Include padding in width calculation */
       left: 0; /* Ensure consistent positioning */
       /* NOTE: removed a scrollbar-compensation hack (margin/padding using
@@ -141,7 +145,7 @@
       color: black;
       font-weight: bold;
       text-transform: uppercase;
-      font-size: clamp(0.75rem, 2vw, 0.9rem); /* Slightly reduced font size */
+      font-size: calc(var(--nav-fs) * var(--nav-fit, 1));
       white-space: nowrap;
       padding: clamp(0.15rem, 0.4vw, 0.25rem) clamp(0.25rem, 0.7vw, 0.4rem); /* Reduced touch targets */
       padding-bottom: calc(clamp(0.15rem, 0.4vw, 0.25rem) - 1px); /* underline sits 1px closer to the text */
@@ -165,9 +169,9 @@
       nav {
         gap: clamp(0.15rem, 1.5vw, 0.6rem); /* Reduced gap for tablets */
         padding: clamp(0.2rem, 0.7vw, 0.3rem) clamp(0.35rem, 1vw, 0.6rem);
+        --nav-fs: clamp(0.7rem, 1.8vw, 0.85rem); /* Reduced font size for tablets */
       }
       nav a {
-        font-size: clamp(0.7rem, 1.8vw, 0.85rem); /* Reduced font size for tablets */
         padding: clamp(0.12rem, 0.35vw, 0.2rem) clamp(0.2rem, 0.6vw, 0.35rem);
         padding-bottom: calc(clamp(0.12rem, 0.35vw, 0.2rem) - 1px);
       }
@@ -177,40 +181,59 @@
       nav {
         gap: clamp(0.12rem, 1vw, 0.4rem); /* Reduced gap for mobile */
         padding: clamp(0.15rem, 0.5vw, 0.25rem) clamp(0.25rem, 0.8vw, 0.5rem);
+        --nav-fs: clamp(0.65rem, 1.6vw, 0.8rem); /* Reduced font size for mobile */
       }
       nav a {
-        font-size: clamp(0.65rem, 1.6vw, 0.8rem); /* Reduced font size for mobile */
         padding: clamp(0.1rem, 0.3vw, 0.15rem) clamp(0.18rem, 0.5vw, 0.25rem);
         padding-bottom: calc(clamp(0.1rem, 0.3vw, 0.15rem) - 1px);
       }
     }
 
-    /* Touch phones: taller tap targets (text stays about the same — 6 items must fit one line). */
+    /* Touch screens: a thin bar. The links keep a comfortable tap height (their own
+       padding); the bar around them adds almost nothing. (Was 40-60px tall.) */
     @media (hover: none), (pointer: coarse) {
       nav {
         gap: clamp(0.14rem, 1.6vw, 1rem);
-        padding: clamp(0.4rem, 1.4vw, 0.7rem) clamp(0.3rem, 1vw, 0.6rem);
-        min-height: clamp(40px, 7vw, 54px);
+        padding: 0.15rem clamp(0.3rem, 1vw, 0.6rem);
+        min-height: 0;
+        --nav-fs: clamp(0.66rem, 2.3vw, 0.95rem);
       }
       nav a {
-        font-size: clamp(0.66rem, 2.3vw, 1.1rem);
-        padding: clamp(0.4rem, 1.3vw, 0.6rem) clamp(0.18rem, 0.6vw, 0.4rem);
-        padding-bottom: calc(clamp(0.4rem, 1.3vw, 0.6rem) - 1px);
+        padding: 0.45rem clamp(0.18rem, 0.6vw, 0.4rem);
+        padding-bottom: calc(0.45rem - 1px);
       }
     }
 
-    /* Tablet-sized screens: a bigger menu bar. Width-based so it applies on real tablets AND
-       previews correctly in the device-test harness. Placed last so it wins on touch tablets. */
+    /* Tablet-sized screens: slightly bigger text. Width-based so it applies on real tablets
+       AND previews correctly in the device-test harness. Placed after the touch rule so it
+       wins on touch tablets. */
     @media (min-width: 700px) and (max-width: 1200px) {
       nav {
         gap: clamp(0.45rem, 1.7vw, 1.15rem);
-        padding: clamp(0.3rem, 0.8vw, 0.5rem) clamp(0.5rem, 1.3vw, 0.9rem);
-        min-height: clamp(32px, 4vw, 42px);
+        padding: 0.15rem clamp(0.5rem, 1.3vw, 0.9rem);
+        min-height: 0;
+        --nav-fs: clamp(0.82rem, 1.6vw, 1.02rem);
       }
       nav a {
-        font-size: clamp(0.82rem, 1.6vw, 1.02rem);
-        padding: clamp(0.25rem, 0.65vw, 0.4rem) clamp(0.3rem, 0.85vw, 0.5rem);
-        padding-bottom: calc(clamp(0.25rem, 0.65vw, 0.4rem) - 1px);
+        padding: 0.4rem clamp(0.3rem, 0.85vw, 0.5rem);
+        padding-bottom: calc(0.4rem - 1px);
+      }
+    }
+
+    /* Phones (portrait) and other narrow windows: the six items spread across the whole
+       width and the text is sized to the screen, so the row fits even at 320px. Last, so
+       it wins over the rules above. */
+    @media (max-width: 600px) {
+      nav {
+        justify-content: space-evenly;
+        gap: 0;
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+        --nav-fs: min(0.85rem, 2.75vw);
+      }
+      nav a {
+        padding-left: 0.1rem;
+        padding-right: 0.1rem;
       }
     }</style></head><body><canvas id="swirlyCanvas"></canvas><div class="background-animation"><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div><div class="cloud"></div></div><nav><a href="/home">home</a> <a href="/radio-show">radio show</a> <a href="/year-end-lists">year-end lists</a> <a href="/dial-up">dial-up</a> <a href="/shop">shop</a> <a href="/support">support</a></nav><script>// Public URL for an archive record. Radio Študent's CMS suffixed a clashing
     // slug ("best-releases-of-2024-0": "best-releases-of-2024" was taken by the
@@ -221,15 +244,35 @@
     };</script><script>// Expose nav's real rendered height as --nav-h so fixed full-viewport
     // overlays (show detail / search) can stop their own top edge there
     // instead of running full-height behind nav's translucent background.
-    // Nav's height is responsive (clamp()s + can wrap to 2 lines on narrow
-    // screens), so this is measured, not assumed.
+    // Nav's height is responsive (clamp()s), so this is measured, not assumed.
+    //
+    // fitNav(): the nav is ONE row by design (flex-wrap: nowrap). The CSS sizes the
+    // text to fit; if a device still renders it wider than the screen (a wider
+    // fallback font, font boosting, a very narrow window), shrink the text a bit
+    // (--nav-fit) instead of letting links get clipped.
     (function () {
       const nav = document.querySelector('nav');
       if (!nav) return;
+      const links = nav.querySelectorAll('a');
+      const fitNav = () => {
+        nav.style.removeProperty('--nav-fit');
+        for (let i = 0; i < 4; i++) {
+          const cs = getComputedStyle(nav);
+          const room = nav.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+          let need = (parseFloat(cs.columnGap) || 0) * (links.length - 1);
+          links.forEach((a) => { need += a.getBoundingClientRect().width; });
+          if (need <= room) break;
+          const fit = parseFloat(nav.style.getPropertyValue('--nav-fit')) || 1;
+          nav.style.setProperty('--nav-fit', Math.max(0.6, fit * (room / need) * 0.98).toFixed(3));
+        }
+      };
       const update = () => {
         document.documentElement.style.setProperty('--nav-h', nav.getBoundingClientRect().height + 'px');
       };
+      fitNav();
       update();
+      window.addEventListener('resize', fitNav);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNav);
       if (window.ResizeObserver) {
         new ResizeObserver(update).observe(nav);
       } else {
