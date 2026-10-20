@@ -1769,13 +1769,23 @@
         if (playing) widget.seekTo(ms); else { pendingSeekMs = ms; widget.play(); }
         tlUpdate(ms);
       }
-      // an artist / label opens the search on it (like the player's own artist link)
+      // an artist / label opens the search on it (like the player's own artist link) — with a
+      // mouse, one click. Touch screens: the names sit right where a thumb taps a row, so a tap
+      // on a name waits a moment: a second tap opens the search, otherwise it's just a tap on
+      // the row (jump there). It has to wait — jumping first scrolls the list, and the second
+      // tap would land on another row.
+      const tlTouch = window.matchMedia('(hover: none)');
+      let tlTapTimer = null, tlTapTag = null;
       function tlTag(e) {
         const tag = e.target.closest('.mp-tl-tag');
         if (!tag) return false;
         e.preventDefault(); e.stopPropagation();
         openSearchFromPlayer({ kind: tag.dataset.kind, name: tag.dataset.name });
         return true;
+      }
+      function tlRowSeek(li) {
+        const i = [...tlList.children].indexOf(li);
+        if (tlRows[i]) tlSeek(tlRows[i].t * 1000);
       }
       function tlToggle() {
         tlList.hidden = !tlList.hidden;
@@ -1785,18 +1795,30 @@
       }
       tlNow.addEventListener('click', (e) => {
         if (el.classList.contains('mp-mini')) return; // the mini bar's own tap expands the player
-        if (tlTag(e)) return;
+        if (!tlTouch.matches && tlTag(e)) return; // phones: names here are inert, a tap opens / closes the list
         e.stopPropagation();
         tlToggle();
       });
       tlNow.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tlToggle(); } });
       tlList.addEventListener('click', (e) => {
-        if (tlTag(e)) return;
+        const tag = e.target.closest('.mp-tl-tag');
+        if (tag && tlTouch.matches) {
+          e.preventDefault(); e.stopPropagation();
+          if (tlTapTimer && tlTapTag === tag) { // the second tap: open the search
+            clearTimeout(tlTapTimer); tlTapTimer = null; tlTapTag = null;
+            openSearchFromPlayer({ kind: tag.dataset.kind, name: tag.dataset.name });
+            return;
+          }
+          clearTimeout(tlTapTimer); tlTapTag = tag;
+          const li = tag.closest('.mp-tl-row');
+          tlTapTimer = setTimeout(() => { tlTapTimer = null; tlTapTag = null; tlRowSeek(li); }, 320);
+          return;
+        }
+        if (tlTag(e)) return; // mouse
         const li = e.target.closest('.mp-tl-row');
         if (!li) return;
         e.stopPropagation();
-        const i = [...tlList.children].indexOf(li);
-        if (tlRows[i]) tlSeek(tlRows[i].t * 1000);
+        tlRowSeek(li);
       });
 
       function shuffleArr(a) {
