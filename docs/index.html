@@ -1488,6 +1488,18 @@
       .modem-player.mp-mini .mp-tl-t { display: none; }
       .modem-player.mp-mini .mp-tl { grid-area: meta; margin: 0; padding: 0; min-width: 0; }
       .modem-player.mp-mini .mp-tl-now { border: 0; padding: 0; font-size: 0.78rem; justify-content: flex-start; }
+
+      /* list open: everything must still fit the screen. The artwork shrinks (smoothly),
+         the gaps around the controls tighten, and the top keeps clear of the − / ×
+         buttons — instead of the centred column outgrowing the screen and the cover
+         being pushed up under (or past) the top edge. */
+      .modem-player .mp-art-wrap { transition: width 0.25s ease; }
+      .modem-player:not(.mp-mini)::before { min-height: 1.4rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-art-wrap { width: min(52vw, 23vh); }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-tl-list { max-height: min(20vh, 12.5rem); }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-time { margin-top: 0.5rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-bottom { margin-top: 1.2rem; gap: 1.1rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-show { margin-top: 0.8rem; }
     }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg> soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> <button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></div><script src="https://w.soundcloud.com/player/api.js"></script><script>// Live-tracklist timestamps (where each track starts in each show's SoundCloud
     // upload — scripts/tracklists/README.md), fetched once and shared by the show
     // page's tracklist (archive.html) and the floating player's slim one below.
@@ -1593,6 +1605,7 @@
       function tlSetup(item) {
         tlRows = []; tlCur = -1; tlFor = item; tlLastMs = 0;
         tlEl.hidden = true; tlList.hidden = true;
+        el.classList.remove('mp-tl-open');
         el.querySelector('.mp-panel').classList.remove('has-tl');
         if (!item || item.kind !== 'show' || !window.modemTimestamps) return;
         window.modemTimestamps().then((data) => {
@@ -1647,6 +1660,7 @@
       }
       function tlToggle() {
         tlList.hidden = !tlList.hidden;
+        el.classList.toggle('mp-tl-open', !tlList.hidden); // phones: the artwork makes room (CSS)
         tlNow.setAttribute('aria-expanded', String(!tlList.hidden));
         tlUpdate(tlLastMs, true);
       }
