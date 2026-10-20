@@ -6,6 +6,12 @@
   <meta name="initial-path" content="home.html">
   <link rel="icon" href="assets/modem.ico" type="image/x-icon">
   <title>modem</title>
+  <script>
+    // An app's built-in browser (Instagram, Facebook... on Android every app's is a WebView, "; wv)")
+    // only starts audio from a tap inside SoundCloud's own frame: the players then put that frame
+    // under the play button (.sc-tapwin / .mp-tapwin). Other browsers keep the plain button.
+    if (/; wv\)|Instagram|FBAN|FBAV|FB_IAB/.test(navigator.userAgent)) document.documentElement.classList.add('app-browser');
+  </script>
   <style>
     /* stop iOS Safari from auto-inflating text on mobile (the "super oversized"
        show pages) — desktop/emulators don't do this, only real iOS does. */
@@ -1432,10 +1438,13 @@
        SoundCloud player therefore sits in a small, fully transparent window over the play button,
        moved so that SoundCloud's own play button (8,11 43x43 in its frame, the same at any width)
        fills it: the first tap lands on SoundCloud's button. The window takes taps only while a track
-       is loaded and paused; pause, keyboard and everything else go to our button. 2026-10-20 */
+       is loaded and paused; pause, keyboard and everything else go to our button. 2026-10-20
+       Only in app browsers (html.app-browser, set in index.html's <head>): everywhere else the frame
+       stays off-screen, where the browser doesn't draw it, and our button gets the tap as before. */
     .mp-playwrap { position: relative; flex: none; display: flex; }
-    .mp-tapwin { position: absolute; inset: 0; margin: auto; width: min(100%, 43px); height: min(100%, 43px); overflow: hidden; opacity: 0; z-index: 1; pointer-events: none; }
-    .modem-player:not(.mp-playing) .mp-tapwin { pointer-events: auto; }
+    .mp-tapwin { position: absolute; left: -9999px; top: -9999px; width: 43px; height: 43px; overflow: hidden; opacity: 0; pointer-events: none; }
+    html.app-browser .mp-tapwin { left: 0; top: 0; right: 0; bottom: 0; margin: auto; width: min(100%, 43px); height: min(100%, 43px); z-index: 1; }
+    html.app-browser .modem-player:not(.mp-playing) .mp-tapwin { pointer-events: auto; }
     .mp-hidden { position: absolute; left: 50%; top: 50%; margin: -32.5px 0 0 -29.5px; width: 300px; height: 166px; border: 0; }
 
     /* ---- slim live tracklist, only while a whole show plays (same data as the show
