@@ -1576,6 +1576,18 @@
       .modem-player.mp-mini .mp-tl-t { display: none; }
       .modem-player.mp-mini .mp-tl { grid-area: meta; margin: 0; padding: 0; min-width: 0; }
       .modem-player.mp-mini .mp-tl-now { border: 0; padding: 0; font-size: 0.78rem; justify-content: flex-start; }
+
+      /* list open: everything must still fit the screen. The artwork shrinks (smoothly),
+         the gaps around the controls tighten, and the top keeps clear of the − / ×
+         buttons — instead of the centred column outgrowing the screen and the cover
+         being pushed up under (or past) the top edge. */
+      .modem-player .mp-art-wrap { transition: width 0.25s ease; }
+      .modem-player:not(.mp-mini)::before { min-height: 1.4rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-art-wrap { width: min(52vw, 23vh); }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-tl-list { max-height: min(20vh, 12.5rem); }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-time { margin-top: 0.5rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-bottom { margin-top: 1.2rem; gap: 1.1rem; }
+      .modem-player.mp-tl-open:not(.mp-mini) .mp-show { margin-top: 0.8rem; }
     }
   </style>
   <div id="modem-player" class="modem-player" hidden>
@@ -1712,6 +1724,7 @@
       function tlSetup(item) {
         tlRows = []; tlCur = -1; tlFor = item; tlLastMs = 0;
         tlEl.hidden = true; tlList.hidden = true;
+        el.classList.remove('mp-tl-open');
         el.querySelector('.mp-panel').classList.remove('has-tl');
         if (!item || item.kind !== 'show' || !window.modemTimestamps) return;
         window.modemTimestamps().then((data) => {
@@ -1766,6 +1779,7 @@
       }
       function tlToggle() {
         tlList.hidden = !tlList.hidden;
+        el.classList.toggle('mp-tl-open', !tlList.hidden); // phones: the artwork makes room (CSS)
         tlNow.setAttribute('aria-expanded', String(!tlList.hidden));
         tlUpdate(tlLastMs, true);
       }
