@@ -155,8 +155,10 @@
          bar; JS (syncBottomReserve) then refines --reserve-bottom to the bar's real
          measured height so it never overlays the grid's bottom row. */
       :root { --reserve-top: 4rem; --reserve-bottom: 4.5rem; }
+      /* bottom: above the minimised player bar when it's showing (index.html
+         publishes its height as --mp-mini-h) — it used to cover the buttons */
       .modem-actions {
-        top: auto; bottom: 0; left: 0; right: 0; transform: none;
+        top: auto; bottom: var(--mp-mini-h, 0px); left: 0; right: 0; transform: none;
         flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center;
         gap: 0.4rem; padding: 0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
       }
@@ -408,7 +410,8 @@
         // keep their size — only the centered grid's position slides up by SHIFT.
         const SHIFT = 22;
         if (nav) root.style.setProperty('--reserve-top', Math.max(8, Math.ceil(nav.getBoundingClientRect().bottom) + 8 - SHIFT) + 'px');
-        if (acts) root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height) + 12 + SHIFT) + 'px');
+        const mini = parseFloat(getComputedStyle(root).getPropertyValue('--mp-mini-h')) || 0; // the minimised player under the buttons
+        if (acts) root.style.setProperty('--reserve-bottom', (Math.ceil(acts.getBoundingClientRect().height + mini) + 12 + SHIFT) + 'px');
       } else {
         root.style.removeProperty('--reserve-top');
         root.style.removeProperty('--reserve-bottom');
@@ -417,6 +420,11 @@
     window.addEventListener('load', syncReserves);
     window.addEventListener('resize', syncReserves);
     window.addEventListener('orientationchange', syncReserves);
+    // the minimised player appearing / going away changes the room at the bottom
+    // (index.html fires mp-mini-change); one listener, even though this script re-runs per visit
+    window.removeEventListener('mp-mini-change', window.__radioShowReserves || (() => {}));
+    window.__radioShowReserves = syncReserves;
+    window.addEventListener('mp-mini-change', syncReserves);
     syncReserves();
     setTimeout(syncReserves, 300); // re-measure once fonts/layout settle
   </script>

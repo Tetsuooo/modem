@@ -2275,7 +2275,10 @@
       function sync() {
         const showing = !mp.hidden && mp.classList.contains('mp-mini') &&
           window.matchMedia('(max-width: 600px)').matches;
-        root.style.setProperty('--mp-mini-h', showing ? mp.getBoundingClientRect().height + 'px' : '0px');
+        const h = showing ? mp.getBoundingClientRect().height + 'px' : '0px';
+        if (root.style.getPropertyValue('--mp-mini-h') === h) return;
+        root.style.setProperty('--mp-mini-h', h);
+        window.dispatchEvent(new Event('mp-mini-change')); // e.g. radio-show.html re-fits its grid
       }
       new MutationObserver(sync).observe(mp, { attributes: true, attributeFilter: ['class', 'hidden'] });
       window.addEventListener('resize', sync);
