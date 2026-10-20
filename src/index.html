@@ -1406,7 +1406,7 @@
       width: 1.9rem; height: 1.9rem; display: flex; align-items: center; justify-content: center; padding: 0;
     }
     .mp-toggle { background: #fff; border: 2px solid #000; }
-    .mp-toggle:hover { background: #ffff00; }
+    .mp-toggle:hover, .mp-playwrap:hover .mp-toggle { background: #ffff00; }
     .mp-prev:hover, .mp-next:hover { color: #888; }
     /* shuffle toggle pinned to the top-right corner of the white panel */
     .mp-shuffle { position: absolute; top: 0.4rem; right: 0.45rem; z-index: 4; width: 1.5rem; height: 1.4rem; border: 0; background: transparent; cursor: pointer; font-size: 0.95rem; line-height: 1; color: #bbb; padding: 0; }
@@ -1427,7 +1427,16 @@
     .mp-close:hover { color: #ffff00; }
     /* minimize-to-bar handle: only used on phones (see mobile media query) */
     .mp-min { display: none; }
-    .mp-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
+    /* App browsers (Instagram, Facebook... on Android: a WebView) only start audio from a tap INSIDE
+       the frame that plays it, so a tap on our own button can't start SoundCloud there. The
+       SoundCloud player therefore sits in a small, fully transparent window over the play button,
+       moved so that SoundCloud's own play button (8,11 43x43 in its frame, the same at any width)
+       fills it: the first tap lands on SoundCloud's button. The window takes taps only while a track
+       is loaded and paused; pause, keyboard and everything else go to our button. 2026-10-20 */
+    .mp-playwrap { position: relative; flex: none; display: flex; }
+    .mp-tapwin { position: absolute; inset: 0; margin: auto; width: min(100%, 43px); height: min(100%, 43px); overflow: hidden; opacity: 0; z-index: 1; pointer-events: none; }
+    .modem-player:not(.mp-playing) .mp-tapwin { pointer-events: auto; }
+    .mp-hidden { position: absolute; left: 50%; top: 50%; margin: -32.5px 0 0 -29.5px; width: 300px; height: 166px; border: 0; }
 
     /* ---- slim live tracklist, only while a whole show plays (same data as the show
        page's tracklist: assets/show-timestamps.json). One "now playing" line; its ▾
@@ -1604,7 +1613,10 @@
       <div class="mp-bottom">
         <div class="mp-controls">
           <button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-          <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button>
+          <span class="mp-playwrap">
+            <button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button>
+            <span class="mp-tapwin"><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></span>
+          </span>
           <button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
         </div>
         <div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div>
@@ -1614,7 +1626,6 @@
       </div>
     </div>
     <a class="mp-show" id="mp-show"></a>
-    <iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe>
   </div>
 
   <script src="https://w.soundcloud.com/player/api.js"></script>
@@ -1967,12 +1978,13 @@
         widget = SC.Widget(iframe);
         widget.bind(SC.Widget.Events.PLAY, () => {
           playing = true; toggleBtn.innerHTML = ICON_PAUSE; wantPlaying = true;
+          el.classList.add('mp-playing'); // the tap window over the play button steps aside (.mp-tapwin)
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
           resolvePermalink();
           widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
           if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
         });
-        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
         widget.bind(SC.Widget.Events.FINISH, () => go(1));
         widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
           if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
@@ -2040,6 +2052,7 @@
       function loadAndPlay(item) {
         wantPlaying = true;
         playing = false;
+        el.classList.remove('mp-playing');
         toggleBtn.innerHTML = ICON_PLAY;
         renderMeta(item);
         widget.load(item.apiUrl, Object.assign({}, LOAD_OPTS, {
