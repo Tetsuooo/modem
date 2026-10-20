@@ -108,11 +108,23 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 1.5rem; line-height: 1; cursor: pointer;
     }
-    .sc-toggle:hover { color: #888; }
+    .sc-toggle:hover, .sc-playwrap:hover .sc-toggle { color: #888; }
     .sc-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; cursor: pointer; touch-action: none; }
     .sc-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .sc-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; transform: translateX(-50%); }
-    .sc-hidden { position: absolute; top: -9999px; left: -9999px; width: 320px; height: 200px; border: 0; }
+    /* App browsers (Instagram, Facebook... on Android: a WebView) only start audio from a tap INSIDE
+       the frame that plays it, so a tap on our own button can't start SoundCloud there. The
+       SoundCloud player therefore sits in a small, fully transparent window over the play button,
+       moved so that SoundCloud's own play button (8,11 43x43 in its frame, the same at any width)
+       fills it: the first tap lands on SoundCloud's button. The window takes taps only while a track
+       is ready and paused; pause, keyboard and everything else go to our button. 2026-10-20 */
+    .sc-playwrap { position: relative; flex: none; display: flex; }
+    .sc-tapwin { position: absolute; inset: 0; margin: auto; width: min(100%, 43px); height: min(100%, 43px); overflow: hidden; opacity: 0; z-index: 1; pointer-events: none; }
+    .sc-player.sc-ready:not(.sc-playing) .sc-tapwin { pointer-events: auto; }
+    .sc-hidden { position: absolute; left: 50%; top: 50%; margin: -32.5px 0 0 -29.5px; width: 300px; height: 166px; border: 0; }
+    /* SoundCloud never answered (a blocker): the player folds away; the frame stays in the page, so a
+       late answer can still bring it back */
+    .sc-player.sc-dead { height: 0; min-height: 0; padding: 0; margin: 0; overflow: hidden; }
     .sc-hidden-native { position: absolute; top: -9999px; left: -9999px; }
     /* Shown only if the SoundCloud widget never confirms it loaded (typically an
        ad/tracker blocker on the visitor's end) — see initPlayer()'s showFallback(). */
@@ -941,12 +953,14 @@
           '<div class="sc-time"><span class="sc-cur">0:00</span> / <span class="sc-dur">–:––</span></div>' +
           '<button class="sc-popout" type="button" title="continue in the floating player" aria-label="continue in the floating player">' + ICON_ARROW + '</button>' +
           '<div class="sc-row">' +
-            '<button class="sc-toggle" type="button" aria-label="play">' + ICON_PLAY + '</button>' +
+            '<span class="sc-playwrap">' +
+              '<button class="sc-toggle" type="button" aria-label="play">' + ICON_PLAY + '</button>' +
+              '<span class="sc-tapwin"><iframe class="sc-hidden" title="soundcloud player" allow="autoplay" src="' + src + '"></iframe></span>' +
+            '</span>' +
             '<div class="sc-bar"><div class="sc-progress"></div><div class="sc-playhead"></div></div>' +
           '</div>' +
           '</div>' +
-          (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">' + ICON_ARROW + ' listen on soundcloud</a>' : '') +
-          '<iframe class="sc-hidden" allow="autoplay" src="' + src + '"></iframe>';
+          (sc.track ? '<a class="sc-fallback" href="' + esc(sc.track) + '" target="_blank" rel="noopener">' + ICON_ARROW + ' listen on soundcloud</a>' : '');
       }
       // Native <audio>-backed twin of the SoundCloud player below, for the rare
       // show with no SoundCloud upload at all (see playerMarkup()) — same
@@ -1137,8 +1151,8 @@
         // this is a single widget, not up to a dozen on the page at once.
         let widget = null, durationMs = 0, readyTimer = null, currentPositionMs = 0, scrubbing = false;
         let playing = false, pendingSeekMs = null;
-        function showFallback() { wrap.style.display = 'none'; if (fallback) fallback.classList.add('show'); }
-        function restoreFromFallback() { wrap.style.display = ''; if (fallback) fallback.classList.remove('show'); }
+        function showFallback() { wrap.classList.add('sc-dead'); if (fallback) fallback.classList.add('show'); }
+        function restoreFromFallback() { wrap.classList.remove('sc-dead'); if (fallback) fallback.classList.remove('show'); }
         // Jump to a position from the tracklist. A widget that hasn't started yet
         // ignores seekTo, so start it first and seek once PLAY fires.
         function seekTo(ms) {
@@ -1154,15 +1168,17 @@
           widget.bind(SC.Widget.Events.READY, () => {
             clearTimeout(readyTimer);
             restoreFromFallback();
+            wrap.classList.add('sc-ready'); // the tap window over the play button goes live (.sc-tapwin)
             widget.getDuration((d) => { durationMs = d; durEl.textContent = fmt(d); });
           });
           widget.bind(SC.Widget.Events.PLAY, () => {
             playing = true;
+            wrap.classList.add('sc-playing');
             toggle.innerHTML = ICON_PAUSE;
             if (pendingSeekMs != null) { widget.seekTo(pendingSeekMs); pendingSeekMs = null; }
           });
-          widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; toggle.innerHTML = ICON_PLAY; });
-          widget.bind(SC.Widget.Events.FINISH, () => { playing = false; toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
+          widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; wrap.classList.remove('sc-playing'); toggle.innerHTML = ICON_PLAY; });
+          widget.bind(SC.Widget.Events.FINISH, () => { playing = false; wrap.classList.remove('sc-playing'); toggle.innerHTML = ICON_PLAY; seek(0); curEl.textContent = '0:00'; });
           widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
             if (!scrubbing) seek(e.relativePosition); // don't fight the user's drag
             curEl.textContent = fmt(e.currentPosition); currentPositionMs = e.currentPosition;
