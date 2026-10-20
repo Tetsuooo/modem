@@ -163,6 +163,11 @@
       .back-arrow {
         top: 90px !important; /* Move arrow lower in portrait mode */
       }
+    }
+    /* phones: a smaller back arrow (it sat big over the collage; the dial-up page's own
+       buttons are smaller on phones too) */
+    @media (max-width: 600px) {
+      .back-arrow { font-size: 18px !important; padding: 3px 9px !important; right: 12px !important; } /* !important: the script that shows it sets its size inline */
     }</style><script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.2.4/pixi.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pixi-apngandgif@latest/dist/pixi-apngandgif.min.js"></script><script type="module">// Import the loadSpritesheet function and attach it to window.Framework.
     import { loadSpritesheet } from './framework.js';
     window.Framework = { loadSpritesheet };
@@ -294,11 +299,13 @@
                 iframe = document.createElement('iframe');
                 iframe.id = 'mix-iframe';
                 iframe.style.position = 'fixed';
-                iframe.style.bottom = '0px';
+                // ends above the minimised player bar when it's showing (--mp-mini-h,
+                // index.html) — it used to cover the collage's < button and play button
+                iframe.style.bottom = 'var(--mp-mini-h, 0px)';
                 iframe.style.right = '0px';
                 iframe.style.border = 'none';
                 iframe.style.width = '100vw';
-                iframe.style.height = '100vh';
+                iframe.style.height = 'calc(100vh - var(--mp-mini-h, 0px))';
                 iframe.style.zIndex = '150000';
                 iframe.setAttribute('allow', 'autoplay; encrypted-media');
                 iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation');
