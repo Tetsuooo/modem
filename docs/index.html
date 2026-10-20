@@ -1601,7 +1601,7 @@
           withData((d) => {
             if (tlFor !== item) return; // the player moved on meanwhile
             const byKey = new Map((d.tracks || []).map((t) => [t.key, t]));
-            tlRows = entry.tracks.map((x) => {
+            tlRows = entry.tracks.filter((x) => !x.hidden).map((x) => { // hidden: "not played" (show builder)
               const tk = x.key && byKey.get(x.key);
               return { t: x.t, approx: !!x.approx, slug: item.slug, playlistOnly: !tk,
                 tk: tk || { artist: x.artist || '' }, title: (tk && tk.title) || x.title || 'untitled' };
