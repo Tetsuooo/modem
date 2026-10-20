@@ -190,7 +190,14 @@ function mount(app, opts = {}) {
       const merges = changedKeys(before.tagMerges, now.tagMerges);
       const edits = changedKeys(before.tagEdits, now.tagEdits);
       const sc = changedKeys(parse(committed('scripts/approvals.json')), parse(working('scripts/approvals.json')));
-      res.json({ ok: true, segEdits: segs, tagMerges: merges.length, tagEdits: edits, scLinks: sc.length, total: segs.length + merges.length + edits.length + sc.length });
+      // the Tracklist tab's start-time fixes ("<slug>::<rowId>")
+      const times = changedKeys(before.timeEdits, now.timeEdits);
+      const timeShows = new Set(times.map((k) => k.split('::')[0])).size;
+      res.json({
+        ok: true, segEdits: segs, tagMerges: merges.length, tagEdits: edits, scLinks: sc.length,
+        timeEdits: times.length, timeShows,
+        total: segs.length + merges.length + edits.length + sc.length + times.length,
+      });
     } catch (e) {
       res.status(500).json({ ok: false, error: String(e.message || e) });
     }

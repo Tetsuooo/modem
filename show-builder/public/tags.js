@@ -633,6 +633,7 @@
     if (p.tagEdits.length) bits.push(`${p.tagEdits.length} release${p.tagEdits.length > 1 ? 's' : ''}`);
     if (p.tagMerges) bits.push(`${p.tagMerges} merge${p.tagMerges > 1 ? 's' : ''}`);
     if (p.scLinks) bits.push(`${p.scLinks} SoundCloud link${p.scLinks > 1 ? 's' : ''}`);
+    if (p.timeEdits) bits.push(`${p.timeEdits} tracklist time fix${p.timeEdits > 1 ? 'es' : ''} in ${p.timeShows} show${p.timeShows > 1 ? 's' : ''}`);
     info.innerHTML = p.total
       ? `<b>Saved, not on the site yet:</b> ${esc(bits.join(' · '))}`
       : 'Everything saved is on the site.';
@@ -680,8 +681,10 @@
     const box = el('sePubReview');
     if (j.error) { box.innerHTML = `<div class="errors">the rebuild failed: ${esc(j.error)} — nothing was changed on the site. The log above says where.</div>`; return; }
     const ch = j.changed;
-    const list = ch && ch.records.length
-      ? `<ul class="se-changes">${ch.records.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
+    const pend = P.pending || {};
+    const times = pend.timeEdits ? `<li>tracklist start times: ${pend.timeEdits} fix${pend.timeEdits > 1 ? 'es' : ''} in ${pend.timeShows} show${pend.timeShows > 1 ? 's' : ''} (Tracklist tab)</li>` : '';
+    const list = (ch && ch.records.length) || times
+      ? `<ul class="se-changes">${times}${ch ? ch.records.map((x) => `<li>${esc(x)}</li>`).join('') : ''}</ul>`
       : '<div class="tg-hint">no show or list changes (only track details, if anything).</div>';
     box.innerHTML = `<div class="se-review">
       <div><b>Rebuilt on this computer.</b> Publishing would change:</div>${list}
