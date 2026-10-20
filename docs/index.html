@@ -1331,6 +1331,12 @@
     .mp-bar { flex: 1; height: 4px; background: #e9e9e9; border: 1px solid #000; position: relative; touch-action: none; }
     .mp-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #000; }
     .mp-playhead { position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; background: #000; border: 0; transform: translateX(-50%); }
+    /* touch screens: the 4px timeline also takes taps around it (an invisible ::before; the line
+       keeps its look). 10px above and below here, where the buttons sit beside it (tablets); more
+       in the phone player and the mini bar (see the phone rules). */
+    @media (pointer: coarse) {
+      .mp-bar::before { content: ''; position: absolute; left: -6px; right: -6px; top: -10px; bottom: -10px; }
+    }
     /* plain × (no circle), pinned to the artwork's top-left corner (the
        "↗ soundcloud" pill already owns top-right) — nested inside .mp-art-wrap
        now instead of floating at the far edge of the whole (wider) panel. */
@@ -1413,6 +1419,13 @@
         gap: 1.6rem; margin-top: 2.1rem; width: 100%; position: relative;
       }
       .modem-player .mp-bar { order: 1; flex: none; width: 100%; max-width: 100%; height: 5px; }
+      /* touch: the timeline takes taps 16px above and below it (the gap to the buttons below is at
+         least 1.1rem). In the mini bar, where the line is the bar's top edge, only 8px downward:
+         upward it would reach over the page above (e.g. the radio-show buttons). */
+      @media (pointer: coarse) {
+        .modem-player .mp-bar::before { top: -16px; bottom: -16px; }
+        .modem-player.mp-mini .mp-bar::before { left: 0; right: 0; top: 0; bottom: -8px; }
+      }
       .modem-player .mp-controls { order: 2; gap: 1.9rem; }
       .modem-player .mp-controls button { width: 3.2rem; height: 3.2rem; font-size: 1.75rem; }
       /* shuffle sits on the SAME line as the transport controls, at the right edge
