@@ -1355,11 +1355,17 @@
        fills it: the first tap lands on SoundCloud's button. The window takes taps only while a track
        is loaded and paused; pause, keyboard and everything else go to our button. 2026-10-20
        Only in app browsers (html.app-browser, set in index.html's <head>): everywhere else the frame
-       stays off-screen, where the browser doesn't draw it, and our button gets the tap as before. */
+       stays off-screen, where the browser doesn't draw it, and our button gets the tap as before.
+       Next (2026-10-21): a SECOND SoundCloud player, loaded with the next track and paused, sits the
+       same way over the next button (.tw-next), so a tap on next starts that track straight away;
+       the two players then swap places (see placeTapwins / takeOverFromSpare). Both windows live
+       in .mp-controls and are positioned by script, because moving an iframe in the page reloads it. */
     .mp-playwrap { position: relative; flex: none; display: flex; }
+    .mp-controls { position: relative; }
     .mp-tapwin { position: absolute; left: -9999px; top: -9999px; width: 43px; height: 43px; overflow: hidden; opacity: 0; pointer-events: none; }
-    html.app-browser .mp-tapwin { left: 0; top: 0; right: 0; bottom: 0; margin: auto; width: min(100%, 43px); height: min(100%, 43px); z-index: 1; }
-    html.app-browser .modem-player:not(.mp-playing) .mp-tapwin { pointer-events: auto; }
+    html.app-browser .mp-tapwin { z-index: 1; } /* left / top / size: placeTapwins() */
+    html.app-browser .modem-player:not(.mp-playing) .mp-tapwin.tw-play { pointer-events: auto; }
+    html.app-browser .modem-player.mp-next-ready .mp-tapwin.tw-next { pointer-events: auto; }
     .mp-hidden { position: absolute; left: 50%; top: 50%; margin: -32.5px 0 0 -29.5px; width: 300px; height: 166px; border: 0; }
 
     /* ---- slim live tracklist, only while a whole show plays (same data as the show
@@ -1528,7 +1534,7 @@
       .modem-player.mp-tl-open:not(.mp-mini) .mp-time { margin-top: 0.5rem; }
       .modem-player.mp-tl-open:not(.mp-mini) .mp-bottom { margin-top: 1.2rem; gap: 1.1rem; }
       .modem-player.mp-tl-open:not(.mp-mini) .mp-show { margin-top: 0.8rem; }
-    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg> soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <span class="mp-playwrap"><button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> <span class="mp-tapwin"><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></span></span><button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a></div><script src="https://w.soundcloud.com/player/api.js"></script><script>// Live-tracklist timestamps (where each track starts in each show's SoundCloud
+    }</style><div id="modem-player" class="modem-player" hidden><span class="mp-art-wrap"><a class="mp-art" id="mp-art" target="_blank" rel="noopener"><img alt=""></a><a class="mp-src" id="mp-src" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg> soundcloud</a> <button class="mp-min" type="button" aria-label="minimize to bar" title="minimize">&minus;</button> <button class="mp-close" type="button" aria-label="close">×</button></span><div class="mp-panel"><div class="mp-title"></div><div class="mp-meta"><a class="mp-artist" title="find this artist"></a><a class="mp-album" target="_blank" rel="noopener"></a><a class="mp-label" title="find this label"></a></div><div class="mp-time" id="mp-time">0:00 / –:––</div><div class="mp-bottom"><div class="mp-controls"><button class="mp-prev" type="button" aria-label="previous"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button> <span class="mp-playwrap"><button class="mp-toggle" type="button" aria-label="play or pause"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"/></svg></button> </span><button class="mp-next" type="button" aria-label="next"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button> <span class="mp-tapwin tw-play"><iframe class="mp-hidden" title="modem player" allow="autoplay"></iframe></span></div><div class="mp-bar"><div class="mp-progress"></div><div class="mp-playhead"></div></div><button class="mp-shuffle on" id="mp-shuffle" type="button" aria-label="shuffle" title="shuffle: on">⇄</button></div></div><a class="mp-show" id="mp-show"></a></div><script src="https://w.soundcloud.com/player/api.js"></script><script>// Live-tracklist timestamps (where each track starts in each show's SoundCloud
     // upload — scripts/tracklists/README.md), fetched once and shared by the show
     // page's tracklist (archive.html) and the floating player's slim one below.
     (function () {
@@ -1568,6 +1574,18 @@
       // also an emoji-capable glyph on iOS.
       const ICON_ARROW = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg>';
       const iframe = el.querySelector('.mp-hidden');
+      // App browsers (see .mp-tapwin): a second SoundCloud player, preloaded with the next
+      // track, waits under the next button. Only there; everywhere else it doesn't exist.
+      const APP = document.documentElement.classList.contains('app-browser');
+      const controls = el.querySelector('.mp-controls');
+      let curTw = el.querySelector('.mp-tapwin.tw-play'), spareTw = null, iframeB = null;
+      if (APP) {
+        spareTw = document.createElement('span');
+        spareTw.className = 'mp-tapwin tw-next';
+        spareTw.innerHTML = '<iframe class="mp-hidden" title="modem player (next track)" allow="autoplay"></iframe>';
+        controls.appendChild(spareTw);
+        iframeB = spareTw.firstChild;
+      }
       const artLink = el.querySelector('#mp-art');
       const artImg = artLink.querySelector('img');
       const titleEl = el.querySelector('.mp-title');
@@ -1871,10 +1889,17 @@
         tlSetup(item);
       }
 
-      function bindWidget() {
-        if (widget) return;                    // never bind twice (warm + start can race)
-        widget = SC.Widget(iframe);
-        widget.bind(SC.Widget.Events.PLAY, () => {
+      // Events of a SoundCloud player. Only the one holding the current track (`widget`)
+      // drives the UI; the spare's only event that matters is PLAY = the tap on next
+      // landed on its play button, so it takes over.
+      function bindEvents(w) {
+        w.bind(SC.Widget.Events.PLAY, () => {
+          if (w === spare) {
+            // a tap on next, only while the spare is ready under it. Right after a swap the old
+            // player, loading its next track, can report PLAY without playing: keep it quiet.
+            if (spareReady) takeOverFromSpare(); else { w.pause(); return; }
+          }
+          if (w !== widget) return;
           playing = true; toggleBtn.innerHTML = ICON_PAUSE; wantPlaying = true;
           el.classList.add('mp-playing'); // the tap window over the play button steps aside (.mp-tapwin)
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
@@ -1882,14 +1907,129 @@
           widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
           if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
         });
-        widget.bind(SC.Widget.Events.PAUSE, () => { playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
-        widget.bind(SC.Widget.Events.FINISH, () => go(1));
-        widget.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
+        w.bind(SC.Widget.Events.PAUSE, () => { if (w !== widget) return; playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        w.bind(SC.Widget.Events.FINISH, () => { if (w === widget) go(1); });
+        w.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
+          if (w !== widget) return;
           if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
           if (!durationMs && e.relativePosition > 0) durationMs = e.currentPosition / e.relativePosition;
           timeEl.textContent = fmtT(e.currentPosition) + ' / ' + fmtT(durationMs);
           tlUpdate(e.currentPosition);
         });
+      }
+      function bindWidget() {
+        if (widget) return;                    // never bind twice (warm + start can race)
+        widget = SC.Widget(iframe);
+        bindEvents(widget);
+      }
+
+      // ---- app browsers: the spare player under the next button ----
+      // An app browser (Instagram / Facebook) only starts SoundCloud's audio from a tap inside
+      // SoundCloud's own frame; a tap on our next button can load the next track but not start
+      // it. So the next track waits, loaded and paused, in a second player whose play button sits
+      // under ours (.tw-next): the tap on next starts it for real. Its PLAY makes it the current
+      // player (takeOverFromSpare), the old one is paused and becomes the spare, loading the track
+      // after that. Until the spare is ready (.mp-next-ready) a tap on next goes to our button
+      // (load, then a tap on play). Previous and the automatic next at a track's end still wait
+      // for a tap on play there: no tap, no sound.
+      let spare = null, spareFor = null, spareWant = null, spareIdx = -1, spareBusy = false, spareGen = 0, spareReady = false;
+      // Tracks SoundCloud no longer plays (removed / private: the widget errors and the sound
+      // comes back without a title). Found by the spare; next and previous skip them, or a tap on
+      // next would land on a player that can never start. 2026-10-21, e.g. modem 242's "carpundia".
+      const deadUrls = new Set();
+      const SC_QS = '&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
+      const setSpareReady = (on) => { spareReady = on; el.classList.toggle('mp-next-ready', on); };
+      // the next index after i (in direction d) that isn't known to be dead; i itself if all are
+      function nextAlive(i, d) {
+        for (let n = 1; n <= queue.length; n++) {
+          const j = ((i + d * n) % queue.length + queue.length) % queue.length;
+          if (!deadUrls.has(queue[j].apiUrl)) return j;
+        }
+        return i;
+      }
+      function preloadSpare() {
+        if (!APP) return;
+        setSpareReady(false);
+        if (queue.length < 2) { spareWant = null; return; }
+        spareIdx = nextAlive(idx, 1);
+        spareWant = spareIdx === idx ? null : queue[spareIdx].apiUrl;
+        pumpSpare();
+      }
+      function pumpSpare() {
+        if (spareBusy || !spareWant) return;
+        if (spare && spareFor === spareWant) { setSpareReady(true); placeTapwins(); return; }
+        spareBusy = true;
+        const url = spareWant, gen = spareGen;
+        // loaded: check it can really play; a dead one is skipped (the spare loads the one after)
+        const done = () => {
+          if (gen !== spareGen) return;
+          let answered = false;
+          const verdict = (alive) => {
+            if (answered || gen !== spareGen) return;
+            answered = true;
+            spareBusy = false;
+            if (!alive) { deadUrls.add(url); spareFor = null; if (spareWant === url) preloadSpare(); else pumpSpare(); return; }
+            spareFor = url; pumpSpare();
+          };
+          setTimeout(() => verdict(true), 4000); // no answer: assume it plays
+          spare.getCurrentSound((s) => verdict(!!(s && s.title) && s.streamable !== false && s.policy !== 'BLOCK'));
+        };
+        if (!spare) {
+          // the first time: make the frame a SoundCloud player, then wrap it (like bindWidget)
+          iframeB.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&auto_play=false' + SC_QS;
+          const wait = (n) => {
+            if (window.SC && SC.Widget) {
+              spare = SC.Widget(iframeB);
+              bindEvents(spare);
+              let first = true; // READY again after later loads would be stale here
+              spare.bind(SC.Widget.Events.READY, () => { if (first) { first = false; done(); } });
+            } else if (n > 0) setTimeout(() => wait(n - 1), 100);
+            else spareBusy = false;
+          };
+          wait(80);
+        } else {
+          spare.load(url, Object.assign({}, LOAD_OPTS, { auto_play: false, callback: done }));
+        }
+      }
+      function takeOverFromSpare() {
+        const old = widget;
+        const oldFor = old ? (queue[idx] && queue[idx].apiUrl) : null;
+        widget = spare; spare = old;
+        const t = curTw; curTw = spareTw; spareTw = t;
+        curTw.classList.replace('tw-next', 'tw-play');
+        spareTw.classList.replace('tw-play', 'tw-next');
+        setSpareReady(false); // before pausing the old player: its own PLAY/PAUSE noise must not count as a tap
+        if (old) old.pause();
+        idx = spareIdx;
+        wantPlaying = true; pendingSeekMs = null;
+        renderMeta(queue[idx]);
+        // the old player is the spare now: it still holds the previous track
+        spareGen++; spareBusy = false; spareFor = oldFor;
+        placeTapwins();
+        preloadSpare();
+      }
+      // Put the tap windows over the play and next buttons (app browsers only). Centred on the
+      // button, at most SoundCloud's 43px button size (.mp-hidden centres that button in it).
+      function placeTapwins() {
+        if (!APP || el.hidden) return;
+        const c = controls.getBoundingClientRect();
+        const put = (tw, btn) => {
+          if (!tw) return;
+          const b = btn.getBoundingClientRect();
+          const w = Math.min(b.width, 43), h = Math.min(b.height, 43);
+          tw.style.width = w + 'px'; tw.style.height = h + 'px';
+          tw.style.left = (b.left - c.left + (b.width - w) / 2) + 'px';
+          tw.style.top = (b.top - c.top + (b.height - h) / 2) + 'px';
+        };
+        put(curTw, toggleBtn);
+        put(spareTw, nextBtn);
+      }
+      if (APP) {
+        let raf = 0;
+        const schedulePlace = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(placeTapwins); };
+        if (window.ResizeObserver) { const ro = new ResizeObserver(schedulePlace); ro.observe(controls); ro.observe(toggleBtn); ro.observe(nextBtn); }
+        window.addEventListener('resize', schedulePlace);
+        new MutationObserver(schedulePlace).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
       }
 
       // Position the player on first appearance — ALWAYS the same spot,
@@ -1937,6 +2077,8 @@
         } else {
           loadAndPlay(item);
         }
+        preloadSpare();
+        placeTapwins();
       }
 
       // Load a track and start it. On mobile, widget.load({auto_play:true}) usually
@@ -1961,8 +2103,9 @@
 
       function go(delta) {
         if (!queue.length || !widget) return;
-        idx = (idx + delta + queue.length) % queue.length;
+        idx = deadUrls.size ? nextAlive(idx, delta < 0 ? -1 : 1) : (idx + delta + queue.length) % queue.length;
         loadAndPlay(queue[idx]);
+        preloadSpare();
       }
 
       // Pre-warm the SoundCloud widget on the user's FIRST interaction with the page.
@@ -2052,7 +2195,7 @@
         shufBtn.classList.toggle('on', shuffleOn);
         shufBtn.title = 'shuffle: ' + (shuffleOn ? 'on' : 'off');
         // re-order what plays next, keeping the current track playing
-        if (queue.length) { const cur = queue[idx]; queue = order(queue); idx = Math.max(0, queue.findIndex((x) => x.apiUrl === cur.apiUrl)); }
+        if (queue.length) { const cur = queue[idx]; queue = order(queue); idx = Math.max(0, queue.findIndex((x) => x.apiUrl === cur.apiUrl)); preloadSpare(); }
       };
       // Scrubbing: pointer events cover mouse/touch/pen in one path, and
       // setPointerCapture keeps move/up firing on `bar` even once the
