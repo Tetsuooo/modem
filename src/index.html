@@ -2017,23 +2017,28 @@
       // Events of a SoundCloud player. Only the one holding the current track (`widget`)
       // drives the UI; the spare's only event that matters is PLAY = the tap on next
       // landed on its play button, so it takes over.
-      function bindEvents(w) {
+      function bindEvents(w, frame) {
+        const name = frame === iframe ? 'A' : 'B';
         w.bind(SC.Widget.Events.PLAY, () => {
-          if (w === spare) {
-            // a tap on next, only while the spare is ready under it. Right after a swap the old
-            // player, loading its next track, can report PLAY without playing: keep it quiet.
-            if (spareReady) takeOverFromSpare(); else { w.pause(); return; }
-          }
-          if (w !== widget) return;
-          playing = true; toggleBtn.innerHTML = ICON_PAUSE; wantPlaying = true;
-          el.classList.add('mp-playing'); // the tap window over the play button steps aside (.mp-tapwin)
-          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-          resolvePermalink();
-          widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
-          if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
+          if (!APP) return onPlay(w);
+          // App browsers: SoundCloud can report PLAY without playing — after a start the browser
+          // blocked, or as the API's stand-in PLAY for an early progress message while a track
+          // loads. Believed, that showed ❚❚ over silence, the window over play stepped aside and
+          // every tap reached our button (2026-10-21, "play random track" in Instagram). So ask.
+          // A ready spare's window goes off at once (a quick second tap must not land on the track
+          // that just started and pause it); back on if the PLAY turns out to be a phantom.
+          const wasReadySpare = w === spare && spareReady;
+          if (wasReadySpare) setSpareReady(false);
+          w.isPaused((p) => {
+            dlog('PLAY from ' + name + (w === widget ? ' (current)' : w === spare ? ' (spare)' : '') + (p ? ' — but it is paused: ignored' : ''));
+            if (p) { if (wasReadySpare && w === spare && spareFor === spareWant) setSpareReady(true); return; }
+            if (wasReadySpare && w === spare) takeOverFromSpare(); // a real tap on next (spareReady is already off)
+            onPlay(w);
+          });
         });
-        w.bind(SC.Widget.Events.PAUSE, () => { if (w !== widget) return; playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
-        w.bind(SC.Widget.Events.FINISH, () => { if (w === widget) go(1); });
+        w.bind(SC.Widget.Events.PAUSE, () => { dlog('PAUSE from ' + name); if (w !== widget) return; playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
+        w.bind(SC.Widget.Events.FINISH, () => { dlog('FINISH from ' + name); if (w === widget) go(1); });
+        w.bind(SC.Widget.Events.ERROR, () => dlog('ERROR from ' + name));
         w.bind(SC.Widget.Events.PLAY_PROGRESS, (e) => {
           if (w !== widget) return;
           if (!scrubbing) setProgress(e.relativePosition); // don't fight the user's drag
@@ -2042,10 +2047,24 @@
           tlUpdate(e.currentPosition);
         });
       }
+      function onPlay(w) {
+        if (w === spare) {
+          // a tap on next, only while the spare is ready under it. Right after a swap the old
+          // player, loading its next track, can report PLAY without playing: keep it quiet.
+          if (spareReady) takeOverFromSpare(); else { w.pause(); return; }
+        }
+        if (w !== widget) return;
+        playing = true; toggleBtn.innerHTML = ICON_PAUSE; wantPlaying = true;
+        el.classList.add('mp-playing'); // the tap window over the play button steps aside (.mp-tapwin)
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        resolvePermalink();
+        widget.getDuration((d) => { if (d) { durationMs = d; timeEl.textContent = fmtT(0) + ' / ' + fmtT(d); } });
+        if (pendingSeekMs != null) { const s = pendingSeekMs; pendingSeekMs = null; widget.seekTo(s); }
+      }
       function bindWidget() {
         if (widget) return;                    // never bind twice (warm + start can race)
         widget = SC.Widget(iframe);
-        bindEvents(widget);
+        bindEvents(widget, iframe);
       }
 
       // ---- app browsers: the spare player under the next button ----
@@ -2093,6 +2112,7 @@
             if (answered || gen !== spareGen) return;
             answered = true;
             spareBusy = false;
+            dlog('spare loaded #' + spareIdx + (alive ? ' — ready under ⏭' : ' — DEAD on SoundCloud, skipped'));
             if (!alive) { deadUrls.add(url); spareFor = null; if (spareWant === url) preloadSpare(); else pumpSpare(); return; }
             spareFor = url; pumpSpare();
           };
@@ -2105,7 +2125,7 @@
           const wait = (n) => {
             if (window.SC && SC.Widget) {
               spare = SC.Widget(iframeB);
-              bindEvents(spare);
+              bindEvents(spare, iframeB);
               let first = true; // READY again after later loads would be stale here
               spare.bind(SC.Widget.Events.READY, () => { if (first) { first = false; done(); } });
             } else if (n > 0) setTimeout(() => wait(n - 1), 100);
@@ -2117,6 +2137,7 @@
         }
       }
       function takeOverFromSpare() {
+        dlog('tap on ⏭ started the spare: swap, #' + spareIdx + ' is now playing');
         const old = widget;
         const oldFor = old ? (queue[idx] && queue[idx].apiUrl) : null;
         widget = spare; spare = old;
@@ -2155,6 +2176,42 @@
         if (window.ResizeObserver) { const ro = new ResizeObserver(schedulePlace); ro.observe(controls); ro.observe(toggleBtn); ro.observe(nextBtn); }
         window.addEventListener('resize', schedulePlace);
         new MutationObserver(schedulePlace).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
+        // and keep correcting: a layout change that only MOVES the buttons fires none of the above.
+        // Two rect reads, so cheap; a touch on the player re-places at once.
+        setInterval(() => { if (!el.hidden) placeTapwins(); }, 700);
+        el.addEventListener('pointerdown', placeTapwins, true);
+      }
+
+      // ---- #mpdebug: an on-screen diagnostic panel for app browsers we can't inspect ----
+      // Open the site with #mpdebug at the end of the address (e.g. in Instagram's browser): a
+      // small panel shows where the tap windows sit against the buttons, what's on top at play /
+      // next, each SoundCloud player's state and the last events. Nobody else sees anything.
+      const DEBUG = /mpdebug/.test(location.hash + location.search);
+      const dlog = (() => {
+        if (!DEBUG) return () => {};
+        const panel = document.createElement('div');
+        panel.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483647;pointer-events:none;background:rgba(0,0,0,.78);color:#0f0;font:10px/1.3 monospace;padding:4px 6px;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow:hidden';
+        document.body.appendChild(panel);
+        const lines = []; let status = '';
+        const label = (frame) => (frame === iframe ? 'A' : frame === iframeB ? 'B' : '?');
+        const box = (x) => { if (!x) return '-'; const b = x.getBoundingClientRect(); return Math.round(b.left) + ',' + Math.round(b.top) + ' ' + Math.round(b.width) + 'x' + Math.round(b.height); };
+        const onTop = (btn) => { const b = btn.getBoundingClientRect(); const t = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); if (!t) return 'nothing'; const tw = t.closest && t.closest('.mp-tapwin'); return tw ? 'frame ' + label(tw.querySelector('iframe')) : (t.closest && t.closest('button') ? 'our ' + t.closest('button').className : t.tagName); };
+        const render = () => { panel.textContent = status + '\n' + lines.join('\n'); };
+        const ask = (w) => new Promise((res) => { if (!w) return res('-'); let d = false; setTimeout(() => { if (!d) { d = true; res('no answer'); } }, 900); w.getCurrentSound((s) => w.isPaused((p) => { if (!d) { d = true; res((p ? 'paused' : 'PLAYING') + ' "' + (s && s.title ? s.title.slice(0, 22) : 'NO TITLE') + '"'); } })); });
+        setInterval(async () => {
+          if (el.hidden) { status = 'mpdebug: player closed. app-browser=' + APP; render(); return; }
+          const cur = curTw && curTw.querySelector('iframe'), sp = spareTw && spareTw.querySelector('iframe');
+          status = 'app-browser=' + APP + ' playingUI=' + el.classList.contains('mp-playing') + ' spareReady=' + spareReady + ' #' + idx + '/' + queue.length + ' dead=' + deadUrls.size + '\n' +
+            '▶ btn ' + box(toggleBtn) + ' | win ' + label(cur) + ' ' + box(curTw) + ' pe=' + (curTw ? getComputedStyle(curTw).pointerEvents : '-') + ' | on top: ' + onTop(toggleBtn) + '\n' +
+            '⏭ btn ' + box(nextBtn) + ' | win ' + label(sp) + ' ' + box(spareTw) + ' pe=' + (spareTw ? getComputedStyle(spareTw).pointerEvents : '-') + ' | on top: ' + onTop(nextBtn) + '\n' +
+            'current ' + label(cur) + ': ' + (await ask(widget)) + ' | spare ' + label(sp) + ': ' + (await ask(spare)) + '\n' + '-'.repeat(30);
+          render();
+        }, 1000);
+        return (msg) => { const t = new Date(); lines.unshift(String(t.getMinutes()).padStart(2, '0') + ':' + String(t.getSeconds()).padStart(2, '0') + ' ' + msg); lines.length = Math.min(lines.length, 16); render(); };
+      })();
+      if (DEBUG) {
+        toggleBtn.addEventListener('click', () => dlog('tap reached OUR ▶ button (not a SoundCloud frame)'), true);
+        nextBtn.addEventListener('click', () => dlog('tap reached OUR ⏭ button (not a SoundCloud frame)'), true);
       }
 
       // Position the player on first appearance — ALWAYS the same spot,
@@ -2260,7 +2317,17 @@
       // Call play()/pause() SYNCHRONOUSLY inside the tap — do NOT wait on an async
       // isPaused() round-trip first, or mobile browsers drop the user-activation and
       // silently block the audio. `playing` is kept in sync by the PLAY/PAUSE events.
-      toggleBtn.onclick = () => { if (!widget) return; if (playing) { widget.pause(); wantPlaying = false; } else { widget.play(); wantPlaying = true; } };
+      toggleBtn.onclick = () => {
+        if (!widget) return;
+        const was = playing;
+        if (playing) { widget.pause(); wantPlaying = false; } else { widget.play(); wantPlaying = true; }
+        // App browsers: if ❚❚ showed over a player that isn't playing (no PAUSE will come), this tap
+        // still tells us — put ▶ back, so the window over play takes the next tap again.
+        if (APP && was) {
+          const w = widget;
+          w.isPaused((p) => { if (p && w === widget && playing) { playing = false; el.classList.remove('mp-playing'); toggleBtn.innerHTML = ICON_PLAY; dlog('❚❚ showed but SoundCloud was paused: back to ▶'); } });
+        }
+      };
       prevBtn.onclick = () => go(-1);
       nextBtn.onclick = () => go(1);
       closeBtn.onclick = () => { if (widget) widget.pause(); wantPlaying = false; el.hidden = true; el.classList.remove('mp-mini'); };
