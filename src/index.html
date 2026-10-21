@@ -1168,12 +1168,14 @@
       let data = null, ctx = null, searchTracks = [];
       const state = { query: '', tag: null };
 
+      // one download (1.8 MB) shared by everyone waiting: search, player, the app-browser lobby
       function withData(cb) {
         if (window.__modemData) return cb(window.__modemData);
-        fetch('/assets/modem-archive.json', { cache: 'no-cache' })
+        if (!window.__modemDataLoad) window.__modemDataLoad = fetch('/assets/modem-archive.json', { cache: 'no-cache' })
           .then((r) => r.json())
-          .then((d) => { window.__modemData = { records: d.records || [], tracks: d.tracks || [] }; window.__modemArchive = window.__modemData.records; cb(window.__modemData); })
-          .catch((e) => console.error('search: data load failed', e));
+          .then((d) => { window.__modemData = { records: d.records || [], tracks: d.tracks || [] }; window.__modemArchive = window.__modemData.records; return window.__modemData; })
+          .catch((e) => { window.__modemDataLoad = null; throw e; });
+        window.__modemDataLoad.then(cb).catch((e) => console.error('search: data load failed', e));
       }
 
       function buildCtx(d) {
@@ -1449,14 +1451,19 @@
        stays off-screen, where the browser doesn't draw it, and our button gets the tap as before.
        Next (2026-10-21): a SECOND SoundCloud player, loaded with the next track and paused, sits the
        same way over the next button (.tw-next), so a tap on next starts that track straight away;
-       the two players then swap places (see placeTapwins / takeOverFromSpare). Both windows live
-       in .mp-controls and are positioned by script, because moving an iframe in the page reloads it. */
+       the two players then swap places (see placeTapwins / takeOverFromSpare). The windows are
+       positioned by script, because moving an iframe in the page reloads it. */
     .mp-playwrap { position: relative; flex: none; display: flex; }
     .mp-controls { position: relative; }
     .mp-tapwin { position: absolute; left: -9999px; top: -9999px; width: 43px; height: 43px; overflow: hidden; opacity: 0; pointer-events: none; }
-    html.app-browser .mp-tapwin { z-index: 1; } /* left / top / size: placeTapwins() */
-    html.app-browser .modem-player:not(.mp-playing) .mp-tapwin.tw-play { pointer-events: auto; }
-    html.app-browser .modem-player.mp-next-ready .mp-tapwin.tw-next { pointer-events: auto; }
+    /* App browsers, 2026-10-21 (later): the windows live at page level, so they can also sit over
+       the radio-show page's "play random show / track" while the player is closed. placeTapwins()
+       sets left / top / size / rotation from the button and stretches the frame inside so
+       SoundCloud's play button fills the window (the whole button answers); .live = takes taps.
+       Above the player (200003) and search (200002); only placed over a button nothing covers. */
+    html.app-browser .mp-tapwin { position: fixed; z-index: 200004; }
+    html.app-browser .mp-tapwin.live { pointer-events: auto; }
+    html.app-browser .mp-tapwin .mp-hidden { left: 0; top: 0; margin: 0; transform-origin: 0 0; }
     .mp-hidden { position: absolute; left: 50%; top: 50%; margin: -32.5px 0 0 -29.5px; width: 300px; height: 166px; border: 0; }
 
     /* ---- slim live tracklist, only while a whole show plays (same data as the show
@@ -1699,8 +1706,11 @@
       // also an emoji-capable glyph on iOS.
       const ICON_ARROW = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-0.125em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></svg>';
       const iframe = el.querySelector('.mp-hidden');
-      // App browsers (see .mp-tapwin): a second SoundCloud player, preloaded with the next
-      // track, waits under the next button. Only there; everywhere else it doesn't exist.
+      // App browsers (see .mp-tapwin): TWO SoundCloud players, each in an invisible window the
+      // script puts over one of our buttons — with the player open over play (current track) and
+      // next (the next track, preloaded); closed, over "play random show / track" (a random pick
+      // each). The windows move to page level now, before either frame has loaded anything (moving
+      // an iframe in the page reloads it). Everywhere else: one player, off-screen, as before.
       const APP = document.documentElement.classList.contains('app-browser');
       const controls = el.querySelector('.mp-controls');
       let curTw = el.querySelector('.mp-tapwin.tw-play'), spareTw = null, iframeB = null;
@@ -1708,8 +1718,9 @@
         spareTw = document.createElement('span');
         spareTw.className = 'mp-tapwin tw-next';
         spareTw.innerHTML = '<iframe class="mp-hidden" title="modem player (next track)" allow="autoplay"></iframe>';
-        controls.appendChild(spareTw);
         iframeB = spareTw.firstChild;
+        document.body.appendChild(curTw);
+        document.body.appendChild(spareTw);
       }
       const artLink = el.querySelector('#mp-art');
       const artImg = artLink.querySelector('img');
@@ -1896,16 +1907,19 @@
       // (year-end "best releases" list embeds are albums, not show tracks)
       function inShow(t) { return (t.shows || []).some((s) => s.type === 'show'); }
 
+      // one download (1.8 MB) shared by everyone waiting: search, player, the app-browser lobby.
+      // (Each used to fetch its own: with the lobby, warm-up and a tap that was three at once.)
       function withData(cb) {
         if (window.__modemData) return cb(window.__modemData);
-        fetch('/assets/modem-archive.json', { cache: 'no-cache' })
+        if (!window.__modemDataLoad) window.__modemDataLoad = fetch('/assets/modem-archive.json', { cache: 'no-cache' })
           .then((r) => r.json())
           .then((d) => {
             window.__modemData = { records: d.records || [], tracks: d.tracks || [] };
             window.__modemArchive = window.__modemData.records;
-            cb(window.__modemData);
+            return window.__modemData;
           })
-          .catch((e) => console.error('player: data load failed', e));
+          .catch((e) => { window.__modemDataLoad = null; throw e; });
+        window.__modemDataLoad.then(cb).catch((e) => console.error('player: data load failed', e));
       }
 
       function showItems(d) {
@@ -2048,6 +2062,12 @@
         });
       }
       function onPlay(w) {
+        if (APP && el.hidden) {
+          // closed player: only a tap on "play random show / track" (a ready lobby player) starts it
+          if ((w === widget && lobbyShowReady) || (w === spare && lobbyTrackReady)) return lobbyStart(w);
+          w.pause();
+          return;
+        }
         if (w === spare) {
           // a tap on next, only while the spare is ready under it. Right after a swap the old
           // player, loading its next track, can report PLAY without playing: keep it quiet.
@@ -2063,23 +2083,28 @@
       }
       function bindWidget() {
         if (widget) return;                    // never bind twice (warm + start can race)
-        widget = SC.Widget(iframe);
-        bindEvents(widget, iframe);
+        widget = scByFrame.get(iframe) || SC.Widget(iframe); // the app-browser loader may have made it
+        if (!frameBySc.has(widget)) { register(iframe, widget); bindEvents(widget, iframe); }
       }
 
-      // ---- app browsers: the spare player under the next button ----
+      // ---- app browsers: SoundCloud players waiting under our buttons ----
       // An app browser (Instagram / Facebook) only starts SoundCloud's audio from a tap inside
-      // SoundCloud's own frame; a tap on our next button can load the next track but not start
-      // it. So the next track waits, loaded and paused, in a second player whose play button sits
-      // under ours (.tw-next): the tap on next starts it for real. Its PLAY makes it the current
-      // player (takeOverFromSpare), the old one is paused and becomes the spare, loading the track
-      // after that. Until the spare is ready (.mp-next-ready) a tap on next goes to our button
-      // (load, then a tap on play). Previous and the automatic next at a track's end still wait
-      // for a tap on play there: no tap, no sound.
+      // SoundCloud's own frame; a tap on one of our buttons can load a track but not start it. So
+      // tracks wait, loaded and paused, in SoundCloud players whose play button sits under our
+      // button (placeTapwins): the tap starts them for real.
+      //  - player open: the current player under play, the spare (the next track) under next. The
+      //    spare's PLAY makes it the current player (takeOverFromSpare); the old one is paused and
+      //    becomes the spare, loading the track after that.
+      //  - player closed, on the radio-show page (the "lobby"): a random show under "play random
+      //    show" (in the current player) and a random track under "play random track" (in the
+      //    spare); a tap opens the player already playing (lobbyStart).
+      // Until a player is ready its window takes no taps and the tap goes to our button (load,
+      // then a tap on play). Previous and the automatic next at a track's end still wait for a tap
+      // on play there: no tap, no sound.
       let spare = null, spareFor = null, spareWant = null, spareIdx = -1, spareBusy = false, spareGen = 0, spareReady = false;
       // Tracks SoundCloud no longer plays (removed / private: the widget errors and the sound
-      // comes back without a title). Found by the spare; next and previous skip them, or a tap on
-      // next would land on a player that can never start. 2026-10-21, e.g. modem 242's "carpundia".
+      // comes back without a title). Skipped by the spare, the lobby and next / previous, or a tap
+      // would land on a player that can never start. 2026-10-21, e.g. modem 242's "carpundia".
       const deadUrls = new Set();
       const SC_QS = '&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
       const setSpareReady = (on) => { spareReady = on; el.classList.toggle('mp-next-ready', on); };
@@ -2091,6 +2116,57 @@
         }
         return i;
       }
+
+      // Which SoundCloud player wraps which frame (the two swap roles, the frames stay put).
+      const scByFrame = new Map(), frameBySc = new Map();
+      function register(frame, w) { scByFrame.set(frame, w); frameBySc.set(w, frame); }
+      // Load a track into a frame's player, paused, then check it can really play (callback gets
+      // true / false, or null when a newer load for the same frame replaced this one while it
+      // waited). One load per frame at a time, so a random pick and a next-track preload can't
+      // overlap and leave the wrong track waiting. The first load into a frame creates its player.
+      // (SoundCloud's load() swaps the frame's address, and a second load before the first is in
+      // drops the first one's callback: hence the time limit, or the frame would wait forever.)
+      const loaders = new Map();
+      function loadPaused(frame, url, cb, tag) {
+        let L = loaders.get(frame);
+        if (!L) loaders.set(frame, (L = { busy: false, next: null }));
+        if (L.busy) { if (L.next) L.next.cb(null); L.next = { url, cb, tag }; return; }
+        L.busy = true;
+        const finish = (alive) => { L.busy = false; const n = L.next; L.next = null; cb(alive); if (n) loadPaused(frame, n.url, n.cb, n.tag); };
+        let checked = false;
+        const check = () => {
+          if (checked) return;
+          checked = true;
+          const p = scByFrame.get(frame);
+          if (!p) return finish(null);
+          let answered = false;
+          const verdict = (alive) => { if (!answered) { answered = true; finish(alive); } };
+          setTimeout(() => verdict(true), 4000); // no answer: assume it plays
+          p.getCurrentSound((s) => verdict(!!(s && s.title) && s.streamable !== false && s.policy !== 'BLOCK'));
+        };
+        setTimeout(check, 12000);
+        const w = scByFrame.get(frame);
+        if (w) { w.load(url, Object.assign({}, LOAD_OPTS, { auto_play: false, callback: check })); return; }
+        // the first time: make the frame a SoundCloud player, then wrap it (like bindWidget)
+        frame.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&auto_play=false' + SC_QS;
+        const wait = (n) => {
+          if (window.SC && SC.Widget) {
+            const nw = scByFrame.get(frame) || SC.Widget(frame);
+            if (!frameBySc.has(nw)) { register(frame, nw); bindEvents(nw, frame); }
+            // the new player takes the empty role: current for frame A while there is none, else spare
+            if (!widget && frame !== iframeB) widget = nw;
+            else if (!spare && nw !== widget) spare = nw;
+            nw.bind(SC.Widget.Events.READY, check); // (if READY already came and went: the time limit)
+          } else if (n > 0) setTimeout(() => wait(n - 1), 100);
+          else check(); // no SoundCloud API: gives up (null)
+        };
+        wait(80);
+      }
+
+      // The frames by role: after the players swap, A can be the spare's and B the current one's.
+      const curFrame = () => (widget ? frameBySc.get(widget) : spare && frameBySc.get(spare) === iframe ? iframeB : iframe);
+      const spareFrame = () => (spare ? frameBySc.get(spare) : widget && frameBySc.get(widget) === iframeB ? iframe : iframeB);
+
       function preloadSpare() {
         if (!APP) return;
         setSpareReady(false);
@@ -2104,37 +2180,14 @@
         if (spare && spareFor === spareWant) { setSpareReady(true); placeTapwins(); return; }
         spareBusy = true;
         const url = spareWant, gen = spareGen;
-        // loaded: check it can really play; a dead one is skipped (the spare loads the one after)
-        const done = () => {
-          if (gen !== spareGen) return;
-          let answered = false;
-          const verdict = (alive) => {
-            if (answered || gen !== spareGen) return;
-            answered = true;
-            spareBusy = false;
-            dlog('spare loaded #' + spareIdx + (alive ? ' — ready under ⏭' : ' — DEAD on SoundCloud, skipped'));
-            if (!alive) { deadUrls.add(url); spareFor = null; if (spareWant === url) preloadSpare(); else pumpSpare(); return; }
-            spareFor = url; pumpSpare();
-          };
-          setTimeout(() => verdict(true), 4000); // no answer: assume it plays
-          spare.getCurrentSound((s) => verdict(!!(s && s.title) && s.streamable !== false && s.policy !== 'BLOCK'));
-        };
-        if (!spare) {
-          // the first time: make the frame a SoundCloud player, then wrap it (like bindWidget)
-          iframeB.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&auto_play=false' + SC_QS;
-          const wait = (n) => {
-            if (window.SC && SC.Widget) {
-              spare = SC.Widget(iframeB);
-              bindEvents(spare, iframeB);
-              let first = true; // READY again after later loads would be stale here
-              spare.bind(SC.Widget.Events.READY, () => { if (first) { first = false; done(); } });
-            } else if (n > 0) setTimeout(() => wait(n - 1), 100);
-            else spareBusy = false;
-          };
-          wait(80);
-        } else {
-          spare.load(url, Object.assign({}, LOAD_OPTS, { auto_play: false, callback: done }));
-        }
+        loadPaused(spareFrame(), url, (alive) => {
+          if (gen !== spareGen) return; // the players swapped / the player closed meanwhile
+          spareBusy = false;
+          if (alive === null) return;
+          dlog('spare loaded #' + spareIdx + (alive ? ' — ready under ⏭' : ' — DEAD on SoundCloud, skipped'));
+          if (!alive) { deadUrls.add(url); spareFor = null; if (spareWant === url) preloadSpare(); else pumpSpare(); return; }
+          spareFor = url; pumpSpare();
+        });
       }
       function takeOverFromSpare() {
         dlog('tap on ⏭ started the spare: swap, #' + spareIdx + ' is now playing');
@@ -2154,32 +2207,128 @@
         placeTapwins();
         preloadSpare();
       }
-      // Put the tap windows over the play and next buttons (app browsers only). Centred on the
-      // button, at most SoundCloud's 43px button size (.mp-hidden centres that button in it).
+
+      // ---- the lobby: player closed, random picks under "play random show / track" ----
+      let lobbyShow = null, lobbyTrack = null, lobbyShowReady = false, lobbyTrackReady = false;
+      let lobbyShowBusy = false, lobbyTrackBusy = false, lobbyGen = 0;
+      const actBtn = (act) => document.querySelector('.modem-action[data-act="' + act + '"]');
+      // The pick a tap on that button would play: random with shuffle on (the default), the first
+      // in show order with it off — same as playShows / playTracks.
+      const lobbyPick = (all) => (shuffleOn ? all[Math.floor(Math.random() * all.length)] : order(all)[0]);
+      function prepareLobby() {
+        if (!APP || !el.hidden) return;
+        const wantShow = !lobbyShowReady && !lobbyShowBusy && !!actBtn('shows');
+        const wantTrack = !lobbyTrackReady && !lobbyTrackBusy && !!actBtn('tracks');
+        if (!wantShow && !wantTrack) return;
+        const gen = lobbyGen;
+        if (wantShow) lobbyShowBusy = true;
+        if (wantTrack) lobbyTrackBusy = true;
+        withData((d) => {
+          if (gen !== lobbyGen) return;
+          if (!el.hidden) { lobbyShowBusy = lobbyTrackBusy = false; return; }
+          if (wantShow) {
+            const show = lobbyShow = lobbyPick(showItems(d).filter((x) => !deadUrls.has(x.apiUrl)));
+            loadPaused(curFrame(), show.apiUrl, (alive) => {
+              if (gen !== lobbyGen) return;
+              lobbyShowBusy = false;
+              if (alive === false) deadUrls.add(show.apiUrl);
+              if (alive) { lobbyShowReady = true; dlog('lobby: a random show waits under "play random show"'); placeTapwins(); }
+            }, 'lobby');
+          }
+          if (wantTrack) {
+            const track = lobbyTrack = lobbyPick(trackItems(d).filter((x) => !deadUrls.has(x.apiUrl)));
+            spareFor = null; // the spare's frame is changing hands
+            loadPaused(spareFrame(), track.apiUrl, (alive) => {
+              if (gen !== lobbyGen) return;
+              lobbyTrackBusy = false;
+              if (alive === false) deadUrls.add(track.apiUrl);
+              if (alive) { lobbyTrackReady = true; spareFor = track.apiUrl; dlog('lobby: a random track waits under "play random track"'); placeTapwins(); }
+            }, 'lobby');
+          }
+        });
+      }
+      function leaveLobby() {
+        lobbyGen++; lobbyShowReady = lobbyTrackReady = false; lobbyShowBusy = lobbyTrackBusy = false;
+        // a pick still queued behind another load must not land later in a player that's in use now
+        for (const L of loaders.values()) if (L.next && L.next.tag === 'lobby') { L.next.cb(null); L.next = null; }
+      }
+      // A tap on "play random show / track" started that lobby player: open the player with it as
+      // the current track, the queue a tap on our button would have built, the other one as spare.
+      function lobbyStart(w) {
+        const isTrack = w === spare;
+        const item = isTrack ? lobbyTrack : lobbyShow, other = isTrack ? lobbyShow : lobbyTrack;
+        const btn = actBtn(isTrack ? 'tracks' : 'shows');
+        dlog('tap on "play random ' + (isTrack ? 'track' : 'show') + '" started it');
+        leaveLobby();
+        if (isTrack) { // the spare's frame becomes the current player
+          const old = widget; widget = spare; spare = old;
+          const t = curTw; curTw = spareTw; spareTw = t;
+          curTw.classList.replace('tw-next', 'tw-play');
+          spareTw.classList.replace('tw-play', 'tw-next');
+        }
+        if (spare) spare.pause();
+        const all = isTrack ? trackItems(window.__modemData) : showItems(window.__modemData);
+        if (shuffleOn) { queue = [item].concat(shuffleArr(all.filter((x) => x.apiUrl !== item.apiUrl))); idx = 0; }
+        else { queue = order(all); idx = Math.max(0, queue.findIndex((x) => x.apiUrl === item.apiUrl)); }
+        pendingSeekMs = null; wantPlaying = true;
+        setSpareReady(false); spareGen++; spareBusy = false;
+        spareFor = null; // (the new spare holds the other pick: never in this queue)
+        el.hidden = false;
+        placeNear(btn);
+        renderMeta(item);
+        placeTapwins();
+        onPlay(widget);
+        preloadSpare();
+      }
+
+      // Put the two windows over their buttons (app browsers only): player open — play and next;
+      // closed — "play random show / track", when they're on screen and nothing covers them. A
+      // window copies its button's size and rotation (the radio-show buttons are tilted); the frame
+      // inside is stretched so SoundCloud's 43x43 play button (at 8,11 in its frame) fills it, so
+      // the whole button answers (checked: corners and edges of a stretched one start it too).
+      function onScreen(btn) {
+        if (!btn) return null;
+        const b = btn.getBoundingClientRect();
+        if (!b.width || b.bottom < 0 || b.top > innerHeight || b.right < 0 || b.left > innerWidth) return null;
+        const hit = document.elementsFromPoint(b.left + b.width / 2, b.top + b.height / 2).find((x) => !x.closest('.mp-tapwin'));
+        return hit && btn.contains(hit) ? btn : null;
+      }
       function placeTapwins() {
-        if (!APP || el.hidden) return;
-        const c = controls.getBoundingClientRect();
-        const put = (tw, btn) => {
-          if (!tw) return;
-          const b = btn.getBoundingClientRect();
-          const w = Math.min(b.width, 43), h = Math.min(b.height, 43);
-          tw.style.width = w + 'px'; tw.style.height = h + 'px';
-          tw.style.left = (b.left - c.left + (b.width - w) / 2) + 'px';
-          tw.style.top = (b.top - c.top + (b.height - h) / 2) + 'px';
-        };
-        put(curTw, toggleBtn);
-        put(spareTw, nextBtn);
+        if (!APP) return;
+        const targets = !el.hidden
+          ? [[curTw, toggleBtn, !el.classList.contains('mp-playing')], [spareTw, nextBtn, spareReady]]
+          : [[curTw, onScreen(actBtn('shows')), lobbyShowReady], [spareTw, onScreen(actBtn('tracks')), lobbyTrackReady]];
+        for (const [tw, btn, live] of targets) {
+          if (!btn) { tw.style.left = tw.style.top = '-9999px'; tw.classList.remove('live'); continue; }
+          const b = btn.getBoundingClientRect(), W = btn.offsetWidth, H = btn.offsetHeight;
+          const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(btn).transform || '');
+          const ang = m ? Math.atan2(+m[1].split(',')[1], +m[1].split(',')[0]) : 0;
+          tw.style.width = W + 'px'; tw.style.height = H + 'px';
+          tw.style.left = (b.left + b.width / 2 - W / 2) + 'px';
+          tw.style.top = (b.top + b.height / 2 - H / 2) + 'px';
+          tw.style.transform = ang ? 'rotate(' + ang + 'rad)' : '';
+          const f = tw.firstChild, sx = W / 43, sy = H / 43;
+          f.style.transform = 'scale(' + sx + ',' + sy + ')';
+          f.style.left = (-8 * sx) + 'px'; f.style.top = (-11 * sy) + 'px';
+          tw.classList.toggle('live', !!live);
+        }
       }
       if (APP) {
         let raf = 0;
         const schedulePlace = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(placeTapwins); };
         if (window.ResizeObserver) { const ro = new ResizeObserver(schedulePlace); ro.observe(controls); ro.observe(toggleBtn); ro.observe(nextBtn); }
         window.addEventListener('resize', schedulePlace);
+        window.addEventListener('scroll', schedulePlace, { passive: true, capture: true }); // page buttons move with the page
         new MutationObserver(schedulePlace).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
-        // and keep correcting: a layout change that only MOVES the buttons fires none of the above.
-        // Two rect reads, so cheap; a touch on the player re-places at once.
-        setInterval(() => { if (!el.hidden) placeTapwins(); }, 700);
+        // and keep correcting: a layout change that only MOVES a button fires none of the above
+        // (pages change under the closed player too). A few rect reads, so cheap; a touch on the
+        // player re-places at once. While closed this also gets the lobby ready when the
+        // radio-show page is on screen (it loads the archive data then, ~1.8 MB, as a tap would).
+        setInterval(() => { placeTapwins(); if (el.hidden) prepareLobby(); }, 700);
+        prepareLobby();
         el.addEventListener('pointerdown', placeTapwins, true);
+        // after any click (it may have opened the search or another page over the buttons)
+        window.addEventListener('click', schedulePlace, true);
       }
 
       // ---- #mpdebug: an on-screen diagnostic panel for app browsers we can't inspect ----
@@ -2199,7 +2348,14 @@
         const render = () => { panel.textContent = status + '\n' + lines.join('\n'); };
         const ask = (w) => new Promise((res) => { if (!w) return res('-'); let d = false; setTimeout(() => { if (!d) { d = true; res('no answer'); } }, 900); w.getCurrentSound((s) => w.isPaused((p) => { if (!d) { d = true; res((p ? 'paused' : 'PLAYING') + ' "' + (s && s.title ? s.title.slice(0, 22) : 'NO TITLE') + '"'); } })); });
         setInterval(async () => {
-          if (el.hidden) { status = 'mpdebug: player closed. app-browser=' + APP; render(); return; }
+          if (el.hidden) {
+            const sb = APP && actBtn('shows'), tb = APP && actBtn('tracks');
+            status = 'mpdebug: player closed. app-browser=' + APP + ' lobby show ' + (lobbyShowReady ? 'READY' : lobbyShowBusy ? 'loading' : '-') + ' track ' + (lobbyTrackReady ? 'READY' : lobbyTrackBusy ? 'loading' : '-') + '\n' +
+              (sb ? 'random show btn ' + box(sb) + ' | win ' + box(curTw) + ' pe=' + getComputedStyle(curTw).pointerEvents + ' | on top: ' + onTop(sb) + '\n' : '') +
+              (tb ? 'random track btn ' + box(tb) + ' | win ' + box(spareTw) + ' pe=' + getComputedStyle(spareTw).pointerEvents + ' | on top: ' + onTop(tb) + '\n' : '') +
+              'current: ' + (await ask(widget)) + ' | spare: ' + (await ask(spare)) + '\n' + '-'.repeat(30);
+            render(); return;
+          }
           const cur = curTw && curTw.querySelector('iframe'), sp = spareTw && spareTw.querySelector('iframe');
           status = 'app-browser=' + APP + ' playingUI=' + el.classList.contains('mp-playing') + ' spareReady=' + spareReady + ' #' + idx + '/' + queue.length + ' dead=' + deadUrls.size + '\n' +
             '▶ btn ' + box(toggleBtn) + ' | win ' + label(cur) + ' ' + box(curTw) + ' pe=' + (curTw ? getComputedStyle(curTw).pointerEvents : '-') + ' | on top: ' + onTop(toggleBtn) + '\n' +
@@ -2239,6 +2395,7 @@
       function start(items, startIdx, anchor, seekMs) {
         items = (items || []).filter((x) => x && x.apiUrl);
         if (!items.length) return;
+        if (APP) leaveLobby(); // a tap on our button (no lobby player was ready under it)
         const wasHidden = el.hidden;
         queue = items; idx = startIdx || 0;
         pendingSeekMs = (typeof seekMs === 'number' && seekMs > 0) ? seekMs : null;
@@ -2277,6 +2434,10 @@
         el.classList.remove('mp-playing');
         toggleBtn.innerHTML = ICON_PLAY;
         renderMeta(item);
+        if (APP) { // nothing queued for this player may replace the track afterwards
+          const L = loaders.get(frameBySc.get(widget));
+          if (L && L.next) { L.next.cb(null); L.next = null; }
+        }
         widget.load(item.apiUrl, Object.assign({}, LOAD_OPTS, {
           auto_play: true,
           callback: function () { if (wantPlaying && widget) widget.play(); },
@@ -2305,6 +2466,8 @@
           if (widget) return;
           const seed = trackItems(d).concat(showItems(d)).find((x) => x && x.apiUrl);
           if (!seed) return;
+          // app browsers: through the loader, which the lobby may already be using for this frame
+          if (APP) { if (!loaders.has(iframe)) loadPaused(iframe, seed.apiUrl, () => {}); return; }
           iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(seed.apiUrl) +
             '&auto_play=false&visual=false&show_comments=false&show_artwork=false&buying=false&sharing=false&download=false&hide_related=true';
           const wait = (n) => { if (window.SC && SC.Widget) bindWidget(); else if (n > 0) setTimeout(() => wait(n - 1), 100); };
@@ -2330,7 +2493,14 @@
       };
       prevBtn.onclick = () => go(-1);
       nextBtn.onclick = () => go(1);
-      closeBtn.onclick = () => { if (widget) widget.pause(); wantPlaying = false; el.hidden = true; el.classList.remove('mp-mini'); };
+      closeBtn.onclick = () => {
+        if (widget) widget.pause(); wantPlaying = false; el.hidden = true; el.classList.remove('mp-mini');
+        if (APP) { // back to the lobby: the spare stops preparing next, random picks take over
+          setSpareReady(false); spareGen++; spareBusy = false; spareWant = null;
+          if (spare) spare.pause();
+          placeTapwins(); prepareLobby();
+        }
+      };
       // phones: collapse the full-screen player into a bottom bar…
       // stopPropagation is CRITICAL: without it this click bubbles to the el
       // handler below, which — seeing mp-mini now set — instantly expands it back
