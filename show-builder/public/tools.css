@@ -231,6 +231,11 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .ye-type.t-single { background: #3a2a1a; color: #ffb066; }
 .ye-play { width: 30px; height: 30px; padding: 0; border-radius: 50%; flex: none; font-size: 12px; }
 .ye-play.on { background: #3a6ff0; border-color: #3a6ff0; }
+.ye-go { display: flex; gap: 4px; flex: none; }
+.ye-go a { font-size: 11px; font-weight: 600; text-decoration: none; padding: 2px 8px; border-radius: 999px; border: 1px solid; cursor: pointer; }
+.ye-go-bc { color: #6fd3e6; border-color: #2b5a63; background: #13272b; }
+.ye-go-sc { color: #ff9a5c; border-color: #6b3a1f; background: #2b1a10; }
+.ye-go a:hover { filter: brightness(1.3); }
 .ye-acts { display: flex; align-items: center; gap: 5px; flex: none; }
 .ye-btn { padding: 3px 9px; font-size: 12px; }
 .ye-in { background: #1f3a2b; border-color: #2f6b49; color: #7dffb0; }
@@ -266,6 +271,8 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .ye-t-n { width: 18px; text-align: right; color: #6f7080; flex: none; }
 .ye-t-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ye-t-dur { color: #6f7080; flex: none; font-variant-numeric: tabular-nums; }
+.ye-t-go { color: #66b0ff; text-decoration: none; flex: none; padding: 0 4px; opacity: .6; }
+.ye-t:hover .ye-t-go, .ye-t-go:hover { opacity: 1; }
 #yeOut textarea { width: 100%; box-sizing: border-box; background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; font-family: ui-monospace, monospace; font-size: 11px; margin-top: 8px; }
 .ye-addrow { display: flex; gap: 8px; margin: 2px 0 4px; }
 .ye-addrow .sc-input { flex: 1; min-width: 0; }

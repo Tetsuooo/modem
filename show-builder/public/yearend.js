@@ -117,10 +117,14 @@
     const shows = (c.shows || []).map((s) => `#${s.number}${s.tracks.length > 1 ? ` <span class="ye-x">×${s.tracks.length}</span>` : ''}`).join(' ');
     if (shows) bits.push(`<span class="ye-played" title="played in these shows (×N: that many of its tracks)">♪ ${shows}</span>`);
     else if (c.addedByHand) bits.push('<span class="ye-hand" title="added from a link, not played in a show">added by hand</span>');
-    bits.push(`<a href="${escAttr(c.url)}" target="_blank" rel="noopener" title="open on ${c.source === 'soundcloud' ? 'SoundCloud' : 'Bandcamp'}">${c.source === 'soundcloud' ? 'sc' : 'bc'} ↗</a>`);
-    (c.alsoOn || []).forEach((a) => bits.push(`<a href="${escAttr(a.url)}" target="_blank" rel="noopener" title="the same release on ${a.source === 'soundcloud' ? 'SoundCloud' : 'Bandcamp'}">also ${a.source === 'soundcloud' ? 'sc' : 'bc'} ↗</a>`));
     return bits.join(' <span class="ye-dot">·</span> ');
   }
+  // where the release lives: a 'bc' / 'sc' pill for its page (and for the same release on
+  // the other platform, when a show played that one too), opening in a new tab
+  const goLinks = (c) => `<span class="ye-go">${[{ source: c.source, url: c.url }, ...(c.alsoOn || [])].filter((p) => p.url).map((p) => {
+    const sc = p.source === 'soundcloud';
+    return `<a class="ye-go-${sc ? 'sc' : 'bc'}" href="${escAttr(p.url)}" target="_blank" rel="noopener" draggable="false" title="open it on ${sc ? 'SoundCloud' : 'Bandcamp'}">${sc ? 'sc' : 'bc'} ↗</a>`;
+  }).join('')}</span>`;
   const art = (c, where) => `<img class="ye-art" src="${escAttr(c.artwork || '')}" loading="lazy" data-play="${escAttr(where)}" data-key="${escAttr(c.key)}" title="listen" onerror="this.style.visibility='hidden'">`;
   const playBtn = (c, where) => {
     const open = S.open.has(where + ':' + c.key);
@@ -230,6 +234,7 @@
           <div class="ye-sub">${sub(c)}</div>
           <div class="ye-facts">${facts(c)}</div>
         </div>
+        ${goLinks(c)}
         ${playBtn(c, 'pool')}
         <div class="ye-acts">${acts}</div>
       </div>
@@ -250,6 +255,7 @@
           <div class="ye-sub">${sub(c)}</div>
         </div>
         ${typeBadge(c)}
+        ${goLinks(c)}
         ${playBtn(c, 'list')}
         <div class="ye-move">
           <button data-move="top" data-key="${escAttr(c.key)}" title="to the top">⤒</button><button data-move="up" data-key="${escAttr(c.key)}" title="up one">↑</button><button data-move="down" data-key="${escAttr(c.key)}" title="down one">↓</button><button data-move="bottom" data-key="${escAttr(c.key)}" title="to the bottom">⤓</button>
@@ -514,9 +520,10 @@
       return `<div class="ye-t${i === state.i ? ' cur' : ''}${t.playable === false ? ' dead' : ''}" data-i="${i}">
         <span class="ye-t-n">${i + 1}</span><span class="ye-t-title">${esc(t.title || '…')}${t.artist && t.artist !== c.artist ? ` <span class="ye-label">– ${esc(t.artist)}</span>` : ''}</span>
         ${shows ? `<span class="ye-played" title="played in these shows">♪ ${shows.map((n) => '#' + n).join(' ')}</span>` : ''}
-        <span class="ye-t-dur">${t.duration ? formatTime(t.duration) : ''}</span></div>`;
+        <span class="ye-t-dur">${t.duration ? formatTime(t.duration) : ''}</span>
+        ${t.url ? `<a class="ye-t-go" href="${escAttr(t.url)}" target="_blank" rel="noopener" draggable="false" title="open this track on ${c.source === 'soundcloud' ? 'SoundCloud' : 'Bandcamp'}">↗</a>` : ''}</div>`;
     }).join('') || '<div class="status">loading tracks…</div>'}</div>`;
-    box.querySelectorAll('.ye-t').forEach((row) => row.addEventListener('click', () => playTrack(box, Number(row.dataset.i))));
+    box.querySelectorAll('.ye-t').forEach((row) => row.addEventListener('click', (e) => { if (!e.target.closest('a')) playTrack(box, Number(row.dataset.i)); }));
     if (resume && resume.src) {
       const now = box.querySelector('.ye-now');
       now.innerHTML = trackPlayerHtml(resume.src);
