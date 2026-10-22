@@ -516,7 +516,7 @@
               let artist;
               if (firstLink && txt.startsWith(firstLink.textContent.trim())) artist = firstLink.textContent.trim();
               else { const dash = txt.search(/\s[-–—]\s/); artist = dash > 0 ? txt.slice(0, dash).trim() : ''; }
-              if (artist && !/^(v\.?\s?a\.?|various\s+artists?)$/i.test(artist)) add(artist);
+              if (artist && !/^(v\.?\s?\/?\s?a\.?|various\s+artists?)$/i.test(artist)) add(artist);
             });
             // Pass 2: a 2nd/3rd embed packed under one description, or the
             // very first entry of an embed-only list — fall back to the
