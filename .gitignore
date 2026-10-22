@@ -10,6 +10,7 @@ scratch_*.log
 # show-builder: local downloads + transient state (not the tool's own code)
 show-builder/downloads
 show-builder/data/.cache
+show-builder/data/*.tmp
 show-builder/data/current-draft.json
 show-builder/data/download-manifest.jsonl
 show-builder/data/download-urls.txt

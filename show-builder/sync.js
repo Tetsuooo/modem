@@ -22,6 +22,9 @@
 //    cleared, on whichever machine cleared it → merge = UNION of entries,
 //    deduped by (showNumber + clearedAt) since each clear event is a fact
 //    that happened once, sorted newest-first for display.
+//  - year-end.json: the Year-end list tab's work, one entry per year (the gathered
+//    releases, the picks, the ranked order) → merge = NEWEST WINS per year, by the
+//    year's own savedAt — like the draft, an ordered list isn't spliced together.
 //
 // Two more files ride along WITHOUT being pushed by Sync: scripts/approvals.json
 // and src/assets/overrides.json, the decisions the SoundCloud-links and Tags tabs
@@ -44,12 +47,14 @@ const DRAFT_FILE = path.join(DATA_DIR, 'current-draft.json');
 const USED_FILE = path.join(DATA_DIR, 'used-tracks.json');
 const SHARED_DRAFT_FILE = path.join(DATA_DIR, 'shared-draft.json');
 const SHOW_HISTORY_FILE = path.join(DATA_DIR, 'show-history.json');
+const YEAR_END_FILE = path.join(DATA_DIR, 'year-end.json');
 
 // Paths as git sees them (relative to REPO_ROOT, forward slashes).
 const USED_REL = 'show-builder/data/used-tracks.json';
 const SHARED_DRAFT_REL = 'show-builder/data/shared-draft.json';
 const SHOW_HISTORY_REL = 'show-builder/data/show-history.json';
-const MANAGED_RELS = [USED_REL, SHARED_DRAFT_REL, SHOW_HISTORY_REL];
+const YEAR_END_REL = 'show-builder/data/year-end.json';
+const MANAGED_RELS = [USED_REL, SHARED_DRAFT_REL, SHOW_HISTORY_REL, YEAR_END_REL];
 
 function readJson(file, fallback) {
   try {
@@ -111,6 +116,15 @@ function pickNewest(a, b) {
   return (a.savedAt || 0) >= (b.savedAt || 0) ? a : b;
 }
 
+// year → the newer of the two copies of that year (by its savedAt)
+function mergeYearEnd(local, remote) {
+  const out = {};
+  for (const y of new Set([...Object.keys(local || {}), ...Object.keys(remote || {})])) {
+    out[y] = pickNewest((local || {})[y], (remote || {})[y]);
+  }
+  return out;
+}
+
 function mergeHistory(local, remote) {
   const byKey = new Map();
   for (const entry of [...(local || []), ...(remote || [])]) {
@@ -155,6 +169,7 @@ function runSync() {
     const localUsed = readJson(USED_FILE, []);
     const localShared = localSharedDraft();
     const localHistory = readJson(SHOW_HISTORY_FILE, []);
+    const localYearEnd = readJson(YEAR_END_FILE, {});
 
     // Only two things leave the archive modified: a publish run that wasn't
     // pushed, or a save on the main dev server's local preview (/admin there).
@@ -183,10 +198,12 @@ function runSync() {
     const remoteUsed = readAtRef('origin/main', USED_REL, []);
     const remoteShared = readAtRef('origin/main', SHARED_DRAFT_REL, null);
     const remoteHistory = readAtRef('origin/main', SHOW_HISTORY_REL, []);
+    const remoteYearEnd = readAtRef('origin/main', YEAR_END_REL, {});
 
     const mergedUsed = [...new Set([...localUsed, ...remoteUsed])].sort();
     const mergedShared = pickNewest(localShared, remoteShared);
     const mergedHistory = mergeHistory(localHistory, remoteHistory);
+    const mergedYearEnd = mergeYearEnd(localYearEnd, remoteYearEnd);
 
     // Reset the working tree to remote for exactly these managed paths so the
     // upcoming pull has nothing local to conflict with — our own merge
@@ -208,6 +225,7 @@ function runSync() {
     writeJson(USED_FILE, mergedUsed);
     if (mergedShared) writeJson(SHARED_DRAFT_FILE, mergedShared);
     writeJson(SHOW_HISTORY_FILE, mergedHistory);
+    if (Object.keys(mergedYearEnd).length) writeJson(YEAR_END_FILE, mergedYearEnd);
 
     // Only add paths that actually exist on disk — SHARED_DRAFT_FILE won't
     // if this is the very first sync ever and no draft has been saved yet
@@ -218,7 +236,7 @@ function runSync() {
       git(['add', '--', ...paths]);
       const status = git(['status', '--short', '--', ...paths]);
       if (status.trim()) {
-        git(['commit', '-m', 'show-builder: sync used-tracks + draft + history [skip ci]']);
+        git(['commit', '-m', 'show-builder: sync used-tracks + draft + history + year-end list [skip ci]']);
         git(['push']);
         pushed = true;
       }
@@ -247,4 +265,4 @@ function addHistoryEntry(entry) {
   return history;
 }
 
-module.exports = { runSync, getHistory, addHistoryEntry };
+module.exports = { runSync, getHistory, addHistoryEntry, mergeYearEnd };

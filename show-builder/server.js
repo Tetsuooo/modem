@@ -28,6 +28,7 @@ const scLinks = require('./sc-links');
 const tagTools = require('./tag-tools');
 const siteTools = require('./site-tools');
 const timeTools = require('./time-tools');
+const yearEnd = require('./year-end');
 const { undoesSomething } = tagTools;
 const { compareWithLive } = require('./compare-live');
 const { getArchive } = require('./archive-cache');
@@ -110,6 +111,7 @@ app.get('/artist-label-names', (req, res) => {
 scLinks.mount(app);
 tagTools.mount(app);
 timeTools.mount(app);
+yearEnd.mount(app);
 siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------

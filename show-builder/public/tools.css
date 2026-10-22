@@ -187,3 +187,94 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .tt-row .tt-artist { color: #9a9ba5; }
 .tt-row button { padding: 3px 9px; font-size: 12px; flex: none; }
 .tt-row .sc-badge { width: 84px; text-align: center; }
+
+/* ---------- Year-end list tab (public/yearend.js) ---------- */
+.ye-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.ye-head .grow { flex: 1; }
+.ye-head select { background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; padding: 5px 8px; }
+.ye-year { font-size: 13px; color: #9a9ba5; display: flex; align-items: center; gap: 6px; }
+.ye-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .ye-cols { grid-template-columns: 1fr; } }
+.ye-list { position: sticky; top: 8px; max-height: calc(100vh - 24px); overflow-y: auto; padding-right: 4px; }
+.ye-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.ye-bar select { background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; padding: 5px 8px; font-size: 12px; }
+.ye-bar .sc-input { flex: 1 1 180px; min-width: 140px; }
+.ye-seg { display: flex; border: 1px solid #3a3b45; border-radius: 7px; overflow: hidden; }
+.ye-seg-btn { border: 0; border-radius: 0; padding: 4px 9px; font-size: 12px; background: #1a1b21; color: #9a9ba5; }
+.ye-seg-btn + .ye-seg-btn { border-left: 1px solid #3a3b45; }
+.ye-seg-btn.on { background: #263052; color: #e8e8ea; }
+.ye-seg-btn span { font-size: 11px; color: #6f7080; margin-left: 2px; }
+.ye-seg-btn.on span { color: #9fb4ff; }
+
+.ye-cand, .ye-item { border: 1px solid #2a2b33; border-radius: 8px; margin-bottom: 6px; background: #17181e; }
+.ye-cand.d-in { border-color: #2c5a3e; }
+.ye-cand.d-out { opacity: .55; }
+.ye-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; }
+.ye-art { width: 52px; height: 52px; object-fit: cover; border-radius: 4px; background: #2a2b33; flex: none; cursor: pointer; }
+.ye-item .ye-art { width: 40px; height: 40px; }
+.ye-art:hover { outline: 2px solid #3a6ff0; outline-offset: -2px; }
+.ye-meta { flex: 1; min-width: 0; }
+.ye-title { font-size: 13px; color: #e8e8ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ye-sub { font-size: 12px; color: #c7c8d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ye-label { color: #9a9ba5; }
+.ye-facts { font-size: 11px; color: #8a8b96; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.ye-facts a { color: #66b0ff; text-decoration: none; }
+.ye-facts a:hover { text-decoration: underline; }
+.ye-dot { color: #4a4b55; }
+.ye-old { color: #ffb066; }
+.ye-played { color: #d08fff; }
+.ye-x { color: #6f7080; font-size: 10px; }
+.ye-type { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px; background: #2a2b33; color: #c7c8d1; flex: none; }
+.ye-type.t-LP { background: #1a3a2a; color: #7dffb0; }
+.ye-type.t-EP { background: #1a2a3a; color: #66b0ff; }
+.ye-type.t-comp { background: #2e2240; color: #d08fff; }
+.ye-type.t-single { background: #3a2a1a; color: #ffb066; }
+.ye-play { width: 30px; height: 30px; padding: 0; border-radius: 50%; flex: none; font-size: 12px; }
+.ye-play.on { background: #3a6ff0; border-color: #3a6ff0; }
+.ye-acts { display: flex; align-items: center; gap: 5px; flex: none; }
+.ye-btn { padding: 3px 9px; font-size: 12px; }
+.ye-in { background: #1f3a2b; border-color: #2f6b49; color: #7dffb0; }
+.ye-in:hover:not(:disabled) { background: #275038; }
+.ye-x-btn { color: #ff8a8a; }
+.ye-rank-pill { font-size: 11px; font-weight: 600; color: #7dffb0; padding: 1px 6px; border: 1px solid #2f6b49; border-radius: 999px; }
+.ye-rank-pill.below { color: #9a9ba5; border-color: #3a3b45; }
+.ye-out-pill { font-size: 11px; color: #9a9ba5; }
+
+.ye-list-head { display: flex; align-items: baseline; gap: 10px; }
+.ye-list-head h2 { margin: 0; }
+.ye-count { font-size: 13px; color: #c7c8d1; }
+.ye-hint { font-size: 11px; color: #6f7080; margin: 4px 0 10px; }
+.ye-item { cursor: grab; transition: transform .18s ease; }
+.ye-item.dragging { opacity: .45; }
+.ye-item.below { opacity: .5; }
+.ye-rank { width: 26px; text-align: right; font-size: 13px; font-weight: 600; color: #9a9ba5; flex: none; font-variant-numeric: tabular-nums; }
+.ye-move { display: flex; gap: 2px; flex: none; }
+.ye-move button { padding: 2px 6px; font-size: 12px; }
+.ye-cut { display: flex; align-items: center; gap: 8px; margin: 10px 0; color: #ffb066; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.ye-cut::before, .ye-cut::after { content: ''; flex: 1; border-top: 2px dashed #6a4a22; }
+
+.ye-tracks { padding: 2px 10px 10px 70px; }
+.ye-item .ye-tracks { padding-left: 46px; }
+.ye-now { margin-bottom: 6px; }
+.ye-now .track-player { margin: 0; }
+.ye-embed { width: 100%; border: 0; border-radius: 6px; display: block; }
+.ye-tl { max-height: 260px; overflow-y: auto; border-top: 1px solid #2a2b33; }
+.ye-t { display: flex; align-items: center; gap: 8px; padding: 3px 4px; font-size: 12px; color: #c7c8d1; cursor: pointer; border-radius: 4px; }
+.ye-t:hover { background: #22232b; }
+.ye-t.cur { background: #263052; color: #fff; }
+.ye-t.dead { opacity: .4; cursor: default; }
+.ye-t-n { width: 18px; text-align: right; color: #6f7080; flex: none; }
+.ye-t-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ye-t-dur { color: #6f7080; flex: none; font-variant-numeric: tabular-nums; }
+#yeOut textarea { width: 100%; box-sizing: border-box; background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; font-family: ui-monospace, monospace; font-size: 11px; margin-top: 8px; }
+.ye-addrow { display: flex; gap: 8px; margin: 2px 0 4px; }
+.ye-addrow .sc-input { flex: 1; min-width: 0; }
+#yeAddStatus { margin-bottom: 8px; min-height: 14px; }
+.ye-hand { color: #66b0ff; }
+.ye-fixed { color: #ffd166; }
+.ye-btn.on { background: #263052; border-color: #3a6ff0; }
+.ye-editor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; padding: 6px 10px 10px 46px; }
+.ye-editor label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #6f7080; }
+.ye-editor .sc-input { padding: 4px 7px; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.ye-editor-btns { grid-column: 1 / -1; display: flex; gap: 6px; }
+.ye-editor .ye-x { grid-column: 1 / -1; }

@@ -423,6 +423,7 @@
     <button class="tab-btn" data-tab="sc">SoundCloud links</button>
     <button class="tab-btn" data-tab="tags">Edit site</button>
     <button class="tab-btn" data-tab="times">Tracklist</button>
+    <button class="tab-btn" data-tab="yearend">Year-end list</button>
     <button class="tab-btn" data-tab="history">History</button>
   </nav>
   <div class="header-actions">
@@ -603,6 +604,11 @@
   <section class="tab-panel tab-panel-wide" id="panel-times" hidden>
     <h2>Tracklist — where each track starts in a show (the site's live tracklist)</h2>
     <div id="timesTab"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="tab-panel tab-panel-wide" id="panel-yearend" hidden>
+    <h2>Year-end list — the year's 50 best releases</h2>
+    <div id="yearendTab"><div class="empty">Loading…</div></div>
   </section>
 
   <section class="tab-panel" id="panel-history" hidden>
@@ -3507,7 +3513,7 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'times', 'history'];
+const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'times', 'yearend', 'history'];
 // Neither Mix nor Covers needs a tab-switch-triggered auto-fill anymore —
 // syncMixToShowOrder()/syncCoverLayersToShowOrder() both run off
 // renderSelected() regardless of which tab is even visible.
@@ -3524,6 +3530,7 @@ function switchTab(tab) {
   if (tab === 'sc' && window.scTabActivated) scTabActivated();
   if (tab === 'tags' && window.tagsTabActivated) tagsTabActivated();
   if (tab === 'times' && window.timesTabActivated) timesTabActivated();
+  if (tab === 'yearend' && window.yearendTabActivated) yearendTabActivated();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -3573,6 +3580,12 @@ document.addEventListener('keydown', (e) => {
   if (!e.ctrlKey && !e.metaKey) return;
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  // the Year-end list tab has its own undo (public/yearend.js)
+  if (!el('panel-yearend').hidden && window.yearendUndo) {
+    if (e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); yearendUndo(); }
+    else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) { e.preventDefault(); yearendRedo(); }
+    return;
+  }
   if (e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undoShowChange(); }
   else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) { e.preventDefault(); redoShowChange(); }
 });
@@ -3866,6 +3879,7 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 <script src="/sc-links.js"></script>
 <script src="/tags.js"></script>
 <script src="/timestamps.js"></script>
+<script src="/yearend.js"></script>
 <script>
 loadArtistLabelNames();
 loadShowHistory();

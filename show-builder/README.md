@@ -10,6 +10,21 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-10-22)
+
+**New: the Year-end list tab** — building the year's "50 best releases" list. See "Year-end
+list" below.
+- **Before using it:** restart the show builder (`start.bat`). On the Surface: `git pull` +
+  restart (no new packages).
+- **2026 is already gathered** on the desktop: 404 releases from the 21 shows of 2026
+  (229–249) — 106 LPs, 45 EPs, 12 compilations, and 241 singles (hidden unless you show
+  them). Nothing picked yet. The gathered releases travel to the Surface with **Sync**.
+- **Gather again** after the year's last shows are on the site (it keeps your picks; cached,
+  so a re-gather takes seconds, only new shows are looked up).
+- Checked against last year: gathering 2025's shows finds every release on the published
+  "best releases of 2025" that was played in a 2025 show (42 of its 49); the other 7 were
+  played in January 2026 or never in a show — for those, paste the link ("+ add to the list").
+
 ## Where we left off (2026-10-19, late)
 
 **New: the site has a live tracklist under every show** (now playing, start times, jump to
@@ -140,6 +155,7 @@ The page may need a hard refresh (Ctrl+F5) the first time.
 | **SoundCloud links** | The backlog: every Bandcamp track from past shows that could stream from SoundCloud. |
 | **Edit site** | How each show is tagged (per heading, per track); merge doubled tags; fix one release's tags; **Publish site edits**. |
 | **Tracklist** | Set where tracks start in a show (the site's live tracklist), while listening to it. See below. |
+| **Year-end list** | The year's 50 best releases: every LP / EP played in the year's shows, listen, put in or out, rank, cut at 50, HTML for radioštudent. See below. |
 | **History** | Past shows archived by "Start fresh". |
 
 ### Tracklist: fixing start times by hand
@@ -165,6 +181,41 @@ published from the Mix tab are exact already.
 The fixes are saved in `src/assets/overrides.json` → `timeEdits` and travel with **Sync** like
 tag edits. A publish applies them (`scripts/tracklists/apply-timestamp-edits.js`), and a later
 matching run never loses them.
+
+### Year-end list (the 50 best releases)
+
+1. **Year-end list** tab → pick the year → **Gather** (the first time a few minutes: it
+   reads every show of the year from the site's archive and looks each release up on
+   Bandcamp / SoundCloud; later only what's new). It lists every LP, EP and compilation
+   played in those shows. Singles are kept but hidden (the **singles** button shows them).
+2. **Left: the releases.** Each shows its type, tracks, length, release month (⚠ if it came
+   out before this year), the shows it was played in (**♪ #241 ×3** = three of its tracks
+   in modem 241), and links. Sort by most played / played most recently / newest / artist,
+   or search. **▶** (or the cover) plays it through, track by track, in the same player as
+   Arrange; the tracks played in shows are marked; click a track to jump to it.
+   **+ list** puts it in (at the bottom of the list), **✕** puts it out; the to do / in the
+   list / out / all buttons switch between them.
+3. **Right: the list.** Drag to rank (or ⤒ ↑ ↓ ⤓). The first 50 make it; the dashed line is
+   the cut, everything below it is dimmed. **✎** fixes the artist / title / label as they go
+   on the list (e.g. a label the Bandcamp page doesn't name — empty label = self-released).
+   **✕** takes it back out.
+4. **A release that wasn't in a show:** paste its Bandcamp or SoundCloud link above the
+   releases → **+ add to the list**.
+5. **Generate HTML** → the first 50, alphabetical by artist, in the shape of the published
+   lists ("★*ﾟ50 best releases in alphabetical order *★", then per release "Artist - Title
+   (Label)" with links and its player) → copy → paste into radioštudent. Also as a plain list.
+
+Everything saves as you go; **Ctrl+Z / Ctrl+Y** undo / redo here (only the list's own
+changes while this tab is open). **Sync** carries it to the other machine — newest version
+of each year wins, like the draft, so finish on one machine and Sync before switching.
+
+How a release's type is decided: on Bandcamp from its tracks — a **single** is 1 track, or 2
+under 15 minutes together; an **LP** has 7+ tracks or runs 30+ minutes; an **EP** is in
+between; a **compilation** has tracks by 3+ different artists. On SoundCloud, what the
+uploader marked it as (album / EP / single / compilation); a SoundCloud track that isn't on
+any album or EP counts as a single. The same release on Bandcamp and SoundCloud becomes one
+entry (Bandcamp kept, since the lists embed Bandcamp). The label is the one tagged in the
+shows, else the Bandcamp account it's on when that isn't the artist's own.
 
 ---
 
@@ -347,6 +398,7 @@ Same file format as the site's own `/admin` page and its pencils, so any of them
 | The code | git | `git pull` (see "Getting the latest version") |
 | Current show (tracks, order, names, SoundCloud picks, show #, air date) | `data/shared-draft.json` | **Sync** |
 | Used tracks, past-shows history | `data/used-tracks.json`, `data/show-history.json` | **Sync** |
+| Year-end list (releases, picks, order, name fixes) | `data/year-end.json` | **Sync** (newest per year wins) |
 | SoundCloud decisions (backlog tab) | `scripts/approvals.json` | **Publish site edits** or your next show publish (then Sync/pull on the other one) |
 | Tag merges/edits, heading + track edits | `src/assets/overrides.json` | **Publish site edits** or your next show publish |
 | Downloads, mix, cover layers, exported cover | `downloads/`, `data/current-draft.json` | not synced — machine-local |
@@ -427,7 +479,13 @@ from a draft before 2026-10-17 (248, 249) — its original isn't on any page.
   `compare-live.js` — "Compare with radioštudent". `jobs.js` — background job queue.
   `archive-cache.js` — the parsed archive, cached.
 - `show-builder/public/sc-links.js`, `tags.js` (the Edit site tab), `tools.css` — the tabs' front end.
-- `show-builder/sync.js` — Sync (now also merges the two decision files, carries the air date).
+- `show-builder/sync.js` — Sync (now also merges the two decision files, carries the air date,
+  and since 2026-10-22 `data/year-end.json`).
+- Year-end list: `year-end-gather.js` (the gather job; `--year`, `--fresh`, `--out`),
+  `year-end-releases.js` (one Bandcamp / SoundCloud release → a candidate, shared with "add
+  a release"), `year-end.js` (`/ye/*` routes, the HTML), `public/yearend.js` (the tab).
+  Bandcamp pages come from `scripts/.cache` (shared with the SoundCloud matching and the
+  track index); SoundCloud lookups are cached in `data/.cache` (`ye-sc-*`).
 
 ### Older tools still around
 The main dev server (`node server.js`, :8085 — the local preview of the website) still has
@@ -507,7 +565,35 @@ search text than a normal one — noise in every review. Same for a heading edit
 label": its tracks kept the old label until a second build. Both checked on the real data:
 1 track's search text changes (the fix itself), 0 labels.
 
+**2026-10-22 — The Year-end list tab.** Matej asked for a tool like the show builder for the
+yearly list: gather every non-single release from the year's shows, listen as in Arrange,
+put in or out, rank with a cut at 50, alphabetical at the end. Built as one tab combining a
+Scan-like pool of releases with an Arrange-like ranked list (his "combine download and
+arrange into one tab"). *Choices:* singles are gathered but hidden (one button shows them,
+in case one is misjudged); releases from earlier years are flagged, not hidden; a link can
+add a release that wasn't in a show (3 of 2025's 50); names can be fixed per release for the
+list (Bandcamp pages often don't name the label). Saved in one file
+(`data/year-end.json`) that Sync carries, newest wins per year — the same rule as the draft.
+
 ---
+
+## How it was tested (2026-10-22)
+
+Year-end list, on the real data with a second show builder on :8190 (the data file backed up
+before and restored after):
+- Gather for 2025 into a test file vs the published "best releases of 2025": 42 of its 49
+  releases found (all those played in a 2025 show), none taken for a single.
+- Gather for 2026 through the tab's own route (the job queue) with picks saved first: picks
+  kept; the same 404 releases as a direct run.
+- In headless Chrome: releases listed (singles hidden); a Bandcamp release plays and clicking
+  a track jumps to it; a SoundCloud set opens (its tracks looked up) and plays — through
+  SoundCloud's widget when there's no plain stream, and goes on to the next track at the end;
+  52 in the list → the cut after #50, 2 dimmed below; out; ⤒; drag re-ranks and renumbers;
+  Ctrl+Z / Ctrl+Y; a label fix shows and reaches the HTML; a release added from its link
+  goes into the list; HTML = the first 50, alphabetical, heading + 50 players; a reload brings
+  back the same list.
+- Sync's per-year merge (newer copy of each year wins), as a unit check. Not tested: a real
+  Sync between the two machines.
 
 ## How it was tested (2026-10-19)
 
