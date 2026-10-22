@@ -20,6 +20,7 @@
     data: null, byKey: new Map(),
     decisions: {}, order: [], edits: {}, listSize: 50, editing: null,
     view: 'todo', types: { LP: true, EP: true, comp: true, single: false }, sort: 'played', q: '', group: true, hideOld: false,
+    aliases: [], aliasOf: new Map(), aliasesOpen: false, // names that are one artist (for every year)
     open: new Map(), // "pool:key" / "list:key" -> { i: track playing }
     undo: [], redo: [], saveTimer: null, poll: null,
   };
@@ -67,6 +68,7 @@
     S.year = j.year; S.data = j; S.listSize = j.listSize || 50;
     S.byKey = new Map((j.candidates || []).map((c) => [c.key, c]));
     S.decisions = j.decisions || {}; S.order = j.order || []; S.edits = j.edits || {}; S.editing = null;
+    setAliases(j.aliases);
     S.undo = []; S.redo = []; S.open.clear();
     renderAll();
   }
@@ -110,8 +112,17 @@
   // ---------- the candidates ----------------------------------------------------------
   // released before the year of the list (a release with no known date isn't)
   const isOld = (c) => !!(c.year && c.year < S.year);
-  // one artist, however it's spelled (case, accents, spaces)
-  const artistKey = (a) => String(a || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  // one artist, however it's spelled (case, accents, spaces, invisible marks — Bandcamp's
+  // "Computer man" account has left-to-right marks in it)
+  const spelled = (a) => String(a || '').normalize('NFKD').replace(/\p{M}/gu, '').replace(/\p{Cf}/gu, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+  // …and names that are one artist (the "same artist" list): all go under the group's first name
+  const artistKey = (a) => { const k = spelled(a); return S.aliasOf.get(k) || k; };
+  function setAliases(groups) {
+    S.aliases = groups || [];
+    S.aliasOf = new Map();
+    S.aliases.forEach((g) => { const head = spelled(g[0]); g.forEach((n) => S.aliasOf.set(spelled(n), head)); });
+  }
   const abc = (a, b) => String(a || '').localeCompare(String(b || ''), undefined, { sensitivity: 'base', numeric: true });
   const lastShow = (c) => Math.max(0, ...(c.shows || []).map((s) => s.number));
   // releases with no date go last, whichever way the dates run
@@ -148,7 +159,11 @@
     return [...groups.values()]
       .map((g) => g.sort(cmp))
       .sort((g, h) => cmp(g[0], h[0]))
-      .map((g) => ({ name: g.length > 1 ? g[0].c.artist : null, items: g.map((x) => x.raw) }));
+      // the heading: every name the artist's releases go under ("Dj-c / Computer man")
+      .map((g) => ({
+        name: g.length > 1 ? [...new Map(g.map((x) => [spelled(x.c.artist), x.c.artist])).values()].join(' / ') : null,
+        items: g.map((x) => x.raw),
+      }));
   }
   function counts() {
     const v = { todo: 0, in: 0, out: 0, all: 0 }, t = { LP: 0, EP: 0, comp: 0, single: 0 };
@@ -192,7 +207,7 @@
       <div class="ye-row">
         ${art(c, 'pool')}
         <div class="ye-meta">
-          <div class="ye-title" title="${escAttr(c.title)}">${esc(c.title)}</div>
+          <div class="ye-title" title="${escAttr(c.title)}">${esc(c.title || 'untitled')}</div>
           <div class="ye-sub">${sub(c)}</div>
           <div class="ye-facts">${facts(c)}</div>
         </div>
@@ -212,7 +227,7 @@
         <span class="ye-rank">${i + 1}</span>
         ${art(c, 'list')}
         <div class="ye-meta">
-          <div class="ye-title" title="${escAttr(c.title)}">${esc(c.title)}</div>
+          <div class="ye-title" title="${escAttr(c.title)}">${esc(c.title || 'untitled')}</div>
           <div class="ye-sub">${sub(c)}</div>
         </div>
         ${typeBadge(c)}
@@ -292,6 +307,12 @@
             </select>
           </label>
           <div class="ye-seg" id="yeOpts"></div>
+          <button id="yeAliasBtn" class="ye-btn" title="names that are one artist — grouped together">same artist…</button>
+        </div>
+        <div id="yeAliasBox" class="ye-aliasbox" hidden>
+          <div class="ye-x">One artist per line, its names separated by <b>=</b> — e.g. <code>Computer man = Computer doctor = Dj-c</code>. Their releases are grouped together (for every year). Case, accents and spaces don't matter.</div>
+          <textarea id="yeAliasText" rows="4" spellcheck="false"></textarea>
+          <div class="actions"><button id="yeAliasSave" class="ye-btn accent">save</button><button id="yeAliasClose" class="ye-btn">close</button><span id="yeAliasStatus" class="status"></span></div>
         </div>
         <div class="ye-addrow">
           <input id="yeAddUrl" class="sc-input" placeholder="a release that wasn't in a show: paste its Bandcamp / SoundCloud link">
@@ -610,6 +631,29 @@
     }
   }
 
+  // ---------- names that are one artist ("same artist…") ----------------------------------------
+  function toggleAliases() {
+    S.aliasesOpen = !S.aliasesOpen;
+    const box = el('yeAliasBox');
+    box.hidden = !S.aliasesOpen;
+    if (S.aliasesOpen) {
+      el('yeAliasText').value = S.aliases.map((g) => g.join(' = ')).join('\n');
+      el('yeAliasStatus').textContent = '';
+      el('yeAliasText').focus();
+    }
+  }
+  async function saveAliases() {
+    const groups = el('yeAliasText').value.split('\n')
+      .map((line) => line.split('=').map((n) => n.trim()).filter(Boolean))
+      .filter((g) => g.length > 1);
+    const j = await post('/ye/aliases', { groups });
+    if (!j.ok) { el('yeAliasStatus').textContent = 'not saved: ' + (j.error || ''); return; }
+    setAliases(j.groups);
+    el('yeAliasText').value = S.aliases.map((g) => g.join(' = ')).join('\n');
+    el('yeAliasStatus').textContent = `saved — ${S.aliases.length} artist${S.aliases.length === 1 ? '' : 's'} with more than one name`;
+    renderPool();
+  }
+
   // ---------- HTML for radioštudent -----------------------------------------------------------
   async function makeHtml() {
     const st = el('yeHtmlStatus');
@@ -647,6 +691,8 @@
       if (type) { S.types[type.dataset.type] = !S.types[type.dataset.type]; savePrefs(); return renderAll(); }
       const opt = t.closest('[data-opt]');
       if (opt) { S[opt.dataset.opt] = !S[opt.dataset.opt]; savePrefs(); return renderAll(); }
+      if (t.id === 'yeAliasBtn' || t.id === 'yeAliasClose') return toggleAliases();
+      if (t.id === 'yeAliasSave') return saveAliases();
       if (t.id === 'yeGather') return gather();
       if (t.id === 'yeUndo') return window.yearendUndo();
       if (t.id === 'yeRedo') return window.yearendRedo();

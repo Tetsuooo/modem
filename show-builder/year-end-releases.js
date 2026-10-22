@@ -38,6 +38,18 @@ const releaseId = (artist, title) => norm(artist) + '|' + norm(title);
 const isoDate = (s) => { if (!s) return null; const d = new Date(s); return isNaN(d) ? null : d.toISOString().slice(0, 10); };
 const origin = (u) => { try { return new URL(u).origin; } catch (e) { return null; } };
 
+// Names and titles without invisible direction marks / zero-width spaces (Bandcamp's
+// "Computer man" account is "Computer‎ ‎man") — they'd end up in the list's HTML.
+// The zero-width joiner stays: emoji sequences need it.
+const INVISIBLE = /[​‎‏‪-‮⁦-⁩﻿]/g;
+const clean = (s) => (s == null ? s : String(s).replace(INVISIBLE, '').replace(/\s+/g, ' ').trim());
+function tidy(c) {
+  if (!c) return c;
+  for (const f of ['title', 'artist', 'account', 'label']) c[f] = clean(c[f]);
+  (c.tracks || []).forEach((t) => { t.title = clean(t.title); t.artist = clean(t.artist); });
+  return c;
+}
+
 // ---------- Bandcamp ---------------------------------------------------------------------
 function decodeEntities(s) {
   return String(s || '').replace(/&quot;/g, '"').replace(/&#0*39;/g, "'").replace(/&#x27;/gi, "'")
@@ -63,7 +75,7 @@ function readJsonAttr(html, attr) {
 const bcArt = (td) => (td && td.art_id ? `https://f4.bcbits.com/img/a${td.art_id}_16.jpg` : null);
 
 // One Bandcamp album page → a candidate (or null if the page can't be read).
-function bandcampAlbum(albumId, albumUrl) {
+function bandcampAlbumRaw(albumId, albumUrl) {
   const html = bcPage(albumUrl);
   const td = readTralbum(html);
   if (!td) return null;
@@ -106,7 +118,7 @@ function bandcampAlbum(albumId, albumUrl) {
 }
 
 // A Bandcamp track page → its album's candidate if it's on one, else a single.
-function bandcampTrack(trackUrl, trackId) {
+function bandcampTrackRaw(trackUrl, trackId) {
   const html = bcPage(trackUrl);
   const td = readTralbum(html);
   if (!td) return null;
@@ -171,7 +183,7 @@ function scAlbumsOf(trackId) {
   });
 }
 
-function soundcloudSet(p) {
+function soundcloudSetRaw(p) {
   if (!p) return null;
   const tracks = (p.tracks || []).map((t) => ({
     id: t.id,
@@ -208,7 +220,7 @@ function soundcloudSet(p) {
   };
 }
 
-function soundcloudSingle(t) {
+function soundcloudSingleRaw(t) {
   if (!t) return null;
   const duration = t.duration ? Math.round(t.duration / 1000) : null;
   const pm = t.publisher_metadata || {};
@@ -258,6 +270,12 @@ function releaseFromUrl(raw) {
   if (td.item_type === 'album' || /\/album\//.test(url.pathname)) return bandcampAlbum(null, page);
   return bandcampTrack(page, td.id);
 }
+
+// every release comes out tidied (see tidy)
+const bandcampAlbum = (...a) => tidy(bandcampAlbumRaw(...a));
+const bandcampTrack = (...a) => tidy(bandcampTrackRaw(...a));
+const soundcloudSet = (...a) => tidy(soundcloudSetRaw(...a));
+const soundcloudSingle = (...a) => tidy(soundcloudSingleRaw(...a));
 
 module.exports = {
   stats, setFresh, typeOf, norm, releaseId, isoDate, origin,

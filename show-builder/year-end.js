@@ -10,6 +10,9 @@
 //   order       [key, …] — the ranked list, best first (written by the tab)
 //   edits       { key: { artist, title, label } } — names fixed by hand for the list
 //   gatheredAt, shows, savedAt (ms — Sync keeps the newer copy of each year)
+// and, for every year, data/year-end.json → aliases: { groups: [[name, name, …], …], savedAt }
+// — names that are one artist ("Computer man = Computer doctor = Dj-c"): the tab groups
+// their releases together. Sync treats it like a year (newer copy wins).
 // Sync carries the file between machines (sync.js).
 //
 // The output is the HTML for radioštudent in the same shape as the published lists
@@ -33,6 +36,9 @@ function writeAll(all) {
   fs.writeFileSync(tmp, JSON.stringify(all, null, 1));
   fs.renameSync(tmp, FILE);
 }
+const isYear = (k) => /^\d{4}$/.test(k);
+// Matej, 2026-10-22: "computer man, computer doctor and dj-c are the same artist"
+const DEFAULT_ALIASES = [['Computer man', 'Computer doctor', 'Dj-c']];
 const emptyYear = () => ({ candidates: [], decisions: {}, order: [], edits: {}, gatheredAt: null, shows: [], savedAt: 0 });
 
 // a release as it goes on the list: names fixed by hand win; a link only stays with
@@ -89,11 +95,11 @@ function listHtml(entries) {
   const plain = [];
   for (const c of sorted) {
     const label = c.label ? link(c.labelUrl, c.label) : 'self-released';
-    out.push(`<p>${link(c.artistUrl, c.artist)} - ${escapeHtml(c.title)} (${label})</p>`);
+    out.push(`<p>${link(c.artistUrl, c.artist)} - ${escapeHtml(c.title || 'untitled')} (${label})</p>`);
     // Bandcamp's player where the release has one (the lists have always used it)
     const bc = c.source === 'bandcamp' ? c : null;
     out.push(`<p>${bc ? bandcampEmbed(bc) : soundcloudEmbed(c)}</p>`);
-    plain.push(`${c.artist} - ${c.title} (${c.label || 'self-released'})`);
+    plain.push(`${c.artist} - ${c.title || 'untitled'} (${c.label || 'self-released'})`);
   }
   return { html: out.join('\n'), text: plain.join('\n'), count: sorted.length };
 }
@@ -101,12 +107,24 @@ function listHtml(entries) {
 function mount(app) {
   app.get('/ye/years', (req, res) => {
     const all = readAll();
-    res.json({ ok: true, years: showYears(), gathered: Object.keys(all).map(Number).filter((y) => (all[y].candidates || []).length) });
+    res.json({ ok: true, years: showYears(), gathered: Object.keys(all).filter(isYear).map(Number).filter((y) => (all[y].candidates || []).length) });
   });
 
   app.get('/ye/state', (req, res) => {
     const year = Number(req.query.year) || new Date().getFullYear();
-    res.json({ ok: true, year, listSize: LIST_SIZE, ...emptyYear(), ...(readAll()[year] || {}) });
+    const all = readAll();
+    res.json({ ok: true, year, listSize: LIST_SIZE, ...emptyYear(), ...(all[year] || {}), aliases: (all.aliases && all.aliases.groups) || DEFAULT_ALIASES });
+  });
+
+  // names that are one artist — for every year
+  app.post('/ye/aliases', (req, res) => {
+    const groups = ((req.body || {}).groups || [])
+      .map((g) => (Array.isArray(g) ? g : []).map((n) => String(n || '').trim()).filter(Boolean))
+      .filter((g) => g.length > 1);
+    const all = readAll();
+    all.aliases = { groups, savedAt: Date.now() };
+    writeAll(all);
+    res.json({ ok: true, groups });
   });
 
   // The tab's picks + order. Only these two fields — the candidates are the gather

@@ -158,12 +158,23 @@ function main() {
     c.year = c.releaseDate ? Number(c.releaseDate.slice(0, 4)) : null;
   }
 
-  // one release, two places (Bandcamp + SoundCloud, or two Bandcamp pages): keep one
+  // one release, two places (Bandcamp + SoundCloud, or two Bandcamp pages): keep one.
+  // Known as "artist + title" — and, for a title like "Dj-c - Night of the living liquor
+  // store" (SoundCloud sets often carry the artist in the title), also as that artist + title.
+  // Only with a real title: titles that are just symbols ("-", "🛞", invisible marks) would all
+  // read as the same empty title, and an artist's untitled tracks would become one release.
+  const idsOf = (c) => {
+    const ids = [];
+    if (R.norm(c.title)) ids.push(R.releaseId(c.artist, c.title));
+    const m = String(c.title || '').match(/^(.+?)\s+[-–—]\s+(.+)$/);
+    if (m && R.norm(m[1]) && R.norm(m[2])) ids.push(R.releaseId(m[1], m[2]));
+    return ids.length ? ids : ['key:' + c.key];
+  };
   const byRelease = new Map();
   for (const c of [...candidates.values()].filter((x) => x.shows.length)) {
-    const id = R.releaseId(c.artist, c.title);
-    const keep = byRelease.get(id);
-    if (!keep) { byRelease.set(id, c); continue; }
+    const ids = idsOf(c);
+    const keep = ids.map((i) => byRelease.get(i)).find(Boolean);
+    if (!keep) { ids.forEach((i) => byRelease.set(i, c)); continue; }
     // Bandcamp first (the lists embed Bandcamp), then the one with more tracks
     const [a, b] = (keep.source === 'bandcamp' && c.source !== 'bandcamp') || (keep.source === c.source && (keep.trackCount || 0) >= (c.trackCount || 0)) ? [keep, c] : [c, keep];
     a.alsoOn = [...(a.alsoOn || []), { source: b.source, url: b.url, key: b.key }];
@@ -172,9 +183,9 @@ function main() {
     a.shows = [...shows.entries()].sort((x, y) => x[0] - y[0]).map(([number, ids]) => ({ number, tracks: [...ids] }));
     a.playedTracks = a.shows.reduce((s, x) => s + Math.max(1, x.tracks.length), 0);
     if (!a.label && b.label) { a.label = b.label; a.labelFrom = b.labelFrom; }
-    byRelease.set(id, a);
+    [...ids, ...idsOf(keep)].forEach((i) => byRelease.set(i, a));
   }
-  const list = [...byRelease.values()].sort((a, b) =>
+  const list = [...new Set(byRelease.values())].sort((a, b) =>
     (b.playedTracks - a.playedTracks) || (b.shows.length - a.shows.length) || String(b.releaseDate || '').localeCompare(String(a.releaseDate || '')));
 
   const counts = list.reduce((m, c) => { m[c.type] = (m[c.type] || 0) + 1; return m; }, {});

@@ -103,7 +103,7 @@
      },
      {
       "id": 1003889584,
-      "title": "eden2001 -  无暇 (WuXia)",
+      "title": "eden2001 - 无暇 (WuXia)",
       "artist": "",
       "url": "https://gudserben.bandcamp.com/track/eden2001-wuxia",
       "duration": 184,
@@ -1163,69 +1163,6 @@
     "year": 2026
    },
    {
-    "key": "sc:t:2243546996",
-    "source": "soundcloud",
-    "kind": "track",
-    "scId": "2243546996",
-    "title": "‎",
-    "artist": "imuhki",
-    "account": "imuhki",
-    "label": null,
-    "labelFrom": null,
-    "url": "https://soundcloud.com/imuhki/e4a0782b-d53d-4fb0-9e3f-956658dbbc69",
-    "artistUrl": "https://soundcloud.com/imuhki",
-    "labelUrl": null,
-    "artwork": "https://i1.sndcdn.com/artworks-Yq4FTLncfz1tnHQP-uEzedA-t500x500.png",
-    "releaseDate": "2026-01-08",
-    "trackCount": 1,
-    "duration": 36,
-    "type": "single",
-    "tracks": [
-     {
-      "id": 2243546996,
-      "title": "‎",
-      "artist": "imuhki",
-      "url": "https://soundcloud.com/imuhki/e4a0782b-d53d-4fb0-9e3f-956658dbbc69",
-      "duration": 36,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 230,
-      "tracks": [
-       "2243546996"
-      ]
-     },
-     {
-      "number": 233,
-      "tracks": [
-       "2270082194"
-      ]
-     },
-     {
-      "number": 243,
-      "tracks": [
-       "2360817371"
-      ]
-     }
-    ],
-    "playedTracks": 3,
-    "year": 2026,
-    "alsoOn": [
-     {
-      "source": "soundcloud",
-      "url": "https://soundcloud.com/imuhki/u0g3jghlrcsh",
-      "key": "sc:t:2270082194"
-     },
-     {
-      "source": "soundcloud",
-      "url": "https://soundcloud.com/imuhki/y6d2vlzeuznl",
-      "key": "sc:t:2360817371"
-     }
-    ]
-   },
-   {
     "key": "bc:a:513945392",
     "source": "bandcamp",
     "kind": "album",
@@ -2126,6 +2063,59 @@
     "year": 2024
    },
    {
+    "key": "bc:t:3817911612",
+    "source": "bandcamp",
+    "kind": "track",
+    "albumId": null,
+    "trackId": "3817911612",
+    "title": "kęnåi & IRIGINO - A City in the Corner of a Garden",
+    "artist": "kęnåi & IRIGINO",
+    "account": "kęnåi",
+    "label": "kęnåi",
+    "labelFrom": "account",
+    "url": "https://k-e-n-a-iiiiiiii.bandcamp.com/track/a-city-in-the-corner-of-a-garden",
+    "artistUrl": null,
+    "labelUrl": "https://k-e-n-a-iiiiiiii.bandcamp.com",
+    "artwork": "https://f4.bcbits.com/img/a4211766288_16.jpg",
+    "releaseDate": "2026-10-08",
+    "trackCount": 1,
+    "duration": 156,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 3817911612,
+      "title": "kęnåi & IRIGINO - A City in the Corner of a Garden",
+      "artist": "kęnåi & IRIGINO",
+      "url": "https://k-e-n-a-iiiiiiii.bandcamp.com/track/a-city-in-the-corner-of-a-garden",
+      "duration": 156,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 248,
+      "tracks": [
+       "2403313518"
+      ]
+     },
+     {
+      "number": 249,
+      "tracks": [
+       "3817911612"
+      ]
+     }
+    ],
+    "playedTracks": 2,
+    "year": 2026,
+    "alsoOn": [
+     {
+      "source": "soundcloud",
+      "url": "https://soundcloud.com/kenaiiiiiiii/a-city-in-the-corner-of-a",
+      "key": "sc:t:2403313518"
+     }
+    ]
+   },
+   {
     "key": "bc:a:3198824310",
     "source": "bandcamp",
     "kind": "album",
@@ -2202,45 +2192,140 @@
     "year": 2026
    },
    {
-    "key": "sc:t:2259791780",
-    "source": "soundcloud",
-    "kind": "track",
-    "scId": "2259791780",
-    "title": "-",
-    "artist": "guu",
-    "account": "guu",
-    "label": null,
-    "labelFrom": null,
-    "url": "https://soundcloud.com/guu_neru/542c1592-a10f-4d4b-89ed-06ffaa2896d5",
-    "artistUrl": "https://soundcloud.com/guu_neru",
-    "labelUrl": null,
-    "artwork": "https://i1.sndcdn.com/artworks-F4B5f52owfPxiO7B-xy7Iaw-t500x500.jpg",
-    "releaseDate": "2026-02-04",
-    "trackCount": 1,
-    "duration": 35,
-    "type": "single",
+    "key": "bc:a:839427358",
+    "source": "bandcamp",
+    "kind": "album",
+    "albumId": "839427358",
+    "trackId": "4284513649",
+    "title": "Night of the living liquor store",
+    "artist": "Dj-c",
+    "account": "Computer man",
+    "label": "Computer man",
+    "labelFrom": "account",
+    "url": "https://c0mput3rm4n.bandcamp.com/album/night-of-the-living-liquor-store",
+    "artistUrl": null,
+    "labelUrl": "https://c0mput3rm4n.bandcamp.com",
+    "artwork": "https://f4.bcbits.com/img/a1829163413_16.jpg",
+    "releaseDate": "2026-05-01",
+    "trackCount": 13,
+    "duration": 2656,
+    "type": "LP",
     "tracks": [
      {
-      "id": 2259791780,
-      "title": "-",
-      "artist": "guu",
-      "url": "https://soundcloud.com/guu_neru/542c1592-a10f-4d4b-89ed-06ffaa2896d5",
-      "duration": 35,
+      "id": 4284513649,
+      "title": "Jesus p1€ce",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/jesus-p1-ce-3",
+      "duration": 321,
+      "playable": true
+     },
+     {
+      "id": 1331405507,
+      "title": "Doupe man",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/doupe-man",
+      "duration": 132,
+      "playable": true
+     },
+     {
+      "id": 2396197057,
+      "title": "Tek'it",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/tekit",
+      "duration": 130,
+      "playable": true
+     },
+     {
+      "id": 1425178313,
+      "title": "Fuk`em!~",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/fukem",
+      "duration": 192,
+      "playable": true
+     },
+     {
+      "id": 424976663,
+      "title": "Berryfusion",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/berryfusion",
+      "duration": 216,
+      "playable": true
+     },
+     {
+      "id": 2000502060,
+      "title": "Im0nnatkush",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/im0nnatkush",
+      "duration": 198,
+      "playable": true
+     },
+     {
+      "id": 2524145001,
+      "title": "27",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/27-2",
+      "duration": 149,
+      "playable": true
+     },
+     {
+      "id": 1485117003,
+      "title": "Powerful",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/powerful",
+      "duration": 264,
+      "playable": true
+     },
+     {
+      "id": 116091555,
+      "title": "Der Blue Gangster singt sein Lied feat. Logan montefusco",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/der-blue-gangster-singt-sein-lied-feat-logan-montefusco",
+      "duration": 236,
+      "playable": true
+     },
+     {
+      "id": 3241477523,
+      "title": "Rescue mission",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/rescue-mission",
+      "duration": 240,
+      "playable": true
+     },
+     {
+      "id": 4069214344,
+      "title": "Yeh",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/yeh",
+      "duration": 229,
+      "playable": true
+     },
+     {
+      "id": 363268699,
+      "title": "Double gup",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/double-gup",
+      "duration": 130,
+      "playable": true
+     },
+     {
+      "id": 3719013358,
+      "title": "Battlefield",
+      "artist": "",
+      "url": "https://c0mput3rm4n.bandcamp.com/track/battlefield",
+      "duration": 219,
       "playable": true
      }
     ],
     "shows": [
      {
-      "number": 232,
+      "number": 233,
       "tracks": [
-       "2259791780"
+       "1936765889"
       ]
      },
      {
-      "number": 244,
-      "tracks": [
-       "2368104062"
-      ]
+      "number": 238,
+      "tracks": []
      }
     ],
     "playedTracks": 2,
@@ -2248,60 +2333,8 @@
     "alsoOn": [
      {
       "source": "soundcloud",
-      "url": "https://soundcloud.com/guu_neru/x5usiwrziz74",
-      "key": "sc:t:2368104062"
-     }
-    ]
-   },
-   {
-    "key": "sc:t:2249355500",
-    "source": "soundcloud",
-    "kind": "track",
-    "scId": "2249355500",
-    "title": "🛞",
-    "artist": "Ashton Hyatt",
-    "account": "☁",
-    "label": null,
-    "labelFrom": null,
-    "url": "https://soundcloud.com/elevationishere/7c116e48-3999-4a89-9982-a17051e43b1e",
-    "artistUrl": "https://soundcloud.com/elevationishere",
-    "labelUrl": null,
-    "artwork": "https://i1.sndcdn.com/artworks-zS2NeB7yIpF3sBlI-mtx0lw-t500x500.jpg",
-    "releaseDate": "2026-01-17",
-    "trackCount": 1,
-    "duration": 90,
-    "type": "single",
-    "tracks": [
-     {
-      "id": 2249355500,
-      "title": "🛞",
-      "artist": "Ashton Hyatt",
-      "url": "https://soundcloud.com/elevationishere/7c116e48-3999-4a89-9982-a17051e43b1e",
-      "duration": 90,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 230,
-      "tracks": [
-       "2249355500"
-      ]
-     },
-     {
-      "number": 235,
-      "tracks": [
-       "2290106816"
-      ]
-     }
-    ],
-    "playedTracks": 2,
-    "year": 2026,
-    "alsoOn": [
-     {
-      "source": "soundcloud",
-      "url": "https://soundcloud.com/elevationishere/vtq5io2ceekc",
-      "key": "sc:t:2290106816"
+      "url": "https://soundcloud.com/c0mput3rm4n/sets/dj-c-dese-bangs",
+      "key": "sc:p:2230189157"
      }
     ]
    },
@@ -3037,46 +3070,6 @@
     ],
     "playedTracks": 1,
     "year": 5026
-   },
-   {
-    "key": "bc:t:3817911612",
-    "source": "bandcamp",
-    "kind": "track",
-    "albumId": null,
-    "trackId": "3817911612",
-    "title": "kęnåi & IRIGINO - A City in the Corner of a Garden",
-    "artist": "kęnåi & IRIGINO",
-    "account": "kęnåi",
-    "label": "kęnåi",
-    "labelFrom": "account",
-    "url": "https://k-e-n-a-iiiiiiii.bandcamp.com/track/a-city-in-the-corner-of-a-garden",
-    "artistUrl": null,
-    "labelUrl": "https://k-e-n-a-iiiiiiii.bandcamp.com",
-    "artwork": "https://f4.bcbits.com/img/a4211766288_16.jpg",
-    "releaseDate": "2026-10-08",
-    "trackCount": 1,
-    "duration": 156,
-    "type": "single",
-    "tracks": [
-     {
-      "id": 3817911612,
-      "title": "kęnåi & IRIGINO - A City in the Corner of a Garden",
-      "artist": "kęnåi & IRIGINO",
-      "url": "https://k-e-n-a-iiiiiiii.bandcamp.com/track/a-city-in-the-corner-of-a-garden",
-      "duration": 156,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 249,
-      "tracks": [
-       "3817911612"
-      ]
-     }
-    ],
-    "playedTracks": 1,
-    "year": 2026
    },
    {
     "key": "sc:t:2413905219",
@@ -3921,45 +3914,6 @@
       "number": 248,
       "tracks": [
        "2407020654"
-      ]
-     }
-    ],
-    "playedTracks": 1,
-    "year": 2026
-   },
-   {
-    "key": "sc:t:2403313518",
-    "source": "soundcloud",
-    "kind": "track",
-    "scId": "2403313518",
-    "title": "A City in the Corner of a Garden",
-    "artist": "kęnåi, IRIGINO",
-    "account": "kęnåi",
-    "label": null,
-    "labelFrom": null,
-    "url": "https://soundcloud.com/kenaiiiiiiii/a-city-in-the-corner-of-a",
-    "artistUrl": "https://soundcloud.com/kenaiiiiiiii",
-    "labelUrl": null,
-    "artwork": "https://i1.sndcdn.com/artworks-p8Ukv25WXyqa9t58-XtFCxw-t500x500.jpg",
-    "releaseDate": "2026-09-24",
-    "trackCount": 1,
-    "duration": 156,
-    "type": "single",
-    "tracks": [
-     {
-      "id": 2403313518,
-      "title": "A City in the Corner of a Garden",
-      "artist": "kęnåi, IRIGINO",
-      "url": "https://soundcloud.com/kenaiiiiiiii/a-city-in-the-corner-of-a",
-      "duration": 156,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 248,
-      "tracks": [
-       "2403313518"
       ]
      }
     ],
@@ -5024,7 +4978,7 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2395835493",
-    "title": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park  https://www.instagram.com/orchead420/",
+    "title": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park https://www.instagram.com/orchead420/",
     "artist": "orc",
     "account": "orchead420",
     "label": null,
@@ -5040,7 +4994,7 @@
     "tracks": [
      {
       "id": 2395835493,
-      "title": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park  https://www.instagram.com/orchead420/",
+      "title": "my body is made of thousands of tiny titanium knives and i can move at a speed of 100mph in any direction at any time come meet me in millenium park https://www.instagram.com/orchead420/",
       "artist": "orc",
       "url": "https://soundcloud.com/orchead420/on",
       "duration": 130,
@@ -6936,8 +6890,8 @@
     "trackId": "3774848744",
     "title": "Psychosomatic piano-person",
     "artist": "C man & his band of virtuosos",
-    "account": "Computer‎ ‎man",
-    "label": "Computer‎ ‎man",
+    "account": "Computer man",
+    "label": "Computer man",
     "labelFrom": "account",
     "url": "https://c0mput3rm4n.bandcamp.com/album/psychosomatic-piano-person",
     "artistUrl": null,
@@ -7368,7 +7322,7 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2377835909",
-    "title": "frankenstein's house | cool beat u might like i feel so stupid and idk what im doing and i just need to sit with myself and go through pain CONSCIOUSLY but idk how  I thot i was over things but ideas keep bringing me back all i am is art i am art",
+    "title": "frankenstein's house | cool beat u might like i feel so stupid and idk what im doing and i just need to sit with myself and go through pain CONSCIOUSLY but idk how I thot i was over things but ideas keep bringing me back all i am is art i am art",
     "artist": "i think ill be okay i think im bipolar",
     "account": "orchead420",
     "label": null,
@@ -7384,7 +7338,7 @@
     "tracks": [
      {
       "id": 2377835909,
-      "title": "frankenstein's house | cool beat u might like i feel so stupid and idk what im doing and i just need to sit with myself and go through pain CONSCIOUSLY but idk how  I thot i was over things but ideas keep bringing me back all i am is art i am art",
+      "title": "frankenstein's house | cool beat u might like i feel so stupid and idk what im doing and i just need to sit with myself and go through pain CONSCIOUSLY but idk how I thot i was over things but ideas keep bringing me back all i am is art i am art",
       "artist": "i think ill be okay i think im bipolar",
       "url": "https://soundcloud.com/orchead420/zz0",
       "duration": 135,
@@ -8679,7 +8633,7 @@
      },
      {
       "id": 912013475,
-      "title": "Worst Thing To Tell Me Ever. EVER!                                  ever",
+      "title": "Worst Thing To Tell Me Ever. EVER! ever",
       "artist": "",
       "url": "https://inunison.bandcamp.com/track/worst-thing-to-tell-me-ever-ever-ever",
       "duration": 246,
@@ -8984,6 +8938,45 @@
       "number": 244,
       "tracks": [
        "2369037458"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
+    "key": "sc:t:2368104062",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2368104062",
+    "title": "-",
+    "artist": "guu",
+    "account": "guu",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/guu_neru/x5usiwrziz74",
+    "artistUrl": "https://soundcloud.com/guu_neru",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-RUfzy0xjwamdhe1m-k9qErw-t500x500.jpg",
+    "releaseDate": "2026-07-26",
+    "trackCount": 1,
+    "duration": 263,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2368104062,
+      "title": "-",
+      "artist": "guu",
+      "url": "https://soundcloud.com/guu_neru/x5usiwrziz74",
+      "duration": 263,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 244,
+      "tracks": [
+       "2368104062"
       ]
      }
     ],
@@ -9346,8 +9339,8 @@
     "trackId": "2584803484",
     "title": "I am evan from lunenburg / panax flower -Single mix-",
     "artist": "Computer man & ant. adventure.ᐟ",
-    "account": "Computer‎ ‎man",
-    "label": "Computer‎ ‎man",
+    "account": "Computer man",
+    "label": "Computer man",
     "labelFrom": "account",
     "url": "https://c0mput3rm4n.bandcamp.com/album/i-am-evan-from-lunenburg-panax-flower-single-mix",
     "artistUrl": null,
@@ -9461,7 +9454,7 @@
     "scId": "2362876781",
     "title": "imadesomestuffwithmyguy4h4gowfwusand#devourbecausewearetuffandinsaneidontknowwhatamitypinglol",
     "artist": "vaber66 & 4h4",
-    "account": "ｖａｂｅｒ６６ ミ  凍った天使",
+    "account": "ｖａｂｅｒ６６ ミ 凍った天使",
     "label": null,
     "labelFrom": null,
     "url": "https://soundcloud.com/vaber66/imadesomestuffwithmyguy4h4gowf",
@@ -9948,6 +9941,45 @@
     "year": 2026
    },
    {
+    "key": "sc:t:2360817371",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2360817371",
+    "title": "",
+    "artist": "imuhki",
+    "account": "imuhki",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/imuhki/y6d2vlzeuznl",
+    "artistUrl": "https://soundcloud.com/imuhki",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-FgRi0DRrBArqYbFM-I0XyJA-t500x500.jpg",
+    "releaseDate": "2026-07-15",
+    "trackCount": 1,
+    "duration": 117,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2360817371,
+      "title": "",
+      "artist": "imuhki",
+      "url": "https://soundcloud.com/imuhki/y6d2vlzeuznl",
+      "duration": 117,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 243,
+      "tracks": [
+       "2360817371"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
     "key": "bc:t:3316784934",
     "source": "bandcamp",
     "kind": "track",
@@ -10332,8 +10364,8 @@
     "albumId": null,
     "trackId": "3257326073",
     "title": "Sprocket / untitled -Single mix-",
-    "artist": "Computer‎ ‎man",
-    "account": "Computer‎ ‎man",
+    "artist": "Computer man",
+    "account": "Computer man",
     "label": null,
     "labelFrom": null,
     "url": "https://c0mput3rm4n.bandcamp.com/track/sprocket-untitled-single-mix",
@@ -11893,7 +11925,7 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2341306556",
-    "title": "oracal *  june clips * 2026",
+    "title": "oracal * june clips * 2026",
     "artist": "Oracal",
     "account": "Oracal",
     "label": null,
@@ -11909,7 +11941,7 @@
     "tracks": [
      {
       "id": 2341306556,
-      "title": "oracal *  june clips * 2026",
+      "title": "oracal * june clips * 2026",
       "artist": "Oracal",
       "url": "https://soundcloud.com/nocksoracal/oracal-june-clips-2026",
       "duration": 311,
@@ -13704,7 +13736,7 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2328630266",
-    "title": "iamincrediblystrong                 \"a critical hit\" — Gameinformer",
+    "title": "iamincrediblystrong \"a critical hit\" — Gameinformer",
     "artist": "winter emiline 9",
     "account": "winterEmiline9",
     "label": null,
@@ -13720,7 +13752,7 @@
     "tracks": [
      {
       "id": 2328630266,
-      "title": "iamincrediblystrong                 \"a critical hit\" — Gameinformer",
+      "title": "iamincrediblystrong \"a critical hit\" — Gameinformer",
       "artist": "winter emiline 9",
       "url": "https://soundcloud.com/necronomicmiraclepending/iamincrediblystrong",
       "duration": 184,
@@ -15164,7 +15196,7 @@
     "kind": "track",
     "scId": "2315152889",
     "title": "jac⋆꙳·❅*‧ ‧*❆ ₊⋆ft.Wacoozi",
-    "artist": "‎ ",
+    "artist": "",
     "account": "TV",
     "label": null,
     "labelFrom": null,
@@ -15180,7 +15212,7 @@
      {
       "id": 2315152889,
       "title": "jac⋆꙳·❅*‧ ‧*❆ ₊⋆ft.Wacoozi",
-      "artist": "‎ ",
+      "artist": "",
       "url": "https://soundcloud.com/user-789039745/jac-ft-wacoozi",
       "duration": 219,
       "playable": true
@@ -15458,140 +15490,6 @@
     "year": 2026
    },
    {
-    "key": "bc:a:839427358",
-    "source": "bandcamp",
-    "kind": "album",
-    "albumId": "839427358",
-    "trackId": "4284513649",
-    "title": "Night of the living liquor store",
-    "artist": "Dj-c",
-    "account": "Computer‎ ‎man",
-    "label": "Computer‎ ‎man",
-    "labelFrom": "account",
-    "url": "https://c0mput3rm4n.bandcamp.com/album/night-of-the-living-liquor-store",
-    "artistUrl": null,
-    "labelUrl": "https://c0mput3rm4n.bandcamp.com",
-    "artwork": "https://f4.bcbits.com/img/a1829163413_16.jpg",
-    "releaseDate": "2026-05-01",
-    "trackCount": 13,
-    "duration": 2656,
-    "type": "LP",
-    "tracks": [
-     {
-      "id": 4284513649,
-      "title": "Jesus p1€ce",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/jesus-p1-ce-3",
-      "duration": 321,
-      "playable": true
-     },
-     {
-      "id": 1331405507,
-      "title": "Doupe man",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/doupe-man",
-      "duration": 132,
-      "playable": true
-     },
-     {
-      "id": 2396197057,
-      "title": "Tek'it",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/tekit",
-      "duration": 130,
-      "playable": true
-     },
-     {
-      "id": 1425178313,
-      "title": "Fuk`em!~",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/fukem",
-      "duration": 192,
-      "playable": true
-     },
-     {
-      "id": 424976663,
-      "title": "Berryfusion",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/berryfusion",
-      "duration": 216,
-      "playable": true
-     },
-     {
-      "id": 2000502060,
-      "title": "Im0nnatkush",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/im0nnatkush",
-      "duration": 198,
-      "playable": true
-     },
-     {
-      "id": 2524145001,
-      "title": "27",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/27-2",
-      "duration": 149,
-      "playable": true
-     },
-     {
-      "id": 1485117003,
-      "title": "Powerful",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/powerful",
-      "duration": 264,
-      "playable": true
-     },
-     {
-      "id": 116091555,
-      "title": "Der Blue Gangster singt sein Lied feat. Logan montefusco",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/der-blue-gangster-singt-sein-lied-feat-logan-montefusco",
-      "duration": 236,
-      "playable": true
-     },
-     {
-      "id": 3241477523,
-      "title": "Rescue mission",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/rescue-mission",
-      "duration": 240,
-      "playable": true
-     },
-     {
-      "id": 4069214344,
-      "title": "Yeh",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/yeh",
-      "duration": 229,
-      "playable": true
-     },
-     {
-      "id": 363268699,
-      "title": "Double gup",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/double-gup",
-      "duration": 130,
-      "playable": true
-     },
-     {
-      "id": 3719013358,
-      "title": "Battlefield",
-      "artist": "",
-      "url": "https://c0mput3rm4n.bandcamp.com/track/battlefield",
-      "duration": 219,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 238,
-      "tracks": []
-     }
-    ],
-    "playedTracks": 1,
-    "year": 2026
-   },
-   {
     "key": "bc:a:2082944026",
     "source": "bandcamp",
     "kind": "album",
@@ -15613,7 +15511,7 @@
     "tracks": [
      {
       "id": 4098358853,
-      "title": "frankenstein emojis. Prod Me   Page 6 | Fright Images | Free Vectors, Stock Photos & PSD The Frankenstein emoji represents a green, scary creature symbolizing monsters, horror, and scientific experimentation. The Frankenstein emoji depicts a green, monstr",
+      "title": "frankenstein emojis. Prod Me Page 6 | Fright Images | Free Vectors, Stock Photos & PSD The Frankenstein emoji represents a green, scary creature symbolizing monsters, horror, and scientific experimentation. The Frankenstein emoji depicts a green, monstr",
       "artist": "",
       "url": "https://zombiebasketball.bandcamp.com/track/frankenstein-emojis-prod-me-page-6-fright-images-free-vectors-stock-photos-psd-the-frankenstein-emoji-represents-a-green-scary-creature-symbolizing-monsters-horror-and-scientific-experimentation",
       "duration": 130,
@@ -15629,7 +15527,7 @@
      },
      {
       "id": 202663914,
-      "title": "mino xae is a multifaceted societal issue plaguing  every1 around me n i hav my faults but u need to understand there is a zenith of negativity trapped within an individual undercover in a virtual society anyways big rochead420 go fw me",
+      "title": "mino xae is a multifaceted societal issue plaguing every1 around me n i hav my faults but u need to understand there is a zenith of negativity trapped within an individual undercover in a virtual society anyways big rochead420 go fw me",
       "artist": "",
       "url": "https://zombiebasketball.bandcamp.com/track/mino-xae-is-a-multifaceted-societal-issue-plaguing-every1-around-me-n-i-hav-my-faults-but-u-need-to-understand-there-is-a-zenith-of-negativity-trapped-within-an-individual-undercover-in-a-virtual",
       "duration": 89,
@@ -15637,7 +15535,7 @@
      },
      {
       "id": 2708686198,
-      "title": "﴾◣.,,.◢﴿  - ion kno what to name this i was laid up out the crib texting santana tellin him to send me somn to drop shoutout big bro for clutching it up for me this prod me n him go fw my bro thats day 1 ong",
+      "title": "﴾◣.,,.◢﴿ - ion kno what to name this i was laid up out the crib texting santana tellin him to send me somn to drop shoutout big bro for clutching it up for me this prod me n him go fw my bro thats day 1 ong",
       "artist": "",
       "url": "https://zombiebasketball.bandcamp.com/track/ion-kno-what-to-name-this-i-was-laid-up-out-the-crib-texting-santana-tellin-him-to-send-me-somn-to-drop-shoutout-big-bro-for-clutching-it-up-for-me-this-prod-me-n-him-go-fw-my-bro-thats-day-1-ong",
       "duration": 65,
@@ -15740,142 +15638,6 @@
       "number": 238,
       "tracks": [
        "2312928779"
-      ]
-     }
-    ],
-    "playedTracks": 1,
-    "year": 2026
-   },
-   {
-    "key": "sc:p:2230189157",
-    "source": "soundcloud",
-    "kind": "set",
-    "scId": "2230189157",
-    "setType": "compilation",
-    "title": "Dj-c - Night of the living liquor store",
-    "artist": "Computer man",
-    "account": "Computer man",
-    "label": null,
-    "labelFrom": null,
-    "url": "https://soundcloud.com/c0mput3rm4n/sets/dj-c-dese-bangs",
-    "artistUrl": "https://soundcloud.com/c0mput3rm4n",
-    "labelUrl": null,
-    "artwork": "https://i1.sndcdn.com/artworks-iKLxpMWr0YdK6cTE-LQVXzA-t500x500.jpg",
-    "releaseDate": "2026-04-30",
-    "trackCount": 13,
-    "duration": 2655,
-    "type": "comp",
-    "tracks": [
-     {
-      "id": 1893032529,
-      "title": "Jesus p1€ce",
-      "artist": "Dj-c",
-      "url": "https://soundcloud.com/c0mput3rm4n/jesus-piece",
-      "duration": 321,
-      "playable": true
-     },
-     {
-      "id": 1942669175,
-      "title": "Doupe man",
-      "artist": "Dj-c",
-      "url": "https://soundcloud.com/c0mput3rm4n/doupe-man",
-      "duration": 132,
-      "playable": true
-     },
-     {
-      "id": 1936765889,
-      "title": "Tek'it",
-      "artist": "Dj-c",
-      "url": "https://soundcloud.com/c0mput3rm4n/2hiiiigh",
-      "duration": 130,
-      "playable": true
-     },
-     {
-      "id": 1960636379,
-      "title": "Computer‎ ‎ man—Fuk`em!~",
-      "artist": "Sun set smile company",
-      "url": "https://soundcloud.com/sun-set-smile-company/computer-manfukem",
-      "duration": 192,
-      "playable": true
-     },
-     {
-      "id": 1917126317,
-      "title": "Berryfusion",
-      "artist": "Dj-c",
-      "url": "https://soundcloud.com/c0mput3rm4n/berryfusion",
-      "duration": 216,
-      "playable": true
-     },
-     {
-      "id": 1926087467,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1929982778,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1933606469,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 2156130804,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1943468211,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1964032923,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1917148871,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     },
-     {
-      "id": 1930759733,
-      "title": null,
-      "artist": "",
-      "url": null,
-      "duration": null,
-      "playable": true
-     }
-    ],
-    "shows": [
-     {
-      "number": 233,
-      "tracks": [
-       "1936765889"
       ]
      }
     ],
@@ -16452,7 +16214,7 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2296629143",
-    "title": "solo mission ! !  fire engine red ! ! water in the streets . !",
+    "title": "solo mission ! ! fire engine red ! ! water in the streets . !",
     "artist": "ant. adventure.ᐟ",
     "account": "ant. adventure.ᐟ",
     "label": null,
@@ -16468,7 +16230,7 @@
     "tracks": [
      {
       "id": 2296629143,
-      "title": "solo mission ! !  fire engine red ! ! water in the streets . !",
+      "title": "solo mission ! ! fire engine red ! ! water in the streets . !",
       "artist": "ant. adventure.ᐟ",
       "url": "https://soundcloud.com/anteaterworld/114bpm-umbrella-shopping",
       "duration": 139,
@@ -16978,8 +16740,8 @@
     "source": "soundcloud",
     "kind": "track",
     "scId": "2303950469",
-    "title": "S⠊GN⠁L    S⠑QU⠑NCE",
-    "artist": "⌄⠁\\ ..  █__⠉",
+    "title": "S⠊GN⠁L S⠑QU⠑NCE",
+    "artist": "⌄⠁\\ .. █__⠉",
     "account": "vanc",
     "label": null,
     "labelFrom": null,
@@ -16994,8 +16756,8 @@
     "tracks": [
      {
       "id": 2303950469,
-      "title": "S⠊GN⠁L    S⠑QU⠑NCE",
-      "artist": "⌄⠁\\ ..  █__⠉",
+      "title": "S⠊GN⠁L S⠑QU⠑NCE",
+      "artist": "⌄⠁\\ .. █__⠉",
       "url": "https://soundcloud.com/10x19v/c",
       "duration": 51,
       "playable": true
@@ -17059,8 +16821,8 @@
     "trackId": "1732725401",
     "title": "Du bist mein Ein und Alles",
     "artist": "Computer doctor",
-    "account": "Computer‎ ‎man",
-    "label": "Computer‎ ‎man",
+    "account": "Computer man",
+    "label": "Computer man",
     "labelFrom": "account",
     "url": "https://c0mput3rm4n.bandcamp.com/album/du-bist-mein-ein-und-alles",
     "artistUrl": null,
@@ -17906,8 +17668,8 @@
     "albumId": "213601897",
     "trackId": "2244719928",
     "title": "Nelareed's gambit",
-    "artist": "Computer‎ ‎man",
-    "account": "Computer‎ ‎man",
+    "artist": "Computer man",
+    "account": "Computer man",
     "label": null,
     "labelFrom": null,
     "url": "https://c0mput3rm4n.bandcamp.com/album/nelareeds-gambit",
@@ -19314,6 +19076,45 @@
       "number": 235,
       "tracks": [
        "3260914021"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
+    "key": "sc:t:2290106816",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2290106816",
+    "title": "💎",
+    "artist": "Ashton Hyatt",
+    "account": "☁",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/elevationishere/vtq5io2ceekc",
+    "artistUrl": "https://soundcloud.com/elevationishere",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-BL72Z3MwsMgGq6XB-n96I2A-t500x500.png",
+    "releaseDate": "2026-03-25",
+    "trackCount": 1,
+    "duration": 100,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2290106816,
+      "title": "💎",
+      "artist": "Ashton Hyatt",
+      "url": "https://soundcloud.com/elevationishere/vtq5io2ceekc",
+      "duration": 100,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 235,
+      "tracks": [
+       "2290106816"
       ]
      }
     ],
@@ -21165,6 +20966,45 @@
     "year": 2026
    },
    {
+    "key": "sc:t:2270082194",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2270082194",
+    "title": "",
+    "artist": "imuhki",
+    "account": "imuhki",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/imuhki/u0g3jghlrcsh",
+    "artistUrl": "https://soundcloud.com/imuhki",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-f5r0kn9kSveIWVJh-DI6Lmw-t500x500.png",
+    "releaseDate": "2026-02-20",
+    "trackCount": 1,
+    "duration": 79,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2270082194,
+      "title": "",
+      "artist": "imuhki",
+      "url": "https://soundcloud.com/imuhki/u0g3jghlrcsh",
+      "duration": 79,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 233,
+      "tracks": [
+       "2270082194"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
     "key": "bc:a:770584318",
     "source": "bandcamp",
     "kind": "album",
@@ -22575,6 +22415,45 @@
     "year": 2026
    },
    {
+    "key": "sc:t:2259791780",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2259791780",
+    "title": "-",
+    "artist": "guu",
+    "account": "guu",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/guu_neru/542c1592-a10f-4d4b-89ed-06ffaa2896d5",
+    "artistUrl": "https://soundcloud.com/guu_neru",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-F4B5f52owfPxiO7B-xy7Iaw-t500x500.jpg",
+    "releaseDate": "2026-02-04",
+    "trackCount": 1,
+    "duration": 35,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2259791780,
+      "title": "-",
+      "artist": "guu",
+      "url": "https://soundcloud.com/guu_neru/542c1592-a10f-4d4b-89ed-06ffaa2896d5",
+      "duration": 35,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 232,
+      "tracks": [
+       "2259791780"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
     "key": "bc:a:1016997834",
     "source": "bandcamp",
     "kind": "album",
@@ -23976,6 +23855,45 @@
     "year": 2026
    },
    {
+    "key": "sc:t:2249355500",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2249355500",
+    "title": "🛞",
+    "artist": "Ashton Hyatt",
+    "account": "☁",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/elevationishere/7c116e48-3999-4a89-9982-a17051e43b1e",
+    "artistUrl": "https://soundcloud.com/elevationishere",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-zS2NeB7yIpF3sBlI-mtx0lw-t500x500.jpg",
+    "releaseDate": "2026-01-17",
+    "trackCount": 1,
+    "duration": 90,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2249355500,
+      "title": "🛞",
+      "artist": "Ashton Hyatt",
+      "url": "https://soundcloud.com/elevationishere/7c116e48-3999-4a89-9982-a17051e43b1e",
+      "duration": 90,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 230,
+      "tracks": [
+       "2249355500"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
     "key": "sc:t:2248555421",
     "source": "soundcloud",
     "kind": "track",
@@ -24881,6 +24799,45 @@
     "year": 2026
    },
    {
+    "key": "sc:t:2243546996",
+    "source": "soundcloud",
+    "kind": "track",
+    "scId": "2243546996",
+    "title": "",
+    "artist": "imuhki",
+    "account": "imuhki",
+    "label": null,
+    "labelFrom": null,
+    "url": "https://soundcloud.com/imuhki/e4a0782b-d53d-4fb0-9e3f-956658dbbc69",
+    "artistUrl": "https://soundcloud.com/imuhki",
+    "labelUrl": null,
+    "artwork": "https://i1.sndcdn.com/artworks-Yq4FTLncfz1tnHQP-uEzedA-t500x500.png",
+    "releaseDate": "2026-01-08",
+    "trackCount": 1,
+    "duration": 36,
+    "type": "single",
+    "tracks": [
+     {
+      "id": 2243546996,
+      "title": "",
+      "artist": "imuhki",
+      "url": "https://soundcloud.com/imuhki/e4a0782b-d53d-4fb0-9e3f-956658dbbc69",
+      "duration": 36,
+      "playable": true
+     }
+    ],
+    "shows": [
+     {
+      "number": 230,
+      "tracks": [
+       "2243546996"
+      ]
+     }
+    ],
+    "playedTracks": 1,
+    "year": 2026
+   },
+   {
     "key": "sc:p:2183524367",
     "source": "soundcloud",
     "kind": "set",
@@ -25526,8 +25483,8 @@
     "kind": "track",
     "scId": "2234623271",
     "title": "181331 2212'25",
-    "artist": "​​Daniel Welch",
-    "account": "​​Daniel Welch",
+    "artist": "Daniel Welch",
+    "account": "Daniel Welch",
     "label": null,
     "labelFrom": null,
     "url": "https://soundcloud.com/dnlwlch/181331-221225a",
@@ -25542,7 +25499,7 @@
      {
       "id": 2234623271,
       "title": "181331 2212'25",
-      "artist": "​​Daniel Welch",
+      "artist": "Daniel Welch",
       "url": "https://soundcloud.com/dnlwlch/181331-221225a",
       "duration": 175,
       "playable": true
@@ -25650,7 +25607,7 @@
     "kind": "track",
     "scId": "2227298216",
     "title": "iris",
-    "artist": "7wvn, .dotfile ",
+    "artist": "7wvn, .dotfile",
     "account": "7wvn",
     "label": null,
     "labelFrom": null,
@@ -25666,7 +25623,7 @@
      {
       "id": 2227298216,
       "title": "iris",
-      "artist": "7wvn, .dotfile ",
+      "artist": "7wvn, .dotfile",
       "url": "https://soundcloud.com/7wvn/iris",
       "duration": 151,
       "playable": true
@@ -26041,8 +25998,8 @@
     "albumId": null,
     "trackId": "2995893679",
     "title": "Towering",
-    "artist": "Computer‎ ‎man",
-    "account": "Computer‎ ‎man",
+    "artist": "Computer man",
+    "account": "Computer man",
     "label": null,
     "labelFrom": null,
     "url": "https://c0mput3rm4n.bandcamp.com/track/towering",
@@ -26119,7 +26076,7 @@
     "kind": "track",
     "scId": "2183196775",
     "title": "effective power — antipiracy",
-    "artist": "effective power ‎لُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ ‎冗",
+    "artist": "effective power لُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ 冗",
     "account": "23,000 moneys",
     "label": null,
     "labelFrom": null,
@@ -26135,7 +26092,7 @@
      {
       "id": 2183196775,
       "title": "effective power — antipiracy",
-      "artist": "effective power ‎لُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ ‎冗",
+      "artist": "effective power لُلُصّبُلُلصّبُررً ॣ ॣh ॣ ॣ 冗",
       "url": "https://soundcloud.com/user-216278318-73856380/effective-power-antipiracy",
       "duration": 142,
       "playable": true
@@ -26650,8 +26607,8 @@
     "scId": "2178980684",
     "setType": "ep",
     "title": "makeup+",
-    "artist": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
-    "account": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
+    "artist": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
+    "account": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
     "label": "am spritzer",
     "labelFrom": "soundcloud",
     "url": "https://soundcloud.com/littlehypersprite/sets/8a96936d-a384-4800-a868-cd8a7598a72a",
@@ -26666,7 +26623,7 @@
      {
       "id": 2252350478,
       "title": "Side A: little viber <3, guilt and acceptance",
-      "artist": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
+      "artist": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
       "url": "https://soundcloud.com/littlehypersprite/side-a-little-viber-3-guilt-and-acceptance-2",
       "duration": 60,
       "playable": true
@@ -26674,7 +26631,7 @@
      {
       "id": 2252350490,
       "title": "Side A: makeup your makeup on time",
-      "artist": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
+      "artist": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
       "url": "https://soundcloud.com/littlehypersprite/side-a-makeup-your-makeup-on-time-3",
       "duration": 46,
       "playable": true
@@ -26682,7 +26639,7 @@
      {
       "id": 2252350475,
       "title": "Side B: visa card (voice memo like a pressed flower)",
-      "artist": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
+      "artist": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
       "url": "https://soundcloud.com/littlehypersprite/side-b-visa-card-voice-memo-like-a-pressed-flower-4",
       "duration": 76,
       "playable": true
@@ -26690,7 +26647,7 @@
      {
       "id": 2252350472,
       "title": "Side B: south east ohio vernal pool network",
-      "artist": "little hypers̵priᴛ҉  e°゜pixxicato3D°",
+      "artist": "little hypers̵priᴛ҉ e°゜pixxicato3D°",
       "url": "https://soundcloud.com/littlehypersprite/side-b-south-east-ohio-vernal-pool-network-5",
       "duration": 52,
       "playable": true
@@ -27722,7 +27679,7 @@
     "kind": "track",
     "scId": "1959533543",
     "title": "ᵐᵘˢⁱᶜˢʸᵐᵖᵗᵒᵐ - ₘₐₓᵢₘᵤₘ ᴄʜᴀɴɴᴇʟ ʟᴀᴛᴇʀᴀʟ ꜰɪᴇʟᴅ ɪɴᴇʟᴀꜱᴛɪᴄ ꜱᴄᴀᴛᴛᴇʀɪɴɢ ʟᴇɴɢᴛʜ",
-    "artist": "‣ dogbite ☆ ˾ₑₜₑᵣₙₐₗ ₛₒₗₐᵣ ",
+    "artist": "‣ dogbite ☆ ˾ₑₜₑᵣₙₐₗ ₛₒₗₐᵣ",
     "account": "‣ dogbite ☆ ˾ₑₜₑᵣₙₐₗ ₛₒₗₐᵣ 𝓌ₒᵤₙ𝒹 ┚",
     "label": null,
     "labelFrom": null,
@@ -27738,7 +27695,7 @@
      {
       "id": 1959533543,
       "title": "ᵐᵘˢⁱᶜˢʸᵐᵖᵗᵒᵐ - ₘₐₓᵢₘᵤₘ ᴄʜᴀɴɴᴇʟ ʟᴀᴛᴇʀᴀʟ ꜰɪᴇʟᴅ ɪɴᴇʟᴀꜱᴛɪᴄ ꜱᴄᴀᴛᴛᴇʀɪɴɢ ʟᴇɴɢᴛʜ",
-      "artist": "‣ dogbite ☆ ˾ₑₜₑᵣₙₐₗ ₛₒₗₐᵣ ",
+      "artist": "‣ dogbite ☆ ˾ₑₜₑᵣₙₐₗ ₛₒₗₐᵣ",
       "url": "https://soundcloud.com/denkori/floatinggate",
       "duration": 129,
       "playable": true
@@ -28558,7 +28515,7 @@
   "decisions": {},
   "order": [],
   "edits": {},
-  "gatheredAt": "2026-10-22T07:22:09.129Z",
+  "gatheredAt": "2026-10-22T07:51:25.412Z",
   "shows": [
    229,
    230,
@@ -28582,6 +28539,16 @@
    248,
    249
   ],
-  "savedAt": 1792653740583
+  "savedAt": 1792655485412
+ },
+ "aliases": {
+  "groups": [
+   [
+    "Computer man",
+    "Computer doctor",
+    "Dj-c"
+   ]
+  ],
+  "savedAt": 1792655507671
  }
 }

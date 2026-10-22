@@ -195,7 +195,10 @@ matching run never loses them.
    **group by artist** (on by default) keeps each artist's releases together, under their
    name, in the place of their best-placed release. **hide released before 2026** hides
    last year's (and older) releases; one with no known date stays. These choices are
-   remembered on this computer. **▶** (or the cover) plays it through, track by track, in the same player as
+   remembered on this computer. **same artist…** lists names that are one artist, one artist
+   per line, names separated by `=` (e.g. `Computer man = Computer doctor = Dj-c`) — their
+   releases are grouped together, for every year; travels with Sync.
+   **▶** (or the cover) plays it through, track by track, in the same player as
    Arrange; the tracks played in shows are marked; click a track to jump to it.
    **+ list** puts it in (at the bottom of the list), **✕** puts it out; the to do / in the
    list / out / all buttons switch between them.
@@ -218,8 +221,11 @@ under 15 minutes together; an **LP** has 7+ tracks or runs 30+ minutes; an **EP*
 between; a **compilation** has tracks by 3+ different artists. On SoundCloud, what the
 uploader marked it as (album / EP / single / compilation); a SoundCloud track that isn't on
 any album or EP counts as a single. The same release on Bandcamp and SoundCloud becomes one
-entry (Bandcamp kept, since the lists embed Bandcamp). The label is the one tagged in the
-shows, else the Bandcamp account it's on when that isn't the artist's own.
+entry (Bandcamp kept, since the lists embed Bandcamp) — also when SoundCloud has the artist
+in the title ("Dj-c - Night of the living liquor store"); releases without a real title
+(just "-" or an emoji) are never merged. The label is the one tagged in the shows, else the
+Bandcamp account it's on when that isn't the artist's own. Names come without invisible
+direction marks (Bandcamp's "Computer man" account has them), so they don't end up in the HTML.
 
 ---
 
