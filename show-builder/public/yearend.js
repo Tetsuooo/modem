@@ -19,7 +19,7 @@
     loaded: false, year: null, years: [], gathered: [],
     data: null, byKey: new Map(),
     decisions: {}, order: [], edits: {}, listSize: 50, editing: null,
-    view: 'todo', types: { LP: true, EP: true, comp: true, single: false }, sort: 'played', q: '',
+    view: 'todo', types: { LP: true, EP: true, comp: true, single: false }, sort: 'played', q: '', group: true, hideOld: false,
     open: new Map(), // "pool:key" / "list:key" -> { i: track playing }
     undo: [], redo: [], saveTimer: null, poll: null,
   };
@@ -108,30 +108,77 @@
   };
 
   // ---------- the candidates ----------------------------------------------------------
+  // released before the year of the list (a release with no known date isn't)
+  const isOld = (c) => !!(c.year && c.year < S.year);
+  // one artist, however it's spelled (case, accents, spaces)
+  const artistKey = (a) => String(a || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const abc = (a, b) => String(a || '').localeCompare(String(b || ''), undefined, { sensitivity: 'base', numeric: true });
+  const lastShow = (c) => Math.max(0, ...(c.shows || []).map((s) => s.number));
+  // releases with no date go last, whichever way the dates run
+  const byDate = (dir) => (a, b) => (!a.releaseDate) - (!b.releaseDate) || dir * String(a.releaseDate || '').localeCompare(String(b.releaseDate || ''));
+  const SORTS = {
+    played: (a, b) => (b.playedTracks - a.playedTracks) || ((b.shows || []).length - (a.shows || []).length) || byDate(-1)(a, b),
+    recent: (a, b) => (lastShow(b) - lastShow(a)) || (b.playedTracks - a.playedTracks),
+    newest: byDate(-1),
+    oldest: byDate(1),
+    artist: (a, b) => abc(a.artist, b.artist) || abc(a.title, b.title),
+    title: (a, b) => abc(a.title, b.title) || abc(a.artist, b.artist),
+    label: (a, b) => (!a.label) - (!b.label) || abc(a.label, b.label) || abc(a.artist, b.artist),
+  };
+  // the releases on the left, filtered and sorted — as groups: with "group by artist" on,
+  // an artist's releases sit together, in the order of the artist's best-placed one
   function visible() {
     const q = S.q.trim().toLowerCase();
-    let list = [...S.byKey.values()].filter((c) => {
-      if (S.view !== 'all' && decision(c.key) !== S.view) return false;
-      if (!S.types[c.type]) return false;
-      if (q && !`${c.title} ${c.artist} ${c.label || ''} ${c.account || ''}`.toLowerCase().includes(q)) return false;
+    const list = [...S.byKey.values()].map((raw) => ({ raw, c: named(raw) })).filter(({ raw, c }) => {
+      if (S.view !== 'all' && decision(raw.key) !== S.view) return false;
+      if (!S.types[raw.type]) return false;
+      if (S.hideOld && isOld(raw)) return false;
+      if (q && !`${c.title} ${c.artist} ${c.label || ''} ${raw.account || ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
-    const by = {
-      played: (a, b) => (b.playedTracks - a.playedTracks) || ((b.shows || []).length - (a.shows || []).length) || String(b.releaseDate || '').localeCompare(String(a.releaseDate || '')),
-      newest: (a, b) => String(b.releaseDate || '').localeCompare(String(a.releaseDate || '')),
-      recent: (a, b) => Math.max(0, ...(b.shows || []).map((s) => s.number)) - Math.max(0, ...(a.shows || []).map((s) => s.number)),
-      artist: (a, b) => String(a.artist || '').localeCompare(String(b.artist || ''), undefined, { sensitivity: 'base' }),
-    }[S.sort];
-    return list.sort(by);
+    const by = SORTS[S.sort] || SORTS.played;
+    const cmp = (x, y) => by(x.c, y.c);
+    if (!S.group) return list.sort(cmp).map((x) => ({ name: null, items: [x.raw] }));
+    const groups = new Map();
+    for (const x of list) {
+      const k = artistKey(x.c.artist) || x.raw.key;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(x);
+    }
+    return [...groups.values()]
+      .map((g) => g.sort(cmp))
+      .sort((g, h) => cmp(g[0], h[0]))
+      .map((g) => ({ name: g.length > 1 ? g[0].c.artist : null, items: g.map((x) => x.raw) }));
   }
   function counts() {
     const v = { todo: 0, in: 0, out: 0, all: 0 }, t = { LP: 0, EP: 0, comp: 0, single: 0 };
+    let old = 0;
     for (const c of S.byKey.values()) {
+      const inView = S.view === 'all' || decision(c.key) === S.view;
+      if (inView && S.types[c.type] && isOld(c)) old++;
+      if (S.hideOld && isOld(c)) continue;
       // the views count the types shown; the types count within the view
       if (S.types[c.type]) { v.all++; v[decision(c.key)]++; }
-      if (S.view === 'all' || decision(c.key) === S.view) t[c.type] = (t[c.type] || 0) + 1;
+      if (inView) t[c.type] = (t[c.type] || 0) + 1;
     }
-    return { v, t };
+    return { v, t, old };
+  }
+
+  // how the left side is shown: kept on this computer between visits
+  const PREFS = 'sb-ye-view';
+  function savePrefs() {
+    try { localStorage.setItem(PREFS, JSON.stringify({ view: S.view, types: S.types, sort: S.sort, group: S.group, hideOld: S.hideOld })); } catch (e) { /* private mode */ }
+  }
+  function loadPrefs() {
+    try {
+      const p = JSON.parse(localStorage.getItem(PREFS) || 'null');
+      if (!p) return;
+      if (p.view) S.view = p.view;
+      if (p.types) Object.assign(S.types, p.types);
+      if (SORTS[p.sort]) S.sort = p.sort;
+      if (typeof p.group === 'boolean') S.group = p.group;
+      if (typeof p.hideOld === 'boolean') S.hideOld = p.hideOld;
+    } catch (e) { /* ignore */ }
   }
   function candRow(raw) {
     const c = named(raw);
@@ -230,11 +277,21 @@
         <div class="ye-bar">
           <div class="ye-seg" id="yeViews"></div>
           <div class="ye-seg" id="yeTypes"></div>
-          <select id="yeSort" title="order of the releases on this side">
-            <option value="played">most played</option><option value="recent">played most recently</option>
-            <option value="newest">newest release</option><option value="artist">artist A–Z</option>
-          </select>
           <input id="yeSearch" class="sc-input" placeholder="search title / artist / label">
+        </div>
+        <div class="ye-bar">
+          <label class="ye-sortlbl">sort
+            <select id="yeSort" title="the order of the releases on this side">
+              <option value="played">most played</option>
+              <option value="recent">played most recently</option>
+              <option value="newest">release date, newest first</option>
+              <option value="oldest">release date, oldest first</option>
+              <option value="artist">artist A–Z</option>
+              <option value="title">title A–Z</option>
+              <option value="label">label A–Z</option>
+            </select>
+          </label>
+          <div class="ye-seg" id="yeOpts"></div>
         </div>
         <div class="ye-addrow">
           <input id="yeAddUrl" class="sc-input" placeholder="a release that wasn't in a show: paste its Bandcamp / SoundCloud link">
@@ -271,7 +328,10 @@
     el('yeUndo').disabled = !S.undo.length; el('yeRedo').disabled = !S.redo.length;
   }
   function renderPool() {
-    const { v, t } = counts();
+    const { v, t, old } = counts();
+    el('yeOpts').innerHTML =
+      `<button class="ye-seg-btn${S.group ? ' on' : ''}" data-opt="group" title="keep each artist's releases together">group by artist</button>` +
+      `<button class="ye-seg-btn${S.hideOld ? ' on' : ''}" data-opt="hideOld" title="hide everything released before ${S.year} (a release with no known date stays)">hide released before ${S.year} <span>${old}</span></button>`;
     el('yeViews').innerHTML = [['todo', 'to do'], ['in', 'in the list'], ['out', 'out'], ['all', 'all']]
       .map(([k, n]) => `<button class="ye-seg-btn${S.view === k ? ' on' : ''}" data-view="${k}">${n} <span>${v[k]}</span></button>`).join('');
     el('yeTypes').innerHTML = ['LP', 'EP', 'comp', 'single']
@@ -283,8 +343,12 @@
       pool.innerHTML = `<div class="empty">Nothing gathered for ${S.year} yet. <b>Gather</b> looks through every show from ${S.year} and lists the LPs, EPs and compilations played in them (singles are kept too, but hidden). The first time takes a few minutes.</div>`;
       return;
     }
-    const rows = visible();
-    pool.innerHTML = rows.length ? rows.map(candRow).join('') : '<div class="empty">Nothing here.</div>';
+    const groups = visible();
+    pool.innerHTML = groups.length
+      ? groups.map((g) => (g.name
+        ? `<div class="ye-group"><div class="ye-group-head">${esc(g.name)} <span>· ${g.items.length} releases</span></div>${g.items.map(candRow).join('')}</div>`
+        : g.items.map(candRow).join(''))).join('')
+      : '<div class="empty">Nothing here.</div>';
   }
   function renderList() {
     const keys = inList();
@@ -578,9 +642,11 @@
       const mv = t.closest('[data-move]');
       if (mv) return move(mv.dataset.key, mv.dataset.move);
       const view = t.closest('[data-view]');
-      if (view) { S.view = view.dataset.view; return renderAll(); }
+      if (view) { S.view = view.dataset.view; savePrefs(); return renderAll(); }
       const type = t.closest('[data-type]');
-      if (type) { S.types[type.dataset.type] = !S.types[type.dataset.type]; return renderAll(); }
+      if (type) { S.types[type.dataset.type] = !S.types[type.dataset.type]; savePrefs(); return renderAll(); }
+      const opt = t.closest('[data-opt]');
+      if (opt) { S[opt.dataset.opt] = !S[opt.dataset.opt]; savePrefs(); return renderAll(); }
       if (t.id === 'yeGather') return gather();
       if (t.id === 'yeUndo') return window.yearendUndo();
       if (t.id === 'yeRedo') return window.yearendRedo();
@@ -593,7 +659,7 @@
     });
     box.addEventListener('change', (e) => {
       if (e.target.id === 'yeYear') load(Number(e.target.value));
-      if (e.target.id === 'yeSort') { S.sort = e.target.value; renderAll(); }
+      if (e.target.id === 'yeSort') { S.sort = e.target.value; savePrefs(); renderAll(); }
     });
     box.addEventListener('keydown', (e) => {
       if (e.target.id === 'yeAddUrl' && e.key === 'Enter') addByLink();
@@ -614,6 +680,7 @@
     S.loaded = true;
     host().innerHTML = '<div class="status">loading…</div>';
     wire();
+    loadPrefs();
     try {
       const yr = await fetch('/ye/years').then((r) => r.json());
       S.years = yr.years || []; S.gathered = yr.gathered || [];

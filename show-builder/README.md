@@ -190,8 +190,12 @@ matching run never loses them.
    played in those shows. Singles are kept but hidden (the **singles** button shows them).
 2. **Left: the releases.** Each shows its type, tracks, length, release month (⚠ if it came
    out before this year), the shows it was played in (**♪ #241 ×3** = three of its tracks
-   in modem 241), and links. Sort by most played / played most recently / newest / artist,
-   or search. **▶** (or the cover) plays it through, track by track, in the same player as
+   in modem 241), and links. **Sort** by most played, played most recently, release date
+   (newest or oldest first; no date = last), artist, title or label (A–Z), or search.
+   **group by artist** (on by default) keeps each artist's releases together, under their
+   name, in the place of their best-placed release. **hide released before 2026** hides
+   last year's (and older) releases; one with no known date stays. These choices are
+   remembered on this computer. **▶** (or the cover) plays it through, track by track, in the same player as
    Arrange; the tracks played in shows are marked; click a track to jump to it.
    **+ list** puts it in (at the bottom of the list), **✕** puts it out; the to do / in the
    list / out / all buttons switch between them.

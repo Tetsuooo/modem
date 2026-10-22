@@ -278,3 +278,7 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .ye-editor .sc-input { padding: 4px 7px; font-size: 12px; text-transform: none; letter-spacing: 0; }
 .ye-editor-btns { grid-column: 1 / -1; display: flex; gap: 6px; }
 .ye-editor .ye-x { grid-column: 1 / -1; }
+.ye-sortlbl { font-size: 12px; color: #9a9ba5; display: flex; align-items: center; gap: 6px; }
+.ye-group { border-left: 2px solid #3a3b45; padding-left: 8px; margin: 10px 0 10px; }
+.ye-group-head { font-size: 12px; color: #c7c8d1; font-weight: 600; margin: 0 0 5px 2px; }
+.ye-group-head span { font-weight: 400; color: #6f7080; }
