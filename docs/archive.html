@@ -1564,7 +1564,7 @@
           if (!txt) return;
           // format is "ARTIST - TITLE (LABEL)": artist is before the first " - ";
           // the trailing "(...)" is the label (linked OR plain text) — unless it says
-          // "self-released". "v.a."/"various artists" isn't a real artist, so skip it.
+          // "self-released". "V/A", "v.a.", "various artists" aren't a real artist, so skip them.
           const firstLink = p.querySelector('a');
           // artist = a leading artist link (some names run straight into "- title"
           // with no space before the dash), otherwise the text before the first " - "
@@ -1575,7 +1575,7 @@
           let label = pm ? pm[1].trim() : '';
           if (/^self[\s-]?released$/i.test(label)) label = '';
           let chips = '';
-          if (artist && !/^(v\.?\s?a\.?|various\s+artists?)$/i.test(artist)) { chips += chip('artist', 'artist-chip', artist); artists.add(artist); }
+          if (artist && !/^(v\.?\s?\/?\s?a\.?|various\s+artists?)$/i.test(artist)) { chips += chip('artist', 'artist-chip', artist); artists.add(artist); }
           if (label && label.toLowerCase() !== artist.toLowerCase()) { chips += chip('label', 'label-chip', label); labels.add(label); }
           const tk = trackForEmbedP(next);
           const pencil = tk ? pencilHtml(tk.key) : '';
@@ -1693,7 +1693,7 @@
           // "Various Artists" is a Bandcamp/SoundCloud compilation placeholder, not
           // a real name (e.g. modem-59 seg 9's SPA tracks) — never surface it as a
           // chip, same as the list view already does for search/tag pages.
-          const isPlaceholderArtist = /^(v\.?\s?a\.?|various\s+artists?)$/i.test(String(t.artist || '').trim());
+          const isPlaceholderArtist = /^(v\.?\s?\/?\s?a\.?|various\s+artists?)$/i.test(String(t.artist || '').trim());
           if (!isPlaceholderArtist && (!artistHeadingSegs.has(String(s.seg)) || packedSegs.has(String(s.seg)))) add(arts, s.seg, t.artist);
           (s.labels || []).forEach((l) => add(labs, s.seg, l));
         }));
