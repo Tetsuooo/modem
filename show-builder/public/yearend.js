@@ -74,20 +74,38 @@
   }
 
   // a release with the names fixed by hand (see the ✎ editor in the list)
+  // A compilation reads "V/A", its label the one tagged or else the page it's on — as on the
+  // list (year-end.js's withEdits()), unless its artist was fixed by hand.
   function named(c) {
     const e = S.edits[c.key];
-    if (!e) return c;
     const out = { ...c };
-    ['artist', 'title', 'label'].forEach((f) => { if (typeof e[f] === 'string' && e[f].trim() !== '') out[f] = e[f].trim(); });
-    if (e.label === '') out.label = null;
-    out.fixed = true;
+    if (e) {
+      ['artist', 'title', 'label'].forEach((f) => { if (typeof e[f] === 'string' && e[f].trim() !== '') out[f] = e[f].trim(); });
+      if (e.label === '') out.label = null;
+      out.fixed = true;
+    }
+    if (c.type === 'comp' && !(e && typeof e.artist === 'string' && e.artist.trim())) {
+      if (!out.label && !(e && e.label === '')) out.label = c.account || c.artist;
+      out.artist = 'V/A';
+    }
     return out;
   }
 
   // ---------- small pieces -----------------------------------------------------------
   const monthYear = (d) => { if (!d) return ''; const x = new Date(d + 'T00:00:00'); return isNaN(x) ? '' : x.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }); };
   const typeBadge = (c) => `<span class="ye-type t-${escAttr(c.type)}" title="${escAttr(TYPE_NAMES[c.type] || c.type)}${c.setType && c.source === 'soundcloud' ? ' (SoundCloud: ' + escAttr(c.setType) + ')' : ''}">${esc(c.type === 'comp' ? 'comp' : c.type)}</span>`;
-  const sub = (c) => esc(c.artist || '?') + (c.label ? ` <span class="ye-label">· ${esc(c.label)}</span>` : ' <span class="ye-label">· no label</span>') + (c.fixed ? ' <span class="ye-fixed" title="names fixed by hand">✎</span>' : '');
+  // the label is the artist themselves (the same name, a "same artist" name, or one of a
+  // collaboration's names) → self-released, as on every list since 2017. Same rule as
+  // year-end.js's selfReleased(), which writes the HTML.
+  function selfReleased(c) {
+    if (!c.label) return true;
+    if (c.type === 'comp') return false; // a compilation's label is a label
+    const names = [c.artist, ...String(c.artist || '').split(/\s+(?:&|and|x|\+|feat\.?|ft\.?|with)\s+|\s*,\s*/i)];
+    const label = artistKey(c.label);
+    return names.some((n) => n && artistKey(n) === label);
+  }
+  const labelText = (c) => (selfReleased(c) ? '<i>self-released</i>' : esc(c.label));
+  const sub = (c) => esc(c.artist || '?') + ` <span class="ye-label">· ${labelText(c)}</span>` + (c.fixed ? ' <span class="ye-fixed" title="names fixed by hand">✎</span>' : '');
   function facts(c) {
     const bits = [typeBadge(c)];
     if (c.trackCount) bits.push(`${c.trackCount} track${c.trackCount === 1 ? '' : 's'}`);
@@ -134,7 +152,8 @@
     oldest: byDate(1),
     artist: (a, b) => abc(a.artist, b.artist) || abc(a.title, b.title),
     title: (a, b) => abc(a.title, b.title) || abc(a.artist, b.artist),
-    label: (a, b) => (!a.label) - (!b.label) || abc(a.label, b.label) || abc(a.artist, b.artist),
+    // self-released last
+    label: (a, b) => selfReleased(a) - selfReleased(b) || abc(a.label, b.label) || abc(a.artist, b.artist),
   };
   // the releases on the left, filtered and sorted — as groups: with "group by artist" on,
   // an artist's releases sit together, in the order of the artist's best-placed one
@@ -246,10 +265,13 @@
   function editor(c) {
     const e = S.edits[c.key] || {};
     const f = (field, ph) => `<label>${field}<input class="sc-input" data-field="${field}" value="${escAttr(e[field] != null ? e[field] : c[field] || '')}" placeholder="${escAttr(ph)}"></label>`;
+    const ln = (field, name) => `<label>${name}<input class="sc-input" data-field="${field}" value="${escAttr(e[field] || '')}" placeholder="automatic"></label>`;
     return `<div class="ye-editor" data-key="${escAttr(c.key)}">
       ${f('artist', c.artist || 'artist')}${f('title', c.title || 'title')}${f('label', 'self-released')}
-      <div class="ye-editor-btns"><button class="ye-btn accent" data-edit-save="${escAttr(c.key)}">save</button><button class="ye-btn" data-edit-reset="${escAttr(c.key)}" title="back to the names as found">as found</button><button class="ye-btn" data-edit="${escAttr(c.key)}">close</button></div>
-      <div class="ye-x">As found: ${esc(c.artist || '?')} – ${esc(c.title || '?')} (${esc(c.label || 'no label')}). Links stay only with names you didn't change.</div>
+      ${ln('artistLink', 'artist link')}${ln('labelLink', 'label link')}<span></span>
+      <div class="ye-editor-btns"><button class="ye-btn accent" data-edit-save="${escAttr(c.key)}">save</button><button class="ye-btn" data-edit-reset="${escAttr(c.key)}" title="back to the names (and links) as found">as found</button><button class="ye-btn" data-edit="${escAttr(c.key)}">close</button></div>
+      <div class="ye-x">As found: ${esc(c.artist || '?')} – ${esc(c.title || '?')} (${labelText(c)}). A label that is the artist (or one of their names) goes on the list as self-released.
+        Links (empty = automatic): the one used for that name on an earlier list, else its SoundCloud profile (uploads, the Bandcamp page's links, or a SoundCloud account with exactly that name), else the Bandcamp page. Paste one to choose it yourself.</div>
     </div>`;
   }
   function saveEdit(key) {
@@ -260,6 +282,7 @@
     box.querySelectorAll('input[data-field]').forEach((i) => {
       const f = i.dataset.field, v = i.value.trim();
       if (f === 'label') { if (v !== (c.label || '')) e.label = v; } // '' = self-released
+      else if (f === 'artistLink' || f === 'labelLink') { if (v) e[f] = v; } // empty = automatic
       else if (v && v !== (c[f] || '')) e[f] = v;
     });
     change(() => { if (Object.keys(e).length) S.edits[key] = e; else delete S.edits[key]; S.editing = null; });

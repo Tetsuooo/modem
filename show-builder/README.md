@@ -211,6 +211,23 @@ matching run never loses them.
 5. **Generate HTML** → the first 50, alphabetical by artist, in the shape of the published
    lists ("★*ﾟ50 best releases in alphabetical order *★", then per release "Artist - Title
    (Label)" with links and its player) → copy → paste into radioštudent. Also as a plain list.
+   As on every list so far: a label that is the artist (the same name, a "same artist" name,
+   or one of a collaboration's names) is written **(self-released)** — plain, no link; a
+   compilation is **V/A - Title (Label)** ("V/A" without a link; its label the one tagged,
+   else the page it's on). The tab shows them the same way; a name fixed with ✎ wins.
+   **Links** (artist and label, like the published lists — mostly SoundCloud profiles), for
+   each name the first of: the link used for it on an earlier list (any of a "same artist"'s
+   names) → the SoundCloud profile that uploaded the release's tracks, when it has that name
+   (from the SoundCloud versions approved here, `scripts/approvals.json`) → the SoundCloud
+   account in the Bandcamp page's links box (the artist's own page / the label's page) → a
+   SoundCloud account with exactly that name, when there's only one → the Bandcamp page.
+   Otherwise no link. ✎ has "artist link" / "label link" fields to set one yourself.
+   Checked against the 2025 list (knowing only the lists before it): 53 of 75 the same as
+   Matej's, 6 an equal alternative, 8 left empty (several SoundCloud accounts with that name),
+   8 extra. The first Generate HTML of a year looks names up (~15 s), then it's cached.
+   **Tag pills:** the site makes them from each line itself (src/archive.html: the artist
+   before " - ", the label in the closing brackets; none for "self-released"), so the list
+   gets them as soon as it's on the site — nothing to tag by hand for the pills.
 
 Everything saves as you go; **Ctrl+Z / Ctrl+Y** undo / redo here (only the list's own
 changes while this tab is open). **Sync** carries it to the other machine — newest version
@@ -218,7 +235,10 @@ of each year wins, like the draft, so finish on one machine and Sync before swit
 
 How a release's type is decided: on Bandcamp from its tracks — a **single** is 1 track, or 2
 under 15 minutes together; an **LP** has 7+ tracks or runs 30+ minutes; an **EP** is in
-between; a **compilation** has tracks by 3+ different artists. On SoundCloud, what the
+between; a **compilation** has tracks by 3+ different artists and none by the release's own
+artist (Jonáš Gruska's "Juggler", with guests on some tracks, is an LP; when most titles read
+"Artist - Title", like gud serben's "GUD LUCK !!", the part before the dash counts as the
+track's artist; a release credited to Various Artists / V/A always can be). On SoundCloud, what the
 uploader marked it as (album / EP / single / compilation); a SoundCloud track that isn't on
 any album or EP counts as a single. The same release on Bandcamp and SoundCloud becomes one
 entry (Bandcamp kept, since the lists embed Bandcamp) — also when SoundCloud has the artist

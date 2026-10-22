@@ -188,6 +188,45 @@ function main() {
   const list = [...new Set(byRelease.values())].sort((a, b) =>
     (b.playedTracks - a.playedTracks) || (b.shows.length - a.shows.length) || String(b.releaseDate || '').localeCompare(String(a.releaseDate || '')));
 
+  // The SoundCloud profiles that uploaded a Bandcamp release's tracks — from the SoundCloud
+  // versions approved in the show builder (scripts/approvals.json: Bandcamp track → SoundCloud
+  // track). An uploader whose name is the artist's or the label's gives that name its link on
+  // the list (year-end-links.js) — Bandcamp pages often don't link their SoundCloud.
+  let approvals = {};
+  try { approvals = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'approvals.json'), 'utf8')); } catch (e) { approvals = {}; }
+  const scIdOf = (v) => (v && typeof v === 'object' ? v.id || v.scId : v);
+  const idsByRelease = new Map();
+  for (const c of list) {
+    if (c.source !== 'bandcamp') continue;
+    const ids = new Set();
+    for (const t of c.tracks || []) {
+      const id = scIdOf(approvals[`bc:${c.albumId || '-'}:${t.id}`]) || scIdOf(approvals[`bc:-:${t.id}`]);
+      if (id && /^\d+$/.test(String(id))) ids.add(String(id));
+    }
+    if (ids.size) idsByRelease.set(c.key, [...ids]);
+  }
+  const wanted = [...new Set([...idsByRelease.values()].flat())].filter((id) => R.scPeek('ye-sc-track-' + id) === undefined);
+  for (let i = 0; i < wanted.length; i += 50) {
+    const batch = wanted.slice(i, i + 50);
+    const got = R.scGet('/tracks?ids=' + batch.join(',')) || [];
+    const seen = new Set();
+    for (const tr of got) { R.scPut('ye-sc-track-' + tr.id, tr); seen.add(String(tr.id)); }
+    batch.filter((id) => !seen.has(id)).forEach((id) => R.scPut('ye-sc-track-' + id, null)); // gone: don't ask again
+  }
+  let withProfiles = 0;
+  for (const c of list) {
+    const ids = idsByRelease.get(c.key);
+    if (!ids) continue;
+    const profiles = new Map();
+    for (const id of ids) {
+      const tr = R.scPeek('ye-sc-track-' + id);
+      const u = tr && tr.user;
+      if (u && u.permalink_url && !profiles.has(u.permalink_url)) profiles.set(u.permalink_url, { name: u.username || '', url: u.permalink_url });
+    }
+    if (profiles.size) { c.scProfiles = [...profiles.values()]; withProfiles++; }
+  }
+  log(`SoundCloud profiles of the uploaders: for ${withProfiles} Bandcamp releases`);
+
   const counts = list.reduce((m, c) => { m[c.type] = (m[c.type] || 0) + 1; return m; }, {});
   log(`${list.length} releases: ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(', ')} (fetched live: ${R.stats.bcLive} Bandcamp pages, ${R.stats.scLive} SoundCloud calls)`);
 

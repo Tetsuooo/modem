@@ -20,11 +20,23 @@ const sleep = (ms) => { const t = Date.now() + ms; while (Date.now() < t) { /* p
 // ---------- release types -------------------------------------------------------------
 // A single: one track, or two (an A/B side) that together run under 15 minutes.
 // An LP: 7 or more tracks, or 30 minutes and longer. Everything in between: an EP.
-// A compilation: tracks by 3 or more different artists.
-function typeOf(tracks, totalSeconds) {
+// A compilation: tracks by 3 or more different artists, and none by the release's own
+// artist — an artist's album with a guest on some tracks isn't one (Jonáš Gruska's
+// "Juggler": some tracks have no artist of their own, i.e. they're his). When most titles
+// read "Artist - Title" (a label's compilation without per-track artists, like gud serben's
+// "GUD LUCK !!"), the part before the dash is the track's artist.
+const DASH = /^(.+?)\s+[-–—]\s+(.+)$/;
+// "Various Artists", "V/A", "VA", "V.A." — no track is "their own"
+const VARIOUS = /^(v\.?\s*[/.]?\s*a\.?|various(\s+artists?)?)$/i;
+function typeOf(tracks, totalSeconds, credit) {
   const n = tracks.length;
-  const artists = new Set(tracks.map((t) => (t.artist || '').trim().toLowerCase()).filter(Boolean));
-  if (n >= 3 && artists.size >= 3) return 'comp';
+  const dashed = tracks.filter((t) => DASH.test(t.title || '')).length >= Math.ceil(n * 0.7);
+  const credited = String((credit && credit.artist) || '').trim();
+  const own = VARIOUS.test(credited) ? '' : credited.toLowerCase();
+  const trackArtist = (t) => String(t.artist || (dashed ? (String(t.title || '').match(DASH) || [])[1] : '') || '').trim().toLowerCase();
+  const artists = new Set(tracks.map(trackArtist).filter(Boolean));
+  const ownTrack = own && tracks.some((t) => { const a = trackArtist(t); return !a || a.includes(own); });
+  if (n >= 3 && artists.size >= 3 && !ownTrack) return 'comp';
   if (n <= 1 || (n === 2 && (totalSeconds || 0) < 15 * 60)) return 'single';
   if (n >= 7 || (totalSeconds || 0) >= 30 * 60) return 'LP';
   return 'EP';
@@ -112,7 +124,7 @@ function bandcampAlbumRaw(albumId, albumUrl) {
     releaseDate: isoDate(td.album_release_date || (td.current && (td.current.release_date || td.current.publish_date))),
     trackCount: tracks.length,
     duration: duration || null,
-    type: typeOf(tracks, duration),
+    type: typeOf(tracks, duration, { artist, account }),
     tracks,
   };
 }

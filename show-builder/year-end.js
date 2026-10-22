@@ -24,6 +24,7 @@ const jobs = require('./jobs');
 const { curlGet, escapeHtml } = require('./lib');
 const scanSoundcloud = require('./scan-soundcloud');
 const releases = require('./year-end-releases');
+const links = require('./year-end-links');
 
 const FILE = path.join(__dirname, 'data', 'year-end.json');
 const LIST_SIZE = 50;
@@ -44,14 +45,27 @@ const emptyYear = () => ({ candidates: [], decisions: {}, order: [], edits: {}, 
 // a release as it goes on the list: names fixed by hand win; a link only stays with
 // the name it belongs to
 function withEdits(c, e) {
-  if (!e) return c;
   const out = { ...c };
-  for (const f of ['artist', 'title', 'label']) if (typeof e[f] === 'string' && e[f].trim() !== '') out[f] = e[f].trim();
-  if (e.label === '') out.label = null; // cleared on purpose: self-released
-  if (out.artist !== c.artist) out.artistUrl = null;
-  if (out.label !== c.label) out.labelUrl = null;
+  if (e) {
+    for (const f of ['artist', 'title', 'label']) if (typeof e[f] === 'string' && e[f].trim() !== '') out[f] = e[f].trim();
+    if (e.label === '') out.label = null; // cleared on purpose: self-released
+    if (out.artist !== c.artist) out.artistUrl = null;
+    if (out.label !== c.label) out.labelUrl = null;
+  }
+  // A compilation goes on the list as "V/A - Title (Label)", as since 2022 — "V/A" without
+  // a link; the label: the one tagged, else the page it's on. Unless its artist was fixed by
+  // hand, or its label cleared on purpose.
+  if (c.type === 'comp' && !(e && typeof e.artist === 'string' && e.artist.trim())) {
+    if (!out.label && !(e && e.label === '')) {
+      out.label = c.account || c.artist;
+      out.labelUrl = c.source === 'bandcamp' ? origin(c.url) : c.artistUrl;
+    }
+    out.artist = 'V/A';
+    out.artistUrl = null;
+  }
   return out;
 }
+const origin = (u) => { try { return new URL(u).origin; } catch (e) { return null; } };
 
 // The years there are shows for (from the site's archive), newest first.
 function showYears() {
@@ -87,19 +101,37 @@ function soundcloudEmbed(c) {
   return `<a href="${escapeHtml(c.url)}">${escapeHtml(c.url)}</a>`;
 }
 
-function listHtml(entries) {
+// A label that is the artist themselves → "self-released", as on every list since 2017:
+// plain "(self-released)", no link. The same artist means: the same name (case, accents,
+// spaces and invisible marks aside), a name on the "same artist" list, or one of the names
+// of a collaboration ("kęnåi & 261ssh" on 261ssh's own page).
+const spelled = (s) => String(s || '').normalize('NFKD').replace(/\p{M}/gu, '').replace(/\p{Cf}/gu, '')
+  .toLowerCase().replace(/\s+/g, ' ').trim();
+function selfReleased(c, aliases) {
+  if (!c.label) return true;
+  if (c.type === 'comp') return false; // a compilation's label is a label
+  const one = new Map();
+  (aliases || []).forEach((g) => { const head = spelled(g[0]); g.forEach((n) => one.set(spelled(n), head)); });
+  const who = (n) => one.get(spelled(n)) || spelled(n);
+  const names = [c.artist, ...String(c.artist || '').split(/\s+(?:&|and|x|\+|feat\.?|ft\.?|with)\s+|\s*,\s*/i)];
+  const label = who(c.label);
+  return names.some((n) => n && who(n) === label);
+}
+
+function listHtml(entries, aliases) {
   const sorted = [...entries].sort((a, b) =>
     sortName(a.artist).localeCompare(sortName(b.artist), 'en', { sensitivity: 'base' }) ||
     String(a.title || '').localeCompare(String(b.title || ''), 'en', { sensitivity: 'base' }));
   const out = [`<p><strong>${escapeHtml(HEADING)}</strong></p>`];
   const plain = [];
   for (const c of sorted) {
-    const label = c.label ? link(c.labelUrl, c.label) : 'self-released';
+    const self = selfReleased(c, aliases);
+    const label = self ? 'self-released' : link(c.labelUrl, c.label);
     out.push(`<p>${link(c.artistUrl, c.artist)} - ${escapeHtml(c.title || 'untitled')} (${label})</p>`);
     // Bandcamp's player where the release has one (the lists have always used it)
     const bc = c.source === 'bandcamp' ? c : null;
     out.push(`<p>${bc ? bandcampEmbed(bc) : soundcloudEmbed(c)}</p>`);
-    plain.push(`${c.artist} - ${c.title || 'untitled'} (${c.label || 'self-released'})`);
+    plain.push(`${c.artist} - ${c.title || 'untitled'} (${self ? 'self-released' : c.label})`);
   }
   return { html: out.join('\n'), text: plain.join('\n'), count: sorted.length };
 }
@@ -199,18 +231,26 @@ function mount(app) {
   // The HTML for radioštudent: the first 50 of the ranked list, alphabetical.
   app.post('/ye/html', (req, res) => {
     const year = Number((req.body || {}).year);
-    const y = readAll()[year];
+    const all = readAll();
+    const y = all[year];
     if (!y) return res.status(404).json({ ok: false, error: 'nothing saved for ' + year });
     const byKey = new Map((y.candidates || []).map((c) => [c.key, c]));
+    const aliases = (all.aliases && all.aliases.groups) || DEFAULT_ALIASES;
+    // links the way the published lists have them (year-end-links.js)
+    const known = links.knownLinks(require('./archive-cache').getArchive());
     const top = (y.order || []).filter((k) => y.decisions[k] === 'in' && byKey.has(k)).slice(0, LIST_SIZE)
-      .map((k) => withEdits(byKey.get(k), (y.edits || {})[k]));
+      .map((k) => {
+        const orig = byKey.get(k), e = (y.edits || {})[k];
+        const c = withEdits(orig, e);
+        return { ...c, ...links.linksFor(c, orig, e, known, aliases) };
+      });
     if (!top.length) return res.json({ ok: false, error: 'the list is empty' });
     try {
-      res.json({ ok: true, ...listHtml(top), short: Math.max(0, LIST_SIZE - top.length) });
+      res.json({ ok: true, ...listHtml(top, aliases), short: Math.max(0, LIST_SIZE - top.length) });
     } catch (e) {
       res.status(500).json({ ok: false, error: String(e.message || e) });
     }
   });
 }
 
-module.exports = { mount, listHtml, LIST_SIZE };
+module.exports = { mount, listHtml, selfReleased, withEdits, LIST_SIZE };

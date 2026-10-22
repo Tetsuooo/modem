@@ -19,7 +19,7 @@
     "releaseDate": "2026-10-05",
     "trackCount": 30,
     "duration": 6040,
-    "type": "LP",
+    "type": "comp",
     "tracks": [
      {
       "id": 2819588981,
@@ -1013,7 +1013,13 @@
      }
     ],
     "playedTracks": 5,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "ˢᵒᵃᵏ",
+      "url": "https://soundcloud.com/soaku"
+     }
+    ]
    },
    {
     "key": "bc:a:3211619469",
@@ -1314,7 +1320,13 @@
      }
     ],
     "playedTracks": 3,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "XVIENCE",
+      "url": "https://soundcloud.com/xviencevision"
+     }
+    ]
    },
    {
     "key": "bc:a:2452564246",
@@ -1334,7 +1346,7 @@
     "releaseDate": "2026-05-16",
     "trackCount": 7,
     "duration": 3437,
-    "type": "comp",
+    "type": "LP",
     "tracks": [
      {
       "id": 943175612,
@@ -1424,7 +1436,7 @@
     "releaseDate": "2026-05-15",
     "trackCount": 22,
     "duration": 4738,
-    "type": "LP",
+    "type": "comp",
     "tracks": [
      {
       "id": 2204572634,
@@ -1614,7 +1626,13 @@
      }
     ],
     "playedTracks": 3,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Portraiture",
+      "url": "https://soundcloud.com/portraitureplatform"
+     }
+    ]
    },
    {
     "key": "bc:a:601320337",
@@ -1888,7 +1906,17 @@
      }
     ],
     "playedTracks": 3,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "katharsis",
+      "url": "https://soundcloud.com/katharsislabel"
+     },
+     {
+      "name": "Basy Tropikalne",
+      "url": "https://soundcloud.com/basy-tropikalne"
+     }
+    ]
    },
    {
     "key": "bc:a:2105831534",
@@ -1908,7 +1936,7 @@
     "releaseDate": "2026-03-17",
     "trackCount": 5,
     "duration": 1160,
-    "type": "EP",
+    "type": "comp",
     "tracks": [
      {
       "id": 542423736,
@@ -1962,7 +1990,13 @@
      }
     ],
     "playedTracks": 3,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Eco Futurism Corporation",
+      "url": "https://soundcloud.com/eco-futurism-corp"
+     }
+    ]
    },
    {
     "key": "bc:a:2744301420",
@@ -1982,7 +2016,7 @@
     "releaseDate": "2024-12-31",
     "trackCount": 8,
     "duration": 1773,
-    "type": "LP",
+    "type": "comp",
     "tracks": [
      {
       "id": 2096305516,
@@ -2060,7 +2094,13 @@
      }
     ],
     "playedTracks": 3,
-    "year": 2024
+    "year": 2024,
+    "scProfiles": [
+     {
+      "name": "Cold Storage",
+      "url": "https://soundcloud.com/coldeststorage"
+     }
+    ]
    },
    {
     "key": "bc:t:3817911612",
@@ -2622,7 +2662,7 @@
     "releaseDate": "2026-07-16",
     "trackCount": 18,
     "duration": 3914,
-    "type": "LP",
+    "type": "comp",
     "tracks": [
      {
       "id": 1220584083,
@@ -2892,7 +2932,13 @@
      }
     ],
     "playedTracks": 2,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Sal de Fête",
+      "url": "https://soundcloud.com/saldefete"
+     }
+    ]
    },
    {
     "key": "bc:a:652024624",
@@ -3464,7 +3510,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "261ssh",
+      "url": "https://soundcloud.com/261ssh"
+     }
+    ]
    },
    {
     "key": "sc:p:2295411996",
@@ -10591,7 +10643,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Mifu",
+      "url": "https://soundcloud.com/mifuuu"
+     }
+    ]
    },
    {
     "key": "bc:a:4290135981",
@@ -11126,7 +11184,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "b7lanket",
+      "url": "https://soundcloud.com/b7lanket"
+     }
+    ]
    },
    {
     "key": "bc:a:2012030593",
@@ -11379,7 +11443,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "nic torrin",
+      "url": "https://soundcloud.com/nictorrin"
+     }
+    ]
    },
    {
     "key": "sc:t:2343403232",
@@ -11761,7 +11831,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Portraiture",
+      "url": "https://soundcloud.com/portraitureplatform"
+     }
+    ]
    },
    {
     "key": "bc:t:200648405",
@@ -11801,7 +11877,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "mårdhund",
+      "url": "https://soundcloud.com/mardhund"
+     }
+    ]
    },
    {
     "key": "sc:t:2341462451",
@@ -11997,7 +12079,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Julek ploski",
+      "url": "https://soundcloud.com/julekploski"
+     }
+    ]
    },
    {
     "key": "sc:t:2340343904",
@@ -12263,7 +12351,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "strange pressure vessel",
+      "url": "https://soundcloud.com/hentenna"
+     }
+    ]
    },
    {
     "key": "bc:a:742336418",
@@ -13808,7 +13902,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Clara!",
+      "url": "https://soundcloud.com/clara-uno"
+     }
+    ]
    },
    {
     "key": "sc:t:2327008037",
@@ -13959,7 +14059,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "vånda",
+      "url": "https://soundcloud.com/vanda100"
+     }
+    ]
    },
    {
     "key": "bc:a:3799102483",
@@ -14093,7 +14199,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "tumy",
+      "url": "https://soundcloud.com/tumy-sc"
+     }
+    ]
    },
    {
     "key": "sc:t:2324662406",
@@ -14592,7 +14704,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "xtclvr",
+      "url": "https://soundcloud.com/xtclvr"
+     }
+    ]
    },
    {
     "key": "sc:t:2320335662",
@@ -14743,7 +14861,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "secretimage",
+      "url": "https://soundcloud.com/secretimage"
+     }
+    ]
    },
    {
     "key": "bc:t:2646155890",
@@ -14783,7 +14907,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Julek ploski",
+      "url": "https://soundcloud.com/julekploski"
+     }
+    ]
    },
    {
     "key": "bc:a:2114147120",
@@ -14855,7 +14985,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "iyrliaes",
+      "url": "https://soundcloud.com/iyrliaes"
+     }
+    ]
    },
    {
     "key": "bc:t:2561949417",
@@ -14895,7 +15031,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "vånda",
+      "url": "https://soundcloud.com/vanda100"
+     }
+    ]
    },
    {
     "key": "sc:t:2318181308",
@@ -15902,7 +16044,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Ukiuki Atama",
+      "url": "https://soundcloud.com/ukiukiatama"
+     }
+    ]
    },
    {
     "key": "bc:t:1038752725",
@@ -15942,7 +16090,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "blue steel",
+      "url": "https://soundcloud.com/blue_steel"
+     }
+    ]
    },
    {
     "key": "sc:t:2308429145",
@@ -16481,7 +16635,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Muzik",
+      "url": "https://soundcloud.com/muzik_label"
+     }
+    ]
    },
    {
     "key": "bc:a:3263860235",
@@ -16655,7 +16815,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Yegorka",
+      "url": "https://soundcloud.com/yegorkaberlin"
+     }
+    ]
    },
    {
     "key": "sc:t:2304477938",
@@ -16875,7 +17041,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Computer man",
+      "url": "https://soundcloud.com/c0mput3rm4n"
+     }
+    ]
    },
    {
     "key": "sc:t:2302233146",
@@ -16993,7 +17165,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Ukiuki Atama",
+      "url": "https://soundcloud.com/ukiukiatama"
+     }
+    ]
    },
    {
     "key": "sc:t:2300647982",
@@ -17167,7 +17345,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Low Income $quad",
+      "url": "https://soundcloud.com/lowincomesquad"
+     }
+    ]
    },
    {
     "key": "sc:t:2299485386",
@@ -17381,7 +17565,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "b7lanket",
+      "url": "https://soundcloud.com/b7lanket"
+     }
+    ]
    },
    {
     "key": "sc:t:2298336860",
@@ -17819,7 +18009,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Computer man",
+      "url": "https://soundcloud.com/c0mput3rm4n"
+     }
+    ]
    },
    {
     "key": "bc:a:718200646",
@@ -17963,7 +18159,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "DIDA",
+      "url": "https://soundcloud.com/didasy"
+     }
+    ]
    },
    {
     "key": "bc:a:1675392077",
@@ -18451,7 +18653,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Pho Bho Records",
+      "url": "https://soundcloud.com/phobhorecords"
+     }
+    ]
    },
    {
     "key": "sc:p:2213736998",
@@ -18826,7 +19034,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "galen tipton",
+      "url": "https://soundcloud.com/galentipton"
+     }
+    ]
    },
    {
     "key": "bc:a:793702541",
@@ -19080,7 +19294,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Ukiuki Atama",
+      "url": "https://soundcloud.com/ukiukiatama"
+     }
+    ]
    },
    {
     "key": "sc:t:2290106816",
@@ -19191,7 +19411,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "raf shermen",
+      "url": "https://soundcloud.com/rafshermen"
+     }
+    ]
    },
    {
     "key": "bc:a:746145843",
@@ -19626,7 +19852,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Seedlink⁺",
+      "url": "https://soundcloud.com/seedlink_plus"
+     }
+    ]
    },
    {
     "key": "sc:t:2283169256",
@@ -20205,7 +20437,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "~surf",
+      "url": "https://soundcloud.com/wesurf"
+     }
+    ]
    },
    {
     "key": "sc:t:2277465719",
@@ -20786,7 +21024,7 @@
     "releaseDate": "2026-02-23",
     "trackCount": 10,
     "duration": 2936,
-    "type": "LP",
+    "type": "comp",
     "tracks": [
      {
       "id": 1527349200,
@@ -21226,7 +21464,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "jb glazer",
+      "url": "https://soundcloud.com/jbglazer26878"
+     }
+    ]
    },
    {
     "key": "sc:t:2268991040",
@@ -21385,7 +21629,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "katharsis",
+      "url": "https://soundcloud.com/katharsislabel"
+     }
+    ]
    },
    {
     "key": "bc:a:4245018705",
@@ -21591,7 +21841,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Andrew Florres",
+      "url": "https://soundcloud.com/user-316617590"
+     }
+    ]
    },
    {
     "key": "sc:t:2266482434",
@@ -22119,7 +22375,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Madjestic Kasual",
+      "url": "https://soundcloud.com/madjestickasual"
+     }
+    ]
    },
    {
     "key": "sc:t:2261384771",
@@ -22262,7 +22524,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "O A K M I L K",
+      "url": "https://soundcloud.com/oakmilk"
+     }
+    ]
    },
    {
     "key": "bc:a:3274753116",
@@ -22670,7 +22938,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "CANETAMBURO",
+      "url": "https://soundcloud.com/canetamburo"
+     }
+    ]
    },
    {
     "key": "sc:t:2254536689",
@@ -23498,7 +23772,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "mårdhund",
+      "url": "https://soundcloud.com/mardhund"
+     }
+    ]
    },
    {
     "key": "sc:t:2253535925",
@@ -23609,7 +23889,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Deleted",
+      "url": "https://soundcloud.com/deleted900000"
+     }
+    ]
    },
    {
     "key": "sc:t:2252574008",
@@ -24080,7 +24366,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Bio Future Laboratory",
+      "url": "https://soundcloud.com/bio-future-lab"
+     }
+    ]
    },
    {
     "key": "bc:a:4215731890",
@@ -24392,7 +24684,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "cloud:resolve",
+      "url": "https://soundcloud.com/cloudresolve"
+     }
+    ]
    },
    {
     "key": "bc:a:3510791290",
@@ -24796,7 +25094,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "w/lson",
+      "url": "https://soundcloud.com/w-ls0n"
+     }
+    ]
    },
    {
     "key": "sc:t:2243546996",
@@ -24931,7 +25235,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "dj galen",
+      "url": "https://soundcloud.com/djgalen-music"
+     }
+    ]
    },
    {
     "key": "bc:t:872461389",
@@ -24971,7 +25281,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2026
+    "year": 2026,
+    "scProfiles": [
+     {
+      "name": "Ukiuki Atama",
+      "url": "https://soundcloud.com/ukiukiatama"
+     }
+    ]
    },
    {
     "key": "sc:t:2240545817",
@@ -25200,7 +25516,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "Pho Bho Records",
+      "url": "https://soundcloud.com/phobhorecords"
+     }
+    ]
    },
    {
     "key": "sc:t:2236803080",
@@ -25475,7 +25797,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "mårdhund",
+      "url": "https://soundcloud.com/mardhund"
+     }
+    ]
    },
    {
     "key": "sc:t:2234623271",
@@ -25790,7 +26118,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "Bio Future Laboratory",
+      "url": "https://soundcloud.com/bio-future-lab"
+     }
+    ]
    },
    {
     "key": "bc:a:3442018272",
@@ -26029,7 +26363,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "Computer man",
+      "url": "https://soundcloud.com/c0mput3rm4n"
+     }
+    ]
    },
    {
     "key": "sc:t:2187839815",
@@ -26598,7 +26938,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "orque³",
+      "url": "https://soundcloud.com/orque-454293728"
+     }
+    ]
    },
    {
     "key": "sc:p:2178980684",
@@ -26947,7 +27293,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "J.G.G.",
+      "url": "https://soundcloud.com/jotagege"
+     }
+    ]
    },
    {
     "key": "sc:p:2019696240",
@@ -27559,7 +27911,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "William",
+      "url": "https://soundcloud.com/4wilm"
+     }
+    ]
    },
    {
     "key": "bc:a:382660723",
@@ -27671,7 +28029,13 @@
      }
     ],
     "playedTracks": 1,
-    "year": 2025
+    "year": 2025,
+    "scProfiles": [
+     {
+      "name": "Transatlantic",
+      "url": "https://soundcloud.com/transatlanticrecords"
+     }
+    ]
    },
    {
     "key": "sc:t:1959533543",
@@ -28515,7 +28879,7 @@
   "decisions": {},
   "order": [],
   "edits": {},
-  "gatheredAt": "2026-10-22T07:51:25.412Z",
+  "gatheredAt": "2026-10-22T08:17:24.271Z",
   "shows": [
    229,
    230,
@@ -28539,7 +28903,7 @@
    248,
    249
   ],
-  "savedAt": 1792655485412
+  "savedAt": 1792657044271
  },
  "aliases": {
   "groups": [
