@@ -194,20 +194,31 @@ function groupRuns(items) {
 // filtered/selected/reordered by the user.
 function generateShowHtml(items) {
   const runOf = groupRuns(items);
+  const rel = releaseRuns(items);
   const blocks = [];
   let i = 0;
   while (i < items.length) {
     if (runOf[i] === i) {
-      // start of a 2+ item group: one shared heading, then one shared <p>
-      // holding every track's (small/compact) embed — confirmed against
-      // real precedent (modem-242, modem-246): a group's embeds sit
-      // space-separated in ONE paragraph, not one <p> each.
       let j = i;
       while (j + 1 < items.length && runOf[j + 1] === i) j++;
       const heading = `<p>${escapeHtml(runHeading(items, i))} ${SLASHES}</p>`;
-      const embeds = [];
-      for (let k = i; k <= j; k++) embeds.push(buildEmbed(items[k], { small: true }));
-      blocks.push(heading + '\n' + `<p>${embeds.join(' ')}</p>`);
+      // Tracks off ONE release (an album, a compilation): one shared <p> holding every
+      // track's small embed — confirmed against real precedent (modem-242, modem-246).
+      // Anything else under one heading — one artist's tracks off different releases, or
+      // your own group (grp:) — gets full-size players, each in its own <p> (Matej,
+      // 2026-10-24: they "should all be full sized"). That also keeps the site from
+      // treating it as a packed compilation, where it adds a chip per track's own source
+      // artist (e.g. a SoundCloud account name next to the same artist's tag).
+      const oneRelease = rel[i] === i && rel[j] === i && !String(items[i].groupKey || '').startsWith('grp:');
+      if (oneRelease) {
+        const embeds = [];
+        for (let k = i; k <= j; k++) embeds.push(buildEmbed(items[k], { small: true }));
+        blocks.push(heading + '\n' + `<p>${embeds.join(' ')}</p>`);
+      } else {
+        const embeds = [];
+        for (let k = i; k <= j; k++) embeds.push(`<p>${buildEmbed(items[k])}</p>`);
+        blocks.push(heading + '\n' + embeds.join('\n'));
+      }
       i = j + 1;
     } else {
       const heading = `<p>${escapeHtml(headingName(items[i]))} ${SLASHES}</p>`;

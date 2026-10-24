@@ -117,6 +117,14 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   `add-show-from-draft.js` gives the site's page exactly the edited HTML, so radioštudent
   and the site match (the tags still come from "Your show" — it warns if the edited HTML
   has a different number of headings). Generate HTML asks before replacing hand edits.
+- **Full-size players for one artist's tracks under one heading.** Small players packed in
+  one paragraph are now only for tracks off ONE release (an album or compilation — the
+  radioštudent precedent). One artist's tracks off different releases (and your own
+  groups) get full-size players, each in its own paragraph under the shared heading
+  (Matej: "they should all be full sized"). This also stops double pills on the site: a
+  packed paragraph is read as a compilation, and the site then adds a chip per track's own
+  source artist (e.g. a SoundCloud account name beside the artist's tag); unpacked, the
+  heading's tags are all it shows — one pill per artist.
 - **The artist list: editable by hand, and label first.** Like the HTML: "✎ Edited by
   hand", kept (`artistList` / `artistListEdited` in the draft, synced), Generate artist
   list asks before replacing it; Start fresh clears both. The order is now "Label
