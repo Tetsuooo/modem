@@ -459,9 +459,17 @@
   }
   .lumakey-value.show { opacity: 1; }
   .cover-global-adjust { display: flex; flex-direction: column; gap: 4px; }
-  .cover-global-adjust label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-  .cover-global-adjust input[type=range] { flex: 1; }
+  .cover-global-adjust .adj-row { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+  .cover-global-adjust input[type=range] { flex: 1; min-width: 0; }
   .cover-global-adjust span { width: 28px; text-align: right; font-size: 11px; color: #9a9ba5; }
+  .cover-global-adjust .adj-name { width: 62px; flex: none; text-align: left; font-size: 12px; color: inherit; }
+  /* ◀ ▶ beside each slider: one step a click, Shift 10, keeps going while held */
+  .adj-step {
+    flex: none; background: none; border: 1px solid #3a3b45; color: #9a9ba5; border-radius: 4px;
+    padding: 3px 6px; font-size: 9px; line-height: 1; cursor: pointer; user-select: none; touch-action: manipulation;
+  }
+  .adj-step:hover { color: #e8e8ea; border-color: #55566a; }
+  .adj-step:active { background: #2a2b33; }
   /* Covers on a touch screen (the Surface — any-pointer: coarse is true whenever there's
      one): bigger buttons, handles and sliders; the layer's buttons go to a second row so
      they fit. A computer with only a mouse keeps the compact look. */
@@ -482,6 +490,7 @@
     .lumakey-handle { top: 17px; transform: scale(1.25); transform-origin: 50% 0; }
     .cover-global-adjust { gap: 6px; }
     .cover-global-adjust input[type=range], #coverEraserSize { height: 26px; }
+    .adj-step { padding: 6px 8px; font-size: 11px; min-width: 28px; min-height: 28px; }
   }
   .history-entry { border: 1px solid #2a2b33; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
   .history-entry-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
@@ -668,9 +677,9 @@
         </div>
         <h3 class="cover-section-title">Adjust (whole image)</h3>
         <div class="cover-global-adjust">
-          <label>Contrast <input type="range" id="coverContrast" min="-100" max="100" value="0"><span id="coverContrastVal">0</span></label>
-          <label>Lightness <input type="range" id="coverBrightness" min="-100" max="100" value="0"><span id="coverBrightnessVal">0</span></label>
-          <label>Saturation <input type="range" id="coverSaturation" min="-100" max="100" value="0"><span id="coverSaturationVal">0</span></label>
+          <div class="adj-row"><span class="adj-name">Contrast</span><button class="adj-step" data-for="coverContrast" data-step="-1" title="−1 (Shift: −10) — hold to keep going">◀</button><input type="range" id="coverContrast" min="-100" max="100" value="0" aria-label="Contrast"><button class="adj-step" data-for="coverContrast" data-step="1" title="+1 (Shift: +10) — hold to keep going">▶</button><span id="coverContrastVal">0</span></div>
+          <div class="adj-row"><span class="adj-name">Lightness</span><button class="adj-step" data-for="coverBrightness" data-step="-1" title="−1 (Shift: −10) — hold to keep going">◀</button><input type="range" id="coverBrightness" min="-100" max="100" value="0" aria-label="Lightness"><button class="adj-step" data-for="coverBrightness" data-step="1" title="+1 (Shift: +10) — hold to keep going">▶</button><span id="coverBrightnessVal">0</span></div>
+          <div class="adj-row"><span class="adj-name">Saturation</span><button class="adj-step" data-for="coverSaturation" data-step="-1" title="−1 (Shift: −10) — hold to keep going">◀</button><input type="range" id="coverSaturation" min="-100" max="100" value="0" aria-label="Saturation"><button class="adj-step" data-for="coverSaturation" data-step="1" title="+1 (Shift: +10) — hold to keep going">▶</button><span id="coverSaturationVal">0</span></div>
         </div>
       </div>
       <div class="cover-canvas-wrap">
@@ -4614,6 +4623,45 @@ wireCoverEraser();
     scheduleCoverRender();
   });
   el(id).addEventListener('change', debouncedSaveDraft);
+});
+// ◀ ▶ beside each (Matej, 2026-10-24: "so we can more easily go through the settings and
+// tweak"): a click = one step (Shift: 10), held = keeps stepping (after 0.4 s, ~16 a
+// second); one undo step per press. Goes through the slider's own 'input' handler above.
+document.querySelectorAll('.adj-step').forEach((b) => {
+  const input = el(b.dataset.for);
+  let timer = null;
+  const next = (shift) => Math.max(Number(input.min), Math.min(Number(input.max), Number(input.value) + Number(b.dataset.step) * (shift ? 10 : 1)));
+  const step = (shift) => {
+    const v = next(shift);
+    if (v === Number(input.value)) return;
+    input.value = v;
+    input.dispatchEvent(new Event('input'));
+  };
+  const stop = () => {
+    if (!timer) return;
+    clearTimeout(timer);
+    timer = null;
+    debouncedSaveDraft();
+  };
+  b.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    if (next(e.shiftKey) === Number(input.value)) return; // already at the end
+    try { b.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
+    pushUndoSnapshot();
+    const shift = e.shiftKey;
+    step(shift);
+    const repeat = (delay) => { timer = setTimeout(() => { step(shift); repeat(60); }, delay); };
+    repeat(400);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => b.addEventListener(t, stop));
+  // the keyboard (Enter / Space on the focused button)
+  b.addEventListener('click', (e) => {
+    if (e.detail !== 0 || next(e.shiftKey) === Number(input.value)) return;
+    pushUndoSnapshot();
+    step(e.shiftKey);
+    debouncedSaveDraft();
+  });
 });
 // Click the ruler to move the playhead — getBoundingClientRect() already
 // accounts for the timeline-wrap's horizontal scroll (it returns the
