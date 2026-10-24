@@ -82,8 +82,13 @@
   }
   #selected.compact .track-player-icon,
   #selected.compact .track-player-time { display: none; }
-  #selected.compact .scrub-bar { height: 4px; }
-  #selected.compact .track-player:hover .scrub-bar { height: 6px; }
+  /* The whole strip is the timeline here — a click anywhere on it jumps there (it used to
+     pause when it missed the thin line; play/pause is the row's double-click). Still
+     drawn as a thin line along the bottom. */
+  #selected.compact .scrub-bar { top: 0; height: auto; background: linear-gradient(#2a2b33, #2a2b33) left bottom / 100% 4px no-repeat; }
+  #selected.compact .scrub-fill { position: absolute; left: 0; bottom: 0; height: 4px; }
+  #selected.compact .track-player:hover .scrub-bar { height: auto; background-size: 100% 6px; }
+  #selected.compact .track-player:hover .scrub-fill { height: 6px; }
   .tabs { display: flex; gap: 18px; }
   .tab-btn {
     background: none; border: none; border-bottom: 2px solid transparent; color: #9a9ba5;
@@ -1814,6 +1819,8 @@ function wireTrackPlayers(root) {
 
     box.addEventListener('click', (e) => {
       if (scrubBar.contains(e.target)) return;
+      // compact view: the strip is only a timeline (play/pause = double-click the row)
+      if (box.closest('#selected.compact')) return;
       if (audio.paused) audio.play(); else audio.pause();
     });
 

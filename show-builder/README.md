@@ -35,6 +35,12 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   track that stops — paused, or because another one started — plays from the beginning
   next time. Seeking while playing, auto-advance at the end, and a playing track surviving
   a redraw of the list work as before. (One line in `wireTrackPlayers()`'s 'pause'.)
+- **Compact view: a single click on a track's thin strip only jumps in the track.** The
+  strip was a play/pause button wherever the click missed its 4-pixel line, so trying to
+  jump often paused (and, with the rule above, rewound) the track. Now the whole strip is
+  the timeline (click = jump, drag = scrub), drawn just as thin; play/pause stays the
+  double-click on the row. The normal view's full-size player still plays/pauses on a
+  click (it shows a ▶/⏸).
 - **Fixed: very long track titles couldn't be downloaded.** A 254-character SoundCloud title
   ("figuring out who i am٩(̾●̮̮̃̾•̃̾)۶…", on the Surface) failed with "Errno 22 Invalid
   argument": Windows allows 255 characters per file name, and its cover picture's name
