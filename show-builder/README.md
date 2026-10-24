@@ -158,6 +158,16 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
     date too: the Surface's next pull lands exactly in that case;
   - Health's own "restart needed" now uses the same test. It used to compare commits, so a
     data-only Sync asked for a restart.
+- **Still small after that (2026-10-25, 0a83f4e).** Matej synced first, then restarted and
+  generated, so that sync couldn't show the result. Two easy-to-miss spots got fixed:
+  - after a restart that Generate HTML asked for, the page reloaded and waited for a second
+    press. Now it carries on by itself: the Publish tab opens, and Generate HTML asks about
+    the hand edits as usual (a `sessionStorage` flag);
+  - the Preview of hand-edited HTML now says on top that it shows the HTML exactly as saved,
+    without changes or builder fixes since.
+  Each Sync now also records `builderRunning` in the shared draft: the version the
+  syncing machine's builder started on, which it runs until it restarts. That shows from
+  here whether the Surface restarted.
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
@@ -998,6 +1008,16 @@ Sync really pulled and pushed:
   banner shown, Generate HTML asks to restart.
 - Restart itself wasn't pressed: `start.bat` closes whatever runs on port 8090. The Health
   tab's restart was tested on 2026-10-24, and the banner uses the same function.
+
+After a restart, the Preview note, `builderRunning`: on the same kind of setup, with
+Matej's synced show 250 (hand-edited HTML) as the draft:
+- The Preview says it shows hand-edited HTML, with the small player (42 px).
+- Coming back from a restart that Generate HTML asked for (the flag set, then a reload):
+  Publish opens, "Replace your hand edits…?" (accepted), and the computer man Bandcamp
+  player is `size=large`. The Preview has no note and a 120 px player.
+- A plain reload generates nothing and asks nothing.
+- Sync: the scratch remote's shared draft has `builderRunning` = the version the server
+  started on, `htmlEdited: false`, and the full-size player.
 
 Arrange, on a throwaway clone (:8190) with a draft of five real SoundCloud tracks from the
 current draft (without this machine's downloads), in Playwright's Chromium — 28 checks, all

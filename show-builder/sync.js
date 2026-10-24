@@ -72,6 +72,12 @@ function git(args) {
   return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' });
 }
 
+// The builder version this server started with: it runs that code until it restarts, even
+// after a Sync pulls newer code. It travels with the shared draft, so the other machine's
+// state can be read off a sync (2026-10-25: was the Surface running the new code or not?).
+let RUNNING = null;
+try { RUNNING = git(['rev-parse', '--short', 'HEAD']).trim(); } catch (e) { /* not a git checkout */ }
+
 // True if <ref>:<path> exists (e.g. a file that's never been committed yet —
 // the very first sync ever won't have shared-draft.json on the remote).
 function existsAtRef(ref, relPath) {
@@ -111,6 +117,7 @@ function localSharedDraft() {
     selected, showNumber: draft.showNumber || null, airDate: draft.airDate || null,
     generatedHtml: draft.generatedHtml || null, htmlEdited: !!draft.htmlEdited,
     artistList: draft.artistList || null, artistListEdited: !!draft.artistListEdited, savedAt,
+    builderRunning: RUNNING,
   };
 }
 

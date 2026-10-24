@@ -4121,7 +4121,10 @@ function setListEdited(on) {
 async function generateHtml() {
   if (!selected.length) return;
   if (await checkRestartNeeded()) {
-    if (window.confirm('The builder got a new version, but the one running is still the old one, so the HTML would come out the old way.\n\nRestart the builder now? Then press Generate HTML again.')) window.restartBuilder(el('restartBannerText'));
+    if (window.confirm('The builder got a new version, but the one running is still the old one, so the HTML would come out the old way.\n\nRestart the builder now? Generate HTML carries on by itself once it’s back.')) {
+      try { sessionStorage.setItem('sb-generate-after-restart', '1'); } catch (e) { /* then press it again by hand */ }
+      window.restartBuilder(el('restartBannerText'));
+    }
     return;
   }
   if (htmlEditedByHand && !window.confirm('Replace your hand edits with HTML generated from “Your show”?')) return;
@@ -4366,9 +4369,12 @@ async function runPreview() {
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || 'preview failed');
     el('previewBox').style.display = '';
-    el('previewWarnings').innerHTML = j.warnings.length
+    // hand-edited HTML is shown exactly as saved: changes to "Your show" and builder fixes
+    // since then aren't in it (2026-10-25: show 250's small Bandcamp player stayed)
+    const edited = body.html ? '<div class="warning-item">✎ This Preview shows the HTML you edited by hand, exactly as it was saved. Changes to “Your show” and builder fixes since then aren’t in it: press Generate HTML to bring them in (it replaces your hand edits).</div>' : '';
+    el('previewWarnings').innerHTML = edited + (j.warnings.length
       ? j.warnings.map((w) => `<div class="warning-item">⚠ ${esc(w)}</div>`).join('')
-      : '<div class="warning-clean">✓ no issues found</div>';
+      : '<div class="warning-clean">✓ no issues found</div>');
     renderPreviewPane(j.record, selected);
   } catch (e) {
     el('errorsBox').innerHTML = `<div class="errors">preview failed: ${esc(e.message || e)}</div>`;
@@ -5094,7 +5100,12 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 <script>
 loadArtistLabelNames();
 loadShowHistory();
-loadDraft();
+loadDraft().then(() => {
+  // Generate HTML asked for a restart first (the page reloads on the new server): carry on
+  let again = false;
+  try { again = sessionStorage.getItem('sb-generate-after-restart') === '1'; sessionStorage.removeItem('sb-generate-after-restart'); } catch (e) { /* ignore */ }
+  if (again) { switchTab('publish'); generateHtml(); }
+});
 checkRestartNeeded();
 </script>
 </body>
