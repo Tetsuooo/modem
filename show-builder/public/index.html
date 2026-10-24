@@ -26,6 +26,8 @@
   button.primary:hover:not(:disabled) { background: #4a7dff; }
   .status { font-size: 12px; color: #9a9ba5; }
   .errors { padding: 8px 20px; background: #3a1f1f; color: #ff9b9b; font-size: 12px; }
+  .restart-banner { display: flex; align-items: center; gap: 12px; padding: 8px 20px; background: #3a331f; color: #ffd98b; font-size: 12px; }
+  .restart-banner[hidden] { display: none; }
   .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
   .tab-panel.tab-panel-wide { max-width: 1400px; }
   .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
@@ -526,6 +528,10 @@
   </div>
 </header>
 <div id="errorsBox"></div>
+<div id="restartBanner" class="restart-banner" hidden>
+  <span id="restartBannerText">This computer has a new version of the builder, but the one running is still the old one — Generate HTML, the Preview and the rest still work the old way until it restarts.</span>
+  <button id="restartBannerBtn">Restart the builder</button>
+</div>
 
 <main>
   <section class="tab-panel" id="panel-scan">
@@ -4114,6 +4120,10 @@ function setListEdited(on) {
 
 async function generateHtml() {
   if (!selected.length) return;
+  if (await checkRestartNeeded()) {
+    if (window.confirm('The builder got a new version, but the one running is still the old one, so the HTML would come out the old way.\n\nRestart the builder now? Then press Generate HTML again.')) window.restartBuilder(el('restartBannerText'));
+    return;
+  }
   if (htmlEditedByHand && !window.confirm('Replace your hand edits with HTML generated from “Your show”?')) return;
   el('generateBtn').disabled = true;
   el('generateBtn').textContent = 'Generating…';
@@ -4918,6 +4928,25 @@ async function loadArtistLabelNames() {
   } catch (e) { /* best-effort — see comment above */ }
 }
 
+// ---------- Out of date: Sync (or a git pull) can bring new builder code, but the running
+// server keeps its old code until it restarts — the page itself always comes fresh off the
+// disk. 2026-10-25: after a Sync on the Surface, Generate HTML would still have made show
+// 250's old small player. Checked on load, after Sync and before Generate HTML; a server
+// older than this page doesn't know the question (404), which means out of date too.
+async function checkRestartNeeded() {
+  let outdated = false;
+  try {
+    const r = await fetch('/health/restart-needed', { cache: 'no-store' });
+    outdated = r.status === 404 || ((await r.json()).files || []).length > 0;
+  } catch (e) { /* the server isn't answering: say nothing */ }
+  el('restartBanner').hidden = !outdated;
+  return outdated;
+}
+el('restartBannerBtn').addEventListener('click', () => {
+  el('restartBannerBtn').disabled = true;
+  window.restartBuilder(el('restartBannerText'));
+});
+
 // ---------- Sync: reconcile used-tracks + the portable draft subset with
 // whatever's on git (see show-builder/sync.js for the merge strategy) ------
 async function runSyncClick() {
@@ -4931,6 +4960,7 @@ async function runSyncClick() {
     if (!j.ok) throw new Error(j.error || 'sync failed');
     if (j.shared) applySyncedDraft(j.shared);
     if (j.history) renderHistory(j.history);
+    if (j.restartNeeded) el('restartBanner').hidden = false; else await checkRestartNeeded();
     status.textContent = j.pushed ? 'synced ✓ (pushed)' : 'synced ✓ (up to date)';
   } catch (e) {
     status.textContent = 'sync failed — see the message above';
@@ -5065,6 +5095,7 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 loadArtistLabelNames();
 loadShowHistory();
 loadDraft();
+checkRestartNeeded();
 </script>
 </body>
 </html>

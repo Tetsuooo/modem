@@ -55,6 +55,25 @@ function git(args) {
   return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
+// The builder's own code (not its synced data files) or the scripts it runs.
+const CODE_FILE = /^(show-builder\/(?!data\/)|scripts\/|package(-lock)?\.json$)/;
+
+// The code files that differ between the version this server started with and the one on
+// disk now. Not empty = the running builder is out of date: a Sync (or a git pull) brought
+// new code, and a running server keeps its old code until it restarts (2026-10-25: after a
+// Sync, Generate HTML on the Surface would still have made show 250's old small player).
+// Sync's own data commits don't count.
+function codeChangedSince(startedHead) {
+  if (!startedHead) return [];
+  try {
+    const head = git(['rev-parse', 'HEAD']).trim();
+    if (head === startedHead) return [];
+    return git(['diff', '--name-only', startedHead, head]).trim().split('\n').filter((f) => CODE_FILE.test(f));
+  } catch (e) {
+    return [];
+  }
+}
+
 // GET with status, response headers and body; `range` asks for the first bytes only.
 function fetchUrl(url, { headers = {}, range = null, max = 25 } = {}) {
   const args = ['-sS', '-L', '--compressed', '--max-time', String(max), '-A', UA, '-D', '-'];
@@ -123,9 +142,8 @@ const RUN = {
     try { git(['fetch', '-q', 'origin', 'main']); } catch (e) { reached = false; }
     const incoming = git(['log', '--format=%h %s', 'HEAD..origin/main']).trim().split('\n').filter(Boolean);
     const files = incoming.length ? git(['diff', '--name-only', 'HEAD...origin/main']).trim().split('\n') : [];
-    // the builder's own code (not its synced data files) or the scripts it runs
-    const code = files.filter((f) => /^(show-builder\/(?!data\/)|scripts\/|package(-lock)?\.json$)/.test(f));
-    const restart = startedHead && startedHead !== head;
+    const code = files.filter((f) => CODE_FILE.test(f));
+    const restart = codeChangedSince(startedHead).length > 0;
     if (code.length) {
       return warn(`There's a newer version of the builder on GitHub (${incoming.length} change${incoming.length > 1 ? 's' : ''}).`,
         incoming.slice(0, 12).join('\n'), 'update', 'Sync + get the latest version');
@@ -412,6 +430,9 @@ function mount(app) {
 
   app.get('/health/ping', (req, res) => res.json({ ok: true, startedAt }));
 
+  // the page's "restart the builder" banner (on load, after Sync, before Generate HTML)
+  app.get('/health/restart-needed', (req, res) => res.json({ ok: true, files: codeChangedSince(startedHead) }));
+
   app.post('/health/check', async (req, res) => {
     const id = req.body && req.body.id;
     if (!RUN[id]) return res.status(400).json({ ok: false, error: 'no such check' });
@@ -452,7 +473,7 @@ function mount(app) {
         const npm = await runCmd('npm', ['install'], { shell: true });
         log += `\n\nnpm install (the packages changed): ${npm.code === 0 ? 'done' : 'FAILED'}\n${npm.out.slice(-800)}`;
       }
-      return res.json({ ok: true, log, restartNeeded: after !== startedHead });
+      return res.json({ ok: true, log, restartNeeded: codeChangedSince(startedHead).length > 0 });
     }
     if (fix.child) {
       const r = await runCmd(process.execPath, [path.join(HERE, 'health.js'), '--fix', id], { timeout: 120000 });
@@ -474,6 +495,8 @@ function mount(app) {
     return { ok: true, log: 'Restarting…' };
   }
   app.post('/health/restart', (req, res) => res.json(restart()));
+
+  return { restartNeeded: () => codeChangedSince(startedHead).length > 0 };
 }
 
 // ---------- child-process entry --------------------------------------------------------

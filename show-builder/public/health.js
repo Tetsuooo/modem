@@ -95,12 +95,14 @@
     }
   }
 
-  // start.bat closes this server and starts a new one; wait for it, then reload the page
-  async function restart() {
-    const box = el('hlRestartNote');
+  // start.bat closes this server and starts a new one; wait for it, then reload the page.
+  // `box` = where to say how it's going (the Health tab's note, or the page's restart banner).
+  async function restart(box) {
+    if (!(box instanceof Element)) box = el('hlRestartNote'); // a click passes its event
     let before = null;
     try { before = (await (await fetch('/health/ping')).json()).startedAt; } catch (e) { /* ignore */ }
-    const j = await post('/health/restart').catch((e) => ({ ok: false, log: String(e) }));
+    // a server too old to restart itself answers with an error page, not JSON
+    const j = await post('/health/restart').catch(() => ({ ok: false, log: "This builder is too old to restart itself — close its window and start it again with start.bat." }));
     if (!j.ok) { if (box) box.textContent = j.log || 'Restart it with start.bat.'; return; }
     if (box) box.textContent = 'Restarting the builder… the page reloads by itself.';
     const t0 = Date.now();
@@ -215,5 +217,6 @@
   }
 
   window.healthTabActivated = () => render();
+  window.restartBuilder = restart; // index.html's "restart the builder" banner
   load();
 })();

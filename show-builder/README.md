@@ -145,6 +145,19 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   - a label field holding the artist's own name adds no label.
   Matej's saved HTML for show 250 was edited by hand before the full-size fix, so it still
   had the small packed player until Generate HTML is pressed again.
+- **"Restart the builder" banner (2026-10-25).** The Surface's next Sync (a79bb12) still
+  had the hand-edited HTML, unchanged. And Sync had pulled the new code without saying
+  anything, while the running builder keeps its old code until it restarts. Generate HTML
+  on that old server would have made the old small player again. Now:
+  - the server knows which builder code files changed since it started (`codeChangedSince()`
+    in health.js; Sync's data-only commits don't count);
+  - Sync says so, and the page shows a yellow banner with "Restart the builder" (on load,
+    after Sync, and again before Generate HTML);
+  - Generate HTML on an out-of-date builder asks to restart instead of making old HTML;
+  - a server older than the page doesn't know the question (404), which counts as out of
+    date too: the Surface's next pull lands exactly in that case;
+  - Health's own "restart needed" now uses the same test. It used to compare commits, so a
+    data-only Sync asked for a restart.
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
@@ -343,6 +356,10 @@ Nothing is live until step 6 — if anything looks off before that, just stop.
 4. Start it again with `start.bat`.
 
 The page may need a hard refresh (Ctrl+F5) the first time.
+
+The Sync button pulls new code as well, but the running builder keeps using its old code
+until it restarts. When that happens, a yellow banner at the top says so: press "Restart the
+builder" in it (or close the window and run `start.bat`).
 
 ---
 
@@ -970,6 +987,17 @@ made-up shows:
   name; a co-release with it; a duo's tracks in a row; "Computer man" vs "Computer mann".
   All pass.
 - 9 artist-list cases through `creditLines()` in the page. All pass, no page errors.
+
+The restart banner (2026-10-25), on throwaway copies with a scratch bare repo as GitHub, so
+Sync really pulled and pushed:
+- No banner at start, and none after a Sync bringing only a data file.
+- After a Sync bringing a change to generate-html.js, the banner shows; it stays after a
+  page reload. Generate HTML asks "Restart the builder now?" and sends nothing to
+  `/generate`. `/health/restart-needed` names exactly that file.
+- The old server code (a887aa8) with the new page, the Surface's case after its next pull:
+  banner shown, Generate HTML asks to restart.
+- Restart itself wasn't pressed: `start.bat` closes whatever runs on port 8090. The Health
+  tab's restart was tested on 2026-10-24, and the banner uses the same function.
 
 Arrange, on a throwaway clone (:8190) with a draft of five real SoundCloud tracks from the
 current draft (without this machine's downloads), in Playwright's Chromium — 28 checks, all

@@ -113,7 +113,7 @@ scLinks.mount(app);
 tagTools.mount(app);
 timeTools.mount(app);
 yearEnd.mount(app);
-health.mount(app);
+const healthApi = health.mount(app);
 siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------
@@ -235,6 +235,8 @@ app.post('/draft', (req, res) => {
 // pattern is needed here.
 app.post('/sync', (req, res) => {
   const result = runSync();
+  // the pull can bring new builder code, which this running server won't use until it restarts
+  if (result.ok) result.restartNeeded = healthApi.restartNeeded();
   res.status(result.ok ? 200 : 500).json(result);
 });
 
