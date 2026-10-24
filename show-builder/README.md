@@ -31,6 +31,10 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   missing is now read from the downloaded file first — so a track deleted from SoundCloud
   since still has one, and an album trimmed to some of its tracks counts only those.
   Tracks downloaded just now get theirs straight away.
+- **No playhead memory** in the small players (Scan previews, Arrange, Year-end list): a
+  track that stops — paused, or because another one started — plays from the beginning
+  next time. Seeking while playing, auto-advance at the end, and a playing track surviving
+  a redraw of the list work as before. (One line in `wireTrackPlayers()`'s 'pause'.)
 - **Fixed: very long track titles couldn't be downloaded.** A 254-character SoundCloud title
   ("figuring out who i am٩(̾●̮̮̃̾•̃̾)۶…", on the Surface) failed with "Errno 22 Invalid
   argument": Windows allows 255 characters per file name, and its cover picture's name

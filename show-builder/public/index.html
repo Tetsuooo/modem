@@ -1785,6 +1785,10 @@ function wireTrackPlayers(root) {
     audio.addEventListener('pause', () => {
       icon.textContent = '▶';
       if (activeTrackAudio === audio) activeTrackAudio = null;
+      // No playhead memory (Matej, 2026-10-24): a track that stops — paused, or because
+      // another one started — plays from the beginning next time. (At the very end
+      // 'pause' fires before 'ended'; the browser starts an ended track from 0 anyway.)
+      if (!audio.ended) audio.currentTime = 0;
     });
     audio.addEventListener('ended', () => {
       icon.textContent = '▶';
