@@ -117,6 +117,13 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   `add-show-from-draft.js` gives the site's page exactly the edited HTML, so radioštudent
   and the site match (the tags still come from "Your show" — it warns if the edited HTML
   has a different number of headings). Generate HTML asks before replacing hand edits.
+- **The artist list: editable by hand, and label first.** Like the HTML: "✎ Edited by
+  hand", kept (`artistList` / `artistListEdited` in the draft, synced), Generate artist
+  list asks before replacing it; Start fresh clears both. The order is now "Label
+  [ Artist ]" wherever there's a label (it followed the heading, so an artist-headed track
+  came out "Artist [ Label ]"): a co-release = "A / B [ Artist ]", one artist on several
+  labels = a line per label, no label = the artist alone, a compilation or your own group
+  without labels = "Heading [ artists ]" (`creditLines()`).
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the

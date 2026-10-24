@@ -598,7 +598,8 @@
     </div>
     <div id="listOutputBox" style="display:none">
       <h2>Artist/label credits</h2>
-      <textarea id="listOutputText" readonly></textarea>
+      <textarea id="listOutputText" spellcheck="false"></textarea>
+      <div id="listEditedNote" class="status html-edited-note" hidden>✎ Edited by hand — kept with the show. Generate artist list starts over from “Your show”.</div>
       <div class="actions"><button id="copyListBtn">Copy to clipboard</button></div>
     </div>
     <div id="previewBox" style="display:none">
@@ -4103,6 +4104,13 @@ function setHtmlEdited(on) {
   htmlEditedByHand = !!on;
   el('htmlEditedNote').hidden = !htmlEditedByHand;
 }
+// The artist list can be edited by hand too (Matej, 2026-10-24): kept with the draft
+// (artistList / artistListEdited, synced), Generate artist list asks before replacing it.
+let listEditedByHand = false;
+function setListEdited(on) {
+  listEditedByHand = !!on;
+  el('listEditedNote').hidden = !listEditedByHand;
+}
 
 async function generateHtml() {
   if (!selected.length) return;
@@ -4135,6 +4143,7 @@ async function saveDraft() {
       body: JSON.stringify({
         selected, mixClips, coverLayers, coverAdjust,
         generatedHtml: el('outputText').value || null, htmlEdited: htmlEditedByHand && !!el('outputText').value,
+        artistList: el('listOutputText').value || null, artistListEdited: listEditedByHand && !!el('listOutputText').value,
         showNumber: el('showNumber').value || null,
         airDate: el('airDate').value || null,
       }),
@@ -4156,6 +4165,8 @@ async function loadDraft() {
     coverAdjust = j.coverAdjust || { contrast: 0, brightness: 0, saturation: 0 };
     if (j.generatedHtml) { el('outputBox').style.display = ''; el('outputText').value = j.generatedHtml; }
     setHtmlEdited(j.generatedHtml && j.htmlEdited);
+    if (j.artistList) { el('listOutputBox').style.display = ''; el('listOutputText').value = j.artistList; }
+    setListEdited(j.artistList && j.artistListEdited);
     if (j.showNumber) el('showNumber').value = j.showNumber;
     else {
       try {
@@ -4239,19 +4250,45 @@ function dedupedField(field) {
   return names;
 }
 
-// "* Heading [ Other ]" bullet list for the radioštudent post's intro text —
-// heading first (whichever of artist/label drives that track's heading),
-// the other credit in brackets when both are known, matching how existing
-// modem posts already credit a label release's artist alongside it.
-// A grouped run gets ONE credit line — its shared heading with every
-// distinct real artist in the run bracketed after it (e.g.
-// "mappa [ Visible Cloaks, Les Halles, ... ]") — instead of repeating the
-// same heading once per track.
+// "* Label [ Artist ]" bullet list for the radioštudent post's intro text — see
+// creditLines() below (e.g. "mappa [ Visible Cloaks, Les Halles, ... ]").
 // A track's artist (or label) names — first field plus any extras added
 // for a collab/co-release — @-stripped. Deliberately not comma-split: a
 // stylized name can contain a literal comma (see build-record-tags.js).
 function creditNames(it, field) {
   return namesOf(it, field).map((n) => n.replace(/@/g, '').trim()).filter(Boolean);
+}
+
+// The credit lines for one heading's tracks (a run, or a single track). Matej, 2026-10-24:
+// where there's a label, it's "Label [ Artist ]" — the label first, the artist(s) releasing
+// on it in brackets (it used to follow the heading, so an artist-headed track came out
+// "Artist [ Label ]"). A co-release's labels share one line ("A / B [ Artist ]"); one
+// artist's tracks on different labels get a line per label. Tracks without a label: a run
+// with a heading of its own (a compilation, your own group) is "Heading [ artists ]",
+// a single track is just its artist(s).
+function creditLines(items, heading) {
+  const byLabel = new Map(); // "Label / Label" -> artists, in order
+  const noLabel = [];
+  const add = (list, names) => names.forEach((n) => { if (!list.some((x) => x.toLowerCase() === n.toLowerCase())) list.push(n); });
+  items.forEach((it) => {
+    const labels = creditNames(it, 'label');
+    const artists = creditNames(it, 'artist');
+    if (labels.length) {
+      const key = labels.join(' / ');
+      if (!byLabel.has(key)) byLabel.set(key, []);
+      add(byLabel.get(key), artists.filter((a) => a.toLowerCase() !== key.toLowerCase()));
+    } else add(noLabel, artists);
+  });
+  const lines = [];
+  byLabel.forEach((artists, label) => lines.push(artists.length ? `${label} [ ${artists.join(', ')} ]` : label));
+  if (noLabel.length) {
+    const h = String(heading || '').replace(/@/g, '').trim();
+    const others = noLabel.filter((a) => a.toLowerCase() !== h.toLowerCase());
+    if (items.length > 1 && h && !byLabel.has(h)) lines.push(others.length ? `${h} [ ${others.join(', ')} ]` : h);
+    else if (items.length > 1) lines.push(noLabel.join(', '));
+    else lines.push(noLabel.join(' & '));
+  }
+  return lines;
 }
 
 function generateArtistListText() {
@@ -4262,45 +4299,14 @@ function generateArtistListText() {
   const runOf = groupRuns(selected);
   let i = 0;
   while (i < selected.length) {
-    if (runOf[i] === i) {
-      let j = i;
-      while (j + 1 < selected.length && runOf[j + 1] === i) j++;
-      const heading = String(runHeading(selected, i)).replace(/@/g, '').trim();
-      const seenOther = new Set();
-      const others = [];
-      // every other artist in the run, then the tracks' own labels (one artist's tracks
-      // off different releases share a heading now — their labels still get credited)
-      for (const field of ['artist', 'label']) {
-        for (let k = i; k <= j; k++) {
-          creditNames(selected[k], field).forEach((nm) => {
-            const ok = nm.toLowerCase();
-            if (ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
-          });
-        }
-      }
-      if (heading) {
-        const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
-        const key = line.toLowerCase();
-        if (!seen.has(key)) { seen.add(key); lines.push(line); }
-      }
-      i = j + 1;
-    } else {
-      const it = selected[i];
-      const heading = headingName(it).replace(/@/g, '').trim();
-      const headingLower = heading.toLowerCase();
-      const seenOther = new Set();
-      const others = [];
-      creditNames(it, it.headingSource === 'label' ? 'artist' : 'label').forEach((nm) => {
-        const ok = nm.toLowerCase();
-        if (ok !== headingLower && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
-      });
-      if (heading) {
-        const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
-        const key = line.toLowerCase();
-        if (!seen.has(key)) { seen.add(key); lines.push(line); }
-      }
-      i++;
-    }
+    let j = i;
+    if (runOf[i] === i) while (j + 1 < selected.length && runOf[j + 1] === i) j++;
+    const items = selected.slice(i, j + 1);
+    creditLines(items, items.length > 1 ? runHeading(selected, i) : headingName(selected[i])).forEach((line) => {
+      const key = line.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); lines.push(line); }
+    });
+    i = j + 1;
   }
   return `${header}featuring tracks from:\n\n${lines.map((n) => `* ${n}`).join('\n')}`;
 }
@@ -4682,10 +4688,13 @@ el('copyBtn').addEventListener('click', () => {
 });
 el('generateListBtn').addEventListener('click', () => {
   if (!selected.length) return;
+  if (listEditedByHand && !window.confirm('Replace your hand edits with an artist list generated from “Your show”?')) return;
   el('listOutputBox').style.display = '';
   el('listOutputText').value = generateArtistListText();
+  setListEdited(false);
   saveDraft();
 });
+el('listOutputText').addEventListener('input', () => { setListEdited(true); debouncedSaveDraft(); });
 el('copyListBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(el('listOutputText').value);
   el('copyListBtn').textContent = 'Copied!';
@@ -4915,6 +4924,11 @@ function applySyncedDraft(shared) {
     el('outputText').value = shared.generatedHtml;
     setHtmlEdited(shared.htmlEdited);
   }
+  if (shared.artistList) {
+    el('listOutputBox').style.display = '';
+    el('listOutputText').value = shared.artistList;
+    setListEdited(shared.artistListEdited);
+  }
   renderSelected();
   renderScanResults();
   saveDraft();
@@ -4982,7 +4996,10 @@ async function clearDraftClick() {
   el('coverSaturationVal').textContent = 0;
   el('outputBox').style.display = 'none';
   el('outputText').value = '';
+  setHtmlEdited(false);
   el('listOutputBox').style.display = 'none';
+  el('listOutputText').value = '';
+  setListEdited(false);
   try {
     const n = await (await fetch('/next-show-number')).json();
     el('showNumber').value = (n && n.next) || '';
