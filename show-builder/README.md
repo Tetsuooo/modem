@@ -31,6 +31,26 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   missing is now read from the downloaded file first — so a track deleted from SoundCloud
   since still has one, and an album trimmed to some of its tracks counts only those.
   Tracks downloaded just now get theirs straight away.
+- **Mix tab: sharper waveforms, steadier dragging, zoom that stays put.**
+  - Waveforms: ~200 points per second (it was 800 per whole track — blocky once zoomed
+    in), both channels, peaks plus a brighter loudness "body", drawn at the screen's real
+    pixel density (sharp on the Surface), every pixel taking the loudest moment under it
+    (zoomed out it used to skip peaks). Long clips are drawn in 2048-px tiles (a canvas has
+    a size limit). Titles have a dark outline so they read over the waveform.
+  - Dragging a clip: a 3-px dead zone (a click never nudges it), the clip follows the
+    pointer once per screen frame, it snaps to other clips' edges, the playhead and 0:00
+    within 8 px — a yellow guide line shows where — and Alt held places it freely; lanes
+    swap live as it passes another clip. Dropping no longer rebuilds the whole timeline
+    (every clip and waveform) — just repositions (≈0.1 ms instead of ≈8 ms per drop); the
+    undo step is taken at the drop and only if something moved. Trims redraw the waveform
+    once per frame.
+  - Zoom (Matej: "it always transports us randomly"): the wheel over the ruler, Ctrl+wheel
+    or a trackpad pinch anywhere, and touch pinch keep the moment under the cursor where it
+    is; + / − keep the middle of the view in the middle. Before, the wheel measured from the
+    ruler — which scrolls with the timeline — so the scroll was counted twice and the view
+    jumped; + / − jumped to the playhead. While zooming the waveforms stretch, and they're
+    redrawn sharp 0.16 s after.
+  - The mix is no longer rebuilt on every change in Arrange when it didn't change.
 - **One heading for one artist's tracks in a row.** Tracks next to each other whose heading
   would be the same name (the same artist — or the same label, when that's the heading)
   now share ONE heading, even off different releases, like tracks off one release always

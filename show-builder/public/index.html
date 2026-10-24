@@ -315,15 +315,21 @@
   }
   .mix-clip-mute:hover { color: #e8e8ea; background: rgba(0,0,0,.3); }
   .mix-clip-mute.active { color: #fff; background: #b5442a; }
-  .mix-clip-wave { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; }
+  /* the waveform: a row of canvases (drawClipWaves()); stretched with scaleX while
+     zooming, redrawn sharp right after */
+  .mix-clip-waves { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; transform-origin: 0 0; }
+  .mix-clip-waves canvas { position: absolute; top: 0; height: 100%; }
+  .mix-clip.lane-moving { transition: top 140ms ease; }
+  .mix-snap-line { position: absolute; top: 0; bottom: 0; width: 1px; background: #ffd166; z-index: 6; pointer-events: none; box-shadow: 0 0 4px rgba(255, 209, 102, .8); }
   .mix-clip-fill {
     position: absolute; inset: 0;
     background: linear-gradient(90deg, transparent 0%, #3a6ff0 var(--fade-in, 0%), #3a6ff0 calc(100% - var(--fade-out, 0%)), transparent 100%);
     opacity: .3; pointer-events: none;
   }
   .mix-clip-label {
-    position: relative; padding: 4px 8px; font-size: 11px; line-height: 1.3; pointer-events: none;
+    position: relative; padding: 4px 8px 4px 26px; /* clear of the M button */ font-size: 11px; line-height: 1.3; pointer-events: none;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .8); /* readable over the waveform */
   }
   .mix-clip-label .mc-title { color: #e8e8ea; display: block; overflow: hidden; text-overflow: ellipsis; }
   .mix-clip-label .mc-artist { color: #9fb4e0; display: block; overflow: hidden; text-overflow: ellipsis; }
@@ -1982,7 +1988,7 @@ let mixClips = []; // { id, key, title, artist, src, duration, start, fadeIn, fa
 let mixJingleAutoAdded = false; // see syncMixToShowOrder() — once per session, not once per empty mix
 let mixAudioCtx = null;
 const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
-const mixWaveformCache = new Map(); // src -> Float32Array of [min,max] pairs, MIX_WAVE_BUCKETS long
+const mixWaveformCache = new Map(); // src -> { min, max, rms, rate, length } — see getWaveformPeaks()
 let mixPlaying = false;
 let mixActiveSources = [];
 let mixPlayStartCtxTime = 0;
@@ -1999,7 +2005,12 @@ const MIX_PX_PER_SEC_MAX = 60;
 const MIX_LANE_COUNT = 2;
 const MIX_LANE_H = 84;
 const MIX_CLIP_H = 76; // must match .mix-clip's CSS height
-const MIX_WAVE_BUCKETS = 800; // resolution the full-buffer peaks are cached at; resampled to actual on-screen width when drawn
+// Waveform points per second of audio, cached per track — enough for the closest zoom
+// (60 px/s) on a high-density screen (2–3 pixels per CSS px, e.g. the Surface). It used to
+// be 800 points per WHOLE track: blocky once zoomed in, and soft on such screens.
+const MIX_WAVE_RATE = 200;
+const MIX_WAVE_TILE = 2048; // CSS px per waveform canvas — browsers cap a canvas's size
+const MIX_SNAP_PX = 8; // a dragged clip's edge snaps to another clip's edge / the playhead / 0 within this
 
 function fmtMixTime(t) {
   const m = Math.floor(t / 60);
@@ -2007,89 +2018,134 @@ function fmtMixTime(t) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-// Keeps the playhead centered in the visible scroll area after zooming —
-// a fixed scrollLeft pixel value would otherwise land on a different TIME
-// once px/sec changes, which is what made the +/- buttons feel like they
-// jumped around. zoomMixAtCursor() (below) overrides scrollLeft again
-// right after calling this, anchoring to the mouse/pinch point instead —
-// this default only actually applies to the plain +/- buttons, which have
-// no cursor-on-the-timeline position to anchor to instead.
-function zoomMix(factor) {
+// Zoom so the moment under `clientX` stays under it — or, with no clientX (the +/−
+// buttons), the moment in the middle of the view stays in the middle. (Matej, 2026-10-24:
+// "it always transports us randomly" — the buttons used to jump to the playhead wherever
+// it was, and the wheel anchored on the wrong time once the view was scrolled: it measured
+// from the ruler, which scrolls with the timeline, so the scroll was counted twice.)
+function zoomMixAt(clientX, factor) {
   const wrap = el('mixTimelineWrap');
+  const offset = clientX == null
+    ? wrap.clientWidth / 2
+    : clientX - wrap.getBoundingClientRect().left - wrap.clientLeft; // px from the view's left edge
+  const time = (wrap.scrollLeft + offset) / MIX_PX_PER_SEC;
   MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, MIX_PX_PER_SEC * factor));
   el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
-  renderMixTimeline();
-  wrap.scrollLeft = Math.max(0, mixSeekPosition * MIX_PX_PER_SEC - wrap.clientWidth / 2);
+  // positions only (the waveforms stretch), then one sharp redraw once zooming pauses —
+  // a full rebuild per wheel step is what made zooming stutter
+  layoutMix();
+  scheduleWaveRedraw();
+  wrap.scrollLeft = Math.max(0, time * MIX_PX_PER_SEC - offset);
 }
 
-// Same zoom, but keeps whatever time was under `clientX` still under it
-// afterward (mouse-wheel and pinch zoom both feel wrong otherwise — the
-// view jumps instead of scaling around where your attention actually is).
-// A fixed scrollLeft PIXEL value, left untouched, would otherwise correspond
-// to a different TIME position once px/sec changes, so this has to
-// explicitly recompute scrollLeft after the zoom, not just let it sit.
-function zoomMixAtCursor(clientX, factor) {
-  const wrap = el('mixTimelineWrap');
-  const rect = el('mixRuler').getBoundingClientRect();
-  const mouseOffset = clientX - rect.left;
-  const cursorTime = (wrap.scrollLeft + mouseOffset) / MIX_PX_PER_SEC;
-  zoomMix(factor);
-  wrap.scrollLeft = Math.max(0, cursorTime * MIX_PX_PER_SEC - mouseOffset);
-}
+function zoomMix(factor) { zoomMixAt(null, factor); }
+
+// Mouse wheel / trackpad pinch: keeps whatever time was under the cursor under it.
+function zoomMixAtCursor(clientX, factor) { zoomMixAt(clientX, factor); }
+// A wheel event's zoom factor: smooth for a trackpad's small steps, ~16% per mouse notch.
+const mixWheelFactor = (e) => Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015));
 
 // Full-resolution min/max peaks over the WHOLE buffer, computed once and
 // cached per src (a several-minute track is a few million samples — cheap
 // to scan once, wasteful to rescan on every render/zoom/drag). Drawing
 // resamples this fixed-resolution cache to whatever the clip's current
 // on-screen pixel width is, so zooming redraws instantly with no rescan.
+// Per track, once: MIX_WAVE_RATE points per second, each the min/max over ALL channels
+// (the left channel alone missed whatever was only on the right) plus the RMS (the
+// "body" — how loud it sounds, not just its peaks).
 function getWaveformPeaks(src) {
   if (mixWaveformCache.has(src)) return mixWaveformCache.get(src);
   const buffer = mixBuffers.get(src);
   if (!buffer) return null;
-  const data = buffer.getChannelData(0); // first channel only — a visual guide, not a mixdown
-  const samplesPerBucket = Math.max(1, Math.floor(data.length / MIX_WAVE_BUCKETS));
-  const peaks = new Float32Array(MIX_WAVE_BUCKETS * 2);
-  for (let b = 0; b < MIX_WAVE_BUCKETS; b++) {
-    let min = 0, max = 0;
-    const start = b * samplesPerBucket;
-    const end = Math.min(data.length, start + samplesPerBucket);
-    for (let i = start; i < end; i++) {
-      const v = data[i];
-      if (v < min) min = v;
-      if (v > max) max = v;
+  const chans = [];
+  for (let c = 0; c < buffer.numberOfChannels; c++) chans.push(buffer.getChannelData(c));
+  const per = Math.max(1, Math.round(buffer.sampleRate / MIX_WAVE_RATE));
+  const n = Math.ceil(buffer.length / per);
+  const min = new Float32Array(n), max = new Float32Array(n), rms = new Float32Array(n);
+  for (let b = 0; b < n; b++) {
+    const s0 = b * per, s1 = Math.min(buffer.length, s0 + per);
+    let lo = 0, hi = 0, sq = 0;
+    for (const d of chans) {
+      for (let i = s0; i < s1; i++) {
+        const v = d[i];
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+        sq += v * v;
+      }
     }
-    peaks[b * 2] = min;
-    peaks[b * 2 + 1] = max;
+    min[b] = lo; max[b] = hi;
+    rms[b] = Math.sqrt(sq / Math.max(1, (s1 - s0) * chans.length));
   }
+  const peaks = { min, max, rms, rate: buffer.sampleRate / per, length: n };
   mixWaveformCache.set(src, peaks);
   return peaks;
 }
 
-// Draws only the [trimStart, trimStart+duration] window of the cached
-// full-buffer peaks — a trimmed clip's waveform should show what actually
-// plays, not the whole source track compressed into the same width.
-function drawMixWaveform(canvas, clip) {
+// One canvas of a clip's waveform: `t0` = the audio time at its left edge, `span` = the
+// seconds it covers. Every pixel column takes the min/max (and loudest RMS) of ALL the
+// points under it — picking one point per column skipped peaks when zoomed out.
+function drawWaveTile(cv, peaks, t0, span) {
+  const g = cv.getContext('2d');
+  const W = cv.width, H = cv.height, mid = H / 2;
+  g.clearRect(0, 0, W, H);
+  const first = t0 * peaks.rate, perCol = (span * peaks.rate) / W;
+  const top = new Float32Array(W), bot = new Float32Array(W), body = new Float32Array(W);
+  for (let x = 0; x < W; x++) {
+    let b0 = Math.floor(first + x * perCol), b1 = Math.floor(first + (x + 1) * perCol);
+    if (b1 <= b0) b1 = b0 + 1;
+    b0 = Math.max(0, b0); b1 = Math.min(peaks.length, b1);
+    let lo = 0, hi = 0, r = 0;
+    for (let b = b0; b < b1; b++) {
+      if (peaks.min[b] < lo) lo = peaks.min[b];
+      if (peaks.max[b] > hi) hi = peaks.max[b];
+      if (peaks.rms[b] > r) r = peaks.rms[b];
+    }
+    top[x] = hi; bot[x] = lo; body[x] = r;
+  }
+  g.fillStyle = 'rgba(150, 180, 255, 0.45)'; // peaks
+  for (let x = 0; x < W; x++) g.fillRect(x, mid - top[x] * mid, 1, Math.max(1, (top[x] - bot[x]) * mid));
+  g.fillStyle = 'rgba(205, 222, 255, 0.85)'; // the RMS body inside
+  for (let x = 0; x < W; x++) g.fillRect(x, mid - body[x] * mid, 1, Math.max(1, 2 * body[x] * mid));
+}
+
+// A clip's waveform, as a row of canvases (one per MIX_WAVE_TILE CSS px — a long track
+// zoomed in is wider than a browser allows one canvas to be), drawn at the screen's real
+// pixel density so it's sharp on the Surface too. Only the [trimStart, trimStart +
+// duration] window: a trimmed clip shows what actually plays.
+function drawClipWaves(clipEl, clip) {
+  const box = clipEl && clipEl.querySelector('.mix-clip-waves');
+  if (!box) return;
+  box.innerHTML = '';
+  box.style.transform = '';
+  box.dataset.pxps = String(MIX_PX_PER_SEC);
   const peaks = getWaveformPeaks(clip.src);
   if (!peaks) return;
-  const ctx2d = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  ctx2d.clearRect(0, 0, w, h);
-  ctx2d.strokeStyle = 'rgba(170,195,255,0.55)';
-  ctx2d.lineWidth = 1;
-  const buckets = peaks.length / 2;
-  const sourceDuration = clip.sourceDuration || clip.duration;
-  const bucketStart = ((clip.trimStart || 0) / sourceDuration) * buckets;
-  const bucketSpan = (clip.duration / sourceDuration) * buckets;
-  ctx2d.beginPath();
-  for (let x = 0; x < w; x++) {
-    const b = Math.min(buckets - 1, Math.max(0, Math.floor(bucketStart + (x / w) * bucketSpan)));
-    const min = peaks[b * 2], max = peaks[b * 2 + 1];
-    const y1 = h / 2 - max * (h / 2);
-    const y2 = h / 2 - min * (h / 2);
-    ctx2d.moveTo(x + 0.5, y1);
-    ctx2d.lineTo(x + 0.5, y2);
+  const cssW = Math.max(20, Math.round(clip.duration * MIX_PX_PER_SEC));
+  const cssH = MIX_CLIP_H - 8;
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const t0 = clip.trimStart || 0;
+  for (let x0 = 0; x0 < cssW; x0 += MIX_WAVE_TILE) {
+    const w = Math.min(MIX_WAVE_TILE, cssW - x0);
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(w * dpr));
+    cv.height = Math.max(1, Math.round(cssH * dpr));
+    cv.style.left = x0 + 'px';
+    cv.style.width = w + 'px';
+    drawWaveTile(cv, peaks, t0 + x0 / MIX_PX_PER_SEC, w / MIX_PX_PER_SEC);
+    box.appendChild(cv);
   }
-  ctx2d.stroke();
+}
+
+// Sharp waveforms again shortly after zooming stops (until then they're stretched).
+let mixWaveRedrawTimer = null;
+function scheduleWaveRedraw() {
+  clearTimeout(mixWaveRedrawTimer);
+  mixWaveRedrawTimer = setTimeout(() => {
+    el('mixTimeline').querySelectorAll('.mix-clip').forEach((clipEl) => {
+      const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
+      if (clip) drawClipWaves(clipEl, clip);
+    });
+  }, 160);
 }
 
 async function getMixBuffer(src) {
@@ -2170,8 +2226,13 @@ async function syncMixToShowOrder() {
     else { clip.start = cursor; cursor += clip.duration; }
   }
 
-  renderMixTimeline();
-  debouncedSaveDraft();
+  // Only when the mix actually changed: this runs on every change in Arrange, and
+  // rebuilding every clip and waveform each time made the page stutter.
+  const timelineEl = el('mixTimeline');
+  if (mixSignature() !== mixLastSig || !timelineEl || timelineEl.querySelectorAll('.mix-clip').length !== mixClips.length) {
+    renderMixTimeline();
+    debouncedSaveDraft();
+  }
 
   // Same "on by default" bookend as before — just no longer gated to "the
   // first time you open the Mix tab" specifically, since the mix now fills
@@ -2238,30 +2299,75 @@ function updateMixPlayheadPosition() {
   ph.style.left = Math.round(mixSeekPosition * MIX_PX_PER_SEC) + 'px';
 }
 
-function renderMixTimeline() {
+// What the timeline shows, for "did the mix change?" (syncMixToShowOrder()).
+let mixLastSig = '';
+function mixSignature() {
+  return JSON.stringify(mixClips.map((c) => [c.id, c.start, c.duration, c.trimStart, c.fadeIn, c.fadeOut, !!c.muted]));
+}
+
+// Lane = position in START-TIME order, not array/insertion order — so
+// alternation always tracks left-to-right position on the timeline
+// itself, regardless of the order clips were added or last dragged in.
+function mixLanes() {
+  const laneOf = new Map();
+  [...mixClips].sort((a, b) => a.start - b.start).forEach((c, idx) => laneOf.set(c.id, idx % MIX_LANE_COUNT));
+  return laneOf;
+}
+
+// The timeline's length and the ruler, for the current clips and zoom.
+function layoutMixExtents() {
   const timeline = el('mixTimeline');
   const ruler = el('mixRuler');
-  if (!timeline || !ruler) return;
-  if (!mixClips.length) {
-    timeline.innerHTML = '<div class="mix-empty">Add a downloaded track above to start the mix.</div><div id="mixPlayhead" class="mix-playhead" hidden></div>';
-    ruler.innerHTML = '';
-    return;
-  }
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration), 30);
   const widthPx = Math.ceil(totalDur * MIX_PX_PER_SEC) + 60;
   timeline.style.width = widthPx + 'px';
   timeline.style.height = (MIX_LANE_COUNT * MIX_LANE_H + 8) + 'px';
   ruler.style.width = widthPx + 'px';
-
   let rulerHtml = '';
   for (let t = 0; t <= totalDur + 10; t += 10) rulerHtml += `<span style="left:${t * MIX_PX_PER_SEC}px">${fmtMixTime(t)}</span>`;
   ruler.innerHTML = rulerHtml;
+}
 
-  // Lane = position in START-TIME order, not array/insertion order — so
-  // alternation always tracks left-to-right position on the timeline
-  // itself, regardless of the order clips were added or last dragged in.
-  const laneOf = new Map();
-  [...mixClips].sort((a, b) => a.start - b.start).forEach((c, idx) => laneOf.set(c.id, idx % MIX_LANE_COUNT));
+// Positions, sizes, lanes and fades of the clips already on screen, plus the timeline's
+// length — without rebuilding them or redrawing a waveform (they're stretched to a new
+// zoom until scheduleWaveRedraw()). What a drop or a zoom step needs; renderMixTimeline()
+// rebuilt everything for those, which is what made dropping a clip and zooming lag.
+function layoutMix() {
+  const timeline = el('mixTimeline');
+  if (!timeline || !mixClips.length) return;
+  layoutMixExtents();
+  const laneOf = mixLanes();
+  timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
+    const c = mixClips.find((x) => x.id === clipEl.dataset.id);
+    if (!c) return;
+    clipEl.style.left = Math.round(c.start * MIX_PX_PER_SEC) + 'px';
+    clipEl.style.width = Math.max(20, Math.round(c.duration * MIX_PX_PER_SEC)) + 'px';
+    clipEl.style.top = laneOf.get(c.id) * MIX_LANE_H + 'px';
+    const fill = clipEl.querySelector('.mix-clip-fill');
+    if (fill) {
+      fill.style.setProperty('--fade-in', (c.duration ? Math.min(50, (c.fadeIn / c.duration) * 100) : 0) + '%');
+      fill.style.setProperty('--fade-out', (c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0) + '%');
+    }
+    const waves = clipEl.querySelector('.mix-clip-waves');
+    const drawnAt = waves && Number(waves.dataset.pxps);
+    if (drawnAt) waves.style.transform = drawnAt === MIX_PX_PER_SEC ? '' : `scaleX(${MIX_PX_PER_SEC / drawnAt})`;
+  });
+  updateMixPlayheadPosition();
+  mixLastSig = mixSignature();
+}
+
+function renderMixTimeline() {
+  const timeline = el('mixTimeline');
+  const ruler = el('mixRuler');
+  if (!timeline || !ruler) return;
+  mixLastSig = mixSignature();
+  if (!mixClips.length) {
+    timeline.innerHTML = '<div class="mix-empty">Add a downloaded track above to start the mix.</div><div id="mixPlayhead" class="mix-playhead" hidden></div>';
+    ruler.innerHTML = '';
+    return;
+  }
+  layoutMixExtents();
+  const laneOf = mixLanes();
 
   timeline.innerHTML = mixClips.map((c) => {
     const left = Math.round(c.start * MIX_PX_PER_SEC);
@@ -2271,7 +2377,7 @@ function renderMixTimeline() {
     const fadeOutPct = c.duration ? Math.min(50, (c.fadeOut / c.duration) * 100) : 0;
     return `
     <div class="mix-clip${c.muted ? ' muted' : ''}" data-id="${escAttr(c.id)}" style="left:${left}px;width:${width}px;top:${top}px">
-      <canvas class="mix-clip-wave" width="${width}" height="${MIX_CLIP_H - 8}" data-id="${escAttr(c.id)}"></canvas>
+      <div class="mix-clip-waves"></div>
       <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
       <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
       <button class="mix-clip-mute${c.muted ? ' active' : ''}" data-id="${escAttr(c.id)}" title="${c.muted ? 'unmute' : 'mute'}">M</button>
@@ -2281,11 +2387,11 @@ function renderMixTimeline() {
       <div class="mix-trim-handle left" data-id="${escAttr(c.id)}" data-side="start" title="drag to trim the start"></div>
       <div class="mix-trim-handle right" data-id="${escAttr(c.id)}" data-side="end" title="drag to trim the end"></div>
     </div>`;
-  }).join('') + '<div id="mixPlayhead" class="mix-playhead" hidden></div>';
+  }).join('') + '<div id="mixPlayhead" class="mix-playhead" hidden></div><div id="mixSnapLine" class="mix-snap-line" hidden></div>';
 
-  timeline.querySelectorAll('.mix-clip-wave').forEach((canvas) => {
-    const clip = mixClips.find((c) => c.id === canvas.dataset.id);
-    if (clip) drawMixWaveform(canvas, clip);
+  timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
+    const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
+    if (clip) drawClipWaves(clipEl, clip);
   });
   wireMixClipDrag();
   timeline.querySelectorAll('.mix-clip-remove').forEach((b) => {
@@ -2332,37 +2438,99 @@ function renderMixTimeline() {
 // clip element mid-drag, same pattern as wireDragAndDrop()'s reorder.
 const MIX_MIN_CLIP_DURATION = 0.2; // seconds — trim can't shrink a clip below this
 
+// Undo for a drag, taken at the drop and only if something changed (a click on a clip
+// used to leave an empty undo step): the snapshot has to show the state BEFORE the drag,
+// so the clip's fields are put back for a moment while it's taken.
+function pushUndoForClipChange(clip, before) {
+  const after = {};
+  Object.keys(before).forEach((k) => { after[k] = clip[k]; });
+  if (Object.keys(before).every((k) => before[k] === after[k])) return false;
+  Object.assign(clip, before);
+  pushUndoSnapshot();
+  Object.assign(clip, after);
+  return true;
+}
+
+// Where a dragged clip's start would snap: its start or its end within MIX_SNAP_PX of
+// another clip's start/end, the playhead or 0:00 (Alt held = no snapping). Returns
+// { start, at } — `at` the time it snapped to (for the guide line), or null.
+function snapClipStart(clip, start) {
+  const targets = [0, mixSeekPosition];
+  mixClips.forEach((c) => { if (c !== clip) targets.push(c.start, c.start + c.duration); });
+  let best = null;
+  for (const t of targets) {
+    for (const [edge, offset] of [[start, 0], [start + clip.duration, clip.duration]]) {
+      const px = Math.abs(edge - t) * MIX_PX_PER_SEC;
+      if (px <= MIX_SNAP_PX && (!best || px < best.px)) best = { px, start: t - offset, at: t };
+    }
+  }
+  return best && best.start >= 0 ? { start: best.start, at: best.at } : { start, at: null };
+}
+
 function wireMixClipDrag() {
   const timeline = el('mixTimeline');
+  const snapLine = el('mixSnapLine');
   timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
     clipEl.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
       if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove') || e.target.closest('.mix-clip-mute')) return;
       const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
       if (!clip) return;
-      pushUndoSnapshot();
-      clipEl.classList.add('dragging');
+      e.preventDefault();
+      try { clipEl.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
       const startX = e.clientX;
       const startPos = clip.start;
-      const onMove = (ev) => {
-        const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
-        clip.start = Math.max(0, startPos + dx);
+      let dragging = false, frame = 0, lastEv = null;
+      // the clip follows the pointer once per screen frame (pointer events can come
+      // several times a frame); lanes swap live as it passes another clip
+      const apply = () => {
+        frame = 0;
+        const ev = lastEv;
+        const raw = Math.max(0, startPos + (ev.clientX - startX) / MIX_PX_PER_SEC);
+        const snap = ev.altKey ? { start: raw, at: null } : snapClipStart(clip, raw);
+        clip.start = snap.start;
         clipEl.style.left = Math.round(clip.start * MIX_PX_PER_SEC) + 'px';
+        if (snapLine) {
+          snapLine.hidden = snap.at == null;
+          if (snap.at != null) snapLine.style.left = Math.round(snap.at * MIX_PX_PER_SEC) + 'px';
+        }
+        const laneOf = mixLanes();
+        timeline.querySelectorAll('.mix-clip').forEach((n) => {
+          const top = laneOf.get(n.dataset.id) * MIX_LANE_H + 'px';
+          if (n.style.top !== top) { n.classList.toggle('lane-moving', n !== clipEl); n.style.top = top; }
+        });
+      };
+      const onMove = (ev) => {
+        // a few pixels of play first, so clicking a clip never nudges it
+        if (!dragging) {
+          if (Math.abs(ev.clientX - startX) < 3) return;
+          dragging = true;
+          clipEl.classList.add('dragging');
+        }
+        lastEv = ev;
+        if (!frame) frame = requestAnimationFrame(apply);
       };
       const onUp = () => {
-        clipEl.classList.remove('dragging');
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        if (frame) { cancelAnimationFrame(frame); apply(); }
+        clipEl.classList.remove('dragging');
+        if (snapLine) snapLine.hidden = true;
+        timeline.querySelectorAll('.mix-clip.lane-moving').forEach((n) => n.classList.remove('lane-moving'));
+        if (!dragging) return;
         // A clip you've actually dragged to a new time is now "manually
         // positioned" — the automatic show-order sync (syncMixToShowOrder())
         // leaves it exactly where you put it from now on, e.g. a deliberate
         // crossfade overlap, instead of snapping it back into the sequential
         // back-to-back slot on the next unrelated show change.
-        if (clip.start !== startPos) clip.manuallyPositioned = true;
-        renderMixTimeline(); // refresh ruler/scroll extents to the new total length
+        if (pushUndoForClipChange(clip, { start: startPos })) clip.manuallyPositioned = true;
+        layoutMix(); // ruler/length/lanes — no rebuild
         debouncedSaveDraft();
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     });
   });
 
@@ -2371,10 +2539,11 @@ function wireMixClipDrag() {
       e.stopPropagation();
       const clip = mixClips.find((c) => c.id === handle.dataset.id);
       if (!clip) return;
-      pushUndoSnapshot();
+      try { handle.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
       const side = handle.dataset.side;
       const startX = e.clientX;
       const startVal = side === 'in' ? clip.fadeIn : clip.fadeOut;
+      const before = { fadeIn: clip.fadeIn, fadeOut: clip.fadeOut };
       const fillEl = handle.closest('.mix-clip').querySelector('.mix-clip-fill');
       const onMove = (ev) => {
         const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
@@ -2389,10 +2558,14 @@ function wireMixClipDrag() {
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        pushUndoForClipChange(clip, before);
+        mixLastSig = mixSignature();
         debouncedSaveDraft();
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     });
   });
 
@@ -2406,7 +2579,7 @@ function wireMixClipDrag() {
       e.stopPropagation();
       const clip = mixClips.find((c) => c.id === handle.dataset.id);
       if (!clip) return;
-      pushUndoSnapshot();
+      try { handle.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
       // Backfill for a clip saved before trimming existed (no sourceDuration
       // field) — permanently, on the clip itself, not just a local fallback,
       // so a SECOND trim later doesn't mistake the already-trimmed duration
@@ -2420,8 +2593,12 @@ function wireMixClipDrag() {
       const startClipStart = clip.start;
       const sourceDuration = clip.sourceDuration;
       const clipEl = handle.closest('.mix-clip');
-      const canvas = clipEl.querySelector('.mix-clip-wave');
-      const onMove = (ev) => {
+      let frame = 0, lastEv = null;
+      // once per screen frame: the waveform is redrawn for the new window each time
+      const onMove = (ev) => { lastEv = ev; if (!frame) frame = requestAnimationFrame(apply); };
+      const apply = () => {
+        frame = 0;
+        const ev = lastEv;
         const dx = (ev.clientX - startX) / MIX_PX_PER_SEC;
         if (side === 'start') {
           const maxDx = startDuration - MIX_MIN_CLIP_DURATION; // can't eat past leaving the minimum
@@ -2439,16 +2616,20 @@ function wireMixClipDrag() {
         }
         const width = Math.max(20, Math.round(clip.duration * MIX_PX_PER_SEC));
         clipEl.style.width = width + 'px';
-        if (canvas) { canvas.width = width; drawMixWaveform(canvas, clip); }
+        drawClipWaves(clipEl, clip);
       };
       const onUp = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onUp);
-        renderMixTimeline(); // refresh ruler/scroll extents + fade-fill percentages
+        window.removeEventListener('pointercancel', onUp);
+        if (frame) { cancelAnimationFrame(frame); apply(); }
+        pushUndoForClipChange(clip, { trimStart: startTrimStart, duration: startDuration, start: startClipStart });
+        layoutMix(); // ruler/length + fade-fill percentages — no rebuild
         debouncedSaveDraft();
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
     });
   });
 }
@@ -4068,9 +4249,16 @@ el('mixRuler').addEventListener('click', (e) => {
 el('mixRuler').addEventListener('wheel', (e) => {
   e.preventDefault();
   e.stopPropagation();
-  zoomMixAtCursor(e.clientX, e.deltaY < 0 ? 1.08 : 1 / 1.08);
+  zoomMixAtCursor(e.clientX, mixWheelFactor(e));
 }, { passive: false });
 el('mixTimelineWrap').addEventListener('wheel', (e) => {
+  // Ctrl+wheel anywhere zooms at the cursor too — and a trackpad pinch (the Surface's)
+  // arrives as exactly that; it used to scroll instead
+  if (e.ctrlKey) {
+    e.preventDefault();
+    zoomMixAtCursor(e.clientX, mixWheelFactor(e));
+    return;
+  }
   if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // already-horizontal input (trackpad/shift+wheel) — let it scroll natively
   e.preventDefault();
   el('mixTimelineWrap').scrollLeft += e.deltaY;
@@ -4101,13 +4289,8 @@ el('mixTimelineWrap').addEventListener('touchmove', (e) => {
   e.preventDefault();
   const dist = mixTouchDist(e.touches);
   const midClientX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-  const rect = el('mixRuler').getBoundingClientRect();
-  const mouseOffset = midClientX - rect.left;
-  const cursorTime = (el('mixTimelineWrap').scrollLeft + mouseOffset) / MIX_PX_PER_SEC;
-  MIX_PX_PER_SEC = Math.max(MIX_PX_PER_SEC_MIN, Math.min(MIX_PX_PER_SEC_MAX, mixPinchStartPxPerSec * (dist / mixPinchStartDist)));
-  el('mixZoomLabel').textContent = Math.round(MIX_PX_PER_SEC) + ' px/s';
-  renderMixTimeline();
-  el('mixTimelineWrap').scrollLeft = Math.max(0, cursorTime * MIX_PX_PER_SEC - mouseOffset);
+  const target = mixPinchStartPxPerSec * (dist / mixPinchStartDist);
+  zoomMixAt(midClientX, target / MIX_PX_PER_SEC); // anchored between the two fingers
 }, { passive: false });
 el('mixTimelineWrap').addEventListener('touchend', (e) => {
   if (e.touches.length < 2) mixPinchStartDist = null;
