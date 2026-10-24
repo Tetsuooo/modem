@@ -51,6 +51,13 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
     jumped; + / − jumped to the playhead. While zooming the waveforms stretch, and they're
     redrawn sharp 0.16 s after.
   - The mix is no longer rebuilt on every change in Arrange when it didn't change.
+  - **Edits are heard while it plays** (Matej: "its position in the audio only updates if i
+    pause and play again … like this works in ableton"). Playback keeps each clip's own
+    audio source; when a clip is dropped somewhere new, trimmed, faded, muted, removed,
+    added or undone while the mix plays, `mixResync()` replaces just that clip's audio from
+    where the playhead is (a 15 ms crossfade, no click) and leaves the rest playing. Mute
+    used to stop and restart the whole mix. Also fixed: after Play from the middle, clips
+    already under way started ~0.1 s ahead of the others.
 - **One heading for one artist's tracks in a row.** Tracks next to each other whose heading
   would be the same name (the same artist — or the same label, when that's the heading)
   now share ONE heading, even off different releases, like tracks off one release always

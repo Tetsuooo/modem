@@ -1990,7 +1990,8 @@ let mixAudioCtx = null;
 const mixBuffers = new Map(); // src -> decoded AudioBuffer, decoded once and reused
 const mixWaveformCache = new Map(); // src -> { min, max, rms, rate, length } — see getWaveformPeaks()
 let mixPlaying = false;
-let mixActiveSources = [];
+const mixLive = new Map(); // clip id -> { src, out, sig } — what playback has scheduled per clip (mixResync())
+let mixPlaySeekFrom = 0; // the mix position that played at mixPlayStartCtxTime
 let mixPlayStartCtxTime = 0;
 let mixPlayheadRAF = null;
 let mixSeekPosition = 0; // seconds — where the next Play starts from; click the ruler to move it
@@ -2354,6 +2355,7 @@ function layoutMix() {
   });
   updateMixPlayheadPosition();
   mixLastSig = mixSignature();
+  mixResync(); // a clip moved/trimmed while playing is heard where it is now
 }
 
 function renderMixTimeline() {
@@ -2416,19 +2418,13 @@ function renderMixTimeline() {
       if (!clip) return;
       pushUndoSnapshot();
       clip.muted = !clip.muted;
-      // playMix() only reads mute state ONCE, at schedule time — a clip
-      // already scheduled keeps playing regardless of a later mute toggle,
-      // since there's no per-clip handle kept around to silence just one
-      // live source. Restarting from the current position (mixSeekPosition
-      // is kept continuously up to date during playback — see playMix()'s
-      // own tick()) picks up the new mute state immediately instead of
-      // only on the NEXT play.
-      if (mixPlaying) { stopMix(); playMix(); }
+      // while playing, renderMixTimeline() → mixResync() silences / brings back just this clip
       renderMixTimeline();
       debouncedSaveDraft();
     });
   });
   updateMixPlayheadPosition();
+  mixResync(); // clips added / removed / changed (undo too) while the mix plays
 }
 
 // Both drags read movement as a DELTA from pointerdown (not an absolute
@@ -2561,6 +2557,7 @@ function wireMixClipDrag() {
         window.removeEventListener('pointercancel', onUp);
         pushUndoForClipChange(clip, before);
         mixLastSig = mixSignature();
+        mixResync(); // the new fade is heard straight away
         debouncedSaveDraft();
       };
       window.addEventListener('pointermove', onMove);
@@ -2646,13 +2643,13 @@ function wireMixClipDrag() {
 // that lands before the AudioContext's current time just takes effect
 // immediately, so a fade seeked past comes out at full volume correctly
 // with no special-casing needed.
-function scheduleMixClip(ctx, clip, originTime, seekFrom) {
+function scheduleMixClip(ctx, clip, originTime, seekFrom, dest) {
   seekFrom = seekFrom || 0;
   const buffer = mixBuffers.get(clip.src);
   const src = ctx.createBufferSource();
   src.buffer = buffer;
   const gain = ctx.createGain();
-  src.connect(gain).connect(ctx.destination);
+  src.connect(gain).connect(dest || ctx.destination);
   // BUG FIXED: this must subtract seekFrom to actually shift wall-clock
   // time earlier (as the comment above always claimed it did) — without
   // it, seeking anywhere past 0 left every clip's schedule anchored to the
@@ -2690,7 +2687,10 @@ function scheduleMixClip(ctx, clip, originTime, seekFrom) {
   // is where playback of THIS clip actually begins in the source file, on
   // top of however far in a seek lands within the clip's own timeline span.
   const bufferOffset = (clip.trimStart || 0) + Math.max(0, seekFrom - clip.start);
-  src.start(Math.max(clipStart, ctx.currentTime || 0), bufferOffset);
+  // A clip already under way at originTime starts AT originTime — the moment bufferOffset
+  // is for. (It used to start at "now", up to 0.1 s earlier, so after a seek the clips
+  // that were mid-way ran ahead of the rest.)
+  src.start(Math.max(clipStart, originTime, ctx.currentTime || 0), bufferOffset);
   src.stop(Math.max(clipEnd + 0.05, ctx.currentTime || 0));
   return src;
 }
@@ -2741,21 +2741,22 @@ async function playMix() {
   const now = mixAudioCtx.currentTime + 0.1; // small headroom so nothing schedules "in the past"
   const seekFrom = mixSeekPosition;
   mixPlayStartCtxTime = now;
+  mixPlaySeekFrom = seekFrom;
   mixLog('play: ctx.currentTime=', mixAudioCtx.currentTime, 'ctx.state=', mixAudioCtx.state, 'seekFrom=', seekFrom, 'clips=', mixClips.length);
+  mixLive.clear();
   const scheduled = mixClips.filter((clip) => !clip.muted && clip.start + clip.duration > seekFrom);
-  mixActiveSources = scheduled.map((clip, idx) => {
-    const src = scheduleMixClip(mixAudioCtx, clip, now, seekFrom);
+  scheduled.forEach((clip, idx) => {
+    const src = mixStartClip(clip, now, seekFrom, false);
     const label = `${clip.title} (scheduled start=${(now - seekFrom + clip.start).toFixed(2)} stop=${(now - seekFrom + clip.start + clip.duration).toFixed(2)})`;
     mixLog('scheduled', idx + 1 + '/' + scheduled.length, label);
     src.onended = () => mixLog('ENDED:', clip.title, 'at ctx.currentTime=', mixAudioCtx.currentTime.toFixed(2));
-    return src;
   });
-  const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration));
-  mixLog('totalDur=', totalDur);
   const tick = () => {
     if (!mixPlaying) return;
     const elapsed = mixAudioCtx.currentTime - mixPlayStartCtxTime;
     mixSeekPosition = seekFrom + elapsed;
+    // read every frame: clips can move, grow or be added while it plays (mixResync())
+    const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration));
     updateMixPlayheadPosition();
     const nowPlaying = mixClips.findIndex((c) => mixSeekPosition >= c.start && mixSeekPosition < c.start + c.duration);
     el('mixStatus').textContent = nowPlaying === -1
@@ -2772,9 +2773,62 @@ function stopMix() {
   mixPlaying = false;
   updateMixPlayToggleBtn();
   if (mixPlayheadRAF) cancelAnimationFrame(mixPlayheadRAF);
-  mixActiveSources.forEach((s) => { try { s.stop(); } catch (e) { /* already stopped */ } });
-  mixActiveSources = [];
+  mixLive.forEach((l) => { try { l.src.stop(); } catch (e) { /* already stopped */ } });
+  mixLive.clear();
   updateMixPlayheadPosition(); // leaves the playhead wherever playback stopped — Play resumes from there
+}
+
+// ---- live edits while the mix plays (Matej, 2026-10-24: "its position in the audio only
+// updates if i pause and play again … like this works in ableton") ----
+// Playback keeps, per clip, what's scheduled for it; when a clip is moved, trimmed, faded,
+// muted, removed or added while the mix plays, mixResync() replaces just that clip's audio,
+// at once, from wherever the playhead is — with a 15 ms crossfade so it doesn't click —
+// and leaves every other clip playing untouched. Called after every drop / edit (from
+// layoutMix() and renderMixTimeline(), and the fade handles), so undo/redo follows too.
+function mixAudioSig(c) {
+  return [c.src, c.start, c.duration, c.trimStart || 0, c.fadeIn, c.fadeOut, !!c.muted].join('|');
+}
+
+// Schedules one clip through its own small gain stage (`out`, the crossfade), remembered
+// in mixLive. originTime/seekFrom: the ctx time at which mix position seekFrom plays.
+function mixStartClip(clip, originTime, seekFrom, crossfadeIn) {
+  const ctx = mixAudioCtx;
+  const out = ctx.createGain();
+  out.connect(ctx.destination);
+  if (crossfadeIn) {
+    out.gain.setValueAtTime(0, originTime);
+    out.gain.linearRampToValueAtTime(1, originTime + 0.015);
+  }
+  const src = scheduleMixClip(ctx, clip, originTime, seekFrom, out);
+  mixLive.set(clip.id, { src, out, sig: mixAudioSig(clip) });
+  return src;
+}
+
+function mixStopLive(id, at) {
+  const live = mixLive.get(id);
+  if (!live) return;
+  mixLive.delete(id);
+  try {
+    live.out.gain.cancelScheduledValues(at);
+    live.out.gain.setValueAtTime(1, at);
+    live.out.gain.linearRampToValueAtTime(0, at + 0.015);
+    live.src.stop(at + 0.02);
+  } catch (e) { /* already stopped */ }
+}
+
+function mixResync() {
+  if (!mixPlaying || !mixAudioCtx) return;
+  const at = mixAudioCtx.currentTime + 0.03; // just ahead, so nothing is scheduled in the past
+  const pos = mixPlaySeekFrom + (at - mixPlayStartCtxTime); // the mix position playing at `at`
+  const ids = new Set(mixClips.map((c) => c.id));
+  [...mixLive.keys()].forEach((id) => { if (!ids.has(id)) mixStopLive(id, at); });
+  mixClips.forEach((clip) => {
+    const live = mixLive.get(clip.id);
+    if (live && live.sig === mixAudioSig(clip)) return;
+    if (live) mixStopLive(clip.id, at);
+    if (clip.muted || clip.start + clip.duration <= pos || !mixBuffers.get(clip.src)) return;
+    mixStartClip(clip, at, pos, true);
+  });
 }
 
 // Renders the whole mix down to one AudioBuffer via an OfflineAudioContext
