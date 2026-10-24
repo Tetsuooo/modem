@@ -104,17 +104,33 @@ function scheduledDate(number) {
     fail(`${slug} is already on the site (scraped from radioštudent). Re-run with --replace-existing to replace it with the version built here.`, 2);
   }
 
-  // ---- body: regenerate from the draft so the site always matches the draft as it is NOW ----
-  const html = generateShowHtml(draft.selected);
+  // ---- body: regenerate from the draft so the site always matches the draft as it is NOW —
+  // unless the HTML was edited by hand in the Publish tab (draft.htmlEdited, 2026-10-24):
+  // then the site gets exactly that, the same as what was pasted into radioštudent ----
+  const generated = generateShowHtml(draft.selected);
+  const handEdited = !!(draft.htmlEdited && draft.generatedHtml);
+  const html = handEdited ? draft.generatedHtml : generated;
   const squash = (s) => String(s || '').replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
-  if (draft.generatedHtml && squash(draft.generatedHtml) !== squash(html)) {
+  if (handEdited) {
+    console.log('using the tracklist HTML you edited by hand in the Publish tab');
+  } else if (draft.generatedHtml && squash(draft.generatedHtml) !== squash(generated)) {
     console.log('NOTE: the draft has changed since the HTML you last generated/copied for radioštudent — ' +
       'the site gets the CURRENT draft. Generate HTML again and re-paste it there so radioštudent matches.');
   }
-  const page = `<!doctype html><html><head><meta property="og:title" content="modem ///${number}"></head><body>` +
-    `<div class="field field--name-body field__item">\n${html}\n</div></body></html>`;
+  const pageOf = (body) => `<!doctype html><html><head><meta property="og:title" content="modem ///${number}"></head><body>` +
+    `<div class="field field--name-body field__item">\n${body}\n</div></body></html>`;
+  const page = pageOf(html);
   const sc = resolveSoundcloud(number, { hit: false });
   const rec = parsePage(slug, page, 'show', sc);
+  if (handEdited) {
+    // the tags below are made per heading of "Your show"; say so if the edited HTML has a
+    // different number of headings (they'd land on the wrong ones — fix in Edit site)
+    const expected = parsePage(slug, pageOf(generated), 'show', sc).segments || [];
+    if ((rec.segments || []).length !== expected.length) {
+      console.log(`NOTE: your edited HTML has ${(rec.segments || []).length} headings, "Your show" makes ${expected.length} — ` +
+        'the artist/label tags are made per heading of "Your show", so some may sit on the wrong heading. Check the show in Edit site after publishing.');
+    }
+  }
 
   // ---- credits straight from the draft (same as apply-draft-tags.js did after a scrape) ----
   const { artists, labels } = buildRecordTags(draft.selected);

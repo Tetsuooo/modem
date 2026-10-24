@@ -106,9 +106,18 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   (`/release-label`); a label typed or cleared by hand is never overwritten. First real
   scan: 16 of 23 Bandcamp releases came with a label. Album/compilation tracks now also
   carry their own artist from the release page.
-- **The HTML box stays read-only, on purpose:** a publish builds the show's page on the
-  site from "Your show" itself (scripts/add-show-from-draft.js regenerates it), not from
-  that text — hand edits would reach radioštudent but not the site. Fix things in Arrange.
+- **The HTML box can be edited by hand** (Matej asked twice; first it stayed read-only).
+  An edit shows "✎ Edited by hand", is saved (`htmlEdited` in the draft, travels with
+  Sync), and is used by the Preview, "Compare with radioštudent" and a publish:
+  `add-show-from-draft.js` gives the site's page exactly the edited HTML, so radioštudent
+  and the site match (the tags still come from "Your show" — it warns if the edited HTML
+  has a different number of headings). Generate HTML asks before replacing hand edits.
+- **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
+  to each other under ONE heading you can edit, exactly like tracks off one release (the
+  HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
+  group's bar (or in the tick bar, also for a release's group) gives each its own heading
+  back. For when the automatic same-artist grouping misses one (a name spelled slightly
+  differently, a second artist…). `groupKey: 'grp:…'`.
 - **No playhead memory** in the small players (Scan previews, Arrange, Year-end list): a
   track that stops — paused, or because another one started — plays from the beginning
   next time. Seeking while playing, auto-advance at the end, and a playing track surviving

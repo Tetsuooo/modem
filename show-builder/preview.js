@@ -12,8 +12,9 @@ const { escapeHtml } = require('./lib');
 // "Generate artist list" button builds — sent over so there's one source of
 // truth for the dedup logic, not two implementations of it).
 // showNumber: string/number, may be blank.
-function buildSyntheticHtml(items, artists, labels, showNumber) {
-  const bodyHtml = generateShowHtml(items);
+// `html`: the tracklist HTML edited by hand in the Publish tab, used as-is (as a publish does)
+function buildSyntheticHtml(items, artists, labels, showNumber, html) {
+  const bodyHtml = html || generateShowHtml(items);
   const links = (names) => names.map((a) => `<a href="#">${escapeHtml(a)}</a>`).join('\n');
   const title = showNumber ? `modem ///${showNumber}` : 'modem ///draft';
   return `<!doctype html>
@@ -106,11 +107,12 @@ function buildWarnings(record, items) {
   return warnings;
 }
 
-function previewDraft({ items, artists, labels, showNumber }) {
+function previewDraft({ items, artists, labels, showNumber, html: edited }) {
   const slug = showNumber ? `modem-${showNumber}` : 'modem-draft';
-  const html = buildSyntheticHtml(items, artists || [], labels || [], showNumber);
+  const html = buildSyntheticHtml(items, artists || [], labels || [], showNumber, edited);
   const record = parsePage(slug, html, 'show', null);
   const warnings = buildWarnings(record, items);
+  if (edited) warnings.unshift('This preview uses your hand-edited HTML (as the publish will). If a heading above doesn’t match a track, its tags may land on the wrong heading — check them in Edit site after publishing.');
   return { record, warnings };
 }
 

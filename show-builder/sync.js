@@ -107,7 +107,7 @@ function localSharedDraft() {
   });
   let savedAt = 0;
   try { savedAt = fs.statSync(DRAFT_FILE).mtimeMs; } catch (e) { /* no draft yet */ }
-  return { selected, showNumber: draft.showNumber || null, airDate: draft.airDate || null, generatedHtml: draft.generatedHtml || null, savedAt };
+  return { selected, showNumber: draft.showNumber || null, airDate: draft.airDate || null, generatedHtml: draft.generatedHtml || null, htmlEdited: !!draft.htmlEdited, savedAt };
 }
 
 function pickNewest(a, b) {

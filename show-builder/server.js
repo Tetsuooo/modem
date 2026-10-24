@@ -357,8 +357,8 @@ function matchManifest(urls) {
 // anything is pasted into radioštudent.
 app.post('/preview', (req, res) => {
   try {
-    const { items, artists, labels, showNumber } = req.body || {};
-    const result = previewDraft({ items: items || [], artists: artists || [], labels: labels || [], showNumber: showNumber || null });
+    const { items, artists, labels, showNumber, html } = req.body || {};
+    const result = previewDraft({ items: items || [], artists: artists || [], labels: labels || [], showNumber: showNumber || null, html: html || null });
     res.json({ ok: true, record: result.record, warnings: result.warnings });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
@@ -389,10 +389,10 @@ app.get('/publish-check', (req, res) => {
 // draft — so this is the safety net: if the page is live, does it still match
 // the draft? (see compare-live.js). Informational only.
 app.post('/publish-compare', (req, res) => {
-  const { show, items } = req.body || {};
+  const { show, items, html } = req.body || {};
   if (!show || !Array.isArray(items) || !items.length) return res.status(400).json({ ok: false, error: 'show number and a non-empty track list are required' });
   try {
-    res.json({ ok: true, ...compareWithLive(String(show), items) });
+    res.json({ ok: true, ...compareWithLive(String(show), items, html || null) });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }

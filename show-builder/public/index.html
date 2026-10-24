@@ -243,6 +243,8 @@
   }
   .actions { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; align-items: center; }
   #listOutputText { height: 140px; }
+  textarea:focus { outline: none; border-color: #3a6ff0; }
+  .html-edited-note { margin-top: 6px; color: #ffd166; }
   .empty { color: #6f7080; font-size: 12px; padding: 10px 8px; }
   .log { font: 11px/1.5 ui-monospace, monospace; color: #6f7080; max-height: 90px; overflow-y: auto; white-space: pre-wrap; margin-top: 6px; }
 
@@ -590,7 +592,8 @@
     </div>
     <div id="outputBox" style="display:none">
       <h2>Tracklist HTML — paste into radioštudent</h2>
-      <textarea id="outputText" readonly></textarea>
+      <textarea id="outputText" spellcheck="false"></textarea>
+      <div id="htmlEditedNote" class="status html-edited-note" hidden>✎ Edited by hand — this is what you paste into radioštudent, and what the show's page on the site gets when you publish (so the two match). Generate HTML starts over from “Your show”.</div>
       <div class="actions"><button id="copyBtn">Copy to clipboard</button></div>
     </div>
     <div id="listOutputBox" style="display:none">
@@ -1444,6 +1447,8 @@ function refreshPickUi() {
     <button class="move-btn" data-dir="down" title="down one (Alt+↓)" ${can.down ? '' : 'disabled'}>▼</button>
     <button class="move-btn" data-dir="bottom" title="all of them to the bottom, in their order" ${can.down ? '' : 'disabled'}>⇓</button>
     ${can.together ? '' : '<button class="pill-btn" data-act="gather" title="put them next to each other, where the first one is">gather</button>'}
+    ${n > 1 ? '<button class="pill-btn" data-act="group" title="one heading for these tracks, like a compilation — they’re put next to each other; edit the heading in the bar above them">group</button>' : ''}
+    ${selected.some((it) => pickedKeys.has(it.key) && it.groupKey) ? '<button class="pill-btn" data-act="ungroup" title="take the ticked tracks out of their group — each gets its own heading again">ungroup</button>' : ''}
     <button class="pill-btn" data-act="remove" title="take them out of the show (Ctrl+Z brings them back)">remove ${n}</button>
     <button class="pill-btn" data-act="clear" title="untick all (Esc)">untick</button>
     <span class="pick-hint">drag one to move them all · shift-click ticks a range</span>`;
@@ -1452,6 +1457,41 @@ function refreshPickUi() {
   bar.querySelector('[data-act="clear"]').addEventListener('click', () => { pickedKeys.clear(); refreshPickUi(); });
   const g = bar.querySelector('[data-act="gather"]');
   if (g) g.addEventListener('click', () => movePicked('gather'));
+  const grp = bar.querySelector('[data-act="group"]');
+  if (grp) grp.addEventListener('click', groupPicked);
+  const ungrp = bar.querySelector('[data-act="ungroup"]');
+  if (ungrp) ungrp.addEventListener('click', () => ungroupItems((it) => pickedKeys.has(it.key)));
+}
+
+// Your own group (Matej, 2026-10-24: "group certain tracks together … the way they are
+// grouped automatically in case they are all part of a compilation"): the ticked tracks
+// are put next to each other (where the first one is) and share a groupKey of their own
+// ('grp:…'), so they're one run with one editable heading — exactly like tracks off one
+// release, everywhere (Arrange, the HTML, the artist list, the site's tags). The heading
+// starts as the first track's.
+function groupPicked() {
+  if (pickedKeys.size < 2) return;
+  pushUndoSnapshot();
+  const at = selected.findIndex((it) => pickedKeys.has(it.key));
+  const picked = selected.filter((it) => pickedKeys.has(it.key));
+  const rest = selected.filter((it) => !pickedKeys.has(it.key));
+  const first = picked[0];
+  const heading = (first.groupKey && first.groupHeading) || headingName(first);
+  const key = 'grp:' + Date.now().toString(36);
+  picked.forEach((it) => { it.groupKey = key; it.groupHeading = heading; });
+  selected = rest.slice(0, at).concat(picked, rest.slice(at));
+  renderSelected();
+  saveDraft();
+}
+
+// Out of their group (own or a release's): each track gets its own heading again.
+function ungroupItems(which) {
+  const items = selected.filter((it) => it.groupKey && which(it));
+  if (!items.length) return;
+  pushUndoSnapshot();
+  items.forEach((it) => { it.groupKey = null; it.groupHeading = headingName(it); });
+  renderSelected();
+  saveDraft();
 }
 
 // A track's length in seconds, best-effort: its own scan-time duration if
@@ -1648,10 +1688,12 @@ function renderSelected() {
     if (groupStart) { let j = i; while (j + 1 < selected.length && runOf[j + 1] === i) j++; runLen = j - i + 1; }
     // a run that starts with a release keeps its editable shared heading; a run of one
     // artist's (or label's) separate tracks shows the name they share — change it in their fields
+    const ownGroup = String(it.groupKey || '').startsWith('grp:');
     const groupBar = !groupStart ? '' : relOf[i] === i ? `
     <div class="group-heading-bar">
-      <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="compilation / release heading" value="${escAttr(it.groupHeading || '')}">
-      <span class="group-heading-hint">shared heading · ${runLen} tracks</span>
+      <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="${ownGroup ? 'group heading' : 'compilation / release heading'}" value="${escAttr(it.groupHeading || '')}">
+      <span class="group-heading-hint">${ownGroup ? 'your group' : 'shared heading'} · ${runLen} tracks</span>
+      <button class="pill-btn group-ungroup" data-group-key="${escAttr(it.groupKey)}" title="each of these tracks gets its own heading again">ungroup</button>
     </div>` : `
     <div class="group-heading-bar">
       <span class="group-heading-text">${esc(runHeading(selected, i, relOf))}</span>
@@ -1667,7 +1709,7 @@ function renderSelected() {
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
             ${nameFieldsHtml(it, 'artist')}
-            ${inRelease ? '' : nameFieldsHtml(it, 'label')}
+            ${inRelease && !String(it.groupKey || '').startsWith('grp:') ? '' : nameFieldsHtml(it, 'label')}
           </div>
           ${inRelease ? '' : `
           <div class="heading-choice">
@@ -1797,6 +1839,10 @@ function renderSelected() {
     });
     input.addEventListener('change', regroupIfChanged);
   });
+  box.querySelectorAll('.group-ungroup').forEach((b) => b.addEventListener('click', () => {
+    const gk = b.dataset.groupKey;
+    ungroupItems((it) => it.groupKey === gk);
+  }));
   box.querySelectorAll('.heading-choice input[type=radio]').forEach((radio) => {
     radio.addEventListener('change', () => {
       const item = selected.find((s) => s.key === radio.dataset.key);
@@ -4002,8 +4048,18 @@ async function startDownload() {
   }, 1500);
 }
 
+// The HTML box can be edited by hand (Matej, 2026-10-24 — it was read-only). Such edits are
+// kept (htmlEdited in the draft, synced), used by the Preview, and by a publish for the
+// site's page (scripts/add-show-from-draft.js), so radioštudent and the site match.
+let htmlEditedByHand = false;
+function setHtmlEdited(on) {
+  htmlEditedByHand = !!on;
+  el('htmlEditedNote').hidden = !htmlEditedByHand;
+}
+
 async function generateHtml() {
   if (!selected.length) return;
+  if (htmlEditedByHand && !window.confirm('Replace your hand edits with HTML generated from “Your show”?')) return;
   el('generateBtn').disabled = true;
   el('generateBtn').textContent = 'Generating…';
   try {
@@ -4012,6 +4068,7 @@ async function generateHtml() {
     if (!j.ok) throw new Error(j.error || 'generate failed');
     el('outputBox').style.display = '';
     el('outputText').value = j.html;
+    setHtmlEdited(false);
     saveDraft();
   } catch (e) {
     el('errorsBox').innerHTML = `<div class="errors">generate failed: ${esc(e.message || e)}</div>`;
@@ -4030,7 +4087,8 @@ async function saveDraft() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         selected, mixClips, coverLayers, coverAdjust,
-        generatedHtml: el('outputText').value || null, showNumber: el('showNumber').value || null,
+        generatedHtml: el('outputText').value || null, htmlEdited: htmlEditedByHand && !!el('outputText').value,
+        showNumber: el('showNumber').value || null,
         airDate: el('airDate').value || null,
       }),
     });
@@ -4050,6 +4108,7 @@ async function loadDraft() {
     coverLayers = j.coverLayers || [];
     coverAdjust = j.coverAdjust || { contrast: 0, brightness: 0, saturation: 0 };
     if (j.generatedHtml) { el('outputBox').style.display = ''; el('outputText').value = j.generatedHtml; }
+    setHtmlEdited(j.generatedHtml && j.htmlEdited);
     if (j.showNumber) el('showNumber').value = j.showNumber;
     else {
       try {
@@ -4208,6 +4267,7 @@ async function runPreview() {
     const body = {
       items: selected, artists: dedupedField('artist'), labels: dedupedField('label'),
       showNumber: el('showNumber').value.trim() || null,
+      html: htmlEditedByHand ? el('outputText').value : null, // the hand-edited HTML, as a publish would use it
     };
     const r = await fetch('/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json();
@@ -4366,7 +4426,8 @@ async function compareLive() {
   el('liveStatus').textContent = 'checking radioštudent…';
   try {
     const j = await (await fetch('/publish-compare', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show, items: selected }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ show, items: selected, html: htmlEditedByHand ? el('outputText').value : null }),
     })).json();
     if (!j.ok) throw new Error(j.error || 'compare failed');
     if (!j.live) el('liveStatus').textContent = `radioštudent doesn't have modem-${show} yet — nothing to compare (that's fine, the site doesn't need it)`;
@@ -4566,6 +4627,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 el('generateBtn').addEventListener('click', generateHtml);
+el('outputText').addEventListener('input', () => { setHtmlEdited(true); debouncedSaveDraft(); });
 el('copyBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(el('outputText').value);
   el('copyBtn').textContent = 'Copied!';
@@ -4803,6 +4865,7 @@ function applySyncedDraft(shared) {
   if (shared.generatedHtml) {
     el('outputBox').style.display = '';
     el('outputText').value = shared.generatedHtml;
+    setHtmlEdited(shared.htmlEdited);
   }
   renderSelected();
   renderScanResults();

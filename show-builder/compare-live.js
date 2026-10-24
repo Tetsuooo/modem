@@ -10,8 +10,9 @@ const { parsePage } = require('../scripts/scrape-modem.js');
 const { generateShowHtml } = require('./generate-html');
 const { curlGet } = require('./lib');
 
-function parseDraft(slug, number, items) {
-  const html = generateShowHtml(items);
+// `edited`: the HTML edited by hand in the Publish tab — what was pasted, so what to compare
+function parseDraft(slug, number, items, edited) {
+  const html = edited || generateShowHtml(items);
   const page = `<!doctype html><html><head><meta property="og:title" content="modem ///${number}"></head><body>` +
     `<div class="field field--name-body field__item">\n${html}\n</div></body></html>`;
   return parsePage(slug, page, 'show', null);
@@ -34,7 +35,7 @@ function listDiff(label, draftList, liveList) {
   return out;
 }
 
-function compareWithLive(show, items) {
+function compareWithLive(show, items, edited) {
   const slug = `modem-${show}`;
   let html;
   try {
@@ -49,7 +50,7 @@ function compareWithLive(show, items) {
   if (notFound) return { live: false };
 
   const live = parsePage(slug, html, 'show', null);
-  const draft = parseDraft(slug, show, items);
+  const draft = parseDraft(slug, show, items, edited);
   const differences = [
     ...listDiff('headings', draft.segments || [], live.segments || []),
     ...listDiff('embeds', embedKeys(draft), embedKeys(live)),
