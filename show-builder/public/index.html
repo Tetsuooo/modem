@@ -287,6 +287,12 @@
 
   /* ---- Mix tab: a rudimentary DAW — one lane per clip, horizontal = time,
      drag the body to reposition, drag a corner handle to fade. ---- */
+  /* the export's progress line (showMixExportProgress()) */
+  .mix-progress { display: flex; align-items: center; gap: 10px; max-width: 640px; margin: -2px 0 10px; }
+  .mix-progress[hidden] { display: none; }
+  .mix-progress-track { position: relative; flex: 1; height: 8px; border-radius: 4px; background: #2a2b33; overflow: hidden; }
+  .mix-progress-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #3a6ff0; transition: width .25s ease; }
+  .mix-progress-label { font-size: 12px; color: #c7c8d1; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .mix-zoom { display: inline-flex; align-items: center; gap: 6px; }
   .mix-zoom button { padding: 4px 10px; font-size: 13px; }
   .mix-zoom .status { min-width: 52px; text-align: center; }
@@ -417,6 +423,13 @@
   .cover-toggle.mute.active { background: #b5442a; border-color: #b5442a; color: #fff; }
   .cover-toggle.solo.active { background: #d4a72c; border-color: #d4a72c; color: #14151a; }
   .cover-layer.off .cover-layer-thumb, .cover-layer.off .cover-layer-title { opacity: .35; }
+  /* the grip: reorders with finger, pen or mouse (wireCoverLayerDrag()) */
+  .cover-grip {
+    flex: none; width: 16px; align-self: stretch; display: flex; align-items: center; justify-content: center;
+    color: #55566a; cursor: grab; touch-action: none; font-size: 14px; user-select: none;
+  }
+  .cover-grip:hover { color: #c7c8d1; }
+  #coverCanvas.erasing { touch-action: none; } /* a finger erases instead of scrolling the page */
   /* ---- Luma key ("Blend If") bar: one gradient track, a black handle and a
      white handle — double-click either to split it into a draggable
      black/white pair (the feather width), same interaction as Photoshop's
@@ -437,6 +450,8 @@
   .lumakey-handle.black { filter: drop-shadow(0 0 1px rgba(255,255,255,.55)); }
   .lumakey-handle.feather { margin-left: -4px; border-left-width: 4px; border-right-width: 4px; border-bottom-width: 7px; opacity: .8; }
   .lumakey-handle[hidden] { display: none; }
+  /* an invisible, bigger area to grab each handle by (a 12-px triangle is a hard target) */
+  .lumakey-handle::before { content: ''; position: absolute; left: -14px; top: -10px; width: 28px; height: 32px; }
   .lumakey-value {
     position: absolute; top: -13px; transform: translateX(-50%); font-size: 9px; line-height: 1.4;
     color: #c7c8d1; background: #101117; border: 1px solid #2a2b33; border-radius: 3px;
@@ -447,6 +462,29 @@
   .cover-global-adjust label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
   .cover-global-adjust input[type=range] { flex: 1; }
   .cover-global-adjust span { width: 28px; text-align: right; font-size: 11px; color: #9a9ba5; }
+  /* Covers on a touch screen (the Surface — any-pointer: coarse is true whenever there's
+     one): bigger buttons, handles and sliders; the layer's buttons go to a second row so
+     they fit. A computer with only a mouse keeps the compact look. */
+  @media (any-pointer: coarse) {
+    .cover-sidebar { flex-basis: 340px; max-width: 340px; }
+    .cover-layer { padding: 8px 10px; }
+    .cover-layer-head { flex-wrap: wrap; gap: 6px 4px; }
+    .cover-layer-title { flex: 1 1 150px; font-size: 13px; }
+    .cover-layer-thumb { width: 36px; height: 36px; }
+    .cover-grip { width: 28px; font-size: 20px; }
+    .cover-toggle { font-size: 12px; padding: 8px 10px; min-width: 36px; min-height: 36px; }
+    .cover-layer .move-buttons { gap: 4px; }
+    .cover-layer .move-btn { font-size: 15px; padding: 8px 9px; min-width: 36px; min-height: 36px; }
+    .cover-layer-remove { font-size: 20px; padding: 4px 10px; min-width: 36px; min-height: 36px; margin-left: auto; }
+    .lumakey-bar { height: 36px; }
+    .lumakey-track { top: 10px; height: 10px; }
+    .lumakey-bridge { top: 10px; height: 10px; }
+    .lumakey-handle { top: 20px; transform: scale(1.5); transform-origin: 50% 0; }
+    .cover-global-adjust { gap: 8px; }
+    .cover-global-adjust label { font-size: 13px; }
+    .cover-global-adjust input[type=range], #coverEraserSize { height: 32px; }
+    #panel-covers .actions button { padding: 9px 14px; }
+  }
   .history-entry { border: 1px solid #2a2b33; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
   .history-entry-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
   .history-entry-head h3 { font-size: 14px; margin: 0; }
@@ -594,6 +632,11 @@
       <button id="mixUndoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
       <button id="mixRedoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
       <span id="mixStatus" class="status"></span>
+    </div>
+    <div id="mixExportProgress" class="mix-progress" hidden>
+      <div class="mix-progress-track"><div class="mix-progress-fill"></div></div>
+      <span class="mix-progress-label"></span>
+      <button id="mixExportCancelBtn" class="pill-btn" title="stop the export">cancel</button>
     </div>
     <p class="status">Tracks here always match "Your show" — add, remove, or reorder them there. Drag a clip's body to reposition it in time (e.g. for a crossfade); anything else automatically re-flows to match.</p>
     <div id="mixTimelineWrap" class="mix-timeline-wrap">
@@ -2937,7 +2980,8 @@ function mixResync() {
 // Renders the whole mix down to one AudioBuffer via an OfflineAudioContext
 // (same clip-scheduling function real-time playback uses, see
 // scheduleMixClip()) — shared by both export formats below.
-async function renderMixOffline() {
+// onProgress(0..1), optional: reported every 2% of the mix via the context's suspend points.
+async function renderMixOffline(onProgress) {
   await Promise.all(mixClips.map((c) => getMixBuffer(c.src)));
   const sampleRate = 44100;
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
@@ -2948,7 +2992,63 @@ async function renderMixOffline() {
     vol.connect(offlineCtx.destination);
     scheduleMixClip(offlineCtx, clip, 0, 0, vol);
   });
+  if (onProgress && offlineCtx.suspend) {
+    for (let k = 1; k < 50; k++) {
+      const t = Math.floor((totalDur * k / 50) * sampleRate / 128) * 128 / sampleRate; // on a render-block edge
+      offlineCtx.suspend(t).then(() => { onProgress(k / 50); offlineCtx.resume(); }).catch(() => {});
+    }
+  }
   return offlineCtx.startRendering();
+}
+
+// The export's progress line (hidden when idle): a bar, what's happening, how long is left.
+// `stageFrac` + `stageStartedAt`: how far the CURRENT stage is — the time left comes from
+// the encoding stage alone (the render is quick, so the overall pace would promise too little).
+let mixExportCancel = null;
+function showMixExportProgress(stage, frac, stageFrac, stageStartedAt) {
+  const box = el('mixExportProgress');
+  if (!box) return;
+  if (stage == null) { box.hidden = true; return; }
+  box.hidden = false;
+  box.querySelector('.mix-progress-fill').style.width = Math.round(frac * 100) + '%';
+  let left = null;
+  if (stageStartedAt && stageFrac > 0.05 && stageFrac < 1) {
+    const secs = (Date.now() - stageStartedAt) / 1000;
+    left = Math.max(1, Math.round(secs / stageFrac - secs));
+  }
+  box.querySelector('.mix-progress-label').textContent =
+    `${stage} ${Math.round(frac * 100)}%` + (left != null ? ` · about ${left < 60 ? left + ' s' : Math.round(left / 60) + ' min'} left` : '');
+}
+
+// The rendered mix → the file's bytes, encoded in a Web Worker (public/mix-export-worker.js),
+// ~10 s of audio at a time, so the page never freezes. onProgress(0..1). Returns Blob parts.
+function encodeMixInWorker(buffer, format, onProgress, cancelRef) {
+  return new Promise((resolve, reject) => {
+    let worker;
+    try { worker = new Worker('/mix-export-worker.js'); } catch (e) { reject(e); return; }
+    const parts = [];
+    const total = buffer.length, slice = buffer.sampleRate * 10;
+    const channels = Math.min(2, buffer.numberOfChannels);
+    let pos = 0;
+    cancelRef.stop = () => { worker.terminate(); reject(new Error('cancelled')); };
+    const sendNext = () => {
+      if (pos >= total) { worker.postMessage({ type: 'end' }); return; }
+      const end = Math.min(total, pos + slice);
+      const chans = [];
+      for (let c = 0; c < channels; c++) chans.push(buffer.getChannelData(c).slice(pos, end));
+      worker.postMessage({ type: 'data', chans }, chans.map((a) => a.buffer));
+      pos = end;
+    };
+    worker.onmessage = (e) => {
+      const m = e.data;
+      if (m.part) parts.push(m.part);
+      if (m.type === 'ready' || m.type === 'encoded') { onProgress(pos / total); sendNext(); }
+      else if (m.type === 'done') { worker.terminate(); onProgress(1); resolve(parts); }
+      else if (m.type === 'error') { worker.terminate(); reject(new Error(m.message)); }
+    };
+    worker.onerror = (e) => { worker.terminate(); reject(new Error(e.message || 'the export worker failed')); };
+    worker.postMessage({ type: 'start', format, sampleRate: buffer.sampleRate, numChannels: channels, numFrames: total, bitrate: 192 });
+  });
 }
 
 function downloadBlob(blob, filename) {
@@ -2963,23 +3063,44 @@ function downloadBlob(blob, filename) {
 }
 
 // format: 'wav' | 'mp3'
+// Progress (Matej, 2026-10-24: "the site now usually just freezes at some point"): the
+// render reports through suspend points (0–30% of the bar), the encoding runs in a worker
+// (30–100%); a Cancel button stops it. Falls back to encoding on the page (the old way,
+// which freezes it) only if a worker can't be started.
 async function exportMix(format) {
-  if (!mixClips.length) return;
-  const btn = format === 'mp3' ? el('mixExportMp3Btn') : el('mixExportBtn');
-  btn.disabled = true;
-  el('mixStatus').textContent = 'rendering…';
+  if (!mixClips.length || mixExportCancel) return;
+  const btns = [el('mixExportBtn'), el('mixExportMp3Btn')];
+  btns.forEach((b) => { b.disabled = true; });
+  el('mixStatus').textContent = '';
+  const startedAt = Date.now();
+  const cancelRef = { cancelled: false, stop: null };
+  mixExportCancel = () => { cancelRef.cancelled = true; if (cancelRef.stop) cancelRef.stop(); };
+  const label = format === 'mp3' ? 'encoding mp3…' : 'writing wav…';
   try {
-    const rendered = await renderMixOffline();
-    el('mixStatus').textContent = format === 'mp3' ? 'encoding mp3…' : 'writing wav…';
-    const blob = format === 'mp3' ? audioBufferToMp3(rendered) : audioBufferToWav(rendered);
+    showMixExportProgress('putting the mix together…', 0);
+    const rendered = await renderMixOffline((f) => { if (!cancelRef.cancelled) showMixExportProgress('putting the mix together…', 0.3 * f); });
+    if (cancelRef.cancelled) throw new Error('cancelled');
+    let blob;
+    try {
+      const encodeStartedAt = Date.now();
+      const parts = await encodeMixInWorker(rendered, format, (f) => showMixExportProgress(label, 0.3 + 0.7 * f, f, encodeStartedAt), cancelRef);
+      blob = new Blob(parts, { type: format === 'mp3' ? 'audio/mpeg' : 'audio/wav' });
+    } catch (e) {
+      if (cancelRef.cancelled) throw e;
+      showMixExportProgress(label + ' (on the page — it may freeze for a moment)', 0.3);
+      await new Promise((r) => setTimeout(r, 50)); // let that message show first
+      blob = format === 'mp3' ? audioBufferToMp3(rendered) : audioBufferToWav(rendered);
+    }
     // Named after the SHOW, not "the mix" — this is what actually gets
     // published/shared, "modem-mix-N" was just an internal-sounding leftover.
     downloadBlob(blob, `modem-${el('showNumber').value.trim() || Date.now()}.${format}`);
-    el('mixStatus').textContent = 'exported ✓';
+    el('mixStatus').textContent = `exported ✓ (${Math.round((Date.now() - startedAt) / 1000)} s)`;
   } catch (e) {
-    el('mixStatus').textContent = 'export failed: ' + (e.message || e);
+    el('mixStatus').textContent = cancelRef.cancelled ? 'export cancelled' : 'export failed: ' + (e.message || e);
   } finally {
-    btn.disabled = false;
+    showMixExportProgress(null);
+    mixExportCancel = null;
+    btns.forEach((b) => { b.disabled = false; });
   }
 }
 
@@ -3175,6 +3296,7 @@ function renderCoverLayerList() {
   box.innerHTML = coverLayers.map((l, i) => `
     <div class="cover-layer${l.id === selectedCoverLayerId ? ' selected' : ''}${coverLayerShown(l, anySolo) ? '' : ' off'}" data-id="${escAttr(l.id)}">
       <div class="cover-layer-head" draggable="true" title="click to select (for the eraser) — drag to reorder">
+        <span class="cover-grip" title="drag to reorder — with a finger too">⠿</span>
         <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
         <span class="cover-layer-title">${esc(l.title)}</span>
         <div class="cover-layer-toggles">
@@ -3348,6 +3470,8 @@ function toggleLumaFeather(layer, role) {
   }
 }
 
+let lumaLastTap = {};
+let lumaSkipDblclickUntil = 0;
 function wireLumaKeyBars() {
   const box = el('coverLayerList');
   box.querySelectorAll('.lumakey-bar').forEach((bar) => {
@@ -3359,6 +3483,21 @@ function wireLumaKeyBars() {
       handle.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        // a double TAP splits / joins the feather too (a finger's double-tap isn't
+        // reliably a dblclick); the mouse keeps its dblclick below
+        if (e.pointerType !== 'mouse') {
+          const now = Date.now();
+          if (lumaLastTap.role === role && lumaLastTap.bar === bar && now - lumaLastTap.at < 350) {
+            lumaLastTap = {};
+            lumaSkipDblclickUntil = now + 600;
+            toggleLumaFeather(layer, role);
+            positionLumaKeyBar(bar, layer);
+            scheduleCoverRender();
+            debouncedSaveDraft();
+            return;
+          }
+          lumaLastTap = { role, bar, at: now };
+        }
         const label = bar.querySelector(`.lumakey-value[data-for="${role}"]`);
         if (label) label.classList.add('show');
         const track = bar.querySelector('.lumakey-track');
@@ -3383,6 +3522,7 @@ function wireLumaKeyBars() {
       handle.addEventListener('dblclick', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (Date.now() < lumaSkipDblclickUntil) return; // already done by the double tap
         toggleLumaFeather(layer, role);
         positionLumaKeyBar(bar, layer);
         scheduleCoverRender();
@@ -3403,9 +3543,11 @@ function wireCoverLayerDrag() {
   // — dragging is scoped to that top strip so it never fights a slider drag
   // lower in the same card — but the element that actually MOVES in the DOM
   // is its parent .cover-layer (the whole card, sliders included).
+  let gripDragging = false;
   box.querySelectorAll('.cover-layer-head').forEach((head) => {
     const row = head.closest('.cover-layer');
-    head.addEventListener('dragstart', () => {
+    head.addEventListener('dragstart', (e) => {
+      if (gripDragging) { e.preventDefault(); return; } // the grip moves it (below)
       pushUndoSnapshot();
       draggingEl = row;
       row.classList.add('dragging');
@@ -3432,6 +3574,57 @@ function wireCoverLayerDrag() {
     if (after) box.insertBefore(draggingEl, after);
     else box.appendChild(draggingEl);
   };
+
+  // The grip ⠿: the same reorder with pointer events — a finger can't do the browser's
+  // drag-and-drop above on Windows (Matej, 2026-10-24: "more touch screen friendly").
+  box.querySelectorAll('.cover-grip').forEach((grip) => {
+    grip.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      const row = grip.closest('.cover-layer');
+      gripDragging = true;
+      try { grip.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
+      const startY = e.clientY;
+      let moved = false;
+      const onMove = (ev) => {
+        if (!moved) {
+          if (Math.abs(ev.clientY - startY) < 4) return;
+          moved = true;
+          pushUndoSnapshot();
+          row.classList.add('dragging');
+        }
+        const after = [...box.querySelectorAll('.cover-layer')].find((n) => {
+          if (n === row) return false;
+          const r = n.getBoundingClientRect();
+          return ev.clientY < r.top + r.height / 2;
+        });
+        if (after) { if (row.nextElementSibling !== after) box.insertBefore(row, after); }
+        else if (box.lastElementChild !== row) box.appendChild(row);
+      };
+      // listened for on the window, for this pointer only: moving the card in the list
+      // drops the grip's pointer capture, after which the moves (and the lift-off) arrive
+      // at whatever is under the finger
+      const pid = e.pointerId;
+      const move = (ev) => { if (ev.pointerId === pid) onMove(ev); };
+      const up = (ev) => { if (ev.pointerId === pid) onUp(); };
+      const onUp = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
+        gripDragging = false;
+        row.classList.remove('dragging');
+        if (!moved) return;
+        const ids = [...box.querySelectorAll('.cover-layer')].map((n) => n.dataset.id);
+        const byId = new Map(coverLayers.map((l) => [l.id, l]));
+        coverLayers = ids.map((id) => byId.get(id)).filter(Boolean);
+        renderCoverLayerList(); // the ⇑▲▼⇓ buttons follow the new order
+        scheduleCoverRender();
+        debouncedSaveDraft();
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
+    });
+  });
 }
 
 // object-fit: cover — scale to fill w×h, cropping the overflow, so every
@@ -4399,6 +4592,7 @@ el('coverUndoBtn').addEventListener('click', undoShowChange);
 el('coverRedoBtn').addEventListener('click', redoShowChange);
 el('mixExportBtn').addEventListener('click', () => exportMix('wav'));
 el('mixExportMp3Btn').addEventListener('click', () => exportMix('mp3'));
+el('mixExportCancelBtn').addEventListener('click', () => { if (mixExportCancel) mixExportCancel(); });
 el('mixZoomInBtn').addEventListener('click', () => zoomMix(1.4));
 el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
 el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });

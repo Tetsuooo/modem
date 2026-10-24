@@ -65,6 +65,20 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
     waveform grows/shrinks with it, and turns red along the edges where a boost would push
     it past full scale (it would distort — turn the others down instead). Saved as
     `gainDb` on the clip.
+- **Mix export: a progress bar, and the page no longer freezes.** The mp3 encoding (and
+  the wav writing) ran on the page itself — a 9-minute test show froze the page for ~18 s
+  of a 19 s export. Now the rendered mix goes to a Web Worker (`public/mix-export-worker.js`,
+  lamejs loaded there) 10 s of audio at a time; the bar shows "putting the mix together…"
+  (the render, via the offline context's suspend points, 0–30%) then "encoding mp3… 56% ·
+  about 11 s left" (30–100%, time left from the encoding pace), with Cancel. Same files
+  as before (byte-for-byte the same size); falls back to the old way only if a worker
+  can't start.
+- **Covers on a touch screen** (any-pointer: coarse — the Surface; a mouse-only computer
+  keeps the compact look): 36-px M/S/move/× buttons (on a second row), bigger thumbnails,
+  luma-key bar and handles, 32-px sliders. Always: an invisible bigger grab area on each
+  luma handle; a grip ⠿ on each layer that reorders with a finger, pen or mouse (the
+  browser's drag-and-drop doesn't work with a finger); a double tap on a luma handle
+  splits/joins its feather; erasing with a finger no longer scrolls the page.
 - **Covers tab: mute and solo per layer.** M hides a layer, S shows only the soloed layers
   (several can be soloed; Ctrl-click S = only this one; a soloed layer that's also muted
   doesn't count). Hidden layers are dimmed in the list. The export is what you see — its
