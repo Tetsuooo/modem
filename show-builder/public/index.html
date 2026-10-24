@@ -1709,7 +1709,8 @@ async function keepOnlyDownloadedFile(key, index) {
     } catch (e) { it.tracks = []; }
   }
   const name = String(file).replace(/\\/g, '/').split('/').pop().replace(/\.mp3$/i, '');
-  const match = it.tracks.find((t) => sanitizeForCoverGuess(t.title) === name);
+  // the cut name (downloads since 2026-10-24) or the full one (older downloads)
+  const match = it.tracks.find((t) => sanitizeForCoverGuess(t.title, 90) === name || sanitizeForCoverGuess(t.title) === name);
   if (match) {
     it.title = match.title;
     if (match.artist) it.artist = match.artist;
@@ -2627,8 +2628,10 @@ const COVER_CANVAS_SIZE = 1200;
 // skip-path bug fix always reported cover:null even though the file was
 // sitting right there — see server.js's coverFallback for the server-side
 // half of this fix). Gracefully hidden (onerror) if the guess is wrong.
-function sanitizeForCoverGuess(name) {
-  return String(name).replace(/[:/\\<>"|?*]/g, '_').trim();
+// `max`: modem_download.py cuts titles in file names (120 for a single track, 90 inside an
+// album folder — Windows' name/path limits), so a guess has to cut the same way.
+function sanitizeForCoverGuess(name, max) {
+  return String(name).slice(0, max || undefined).replace(/[:/\\<>"|?*]/g, '_').trim();
 }
 
 // Deduped by release, not by track: several tracks off the same
@@ -2645,7 +2648,7 @@ function getCoverCandidates() {
     const dedupeKey = it.groupKey || it.key;
     if (seen.has(dedupeKey)) return;
     seen.add(dedupeKey);
-    const coverPath = it._download.cover || ('downloads/_covers/' + sanitizeForCoverGuess(it.title) + '_cover.jpg');
+    const coverPath = it._download.cover || ('downloads/_covers/' + sanitizeForCoverGuess(it.title, 120) + '_cover.jpg');
     candidates.push({ key: dedupeKey, title: it.groupHeading || it.title, src: downloadedFileUrl(coverPath) });
   });
   return candidates;

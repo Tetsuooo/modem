@@ -31,6 +31,13 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   missing is now read from the downloaded file first — so a track deleted from SoundCloud
   since still has one, and an album trimmed to some of its tracks counts only those.
   Tracks downloaded just now get theirs straight away.
+- **Fixed: very long track titles couldn't be downloaded.** A 254-character SoundCloud title
+  ("figuring out who i am٩(̾●̮̮̃̾•̃̾)۶…", on the Surface) failed with "Errno 22 Invalid
+  argument": Windows allows 255 characters per file name, and its cover picture's name
+  ("title" + ".png") went over. `modem_download.py` now cuts titles in file names to 120
+  characters (90 inside an album folder; album folder names to 80), which also keeps whole
+  paths under Windows' 260 on the Surface's longer user folder. The title tag inside the
+  mp3 keeps the full title. Shorter titles are named exactly as before.
 - **Fixed:** after dragging, a row's buttons still pointed at its old place, so its × could
   remove a different track. The list now redraws after a drag (a playing track keeps
   playing).

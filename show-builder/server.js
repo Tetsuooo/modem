@@ -302,8 +302,11 @@ function coverFallback(rec) {
   let base;
   if (rec.kind === 'playlist' && rec.files && rec.files[0]) {
     base = path.basename(path.dirname(rec.files[0]));
+  } else if (rec.files && rec.files[0]) {
+    // the file's own name, as embed_cover_single() uses — titles are cut in file names
+    base = sanitizeForCoverMatch(path.basename(rec.files[0]).replace(/\.mp3$/i, ''));
   } else if (rec.title) {
-    base = sanitizeForCoverMatch(rec.title);
+    base = sanitizeForCoverMatch(String(rec.title).slice(0, 120));
   }
   if (!base) return null;
   const relPath = path.join('downloads', '_covers', `${base}_cover.jpg`);

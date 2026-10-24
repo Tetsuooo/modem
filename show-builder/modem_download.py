@@ -56,15 +56,24 @@ def album_folder_name(info, url):
             album_artist = "UnknownArtist"
         album_title = info.get('playlist_title') or info.get('title') or "Album"
     folder = f"{album_artist} - {album_title}"
-    return os.path.join("downloads", sanitize_filename(folder)), album_artist
+    return os.path.join("downloads", sanitize_filename(folder)[:MAX_FOLDER].strip()), album_artist
+
+# Windows refuses a file name over 255 characters and (without long-path support) a whole
+# path over 260 — a 254-character SoundCloud title failed on its cover picture ("title" +
+# ".png", Errno 22) and the track never downloaded (2026-10-24). So titles in file names are
+# cut (yt-dlp's "%(title).Ns"), leaving room for the folder, ".mp3.cover.jpg" / "_cover.jpg"
+# and a long user folder on the Surface. The tags inside the file keep the full title.
+MAX_TITLE_SINGLE = 120
+MAX_TITLE_ALBUM = 90
+MAX_FOLDER = 80
 
 def single_outtmpl():
     """Output template for single track downloads (only track title in filename)."""
-    return os.path.join("downloads", "%(title)s.%(ext)s")
+    return os.path.join("downloads", f"%(title).{MAX_TITLE_SINGLE}s.%(ext)s")
 
 def album_outtmpl(album_dir):
     """Output template for album tracks (only track title in filename)."""
-    return os.path.join(album_dir, "%(title)s.%(ext)s")
+    return os.path.join(album_dir, f"%(title).{MAX_TITLE_ALBUM}s.%(ext)s")
 
 def fetch_album_cover_from_url(cover_url, album_dir):
     """
@@ -429,7 +438,7 @@ def download_playlist(url, info):
             "files": files, "cover": expected_cover if os.path.exists(expected_cover) else None, "skipped": True,
         })
         return
-    outtmpl = os.path.join(album_dir, "%(title)s.%(ext)s")
+    outtmpl = album_outtmpl(album_dir)
     opts = copy.deepcopy(BASE_OPTS)
     opts.update({
         'writethumbnail': True,
