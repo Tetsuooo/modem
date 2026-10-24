@@ -29,6 +29,7 @@ const tagTools = require('./tag-tools');
 const siteTools = require('./site-tools');
 const timeTools = require('./time-tools');
 const yearEnd = require('./year-end');
+const health = require('./health');
 const { undoesSomething } = tagTools;
 const { compareWithLive } = require('./compare-live');
 const { getArchive } = require('./archive-cache');
@@ -112,6 +113,7 @@ scLinks.mount(app);
 tagTools.mount(app);
 timeTools.mount(app);
 yearEnd.mount(app);
+health.mount(app);
 siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------

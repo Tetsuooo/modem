@@ -292,3 +292,30 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .ye-aliasbox { background: #1a1b21; border: 1px solid #2a2b33; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
 .ye-aliasbox textarea { width: 100%; box-sizing: border-box; margin-top: 6px; background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; font-family: inherit; font-size: 12px; padding: 6px 8px; }
 .ye-aliasbox code { color: #c7c8d1; }
+
+/* ---------- Health tab (public/health.js) ---------- */
+.hl-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.hl-intro { margin: 0 0 12px; max-width: 80ch; line-height: 1.45; }
+.hl-list { display: flex; flex-direction: column; gap: 6px; }
+.hl-row { display: flex; gap: 12px; align-items: flex-start; padding: 9px 12px; background: #1a1b21; border: 1px solid #2a2b33; border-radius: 8px; }
+.hl-icon { flex: none; width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: #2a2b33; color: #9a9ba5; margin-top: 1px; }
+.hl-ok .hl-icon { background: #1a3a2a; color: #7dffb0; }
+.hl-warn .hl-icon { background: #3a2a1a; color: #ffb066; }
+.hl-fail .hl-icon { background: #3a1a1e; color: #ff6b7a; }
+.hl-fail { border-color: #5a2a30; }
+.hl-warn { border-color: #4a3a22; }
+.hl-running .hl-icon { color: #66b0ff; }
+.hl-main { flex: 1; min-width: 0; }
+.hl-line { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.hl-name { font-weight: 600; color: #e8e8ea; font-size: 13px; }
+.hl-summary { color: #c7c8d1; font-size: 13px; }
+.hl-fail .hl-summary { color: #ffb3bb; }
+.hl-warn .hl-summary { color: #ffd2a6; }
+.hl-what { color: #6f7080; font-size: 12px; margin-top: 2px; }
+.hl-when { color: #55566a; }
+.hl-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.hl-actions:empty { display: none; }
+.hl-detail { margin: 8px 0 0; padding: 8px 10px; background: #101117; border: 1px solid #2a2b33; border-radius: 6px; color: #9a9ba5; font-size: 11px; white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow: auto; }
+.hl-log { color: #c7c8d1; }
+.tab-badge.hl-badge-fail { background: #c23a4a; }
+.tab-badge.hl-badge-warn { background: #b06a1a; }

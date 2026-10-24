@@ -231,4 +231,4 @@ function hlsRank(t) {
   return i < 0 ? order.length : i;
 }
 
-module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl };
+module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl, apiV2Get };

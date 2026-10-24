@@ -425,6 +425,7 @@
     <button class="tab-btn" data-tab="times">Tracklist</button>
     <button class="tab-btn" data-tab="yearend">Year-end list</button>
     <button class="tab-btn" data-tab="history">History</button>
+    <button class="tab-btn" data-tab="health">Health<span id="healthBadge" class="tab-badge" hidden></span></button>
   </nav>
   <div class="header-actions">
     <span id="syncStatus" class="status"></span>
@@ -615,6 +616,11 @@
     <h2>Past shows</h2>
     <p class="status">A lightweight log — appended whenever "Start fresh" archives a show before clearing it. Track list only, not the full draft (see the Sync feature's design notes).</p>
     <div id="historyList"><div class="empty">Nothing archived yet.</div></div>
+  </section>
+
+  <section class="tab-panel" id="panel-health" hidden>
+    <h2>Health — do SoundCloud, Bandcamp, yt-dlp and the website still work as the builder expects?</h2>
+    <div id="healthTab"><div class="empty">Loading…</div></div>
   </section>
 </main>
 
@@ -3547,7 +3553,7 @@ async function confirmPush() {
 
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
-const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'times', 'yearend', 'history'];
+const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'times', 'yearend', 'history', 'health'];
 // Neither Mix nor Covers needs a tab-switch-triggered auto-fill anymore —
 // syncMixToShowOrder()/syncCoverLayersToShowOrder() both run off
 // renderSelected() regardless of which tab is even visible.
@@ -3565,6 +3571,7 @@ function switchTab(tab) {
   if (tab === 'tags' && window.tagsTabActivated) tagsTabActivated();
   if (tab === 'times' && window.timesTabActivated) timesTabActivated();
   if (tab === 'yearend' && window.yearendTabActivated) yearendTabActivated();
+  if (tab === 'health' && window.healthTabActivated) healthTabActivated();
 }
 document.querySelectorAll('.tab-btn').forEach((b) => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
@@ -3914,6 +3921,7 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 <script src="/tags.js"></script>
 <script src="/timestamps.js"></script>
 <script src="/yearend.js"></script>
+<script src="/health.js"></script>
 <script>
 loadArtistLabelNames();
 loadShowHistory();

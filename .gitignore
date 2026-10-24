@@ -14,6 +14,7 @@ show-builder/data/*.tmp
 show-builder/data/current-draft.json
 show-builder/data/download-manifest.jsonl
 show-builder/data/download-urls.txt
+show-builder/data/health.json
 
 # Python bytecode (scripts/tracklists/*.py)
 __pycache__/

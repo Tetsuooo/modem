@@ -12,16 +12,39 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ## Where we left off (2026-10-24)
 
+**New: the Health tab** (the last tab) — 13 checks of everything outside the builder that it
+and the website lean on (SoundCloud, Bandcamp, yt-dlp, ffmpeg, radioštudent, the site), with
+a fix button where the fix is simple and "copy details" where it needs a code fix. It runs by
+itself once a day when the builder opens; the tab button gets a badge when something needs
+attention (amber "!" = something to update, red "✗" = something broken). See "Health" below.
+- First run on the desktop: everything works; **yt-dlp has an update** (2026.08.19 →
+  2026.10.21) — the "Update yt-dlp" button is waiting (not pressed for you: it changes the
+  Python setup).
+- On the Surface: `git pull`, `start.bat`, then look at the Health tab — it'll show whether
+  the Surface has Python + yt-dlp + ffmpeg, and may offer "Install the test browser" (for the
+  SoundCloud-player check only).
+
 **Fixed: Scan previews showed SoundCloud's big player again.** SoundCloud stopped offering
 the plain MP3 stream that the small built-in preview player used; tracks only come as HLS
 now (a playlist of short pieces). The builder now plays that through hls.js
 (`public/vendor/hls.light.min.js`), so SoundCloud previews in Scan and in the Year-end list
 are the small rows again. Bandcamp was never affected. Whole albums / SoundCloud sets that
 aren't expanded still open the platform's tracklist player, as before.
-- **Before using it:** restart the show builder (`start.bat`). On the Surface: `git pull` +
-  restart once it's pushed.
+- Pushed (fd3a39f) and **confirmed working on the Surface** the same day — after one hiccup:
+  the Surface still showed the big players because the old server was still running.
+  `start.bat` started a second one, which couldn't get port 8090, and the browser opened the
+  old one. Since 5a6cf08 `start.bat` closes a running show builder first, so updating is
+  just `git pull` + `start.bat`.
 - The website itself is not affected: it plays through SoundCloud's own player (widget),
   which streams HLS by itself — checked the same day.
+- **How future-proof is all this** (Matej asked): the website mostly is — official
+  SoundCloud/Bandcamp embeds on static pages; soft spots: the Instagram tap window depends
+  on where SoundCloud's play button sits in its widget, ~4,800 covers/players load straight
+  from Bandcamp/SoundCloud (slow link rot when releases are deleted), and the shows' audio
+  lives on SoundCloud. The show builder will break now and then: scanning, previews,
+  SoundCloud links and the year-end lookups use SoundCloud's and Bandcamp's undocumented
+  access, which they change without notice (expect a few small fixes a year); downloads use
+  yt-dlp (update it when downloads fail). Hence the **Health** tab (below).
 
 ## Where we left off (2026-10-22)
 
@@ -173,6 +196,38 @@ The page may need a hard refresh (Ctrl+F5) the first time.
 | **Tracklist** | Set where tracks start in a show (the site's live tracklist), while listening to it. See below. |
 | **Year-end list** | The year's 50 best releases: every LP / EP played in the year's shows, listen, put in or out, rank, cut at 50, HTML for radioštudent. See below. |
 | **History** | Past shows archived by "Start fresh". |
+| **Health** | Do SoundCloud, Bandcamp, yt-dlp and the website still work as the builder expects? Fix buttons for the simple things. See below. |
+
+### Health: is everything the builder leans on still working?
+
+SoundCloud and Bandcamp change their insides without warning (in Oct 2026 SoundCloud dropped
+the plain MP3 streams the previews used). The Health tab checks, one row each:
+
+| Check | What breaks if it fails | Fix button |
+|---|---|---|
+| This copy of the builder | You're on an old version, or the running one is older than the files | Sync + get the latest version · Restart the builder |
+| SoundCloud access | Everything SoundCloud in the builder | Try a new SoundCloud key |
+| SoundCloud scan | The SoundCloud half of Scan | — (code fix) |
+| SoundCloud previews | The small player for SoundCloud tracks | — (code fix) |
+| SoundCloud search | The SoundCloud links tab, "Find links" | — (code fix) |
+| Bandcamp scan | The Bandcamp half of Scan | — (code fix) |
+| Bandcamp releases | Bandcamp previews, album tracks, pre-order flags | — (code fix; "blocked" can be temporary) |
+| Downloads (yt-dlp) | "Download selected" (tests a real SoundCloud + Bandcamp read) | Update yt-dlp / Install yt-dlp |
+| ffmpeg | Downloads → mp3, covers in the files | — (install: `winget install Gyan.FFmpeg`) |
+| SoundCloud's player (Instagram) | The website inside Instagram's browser (the tap window) | — (site fix) · Install the test browser (to check at all) |
+| SoundCloud show lookups | New shows on the site getting their player | — (code fix) |
+| radioštudent feed | The site's Mon/Tue auto-update seeing new shows | — (code fix) |
+| The website | Up, and its newest show = radioštudent's newest (amber if not — stuck auto-update after a week) | — |
+
+- **When:** by itself once a day when the builder opens (a run cut short by a restart doesn't
+  count), or "Run all checks" / "check again" on one row.
+- **Fix buttons** do only safe things: a new SoundCloud key (both caches), `pip install -U
+  yt-dlp requests`, Sync (the same as the Sync button) + `npm install` if the packages
+  changed, `npx playwright install chromium`, and restarting the builder (`start.bat
+  --restart`: closes this server, starts a new one minimised, the page reloads by itself).
+- **Code fixes:** "copy details" (one row) or "Copy report" (everything) and paste it to
+  whoever fixes the code (Claude). Each failure says which file to look at.
+- Results: `data/health.json` (git-ignored, per machine).
 
 ### Tracklist: fixing start times by hand
 
@@ -535,6 +590,11 @@ from a draft before 2026-10-17 (248, 249) — its original isn't on any page.
   a release"), `year-end.js` (`/ye/*` routes, the HTML), `public/yearend.js` (the tab).
   Bandcamp pages come from `scripts/.cache` (shared with the SoundCloud matching and the
   track index); SoundCloud lookups are cached in `data/.cache` (`ye-sc-*`).
+- Health: `health.js` (the 13 checks, the fixes, `/health/*`; each check runs as
+  `node show-builder/health.js --check <id>` in its own process — runnable by hand too),
+  `public/health.js` (the tab + the badge), results in `data/health.json`. The expected
+  SoundCloud play-button position (8, 11; 43 × 43) is `PLAY_BUTTON` — keep it in step with
+  the site's tap window (`src/index.html` `placeTapwins()`, `src/archive.html` `.sc-hidden`).
 
 ### Older tools still around
 The main dev server (`node server.js`, :8085 — the local preview of the website) still has
@@ -634,9 +694,36 @@ SoundCloud CDN sends CORS `*`). *Why not ffmpeg/a server proxy:* hls.js streams 
 away and seeks; nothing to wait for or clean up. `releaseTrackPlayers()` stops hls.js
 loading when a preview closes or the list re-renders.
 
+**2026-10-24 — The Health tab.** Matej asked how future-proof the site and builder are, then
+for a health check "as a separate tab", with fixes from the tab "if the fix is simple".
+*Choices:* each check in its own child process (the scan modules block on curl; the server
+stays responsive, four checks run at once); checks reuse the real code paths
+(`resolveStreamUrl`, `scanReposts`, `getFanId`, sc-search, yt-dlp `--simulate`) so they fail
+when the builder would; test items come from live data (the newest show, the newest wishlist
+item) so they don't rot; once a day by itself instead of a weekly GitHub email (his pick: in
+the tab). Fix buttons only for things that can't hurt; "Sync + get the latest version" is
+the existing Sync, so the data files merge as always. Restart reuses `start.bat` (which
+closes the running server first) with `--restart`: minimised, no new browser tab.
+
 ---
 
 ## How it was tested (2026-10-24)
+
+Health tab, on a throwaway clone run like `start.bat` runs it (port 8090, its own minimised
+window — the real builder wasn't running on the desktop), in Playwright's Chromium:
+- Every check by hand from the command line, then through the page: with no results yet,
+  opening the page ran all 13 by itself (6 s); 12 ✓, yt-dlp amber (update available); the
+  tab badge showed "1 !".
+- details / copy details / Copy report; the "new SoundCloud key" fix, then "check again".
+- Restart from the tab, twice: `start.bat --restart` closed the old server and its window,
+  the new one started minimised, the page reloaded by itself on the new server.
+- Not pressed: "Update yt-dlp" (it changes the desktop's Python; left for Matej), "Sync + get
+  the latest version" (it pushes data), "Install the test browser".
+- Gotcha found on the way: the session's shell had another project's Python venv first on
+  its PATH, so `python` lacked yt-dlp — the check reported exactly that. The builder started
+  from Explorer uses the normal PATH (Python 3.10, yt-dlp 2026.08.19).
+
+HLS previews (earlier the same day):
 
 HLS previews, on a throwaway clone with a second show builder on :8190, in Playwright's
 Chromium (branded headless Chrome 155 / Edge kept dying after 3–15 s even on a blank page on
