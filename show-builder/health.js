@@ -228,9 +228,10 @@ const RUN = {
   },
 
   downloads() {
-    let version;
+    let version, python;
     try {
-      version = execFileSync(PYTHON_CMD, ['-c', 'import yt_dlp, requests; print(yt_dlp.version.__version__)'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+      [version, python] = execFileSync(PYTHON_CMD, ['-c', "import sys, yt_dlp, requests; print(yt_dlp.version.__version__, '.'.join(map(str, sys.version_info[:3])))"],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim().split(/\s+/);
     } catch (e) {
       const t = errText(e);
       if (/No module named/i.test(t)) return fail('yt-dlp (or a part it needs) isn’t installed for Python, so "Download selected" can’t work.', t, 'ytdlp', 'Install yt-dlp');
@@ -251,14 +252,22 @@ const RUN = {
       }
     }
     const broken = tries.filter((t) => !t.ok);
-    const detail = `yt-dlp ${version}${latest ? ` (newest: ${latest})` : ''}\n` + tries.map((t) => `${t.label}: ${t.ok ? 'ok — ' : 'FAILED — '}${t.out}`).join('\n');
+    const detail = `yt-dlp ${version}${latest ? ` (newest: ${latest})` : ''}, Python ${python}\n` + tries.map((t) => `${t.label}: ${t.ok ? 'ok — ' : 'FAILED — '}${t.out}`).join('\n');
+    // yt-dlp drops old Pythons (3.10 deprecated in 2026 — its own warning); after that it
+    // can't be updated on that Python any more, so this has to be noticed before it bites
+    const oldPython = olderVersion(python, '3.11');
     if (broken.length) {
       const which = broken.map((t) => t.label).join(' and ');
       return outdated
         ? fail(`yt-dlp can't read ${which} any more. A newer yt-dlp is out, which usually fixes exactly this.`, detail, 'ytdlp', 'Update yt-dlp')
         : fail(`yt-dlp can't read ${which} any more, and it's already the newest version. yt-dlp's makers usually fix this within days — try "Update yt-dlp" again in a day or two.`, detail, 'ytdlp', 'Update yt-dlp');
     }
-    if (outdated) return warn(`Works (yt-dlp ${version}). A newer yt-dlp is out (${latest}) — updating now saves trouble later.`, detail, 'ytdlp', 'Update yt-dlp');
+    const notes = [];
+    if (outdated) notes.push(`A newer yt-dlp is out (${latest}) — updating now saves trouble later.`);
+    if (oldPython) {
+      notes.push(`The builder's Python (${python}) is getting old: yt-dlp is dropping support for it, and after that yt-dlp can't be updated here. Install Python 3.12 or newer from python.org (tick "Add python.exe to PATH"), then press "Update yt-dlp" and restart the builder — or ask Claude to set it up.`);
+    }
+    if (notes.length) return warn(`Works (yt-dlp ${version}). ${notes.join(' ')}`, detail, 'ytdlp', 'Update yt-dlp');
     return ok(`Works (yt-dlp ${version}, the newest).`, detail);
   },
 

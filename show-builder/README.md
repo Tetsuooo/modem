@@ -12,6 +12,28 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ## Where we left off (2026-10-24)
 
+**New in Download & Arrange (later the same day):**
+- **Tick several tracks, move them together.** Each row has a tick box (shift-click ticks a
+  range). A bar appears above the list: ⇑ ▲ ▼ ⇓ move all the ticked tracks as a block,
+  "gather" puts scattered ones next to each other, "remove N", "untick" (or Esc). A ticked
+  row's own ▲▼ buttons and dragging a ticked row move the whole group too; Alt+↑ / Alt+↓
+  as well. Ctrl+Z undoes it like any move.
+- **Download only what's new.** "Download" now fetches only the tracks that aren't
+  downloaded yet (new ones, or ones that failed) — the button says how many ("Download 1
+  more track", "All downloaded ✓"). Tracks downloaded before are left exactly as they are
+  (before, every click re-read all of them, and an album trimmed with "keep only this" came
+  back whole).
+- **One dead track no longer stops a download.** A track deleted from SoundCloud made
+  `modem_download.py` crash and skip everything after it; now that one says "download
+  failed" and the rest download.
+- **Fixed:** after dragging, a row's buttons still pointed at its old place, so its × could
+  remove a different track. The list now redraws after a drag (a playing track keeps
+  playing).
+- **Health:** the yt-dlp row now also warns that the desktop's Python is 3.10, which yt-dlp
+  is dropping (its own warning) — after that, yt-dlp can't be updated there. Python 3.13 is
+  already installed on the desktop but isn't the one on the PATH; switching needs yt-dlp
+  installed into it (ask Claude).
+
 **New: the Health tab** (the last tab) — 13 checks of everything outside the builder that it
 and the website lean on (SoundCloud, Bandcamp, yt-dlp, ffmpeg, radioštudent, the site), with
 a fix button where the fix is simple and "copy details" where it needs a code fix. It runs by
@@ -187,7 +209,7 @@ The page may need a hard refresh (Ctrl+F5) the first time.
 | Tab | What it's for |
 |---|---|
 | **Scan** | SoundCloud reposts + Bandcamp wishlist/library from the last 14 days. Tick what you want. |
-| **Download & Arrange** | "Your show": order, artist/label names, headings, download, play. Each Bandcamp track has a **SoundCloud** line (see below). |
+| **Download & Arrange** | "Your show": order (drag, the ▲▼ buttons, or tick several and move them together), artist/label names, headings, download (only what isn't downloaded yet), play. Each Bandcamp track has a **SoundCloud** line (see below). |
 | **Publish & Edit** | Show #, **air date**, generate the radioštudent HTML, preview, **publish to the site**. |
 | **Mix** | Timeline mix + export (.wav/.mp3). |
 | **Covers** | Cover generator. **Export PNG** also keeps a copy for the site. |
@@ -705,9 +727,30 @@ the tab). Fix buttons only for things that can't hurt; "Sync + get the latest ve
 the existing Sync, so the data files merge as always. Restart reuses `start.bat` (which
 closes the running server first) with `--restart`: minimised, no new browser tab.
 
+**2026-10-24 — Moving several tracks; downloading only the new ones.** Matej: "select
+multiple tracks and move them up and down in the playlist as a whole", and "when i then
+check another track and click download the already downloaded ones are skipped". *Choices:*
+tick boxes rather than Ctrl/Shift-clicking rows (the rows are full of fields and buttons;
+a box is visible and works the same in compact view), shift-click for ranges as in a file
+manager; the ticks are screen state only (not saved, not in undo). Moving a scattered
+selection up/down steps each one (a block stays a block — the usual list behaviour), while
+⇑/⇓, dragging and "gather" bring them together. "Downloaded" = has files and no error, so a
+failed track is retried by the next click; the page sends only those, so the downloader
+never re-reads the others and their `_download` (with any trimming) is left alone.
+
 ---
 
 ## How it was tested (2026-10-24)
+
+Arrange, on a throwaway clone (:8190) with a draft of five real SoundCloud tracks from the
+current draft (without this machine's downloads), in Playwright's Chromium — 28 checks, all
+passing: ticking, ▼/⇑ in the bar, ▲ disabled at the top, a ticked row's own ▼ moving the
+group, Alt+↓, Esc, shift-click range, gather, ⇓, remove 2 + Ctrl+Z, dragging a ticked row
+(two travel together), × after a drag removing the right track; then real downloads: 5 sent,
+4 downloaded and the 5th (deleted from SoundCloud since) "download failed" without stopping
+the others (before the fix it crashed the batch); a 6th track added → "Download 2 more
+tracks" sent exactly those 2, the four downloaded before untouched. A screenshot caught the
+empty bar showing when nothing was ticked (`.pick-bar[hidden]` fixed it).
 
 Health tab, on a throwaway clone run like `start.bat` runs it (port 8090, its own minimised
 window — the real builder wasn't running on the desktop), in Playwright's Chromium:

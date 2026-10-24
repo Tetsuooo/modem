@@ -283,6 +283,11 @@ def extract_info_no_download(url):
     except Exception as e:
         print(f"Error extracting info from {url}: {e}", file=sys.stderr)
         return None, None
+    # A track that's gone (deleted, private: SoundCloud answers 404) comes back as None
+    # rather than an exception — this used to crash here and stop the whole batch.
+    if not info:
+        print(f"Could not read {url} (deleted or private?); skipping it.", file=sys.stderr)
+        return None, None
     if info.get('entries'):
         return 'playlist', info
     return 'single', info
@@ -472,15 +477,27 @@ def main(input_file):
     except Exception as e:
         print(f"Error reading file {input_file}: {e}", file=sys.stderr)
         sys.exit(1)
+    failed = 0
     for url in urls:
         entry_type, info = extract_info_no_download(url)
         if entry_type is None:
             append_manifest({"url": url, "kind": None, "title": None, "artist": None, "files": [], "cover": None, "error": "extract_info failed"})
+            failed += 1
             continue
-        if entry_type == 'single':
-            download_single(url, info)
-        else:
-            download_playlist(url, info)
+        # One track going wrong mustn't stop the rest of the list: it's recorded as
+        # failed (the show builder shows "download failed" on that row) and we go on.
+        try:
+            if entry_type == 'single':
+                download_single(url, info)
+            else:
+                download_playlist(url, info)
+        except Exception as e:
+            print(f"Error downloading {url}: {e}", file=sys.stderr)
+            append_manifest({"url": url, "kind": entry_type, "title": info.get('title'), "artist": None, "files": [], "cover": None, "error": str(e)})
+            failed += 1
+    if failed:
+        print(f"{failed} of {len(urls)} could not be downloaded.", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

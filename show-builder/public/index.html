@@ -216,6 +216,18 @@
   .move-btn { flex: none; background: none; border: none; color: #9a9ba5; padding: 4px 5px; font-size: 12px; line-height: 1; cursor: pointer; border-radius: 4px; }
   .move-btn:hover:not(:disabled) { color: #e8e8ea; background: #2a2b33; }
   .move-btn:disabled { opacity: .3; cursor: default; }
+  /* Arrange: tick rows to move several tracks together (see movePicked()) */
+  .pick-hit { margin: -8px -4px -8px -8px; }
+  #selected .selected-item.picked .row { border-color: #3a6ff0; background: #1a2233; }
+  .pick-bar {
+    position: sticky; top: 66px; z-index: 4; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 6px 10px; margin-bottom: 8px; background: #1a2233; border: 1px solid #3a6ff0; border-radius: 8px;
+    font-size: 12px; color: #c7d4f0;
+  }
+  .pick-bar[hidden] { display: none; }
+  .pick-bar .move-btn { color: #c7d4f0; font-size: 13px; }
+  .pick-count { font-weight: 600; margin-right: 6px; }
+  .pick-hint { color: #7a9bd0; margin-left: auto; font-size: 11px; }
   textarea {
     width: 100%; height: 260px; background: #0e0f13; color: #d8d8dc; border: 1px solid #2a2b33;
     border-radius: 6px; padding: 10px; font: 12px/1.5 ui-monospace, monospace; resize: vertical;
@@ -471,7 +483,7 @@
         </div>
       </aside>
       <div class="arrange-main">
-        <h2>Your show (drag to reorder)</h2>
+        <h2>Your show (drag to reorder · tick several to move them together)</h2>
         <!-- Autocomplete sources for the artist/label/heading edit fields below —
              populated from /artist-label-names (existing archive credits) so
              typing a name that's already in use surfaces it instead of the user
@@ -479,6 +491,7 @@
         <datalist id="artistNamesList"></datalist>
         <datalist id="labelNamesList"></datalist>
         <datalist id="headingNamesList"></datalist>
+        <div id="pickBar" class="pick-bar" hidden></div>
         <div id="selected"><div class="empty">Nothing selected yet.</div></div>
         <div class="actions">
           <button id="downloadBtn">Download selected</button>
@@ -638,6 +651,12 @@ let selected = [];
 let itemRegistry = new Map(); // key -> item object, covers both top-level results and expanded sub-tracks
 let expandedOpen = new Set(); // keys of releases currently expanded into their track list
 let activeTrackAudio = null; // the one .track-player <audio> currently allowed to play — see wireTrackPlayers()
+// Arrange: keys of the ticked rows, moved together (movePicked()) — screen state only, not
+// saved and not undone; pickAnchor = the last ticked row, for shift-click ranges.
+let pickedKeys = new Set();
+let pickAnchor = null;
+// keys of the tracks in the download that's running (see startDownload())
+let downloadingKeys = new Set();
 
 // Undo/redo for "Your show" — a plain snapshot stack (not per-action inverse
 // functions) because it's simplest and correct for free across every kind
@@ -1202,6 +1221,99 @@ function moveSelectedItem(index, dir) {
   saveDraft();
 }
 
+// Several ticked tracks move together (Matej, 2026-10-24: "select multiple tracks and move
+// them up and down in the playlist as a whole"). up/down: every ticked track passes the
+// unticked one next to it, so a block moves as a block (scattered ones step one each, like
+// any list); top/bottom: all of them, in their order, to the top/bottom; gather: next to
+// each other where the first one is.
+const isPicked = (i) => !!selected[i] && pickedKeys.has(selected[i].key);
+function pickedMoves() {
+  let up = false, down = false;
+  for (let i = 0; i < selected.length; i++) {
+    if (!isPicked(i)) continue;
+    if (i > 0 && !isPicked(i - 1)) up = true;
+    if (i < selected.length - 1 && !isPicked(i + 1)) down = true;
+  }
+  const idx = selected.map((it, i) => (pickedKeys.has(it.key) ? i : -1)).filter((i) => i >= 0);
+  const together = idx.length < 2 || idx[idx.length - 1] - idx[0] === idx.length - 1;
+  return { up, down, together };
+}
+
+function movePicked(dir) {
+  const can = pickedMoves();
+  if (!pickedKeys.size || (dir === 'gather' ? can.together : !can[dir === 'top' || dir === 'up' ? 'up' : 'down'])) return;
+  pushUndoSnapshot();
+  const picked = selected.filter((it) => pickedKeys.has(it.key));
+  const rest = selected.filter((it) => !pickedKeys.has(it.key));
+  if (dir === 'top') selected = picked.concat(rest);
+  else if (dir === 'bottom') selected = rest.concat(picked);
+  else if (dir === 'gather') {
+    const at = selected.findIndex((it) => pickedKeys.has(it.key));
+    selected = rest.slice(0, at).concat(picked, rest.slice(at));
+  } else if (dir === 'up') {
+    for (let i = 1; i < selected.length; i++) {
+      if (isPicked(i) && !isPicked(i - 1)) [selected[i - 1], selected[i]] = [selected[i], selected[i - 1]];
+    }
+  } else {
+    for (let i = selected.length - 2; i >= 0; i--) {
+      if (isPicked(i) && !isPicked(i + 1)) [selected[i], selected[i + 1]] = [selected[i + 1], selected[i]];
+    }
+  }
+  renderSelected();
+  saveDraft();
+  const first = el('selected').querySelector('.selected-item.picked');
+  if (first) first.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function removePicked() {
+  if (!pickedKeys.size) return;
+  pushUndoSnapshot();
+  const gone = new Set(pickedKeys);
+  selected = selected.filter((it) => !gone.has(it.key));
+  // same as a row's own × (see renderSelected): its cover layer goes too
+  coverLayers = coverLayers.filter((l) => !gone.has(l.key));
+  renderCoverLayerList();
+  scheduleCoverRender();
+  pickedKeys.clear();
+  renderSelected(); renderScanResults(); saveDraft();
+}
+
+// Ticks, the bar above the list and the move buttons' enabled state — without rebuilding
+// the rows (renderSelected() calls this too, after it does).
+function refreshPickUi() {
+  const box = el('selected');
+  const can = pickedMoves();
+  const group = pickedKeys.size > 1;
+  box.querySelectorAll('.selected-item[data-key]').forEach((node) => {
+    const on = pickedKeys.has(node.dataset.key);
+    node.classList.toggle('picked', on);
+    const cb = node.querySelector('.pickbox');
+    if (cb) cb.checked = on;
+    node.querySelectorAll('.move-btn').forEach((b) => {
+      const i = Number(b.dataset.index), toTop = b.dataset.dir === 'up' || b.dataset.dir === 'top';
+      b.disabled = on && group ? !(toTop ? can.up : can.down) : (toTop ? i === 0 : i === selected.length - 1);
+    });
+  });
+  const bar = el('pickBar');
+  const n = pickedKeys.size;
+  bar.hidden = !n;
+  if (!n) { bar.innerHTML = ''; return; }
+  bar.innerHTML = `<span class="pick-count">${n} ticked</span>
+    <button class="move-btn" data-dir="top" title="all of them to the top, in their order" ${can.up ? '' : 'disabled'}>⇑</button>
+    <button class="move-btn" data-dir="up" title="up one (Alt+↑)" ${can.up ? '' : 'disabled'}>▲</button>
+    <button class="move-btn" data-dir="down" title="down one (Alt+↓)" ${can.down ? '' : 'disabled'}>▼</button>
+    <button class="move-btn" data-dir="bottom" title="all of them to the bottom, in their order" ${can.down ? '' : 'disabled'}>⇓</button>
+    ${can.together ? '' : '<button class="pill-btn" data-act="gather" title="put them next to each other, where the first one is">gather</button>'}
+    <button class="pill-btn" data-act="remove" title="take them out of the show (Ctrl+Z brings them back)">remove ${n}</button>
+    <button class="pill-btn" data-act="clear" title="untick all (Esc)">untick</button>
+    <span class="pick-hint">drag one to move them all · shift-click ticks a range</span>`;
+  bar.querySelectorAll('.move-btn').forEach((b) => b.addEventListener('click', () => movePicked(b.dataset.dir)));
+  bar.querySelector('[data-act="remove"]').addEventListener('click', removePicked);
+  bar.querySelector('[data-act="clear"]').addEventListener('click', () => { pickedKeys.clear(); refreshPickUi(); });
+  const g = bar.querySelector('[data-act="gather"]');
+  if (g) g.addEventListener('click', () => movePicked('gather'));
+}
+
 // A track's length in seconds, best-effort: its own scan-time duration if
 // known (single tracks, subtracks, or an SC playlist item — whose own
 // `duration` from the API is already the WHOLE playlist's total, see
@@ -1293,6 +1405,9 @@ function renderSelected() {
   if (selected.length) { badge.textContent = String(selected.length); badge.hidden = false; }
   else badge.hidden = true;
   updateShowDuration();
+  const inShow = new Set(selected.map((it) => it.key));
+  pickedKeys = new Set([...pickedKeys].filter((k) => inShow.has(k)));
+  updateDownloadButton();
 
   const box = el('selected');
   // This rebuild (box.innerHTML = ...) below recreates every row's DOM,
@@ -1318,7 +1433,7 @@ function renderSelected() {
     prevRects.set(node.dataset.key, node.getBoundingClientRect());
   });
 
-  if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; if (window.scAfterRender) scAfterRender(); return; }
+  if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; refreshPickUi(); if (window.scAfterRender) scAfterRender(); return; }
 
   // Runs of 2+ adjacent items off the same release share one heading — see
   // groupRuns()'s comment. runOf[i] === i marks the first item of such a run.
@@ -1335,8 +1450,9 @@ function renderSelected() {
       <span class="group-heading-hint">shared heading · ${runLen} tracks</span>
     </div>` : '';
     return `${groupBar}
-    <div class="selected-item${grouped ? ' grouped' : ''}" data-key="${escAttr(it.key)}">
+    <div class="selected-item${grouped ? ' grouped' : ''}${pickedKeys.has(it.key) ? ' picked' : ''}" data-key="${escAttr(it.key)}">
       <div class="row" draggable="true" data-index="${i}">
+        <label class="select-hit pick-hit" title="tick to move several tracks together (shift-click: a range)"><input type="checkbox" class="selectbox pickbox" data-key="${escAttr(it.key)}" ${pickedKeys.has(it.key) ? 'checked' : ''}></label>
         <span class="tag ${SOURCE_TAG[it.source]}">${SOURCE_TAG[it.source]}</span>
         <img src="${escAttr(it.artwork || '')}" loading="lazy" onerror="this.style.visibility='hidden'">
         <div class="meta">
@@ -1374,8 +1490,22 @@ function renderSelected() {
       audio.play().catch(() => {});
     }
   }
+  // a ticked row's buttons move every ticked track (movePicked())
   box.querySelectorAll('.move-btn').forEach((b) => b.addEventListener('click', () => {
-    moveSelectedItem(Number(b.dataset.index), b.dataset.dir);
+    const it = selected[Number(b.dataset.index)];
+    if (it && pickedKeys.size > 1 && pickedKeys.has(it.key)) movePicked(b.dataset.dir);
+    else moveSelectedItem(Number(b.dataset.index), b.dataset.dir);
+  }));
+  box.querySelectorAll('.pickbox').forEach((cb) => cb.addEventListener('click', (e) => {
+    const key = cb.dataset.key;
+    const keys = selected.map((it) => it.key);
+    if (e.shiftKey && pickAnchor && keys.includes(pickAnchor)) {
+      const [a, b] = [keys.indexOf(pickAnchor), keys.indexOf(key)].sort((x, y) => x - y);
+      keys.slice(a, b + 1).forEach((k) => (cb.checked ? pickedKeys.add(k) : pickedKeys.delete(k)));
+    } else if (cb.checked) pickedKeys.add(key);
+    else pickedKeys.delete(key);
+    pickAnchor = key;
+    refreshPickUi();
   }));
   // Compact view only: the scrub-bar strip beneath a row is a small target
   // once shrunk that far down, so double-clicking the row rectangle itself
@@ -1389,7 +1519,7 @@ function renderSelected() {
   box.querySelectorAll('.selected-item[data-key] > .row').forEach((row) => {
     row.addEventListener('dblclick', (e) => {
       if (!box.classList.contains('compact')) return;
-      if (e.target.closest('.remove') || e.target.closest('.move-buttons') || e.target.closest('.edit-field')) return;
+      if (e.target.closest('.remove') || e.target.closest('.move-buttons') || e.target.closest('.edit-field') || e.target.closest('.pick-hit')) return;
       const audio = row.parentElement.querySelector('.track-player audio');
       if (audio) { if (audio.paused) audio.play(); else audio.pause(); }
     });
@@ -1476,6 +1606,7 @@ function renderSelected() {
       node.style.transform = '';
     });
   });
+  refreshPickUi();
   syncMixToShowOrder();
   syncCoverLayersToShowOrder();
   if (window.scAfterRender) scAfterRender();
@@ -1486,6 +1617,7 @@ function renderSelected() {
 // big enough for a real scrubber instead of a cramped inline sliver.
 function downloadStatus(it) {
   const files = (it._download && it._download.files) || [];
+  if (downloadingKeys.has(it.key)) return '<span class="badge pending">downloading…</span>';
   if (!it._download) return '<span class="badge pending">not downloaded</span>';
   if (it._download.error) return '<span class="badge err">download failed</span>';
   if (!files.length) return '<span class="badge pending">…</span>';
@@ -2982,25 +3114,31 @@ async function exportCoverPng() {
 function wireDragAndDrop() {
   const box = el('selected');
   let draggingItem = null;
+  let moving = []; // the dragged row — or every ticked row, when a ticked one is dragged
 
   box.querySelectorAll('.selected-item').forEach((item) => {
     const row = item.querySelector('.row');
     row.addEventListener('dragstart', () => {
       pushUndoSnapshot();
       draggingItem = item;
-      row.classList.add('dragging');
+      // dragging a ticked row takes every ticked track along, as one block in their order
+      moving = pickedKeys.size > 1 && pickedKeys.has(item.dataset.key)
+        ? [...box.querySelectorAll('.selected-item')].filter((n) => pickedKeys.has(n.dataset.key))
+        : [item];
+      moving.forEach((n) => n.querySelector('.row').classList.add('dragging'));
     });
     row.addEventListener('dragend', () => {
-      row.classList.remove('dragging');
+      moving.forEach((n) => n.querySelector('.row').classList.remove('dragging'));
+      moving = [];
       draggingItem = null;
+      const before = selected.map((it) => it.key).join('\n');
       syncSelectedFromDom();
-      // Drag reordering deliberately skips renderSelected() (see its own
-      // comment — a full rebuild there would kill any playing audio), so
-      // the mix's own show-order sync needs its own explicit nudge here;
-      // the duration total is unaffected by pure reordering (same tracks,
-      // same total either way) and auto-advance already reads live DOM
-      // order directly, so neither needs a nudge.
-      syncMixToShowOrder();
+      // Rebuild once the order changed: every row's buttons carry their index
+      // (data-index), which still pointed at the OLD places after a drag — the
+      // × on a moved row could take out a different track — and shared
+      // headings have to follow the new runs. renderSelected() keeps a playing
+      // track playing (resumePlayback) and syncs the mix's order itself.
+      if (selected.map((it) => it.key).join('\n') !== before) renderSelected();
       saveDraft();
     });
   });
@@ -3009,14 +3147,16 @@ function wireDragAndDrop() {
   box.ondragover = (e) => {
     e.preventDefault();
     if (!draggingItem) return;
-    const after = itemAfterPoint(box, e.clientY, draggingItem);
-    if (after === draggingItem) return;
+    const after = itemAfterPoint(box, e.clientY, moving);
+    // already sitting right there, in order: nothing to move
+    const items = [...box.querySelectorAll('.selected-item')];
+    const at = items.indexOf(moving[0]);
+    if (moving.every((n, k) => items[at + k] === n) && (items[at + moving.length] || null) === after) return;
 
     const prevRects = new Map();
     box.querySelectorAll('.selected-item').forEach((n) => prevRects.set(n, n.getBoundingClientRect()));
 
-    if (after == null) box.appendChild(draggingItem);
-    else box.insertBefore(draggingItem, after);
+    moving.forEach((n) => { if (after == null) box.appendChild(n); else box.insertBefore(n, after); });
 
     box.querySelectorAll('.selected-item').forEach((n) => {
       const prev = prevRects.get(n);
@@ -3034,8 +3174,10 @@ function wireDragAndDrop() {
   };
 }
 
+// `skip`: the row(s) being dragged
 function itemAfterPoint(container, y, skip) {
-  const items = [...container.querySelectorAll('.selected-item')].filter((n) => n !== skip);
+  const skipped = new Set([].concat(skip));
+  const items = [...container.querySelectorAll('.selected-item')].filter((n) => !skipped.has(n));
   let closest = { offset: -Infinity, element: null };
   for (const child of items) {
     const box = child.getBoundingClientRect();
@@ -3075,24 +3217,58 @@ async function scan() {
   }
 }
 
+// A track with files counts as downloaded; a failed or empty attempt is tried again.
+function isDownloaded(it) {
+  return !!(it._download && !it._download.error && it._download.files && it._download.files.length);
+}
+
+function updateDownloadButton() {
+  const btn = el('downloadBtn');
+  if (downloadingKeys.size) {
+    btn.disabled = true;
+    btn.textContent = `Downloading ${downloadingKeys.size}…`;
+    return;
+  }
+  const todo = selected.filter((it) => !isDownloaded(it)).length;
+  const done = selected.length - todo;
+  btn.disabled = !todo;
+  btn.textContent = !selected.length ? 'Download selected'
+    : !todo ? 'All downloaded ✓'
+    : done ? `Download ${todo} more track${todo > 1 ? 's' : ''}`
+    : `Download selected (${todo})`;
+  btn.title = done && todo ? `${done} already downloaded — only the ${todo} not downloaded yet (new, or failed before) are fetched` : '';
+}
+
+// Only what isn't downloaded yet goes to the downloader (Matej, 2026-10-24: add tracks
+// after a bulk download, click again, get just those). Tracks downloaded before keep their
+// _download untouched — re-reading the manifest would have reset an album trimmed to one
+// track ("keep only this") back to all its files.
 async function startDownload() {
-  if (!selected.length) return;
-  el('downloadBtn').disabled = true;
-  el('downloadBtn').textContent = 'Downloading…';
-  await fetch('/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: selected }) });
+  const todo = selected.filter((it) => !isDownloaded(it));
+  if (!todo.length || downloadingKeys.size) return;
+  downloadingKeys = new Set(todo.map((it) => it.key));
+  renderSelected();
+  try {
+    await fetch('/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: todo }) });
+  } catch (e) {
+    downloadingKeys = new Set();
+    renderSelected();
+    el('downloadLog').textContent = 'could not start the download: ' + (e.message || e);
+    return;
+  }
   const poll = setInterval(async () => {
-    const j = await (await fetch('/download-status')).json();
+    let j;
+    try { j = await (await fetch('/download-status')).json(); } catch (e) { return; } // try again next tick
     el('downloadLog').textContent = (j.log || []).join('\n');
     if (!j.running) {
       clearInterval(poll);
-      el('downloadBtn').disabled = false;
-      el('downloadBtn').textContent = 'Download selected';
       if (j.results) {
         const byUrl = new Map(j.results.map((r) => [r.url, r]));
-        selected.forEach((it) => { it._download = byUrl.get(it.url) || null; });
-        renderSelected();
-        saveDraft();
+        selected.forEach((it) => { if (downloadingKeys.has(it.key)) it._download = byUrl.get(it.url) || null; });
       }
+      downloadingKeys = new Set();
+      renderSelected();
+      saveDraft();
     }
   }, 1500);
 }
@@ -3629,6 +3805,20 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undoShowChange(); }
   else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) { e.preventDefault(); redoShowChange(); }
+});
+// Arrange, with tracks ticked: Alt+↑ / Alt+↓ move them, Esc unticks (not while typing).
+document.addEventListener('keydown', (e) => {
+  if (el('panel-arrange').hidden || !pickedKeys.size) return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === 'INPUT' && document.activeElement.type !== 'checkbox') return;
+  if (tag === 'TEXTAREA') return;
+  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    e.preventDefault();
+    movePicked(e.key === 'ArrowUp' ? 'up' : 'down');
+  } else if (e.key === 'Escape') {
+    pickedKeys.clear();
+    refreshPickUi();
+  }
 });
 el('generateBtn').addEventListener('click', generateHtml);
 el('copyBtn').addEventListener('click', () => {
