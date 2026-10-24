@@ -107,6 +107,9 @@
   .select-hit { flex: none; display: flex; align-items: center; justify-content: center; padding: 8px; margin: -8px; cursor: pointer; }
   .select-hit .selectbox { width: 16px; height: 16px; cursor: pointer; }
   .row .meta { min-width: 0; flex: 1; }
+  /* Arrange: each track's length, in both views (the same number the Show length total adds up) */
+  .dur { flex: none; min-width: 40px; text-align: right; font-size: 12px; color: #9a9ba5; font-variant-numeric: tabular-nums; }
+  .dur.unknown { color: #55566a; }
   .row .title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .artist { font-size: 12px; color: #9a9ba5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .date { font-size: 11px; color: #6f7080; flex: none; }
@@ -1331,6 +1334,15 @@ function itemDurationSeconds(it) {
   return null;
 }
 
+// A track's length on its Arrange row (compact view too); "–:––" until it's known
+// (backfillMissingDurations() fills those in and re-renders).
+function durationCell(it) {
+  const d = itemDurationSeconds(it);
+  return d == null
+    ? '<span class="dur unknown" title="length not known yet">–:––</span>'
+    : `<span class="dur" title="length">${formatDurationLong(d)}</span>`;
+}
+
 function formatDurationLong(s) {
   s = Math.round(s);
   const h = Math.floor(s / 3600);
@@ -1373,7 +1385,28 @@ function updateShowDuration() {
 // got cached. `durationBackfillAttempted` stops a permanently-unresolvable
 // track (dead link, 404) from being retried on every single re-render.
 const durationBackfillAttempted = new Set();
+// A downloaded file's own length (metadata only), or null.
+function fileDuration(url) {
+  return new Promise((resolve) => {
+    const a = new Audio();
+    let settled = false;
+    const done = (v) => { if (settled) return; settled = true; a.removeAttribute('src'); a.load(); resolve(v); };
+    a.preload = 'metadata';
+    a.addEventListener('loadedmetadata', () => done(isFinite(a.duration) ? a.duration : null), { once: true });
+    a.addEventListener('error', () => done(null), { once: true });
+    setTimeout(() => done(null), 8000);
+    a.src = url;
+  });
+}
+
 async function backfillItemDuration(it) {
+  // The downloaded file(s) know their own length first: that works for a track deleted from
+  // SoundCloud since, and adds up an album trimmed to the tracks actually in the show.
+  const files = (it._download && it._download.files) || [];
+  if (files.length) {
+    const lens = await Promise.all(files.map((f) => fileDuration(downloadedFileUrl(f))));
+    if (lens.every((x) => x != null)) { it.duration = Math.round(lens.reduce((s, x) => s + x, 0)); return true; }
+  }
   try {
     const r = await fetch('/preview-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: it }) });
     const j = await r.json();
@@ -1468,6 +1501,7 @@ function renderSelected() {
             <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="label" ${it.headingSource === 'label' ? 'checked' : ''}> label</label>
           </div>`}
         </div>
+        ${durationCell(it)}
         ${downloadStatus(it)}
         <div class="move-buttons">
           <button class="move-btn" data-index="${i}" data-dir="top" title="move to top" ${i === 0 ? 'disabled' : ''}>⇑</button>
@@ -3266,6 +3300,8 @@ async function startDownload() {
         const byUrl = new Map(j.results.map((r) => [r.url, r]));
         selected.forEach((it) => { if (downloadingKeys.has(it.key)) it._download = byUrl.get(it.url) || null; });
       }
+      // a length still unknown can now come from the downloaded file (backfillItemDuration())
+      downloadingKeys.forEach((k) => durationBackfillAttempted.delete(k));
       downloadingKeys = new Set();
       renderSelected();
       saveDraft();

@@ -26,6 +26,11 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 - **One dead track no longer stops a download.** A track deleted from SoundCloud made
   `modem_download.py` crash and skip everything after it; now that one says "download
   failed" and the rest download.
+- **Each track's length** on its row, on the right, in the normal and the compact view (the
+  same numbers the "Show length" total adds up; "–:––" while unknown). A length that's
+  missing is now read from the downloaded file first — so a track deleted from SoundCloud
+  since still has one, and an album trimmed to some of its tracks counts only those.
+  Tracks downloaded just now get theirs straight away.
 - **Fixed:** after dragging, a row's buttons still pointed at its old place, so its × could
   remove a different track. The list now redraws after a drag (a playing track keeps
   playing).
