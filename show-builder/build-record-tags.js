@@ -10,7 +10,7 @@
 // gone into RS's own admin fields to tag artists/labels there, so
 // scrape-modem.js's field-umetniki/field-zalozba scrape correctly found
 // nothing to attach.
-const { groupRuns, headingName, namesOf } = require('./generate-html');
+const { groupRuns, runHeading, namesOf } = require('./generate-html');
 
 // Deliberately NOT split on commas: a track's artist/label field is treated
 // as ONE atomic tag string, matching both injectSegTagsPreview() (what the
@@ -62,10 +62,22 @@ function buildRecordTags(items) {
           artists.push({ name: nm, url: null, seg });
         });
       });
-      const heading = (group[0].groupHeading || headingName(group[0])).trim();
+      const heading = String(runHeading(items, i) || '').trim();
+      const seenLabels = new Set();
       if (heading && !seen.has(heading.toLowerCase())) {
         labels.push({ name: heading, url: null, seg });
+        seenLabels.add(heading.toLowerCase());
       }
+      // each track's own label too: since one artist's tracks off different releases share
+      // a heading (groupRuns()), their labels would otherwise vanish from the tags
+      group.forEach((it) => {
+        namesOf(it, 'label').forEach((nm) => {
+          const key = nm.toLowerCase();
+          if (seenLabels.has(key)) return;
+          seenLabels.add(key);
+          labels.push({ name: nm, url: null, seg });
+        });
+      });
       i = j + 1;
     } else {
       const it = items[i];

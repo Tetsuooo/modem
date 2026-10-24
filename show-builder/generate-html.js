@@ -137,12 +137,10 @@ function headingName(item) {
 // release's own artist/label name) on tracks expanded from the same
 // album/playlist — see subtrackItem() in public/index.html.
 //
-// Returns, for each item index, the index it's grouped under: itself if
-// standalone or the first item of a run of 2+ adjacent items sharing a
-// non-null groupKey, matching that first item's index if it's part of such
-// a run, or -1 if ungrouped. (items[i] is "the start of a 2+ run" exactly
-// when the return value at i equals i.)
-function groupRuns(items) {
+// releaseRuns(): runs of 2+ adjacent items sharing a non-null groupKey (off one release).
+// Returns, for each item index, the index of its run's first item, or -1 if it isn't in
+// one. (items[i] starts a run exactly when the value at i equals i.)
+function releaseRuns(items) {
   const runOf = new Array(items.length).fill(-1);
   let i = 0;
   while (i < items.length) {
@@ -152,6 +150,42 @@ function groupRuns(items) {
       for (let k = i; k <= j; k++) runOf[k] = i;
     }
     i = j + 1;
+  }
+  return runOf;
+}
+
+// The heading of the run (or lone track) starting at `start`: a release's shared heading
+// when it starts with tracks off one release, else that track's own (headingName()).
+function runHeading(items, start, rel) {
+  rel = rel || releaseRuns(items);
+  const it = items[start];
+  return rel[start] === start ? (it.groupHeading || headingName(it)) : headingName(it);
+}
+
+// groupRuns(): which tracks share ONE heading — same return shape as releaseRuns().
+// Tracks off one release (releaseRuns()), and since 2026-10-24 also neighbours whose
+// heading would be the same name: three tracks by one artist from three different
+// releases, in a row, go under one heading (Matej: "they should all fall under one and
+// the same heading"). Compared case-insensitively; an empty heading never joins.
+// public/index.html has a copy of these three — keep them in step.
+function groupRuns(items) {
+  const rel = releaseRuns(items);
+  const units = []; // a release run or a single track, with its heading
+  let i = 0;
+  while (i < items.length) {
+    let j = i;
+    if (rel[i] === i) while (j + 1 < items.length && rel[j + 1] === i) j++;
+    units.push({ start: i, end: j, key: String(runHeading(items, i, rel) || '').trim().toLowerCase() });
+    i = j + 1;
+  }
+  const runOf = new Array(items.length).fill(-1);
+  let u = 0;
+  while (u < units.length) {
+    let v = u;
+    while (v + 1 < units.length && units[u].key && units[v + 1].key === units[u].key) v++;
+    const start = units[u].start, end = units[v].end;
+    if (end > start) for (let k = start; k <= end; k++) runOf[k] = start;
+    u = v + 1;
   }
   return runOf;
 }
@@ -170,7 +204,7 @@ function generateShowHtml(items) {
       // space-separated in ONE paragraph, not one <p> each.
       let j = i;
       while (j + 1 < items.length && runOf[j + 1] === i) j++;
-      const heading = `<p>${escapeHtml(items[i].groupHeading || headingName(items[i]))} ${SLASHES}</p>`;
+      const heading = `<p>${escapeHtml(runHeading(items, i))} ${SLASHES}</p>`;
       const embeds = [];
       for (let k = i; k <= j; k++) embeds.push(buildEmbed(items[k], { small: true }));
       blocks.push(heading + '\n' + `<p>${embeds.join(' ')}</p>`);
@@ -185,4 +219,4 @@ function generateShowHtml(items) {
   return INTRO_BANNER + '\n\n' + blocks.join('\n\n');
 }
 
-module.exports = { generateShowHtml, buildBandcampEmbed, buildSoundcloudEmbed, groupRuns, headingName, namesOf };
+module.exports = { generateShowHtml, buildBandcampEmbed, buildSoundcloudEmbed, groupRuns, releaseRuns, runHeading, headingName, namesOf };

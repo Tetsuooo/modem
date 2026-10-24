@@ -3,7 +3,7 @@
 // with the same field wrapper divs scripts/scrape-modem.js's fieldByClass()
 // looks for, then runs the REAL parsePage() against it — not a reimplementation.
 const { parsePage } = require('../scripts/scrape-modem.js');
-const { generateShowHtml, groupRuns, headingName, namesOf } = require('./generate-html');
+const { generateShowHtml, groupRuns, runHeading, headingName, namesOf } = require('./generate-html');
 const { escapeHtml } = require('./lib');
 
 // items: ordered, selected candidates (same shape /generate takes — each may
@@ -71,7 +71,7 @@ function buildWarnings(record, items) {
     if (runOf[i] !== -1 && runOf[i] !== i) return; // grouped, but not the group's first — already checked
     const heading = (record.segments || [])[itemToSeg[i]];
     const headingKey = (heading || '').trim().toLowerCase();
-    const expected = (runOf[i] === i ? (item.groupHeading || headingName(item)) : headingName(item)).trim().toLowerCase();
+    const expected = String(runOf[i] === i ? runHeading(items, i) : headingName(item)).trim().toLowerCase();
     const label = runOf[i] === i ? `Group starting at track ${i + 1} ("${item.title}")` : `Track ${i + 1} ("${item.title}")`;
     if (expected && headingKey !== expected) {
       warnings.push(`${label}: heading came out as "${heading}", expected "${expected}" — check for unusual characters in the name.`);

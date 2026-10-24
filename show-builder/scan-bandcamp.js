@@ -41,7 +41,60 @@ function mapItem(item, sourceLabel) {
     date: item.added,
     albumId: isAlbum ? item.tralbum_id : null,
     trackId: isAlbum ? item.featured_track || null : item.tralbum_id,
+    // Bandcamp's own label field — only some releases fill it (e.g. "Drag City Records");
+    // the rest are found on the release page (labelFromPage(), in checkReleaseStatus())
+    label: item.label || null,
   };
+}
+
+function norm(s) {
+  return String(s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+}
+
+// The first `recordLabel` name anywhere in the page's structured data (ld+json):
+// albumRelease[].recordLabel on an album page, under inAlbum on a track page.
+function recordLabelOf(node, depth) {
+  if (!node || typeof node !== 'object' || depth > 6) return null;
+  if (node.recordLabel && node.recordLabel.name) return String(node.recordLabel.name).trim();
+  for (const v of Object.values(node)) {
+    const found = recordLabelOf(v, depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+
+// A release's label, read off its own page (Matej, 2026-10-24: "you could be better at
+// extracting the label info from bandcamp"):
+//   1. Bandcamp's label field, when the release has one (structured data, recordLabel);
+//   2. else the name of the page it's on, when that page isn't the artist's own — most
+//      label releases sit on the label's page ("Artetetra", "mappa", "katharsis");
+//   3. else none (the artist's own page: self-released).
+// A page whose name is part of the artist's (or the other way round: "Sun Araw" vs
+// "Sun Araw & M. Geddes Gengras") counts as the artist's own. Same idea as the Year-end
+// list's accountIsLabel (year-end-releases.js).
+function labelFromPage(html, artist) {
+  const ld = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
+  if (ld) {
+    try {
+      const found = recordLabelOf(JSON.parse(ld[1]), 0);
+      if (found) return found;
+    } catch (e) { /* no structured data */ }
+  }
+  const b = html.match(/data-band="([^"]*)"/);
+  let page = '';
+  try { page = (b && JSON.parse(decodeEntities(b[1])).name) || ''; } catch (e) { page = ''; }
+  const p = norm(page), a = norm(artist);
+  if (!p || !a || p === a || p.includes(a) || a.includes(p)) return null;
+  return page.trim();
+}
+
+// For a track picked before the builder read labels (show-builder's /release-label).
+function releaseLabel(url, artist) {
+  const html = curlGet(url);
+  const m = html.match(/data-tralbum="([^"]*)"/);
+  let td = {};
+  try { td = m ? JSON.parse(decodeEntities(m[1])) : {}; } catch (e) { td = {}; }
+  return labelFromPage(html, td.artist || artist);
 }
 
 // Fetch the release's own page and read its data-tralbum blob (the same one
@@ -68,6 +121,8 @@ function checkReleaseStatus(item) {
   // Always capture the release date (not just for pre-orders) — the "older
   // than 3 months" age flag in the UI needs it for every item.
   item.releaseDate = td.album_release_date || (td.current && td.current.release_date) || null;
+  if (!item.label) item.label = labelFromPage(html, td.artist || item.artist);
+  item.labelChecked = true; // read off the page: the builder needn't look again (see /release-label)
   const preorder = !!(td.is_preorder || td.album_is_preorder);
   if (preorder) {
     item.preorder = true;
@@ -80,6 +135,8 @@ function checkReleaseStatus(item) {
       .map((t) => ({
         id: t.track_id,
         title: t.title,
+        // a compilation's tracks name their own artists (else the release's, in the page)
+        artist: t.artist || null,
         url: new URL(t.title_link, item.url).href,
         duration: t.duration ? Math.round(t.duration) : null,
       }));
@@ -184,4 +241,4 @@ function fetchAlbumTracks(item) {
     }));
 }
 
-module.exports = { scanWishlistAndLibrary, getFanId, resolveStreamUrl, fetchAlbumTracks };
+module.exports = { scanWishlistAndLibrary, getFanId, resolveStreamUrl, fetchAlbumTracks, releaseLabel, labelFromPage };

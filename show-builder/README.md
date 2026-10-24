@@ -31,6 +31,26 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   missing is now read from the downloaded file first — so a track deleted from SoundCloud
   since still has one, and an album trimmed to some of its tracks counts only those.
   Tracks downloaded just now get theirs straight away.
+- **One heading for one artist's tracks in a row.** Tracks next to each other whose heading
+  would be the same name (the same artist — or the same label, when that's the heading)
+  now share ONE heading, even off different releases, like tracks off one release always
+  did: in Arrange (a bar "4h4 · same artist · one heading for 3 tracks"; change it in the
+  tracks' own fields — they keep their label fields), in the HTML, the artist list
+  ("4h4 [ Label One, Label Two ]"), the Preview and the site's tags. Each track's own label
+  is still tagged/credited. Editing a name re-groups when you leave the field.
+  (`releaseRuns()` / `runHeading()` / `groupRuns()` in generate-html.js, copied in
+  public/index.html.)
+- **Labels filled in from Bandcamp.** Scans now read each release's label: Bandcamp's own
+  label field when it's set (e.g. "Drag City Records"), else the name of the Bandcamp page
+  the release is on when that isn't the artist's own ("Artetetra", "mappa", "katharsis") —
+  the artist's own page means self-released, no label. SoundCloud reposts get the
+  uploader's "record label" field when filled in. Tracks picked before get looked up once
+  (`/release-label`); a label typed or cleared by hand is never overwritten. First real
+  scan: 16 of 23 Bandcamp releases came with a label. Album/compilation tracks now also
+  carry their own artist from the release page.
+- **The HTML box stays read-only, on purpose:** a publish builds the show's page on the
+  site from "Your show" itself (scripts/add-show-from-draft.js regenerates it), not from
+  that text — hand edits would reach radioštudent but not the site. Fix things in Arrange.
 - **No playhead memory** in the small players (Scan previews, Arrange, Year-end list): a
   track that stops — paused, or because another one started — plays from the beginning
   next time. Seeking while playing, auto-advance at the end, and a playing track surviving

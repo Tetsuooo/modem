@@ -202,6 +202,22 @@ app.post('/preview-stream', (req, res) => {
   }
 });
 
+// ---------- /release-label ----------------------------------------------------
+// A track's label, for one picked before the builder read labels (scans do it
+// themselves since 2026-10-24): Bandcamp → its release page (labelFromPage() in
+// scan-bandcamp.js), SoundCloud → the uploader's "record label" field. label: null =
+// looked, there's none (self-released) — the page then won't ask again.
+app.post('/release-label', (req, res) => {
+  const it = (req.body && req.body.item) || {};
+  if (!it.url) return res.status(400).json({ ok: false, error: 'no url' });
+  try {
+    const label = it.source === 'soundcloud' ? scanSoundcloud.trackLabel(it.url) : scanBandcamp.releaseLabel(it.url, it.artist);
+    res.json({ ok: true, label: label || null });
+  } catch (e) {
+    res.json({ ok: false, error: String(e.message || e) });
+  }
+});
+
 // ---------- draft persistence ----------------------------------------------
 app.get('/draft', (req, res) => {
   res.json(readJson(DRAFT_FILE, { selected: [], order: [], generatedHtml: null }));

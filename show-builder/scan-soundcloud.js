@@ -128,6 +128,9 @@ function scanReposts(cutoffDate) {
         // Free — already on the track/playlist object, no extra request.
         // For a playlist this is its total length, not one track's.
         duration: track.duration ? Math.round(track.duration / 1000) : null,
+        // the uploader's own "record label" field, when they filled it in
+        label: track.label_name || null,
+        labelChecked: true,
       });
     }
     if (hitOld || !items.length) break;
@@ -179,7 +182,15 @@ function resolveTracks(item) {
       // display_date (see scanReposts' comment above) over release_date/
       // created_at: it's what SoundCloud itself shows as the publish date.
       releaseDate: t.display_date || t.release_date || t.created_at || null,
+      label: t.label_name || null,
     }));
+}
+
+// A track's label as its uploader entered it (SoundCloud's "record label" field), for a
+// track picked before the builder read labels (show-builder's /release-label).
+function trackLabel(url) {
+  const { data } = apiV2Get('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent(url), getClientId(false));
+  return (data && data.label_name) || null;
 }
 
 // Resolves a single track permalink to a directly-playable progressive
@@ -231,4 +242,4 @@ function hlsRank(t) {
   return i < 0 ? order.length : i;
 }
 
-module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl, apiV2Get };
+module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl, apiV2Get, trackLabel };

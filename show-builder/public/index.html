@@ -190,6 +190,7 @@
     background: #1a2333; border: 1px solid #2a3b55; border-radius: 6px;
   }
   .group-heading-bar .group-heading-field { flex: 1; }
+  .group-heading-text { flex: 1; font-size: 13px; color: #e8e8ea; padding: 2px 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .group-heading-hint { font-size: 11px; color: #7a9bd0; white-space: nowrap; flex: none; }
   .selected-item.grouped .row { border-left: 3px solid #3a6ff0; margin-bottom: 2px; }
   .selected-item.grouped + .selected-item.grouped { margin-top: 0; }
@@ -665,6 +666,25 @@ let pickedKeys = new Set();
 let pickAnchor = null;
 // keys of the tracks in the download that's running (see startDownload())
 let downloadingKeys = new Set();
+// groupRuns() as last drawn — editing a name can join or split a shared heading
+let lastRunsSig = '';
+
+// Typing in a name field doesn't redraw (it would lose the cursor). Once the field is
+// left, redraw if that changed who shares a heading (e.g. an artist name now matching
+// the next track's) — and put the cursor back into the field it went to.
+function regroupIfChanged() {
+  if (JSON.stringify(groupRuns(selected)) === lastRunsSig) return;
+  setTimeout(() => {
+    const a = document.activeElement;
+    const sel = a && a.classList && a.classList.contains('edit-field') && a.dataset.key
+      ? `.edit-field[data-key="${CSS.escape(a.dataset.key)}"][data-field="${a.dataset.field}"]` + (a.dataset.extra != null ? `[data-extra="${a.dataset.extra}"]` : ':not([data-extra])')
+      : null;
+    const caret = sel && typeof a.selectionStart === 'number' ? a.selectionStart : null;
+    renderSelected();
+    const n = sel && el('selected').querySelector(sel);
+    if (n) { n.focus(); if (caret != null) n.setSelectionRange(caret, caret); }
+  }, 0);
+}
 
 // Undo/redo for "Your show" — a plain snapshot stack (not per-action inverse
 // functions) because it's simplest and correct for free across every kind
@@ -779,17 +799,21 @@ function nameFieldsHtml(it, field) {
 // post) the label's name, never both, so headingSource records that choice;
 // label starts blank since the scan sources only ever give us one name.
 function makeSelectedEntry(item) {
-  return Object.assign(
+  const entry = Object.assign(
     { label: '', headingSource: 'artist', groupHeading: item.groupLabel || item.artist || '' },
     item
   );
+  // scans read the label since 2026-10-24 (null = none found: self-released)
+  if (entry.label == null) entry.label = '';
+  return entry;
 }
 
-// Same grouping rule generate-html.js's groupRuns() applies server-side —
-// duplicated here (no module system for this inline script) since the
+// Same grouping rules generate-html.js's releaseRuns() / runHeading() / groupRuns() apply
+// server-side — duplicated here (no module system for this inline script) since the
 // reorderable "Your show" list needs the same run boundaries to render the
-// shared-heading UI. Keep these in sync if the rule ever changes.
-function groupRuns(items) {
+// shared-heading UI. Keep these in sync if the rules ever change.
+// releaseRuns: 2+ neighbours off one release (same groupKey).
+function releaseRuns(items) {
   const runOf = new Array(items.length).fill(-1);
   let i = 0;
   while (i < items.length) {
@@ -799,6 +823,37 @@ function groupRuns(items) {
       for (let k = i; k <= j; k++) runOf[k] = i;
     }
     i = j + 1;
+  }
+  return runOf;
+}
+
+// The heading of the run (or lone track) starting at `start`.
+function runHeading(items, start, rel) {
+  rel = rel || releaseRuns(items);
+  const it = items[start];
+  return rel[start] === start ? (it.groupHeading || headingName(it)) : headingName(it);
+}
+
+// groupRuns: who shares ONE heading — a release run, and (since 2026-10-24) neighbours
+// whose heading is the same name, e.g. one artist's tracks off different releases in a row.
+function groupRuns(items) {
+  const rel = releaseRuns(items);
+  const units = [];
+  let i = 0;
+  while (i < items.length) {
+    let j = i;
+    if (rel[i] === i) while (j + 1 < items.length && rel[j + 1] === i) j++;
+    units.push({ start: i, end: j, key: String(runHeading(items, i, rel) || '').trim().toLowerCase() });
+    i = j + 1;
+  }
+  const runOf = new Array(items.length).fill(-1);
+  let u = 0;
+  while (u < units.length) {
+    let v = u;
+    while (v + 1 < units.length && units[u].key && units[v + 1].key === units[u].key) v++;
+    const start = units[u].start, end = units[v].end;
+    if (end > start) for (let k = start; k <= end; k++) runOf[k] = start;
+    u = v + 1;
   }
   return runOf;
 }
@@ -1072,6 +1127,9 @@ function subtrackItem(parent, t) {
     // and a SoundCloud playlist's `.artist` is its uploader/curator account.
     groupKey: isBandcamp ? (parent.albumId ? 'bc:' + parent.albumId : null) : 'scset:' + parent.key,
     groupLabel: parent.artist || '',
+    // the release's label is each of its tracks' (a SoundCloud set's track may name its own)
+    label: t.label || parent.label || '',
+    labelChecked: !!(t.label || parent.labelChecked),
     albumId: isBandcamp ? parent.albumId : undefined,
     trackId: isBandcamp ? t.id : undefined,
     duration: t.duration || null,
@@ -1390,6 +1448,33 @@ function updateShowDuration() {
 // got cached. `durationBackfillAttempted` stops a permanently-unresolvable
 // track (dead link, 404) from being retried on every single re-render.
 const durationBackfillAttempted = new Set();
+
+// Labels for tracks picked before scans read them (2026-10-24): each looked up once
+// (labelChecked, saved with the draft), never over a label typed in or cleared by hand.
+// Fills the label field in place rather than redrawing, so nothing being typed is lost.
+const labelLookupTried = new Set();
+async function backfillLabels() {
+  const targets = selected.filter((it) => !it.label && !it.labelChecked && it.url && !labelLookupTried.has(it.key));
+  if (!targets.length) return;
+  targets.forEach((it) => labelLookupTried.add(it.key));
+  let changed = false;
+  for (const it of targets) {
+    let j;
+    try {
+      j = await (await fetch('/release-label', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: { url: it.url, source: it.source, artist: it.artist } }) })).json();
+    } catch (e) { continue; }
+    if (!j.ok) continue; // couldn't look (offline, a dead page): try again next time the builder opens
+    it.labelChecked = true;
+    changed = true;
+    if (j.label && !it.label) {
+      it.label = j.label;
+      const field = el('selected').querySelector(`.edit-field.edit-label[data-key="${CSS.escape(it.key)}"]:not([data-extra])`);
+      if (field && !field.value) field.value = j.label;
+    }
+  }
+  if (changed) { saveDraft(); regroupIfChanged(); }
+}
+
 // A downloaded file's own length (metadata only), or null.
 function fileDuration(url) {
   return new Promise((resolve) => {
@@ -1473,20 +1558,31 @@ function renderSelected() {
 
   if (!selected.length) { box.innerHTML = '<div class="empty">Nothing selected yet.</div>'; refreshPickUi(); if (window.scAfterRender) scAfterRender(); return; }
 
-  // Runs of 2+ adjacent items off the same release share one heading — see
-  // groupRuns()'s comment. runOf[i] === i marks the first item of such a run.
+  // Runs of 2+ adjacent items share one heading — off one release, or the same
+  // heading name (one artist's tracks off different releases) — see groupRuns().
+  // runOf[i] === i marks the first item of such a run. relOf: release runs only —
+  // their rows hide label/heading choice (the release's shared heading covers it).
   const runOf = groupRuns(selected);
+  const relOf = releaseRuns(selected);
+  lastRunsSig = JSON.stringify(runOf);
 
   box.innerHTML = selected.map((it, i) => {
     const grouped = runOf[i] !== -1;
+    const inRelease = relOf[i] !== -1;
     const groupStart = runOf[i] === i;
     let runLen = 0;
     if (groupStart) { let j = i; while (j + 1 < selected.length && runOf[j + 1] === i) j++; runLen = j - i + 1; }
-    const groupBar = groupStart ? `
+    // a run that starts with a release keeps its editable shared heading; a run of one
+    // artist's (or label's) separate tracks shows the name they share — change it in their fields
+    const groupBar = !groupStart ? '' : relOf[i] === i ? `
     <div class="group-heading-bar">
       <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="compilation / release heading" value="${escAttr(it.groupHeading || '')}">
       <span class="group-heading-hint">shared heading · ${runLen} tracks</span>
-    </div>` : '';
+    </div>` : `
+    <div class="group-heading-bar">
+      <span class="group-heading-text">${esc(runHeading(selected, i, relOf))}</span>
+      <span class="group-heading-hint" title="tracks in a row whose heading is the same name share one heading">same ${it.headingSource === 'label' ? 'label' : 'artist'} · one heading for ${runLen} tracks</span>
+    </div>`;
     return `${groupBar}
     <div class="selected-item${grouped ? ' grouped' : ''}${pickedKeys.has(it.key) ? ' picked' : ''}" data-key="${escAttr(it.key)}">
       <div class="row" draggable="true" data-index="${i}">
@@ -1497,9 +1593,9 @@ function renderSelected() {
           <div class="title">${esc(it.title)}</div>
           <div class="edit-row">
             ${nameFieldsHtml(it, 'artist')}
-            ${grouped ? '' : nameFieldsHtml(it, 'label')}
+            ${inRelease ? '' : nameFieldsHtml(it, 'label')}
           </div>
-          ${grouped ? '' : `
+          ${inRelease ? '' : `
           <div class="heading-choice">
             heading:
             <label><input type="radio" name="heading-${escAttr(it.key)}" data-key="${escAttr(it.key)}" value="artist" ${it.headingSource !== 'label' ? 'checked' : ''}> artist</label>
@@ -1596,6 +1692,7 @@ function renderSelected() {
       else extraNames(item, field)[Number(input.dataset.extra)] = input.value;
       debouncedSaveDraft();
     });
+    input.addEventListener('change', regroupIfChanged);
   });
   // Adding/removing an extra artist/label name IS structural (a field
   // appears or disappears), so unlike typing it re-renders — then focuses
@@ -1624,11 +1721,12 @@ function renderSelected() {
       selected.forEach((it) => { if (it.groupKey === gk) it.groupHeading = input.value; });
       debouncedSaveDraft();
     });
+    input.addEventListener('change', regroupIfChanged);
   });
   box.querySelectorAll('.heading-choice input[type=radio]').forEach((radio) => {
     radio.addEventListener('change', () => {
       const item = selected.find((s) => s.key === radio.dataset.key);
-      if (item && radio.checked) { item.headingSource = radio.value; saveDraft(); }
+      if (item && radio.checked) { item.headingSource = radio.value; saveDraft(); regroupIfChanged(); }
     });
   });
 
@@ -1649,6 +1747,7 @@ function renderSelected() {
   syncMixToShowOrder();
   syncCoverLayersToShowOrder();
   if (window.scAfterRender) scAfterRender();
+  backfillLabels();
 }
 
 // Only a compact status badge lives inline in the row now — once a file is
@@ -3480,14 +3579,18 @@ function generateArtistListText() {
     if (runOf[i] === i) {
       let j = i;
       while (j + 1 < selected.length && runOf[j + 1] === i) j++;
-      const heading = (selected[i].groupHeading || headingName(selected[i])).replace(/@/g, '').trim();
+      const heading = String(runHeading(selected, i)).replace(/@/g, '').trim();
       const seenOther = new Set();
       const others = [];
-      for (let k = i; k <= j; k++) {
-        creditNames(selected[k], 'artist').forEach((nm) => {
-          const ok = nm.toLowerCase();
-          if (ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
-        });
+      // every other artist in the run, then the tracks' own labels (one artist's tracks
+      // off different releases share a heading now — their labels still get credited)
+      for (const field of ['artist', 'label']) {
+        for (let k = i; k <= j; k++) {
+          creditNames(selected[k], field).forEach((nm) => {
+            const ok = nm.toLowerCase();
+            if (ok !== heading.toLowerCase() && !seenOther.has(ok)) { seenOther.add(ok); others.push(nm); }
+          });
+        }
       }
       if (heading) {
         const line = others.length ? `${heading} [ ${others.join(', ')} ]` : heading;
@@ -3598,7 +3701,9 @@ function injectSegTagsPreview(root, items) {
       if (runOf[i] === i) {
         let j = i;
         while (j + 1 < items.length && runOf[j + 1] === i) j++;
-        segGroups.push(items.slice(i, j + 1));
+        const g = items.slice(i, j + 1);
+        g.heading = runHeading(items, i);
+        segGroups.push(g);
         i = j + 1;
       } else {
         segGroups.push([items[i]]);
@@ -3634,8 +3739,18 @@ function injectSegTagsPreview(root, items) {
           artistParts.push(chip('artist-chip', nm));
         });
       });
-      const heading = (group[0].groupHeading || '').trim();
+      const heading = String(group.heading || '').trim();
       const labelParts = (heading && !seen.has(heading.toLowerCase())) ? [chip('label-chip', heading)] : [];
+      // each track's own label too — mirrors build-record-tags.js
+      const seenLabels = new Set(labelParts.length ? [heading.toLowerCase()] : []);
+      group.forEach((item) => {
+        namesOf(item, 'label').forEach((nm) => {
+          const key = nm.toLowerCase();
+          if (seenLabels.has(key)) return;
+          seenLabels.add(key);
+          labelParts.push(chip('label-chip', nm));
+        });
+      });
       chips = artistParts.join('') + labelParts.join('');
     } else {
       const item = group[0];
