@@ -193,7 +193,8 @@ app.post('/preview-stream', (req, res) => {
       ? scanSoundcloud.resolveStreamUrl(item.url)
       : scanBandcamp.resolveStreamUrl(item.url, item.trackId);
     if (!result.url) return res.json({ ok: false, error: 'no direct stream available for this track', duration: result.duration });
-    res.json({ ok: true, url: result.url, duration: result.duration });
+    // hls: an .m3u8 (SoundCloud since Oct 2026) — trackPlayerHtml() plays it through hls.js
+    res.json({ ok: true, url: result.url, duration: result.duration, hls: !!result.hls });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }

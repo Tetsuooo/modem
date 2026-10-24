@@ -10,6 +10,19 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-10-24)
+
+**Fixed: Scan previews showed SoundCloud's big player again.** SoundCloud stopped offering
+the plain MP3 stream that the small built-in preview player used; tracks only come as HLS
+now (a playlist of short pieces). The builder now plays that through hls.js
+(`public/vendor/hls.light.min.js`), so SoundCloud previews in Scan and in the Year-end list
+are the small rows again. Bandcamp was never affected. Whole albums / SoundCloud sets that
+aren't expanded still open the platform's tracklist player, as before.
+- **Before using it:** restart the show builder (`start.bat`). On the Surface: `git pull` +
+  restart once it's pushed.
+- The website itself is not affected: it plays through SoundCloud's own player (widget),
+  which streams HLS by itself — checked the same day.
+
 ## Where we left off (2026-10-22)
 
 **New: the Year-end list tab** — building the year's "50 best releases" list. See "Year-end
@@ -608,7 +621,29 @@ add a release that wasn't in a show (3 of 2025's 50); names can be fixed per rel
 list (Bandcamp pages often don't name the label). Saved in one file
 (`data/year-end.json`) that Sync carries, newest wins per year — the same rule as the draft.
 
+**2026-10-24 — SoundCloud previews play HLS through hls.js.** SoundCloud's api-v2 no longer
+lists a `progressive` (MP3) transcoding for any track checked — only `hls` (aac_160k,
+aac_96k; `abr_sq` answers 404) — so `/preview-stream` found nothing and every SoundCloud
+single fell back to the widget iframe in Scan (and Year-end). Now `resolveStreamUrl()` falls
+back to the unencrypted HLS playlist (`hls: true` in the answer) and `trackPlayerHtml(src,
+hls)` / `attachHls()` play it with hls.js 1.5.20 (vendored, Apache-2.0, light build; the
+SoundCloud CDN sends CORS `*`). *Why not ffmpeg/a server proxy:* hls.js streams straight
+away and seeks; nothing to wait for or clean up. `releaseTrackPlayers()` stops hls.js
+loading when a preview closes or the list re-renders.
+
 ---
+
+## How it was tested (2026-10-24)
+
+HLS previews, on a throwaway clone with a second show builder on :8190, in Playwright's
+Chromium (branded headless Chrome 155 / Edge kept dying after 3–15 s even on a blank page on
+the desktop — a local quirk, not the builder):
+- A real Scan (22 SoundCloud, 23 Bandcamp): the first 4 SoundCloud singles open as small
+  rows (no iframe), play, and seek to the middle and play on from there; no page errors.
+- A Bandcamp single still plays through its plain MP3 stream; closing a preview empties it.
+- Year-end list (with a copy of `year-end.json`): a SoundCloud set and a Bandcamp release
+  both play in the small player.
+- The website's player: SoundCloud's widget + Widget API still plays (5 s in after 6 s).
 
 ## How it was tested (2026-10-22)
 

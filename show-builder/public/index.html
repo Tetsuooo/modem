@@ -623,6 +623,9 @@
      Only used for the Mix tab's "Export (.mp3)" button; WAV export needs no
      library at all (see audioBufferToWav()). -->
 <script src="/vendor/lame.min.js"></script>
+<!-- hls.js 1.5.20 (light build), Apache-2.0 — see vendor/HLS-LICENSE.txt. Plays
+     SoundCloud previews, which since Oct 2026 only come as HLS (see attachHls()). -->
+<script src="/vendor/hls.light.min.js"></script>
 <script>
 let scanResults = [];
 let selected = [];
@@ -894,15 +897,18 @@ function isSingleTrackPreview(it) {
 // source platform's own widget iframe — fetches a direct stream URL
 // (/preview-stream) so several previews open at once don't turn into a wall
 // of big branded embeds, just compact rows that play quietly in the
-// background. Falls back to the old iframe embed if no direct stream could
-// be resolved (e.g. SoundCloud-only-HLS tracks) or the fetch fails.
+// background. SoundCloud tracks come as HLS since Oct 2026 (j.hls, played via
+// hls.js — before that fix every SoundCloud preview fell back to the widget).
+// Falls back to the old iframe embed if no stream could be resolved (an
+// encrypted-only track) or the fetch fails.
 async function playSingleTrackPreview(frame, item) {
+  releaseTrackPlayers(frame);
   frame.innerHTML = '<div class="status">loading preview…</div>';
   try {
     const r = await fetch('/preview-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item }) });
     const j = await r.json();
     if (!j.ok || !j.url) throw new Error(j.error || 'no stream url');
-    frame.innerHTML = trackPlayerHtml(j.url);
+    frame.innerHTML = trackPlayerHtml(j.url, j.hls);
     wireTrackPlayers(frame);
     const audio = frame.querySelector('audio');
     if (audio) {
@@ -929,7 +935,7 @@ function playPreviewByKey(key) {
   if (!frame || !item) return;
   frame.hidden = false;
   if (isSingleTrackPreview(item)) playSingleTrackPreview(frame, item);
-  else frame.innerHTML = previewEmbedHtml(item);
+  else { releaseTrackPlayers(frame); frame.innerHTML = previewEmbedHtml(item); }
 }
 
 // When a subtrack's preview finishes playing, auto-advance into the next
@@ -953,6 +959,7 @@ function togglePreview(key) {
     playPreviewByKey(key);
   } else {
     frame.hidden = true;
+    releaseTrackPlayers(frame);
     frame.innerHTML = ''; // drop the iframe/audio so playback actually stops
   }
 }
@@ -1080,6 +1087,7 @@ function renderSubtracks(parent) {
 
 function renderScanResults() {
   const box = el('scanResults');
+  releaseTrackPlayers(box);
   if (!scanResults.length) { box.innerHTML = '<div class="empty">No results yet.</div>'; return; }
   const groups = { soundcloud: [], 'bandcamp-wishlist': [], 'bandcamp-library': [] };
   scanResults.forEach((it) => { if (groups[it.source]) groups[it.source].push(it); });
@@ -1554,10 +1562,12 @@ async function keepOnlyDownloadedFile(key, index) {
   saveDraft();
 }
 
-function trackPlayerHtml(src) {
+// `hls`: src is an .m3u8 playlist (/preview-stream says so) — wireTrackPlayers()
+// hands it to attachHls() instead of setting it as the <audio>'s src.
+function trackPlayerHtml(src, hls) {
   return `
     <div class="track-player">
-      <audio preload="none" src="${escAttr(src)}"></audio>
+      <audio preload="none" ${hls ? `data-hls="${escAttr(src)}"` : `src="${escAttr(src)}"`}></audio>
       <span class="track-player-icon">▶</span>
       <span class="track-player-time">0:00 / 0:00</span>
       <div class="scrub-bar"><div class="scrub-fill"></div></div>
@@ -1577,6 +1587,7 @@ function formatTime(s) {
 function wireTrackPlayers(root) {
   root.querySelectorAll('.track-player').forEach((box) => {
     const audio = box.querySelector('audio');
+    if (audio.dataset.hls && !audio._hls) attachHls(audio, audio.dataset.hls);
     const icon = box.querySelector('.track-player-icon');
     const time = box.querySelector('.track-player-time');
     const scrubBar = box.querySelector('.scrub-bar');
@@ -1644,6 +1655,29 @@ function wireTrackPlayers(root) {
     scrubBar.addEventListener('pointermove', (e) => { if (scrubbing) seek(e); });
     scrubBar.addEventListener('pointerup', () => { scrubbing = false; });
     scrubBar.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+// SoundCloud stopped offering the plain MP3 stream in Oct 2026 — a track only
+// comes as HLS now (an .m3u8 of short AAC pieces), which Chrome's <audio>
+// can't open by itself, so hls.js feeds it in. Its CDN allows other origins.
+function attachHls(audio, url) {
+  if (window.Hls && Hls.isSupported()) {
+    const hls = new Hls({ maxBufferLength: 30 });
+    hls.loadSource(url);
+    hls.attachMedia(audio);
+    audio._hls = hls;
+  } else {
+    audio.src = url; // a browser that plays HLS by itself (Safari)
+  }
+}
+
+// Stops hls.js loading for every player under `root` — call before replacing
+// or removing its HTML (a plain <audio> just stops once it's gone).
+function releaseTrackPlayers(root) {
+  if (!root) return;
+  root.querySelectorAll('audio').forEach((a) => {
+    if (a._hls) { a._hls.destroy(); a._hls = null; }
   });
 }
 

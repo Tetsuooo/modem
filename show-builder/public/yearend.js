@@ -492,7 +492,8 @@
     const out = [];
     host().querySelectorAll('.ye-tracks').forEach((t) => {
       const a = t.querySelector('audio');
-      out.push({ id: t.dataset.where + ':' + t.dataset.key, src: a && a.src, time: a ? a.currentTime : 0, playing: !!(a && !a.paused) });
+      out.push({ id: t.dataset.where + ':' + t.dataset.key, src: a && (a.dataset.hls || a.src), hls: !!(a && a.dataset.hls), time: a ? a.currentTime : 0, playing: !!(a && !a.paused) });
+      releaseTrackPlayers(t); // every player is rebuilt next (reopenPlayers)
     });
     return out;
   }
@@ -526,7 +527,7 @@
     box.querySelectorAll('.ye-t').forEach((row) => row.addEventListener('click', (e) => { if (!e.target.closest('a')) playTrack(box, Number(row.dataset.i)); }));
     if (resume && resume.src) {
       const now = box.querySelector('.ye-now');
-      now.innerHTML = trackPlayerHtml(resume.src);
+      now.innerHTML = trackPlayerHtml(resume.src, resume.hls);
       wireTrackPlayers(now);
       const a = now.querySelector('audio');
       a.addEventListener('ended', () => playTrack(box, state.i + 1));
@@ -544,12 +545,13 @@
     S.open.set(id, { i });
     box.querySelectorAll('.ye-t').forEach((r) => r.classList.toggle('cur', Number(r.dataset.i) === i));
     const now = box.querySelector('.ye-now');
+    releaseTrackPlayers(now);
     now.innerHTML = '<div class="status">loading…</div>';
     try {
       const j = await post('/preview-stream', { item: { source: c.source === 'soundcloud' ? 'soundcloud' : 'bandcamp-library', url: t.url, trackId: t.id } });
       if (!S.open.has(id)) return; // closed meanwhile
       if (!j.ok || !j.url) throw new Error(j.error || 'no stream');
-      now.innerHTML = trackPlayerHtml(j.url);
+      now.innerHTML = trackPlayerHtml(j.url, j.hls);
       wireTrackPlayers(now);
       const a = now.querySelector('audio');
       a.addEventListener('ended', () => playTrack(box, i + 1));
@@ -584,7 +586,7 @@
     if (S.open.has(id)) {
       S.open.delete(id);
       const box = host().querySelector(`.ye-tracks[data-where="${where}"][data-key="${cssEsc(key)}"]`);
-      if (box) { const a = box.querySelector('audio'); if (a) a.pause(); box.remove(); }
+      if (box) { const a = box.querySelector('audio'); if (a) a.pause(); releaseTrackPlayers(box); box.remove(); }
       updatePlayButtons();
       return;
     }

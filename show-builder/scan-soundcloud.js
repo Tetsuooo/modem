@@ -204,10 +204,31 @@ function resolveStreamUrl(url) {
   const duration = data.duration ? Math.round(data.duration / 1000) : null;
   const transcodings = (data.media && data.media.transcodings) || [];
   const progressive = transcodings.find((t) => t.format && t.format.protocol === 'progressive');
-  if (!progressive) return { url: null, duration };
-  const { data: streamData } = apiV2Get(progressive.url, clientId);
-  if (!streamData || !streamData.url) return { url: null, duration };
-  return { url: streamData.url, duration };
+  if (progressive) {
+    const { data: streamData } = apiV2Get(progressive.url, clientId);
+    if (streamData && streamData.url) return { url: streamData.url, duration };
+  }
+  // By October 2026 SoundCloud had dropped the plain MP3 ("progressive") stream
+  // from every track: only HLS is left, an .m3u8 playlist of short AAC pieces
+  // (aac_160k, aac_96k; "abr_sq" answers 404). The page plays it through hls.js
+  // (public/vendor) — the playlist and pieces are served with CORS *. Encrypted
+  // variants (protocol "ctr-encrypted-hls" etc.) are skipped: hls.js can't play them.
+  const hls = transcodings
+    .filter((t) => t.format && t.format.protocol === 'hls')
+    .sort((a, b) => hlsRank(a) - hlsRank(b));
+  for (const t of hls) {
+    try {
+      const { data: streamData } = apiV2Get(t.url, clientId);
+      if (streamData && streamData.url) return { url: streamData.url, duration, hls: true };
+    } catch (e) { /* try the next one */ }
+  }
+  return { url: null, duration };
+}
+
+function hlsRank(t) {
+  const order = ['aac_160k', 'aac_96k'];
+  const i = order.indexOf(t.preset);
+  return i < 0 ? order.length : i;
 }
 
 module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl };
