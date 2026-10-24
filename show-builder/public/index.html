@@ -491,7 +491,7 @@
     .lumakey-bridge { top: 9px; height: 8px; }
     .lumakey-handle { top: 17px; transform: scale(1.25); transform-origin: 50% 0; }
     .cover-global-adjust { gap: 6px; }
-    .cover-global-adjust input[type=range], #coverEraserSize { height: 26px; }
+    .cover-global-adjust input[type=range], #coverEraserSize, #coverEraserSoft { height: 26px; }
     .adj-step { padding: 6px 8px; font-size: 11px; min-width: 28px; min-height: 28px; }
   }
   .history-entry { border: 1px solid #2a2b33; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
@@ -666,6 +666,8 @@
       <span class="mix-zoom">
         <span class="status">size</span>
         <input type="range" id="coverEraserSize" min="8" max="200" value="40" title="eraser brush size">
+        <span class="status">soft</span>
+        <input type="range" id="coverEraserSoft" min="0" max="100" value="70" title="eraser edge: hard (left) … soft (right)">
       </span>
       <button id="coverUndoBtn" disabled title="undo (Ctrl+Z)">↶ Undo</button>
       <button id="coverRedoBtn" disabled title="redo (Ctrl+Y)">↷ Redo</button>
@@ -3245,6 +3247,9 @@ let selectedCoverLayerId = null; // which layer the eraser (see wireCoverEraser(
 let coverEraserActive = false;
 const COVER_ERASER_MIN_R = 8, COVER_ERASER_MAX_R = 200;
 let coverEraserRadius = 40; // canvas-space px (COVER_CANVAS_SIZE=1200 coordinate space)
+// The eraser's edge, 0 = hard … 1 = fully soft (Matej, 2026-10-24: "should have a soft edge");
+// stored on each new stroke point as `s` — strokes made before keep their hard edge.
+let coverEraserSoft = 0.7;
 let coverAdjust = { contrast: 0, brightness: 0, saturation: 0 };
 const coverImageCache = new Map(); // src -> HTMLImageElement
 const COVER_CANVAS_SIZE = 1200;
@@ -3717,6 +3722,54 @@ function buildCoverFilterCss() {
   return `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
 }
 
+// One eraser stroke, punched out of a layer (ctx is in 'destination-out'). Points with `s`
+// (softness, since 2026-10-24) are dabs laid every quarter radius along the stroke, so a
+// quick drag doesn't leave beads (the old eraser did): soft = a radial fade from solid
+// (inner 1−s of the radius) to nothing at the edge, s = 0 = a hard circle. Points without
+// `s` (strokes made before) stay hard circles at the recorded points only, as they were.
+const eraserDabCache = new Map();
+function eraserDab(r, s) {
+  const key = Math.round(r) + '|' + s.toFixed(2);
+  let dab = eraserDabCache.get(key);
+  if (!dab) {
+    const size = Math.max(2, Math.ceil(r * 2));
+    dab = document.createElement('canvas');
+    dab.width = dab.height = size;
+    const g = dab.getContext('2d');
+    const c = size / 2;
+    const grad = g.createRadialGradient(c, c, c * (1 - s), c, c, c);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(0.5, 'rgba(0,0,0,0.5)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, size, size);
+    eraserDabCache.set(key, dab);
+  }
+  return dab;
+}
+function eraseStroke(ctx, stroke) {
+  for (let i = 0; i < stroke.length; i++) {
+    const p = stroke[i];
+    if (p.s == null) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    const dab = p.s > 0 ? eraserDab(p.r, p.s) : null;
+    const prev = i > 0 ? stroke[i - 1] : null;
+    const dist = prev ? Math.hypot(p.x - prev.x, p.y - prev.y) : 0;
+    const steps = prev ? Math.max(1, Math.ceil(dist / Math.max(1, p.r * 0.25))) : 1;
+    for (let k = 1; k <= steps; k++) {
+      const t = prev ? k / steps : 1;
+      const x = prev ? prev.x + (p.x - prev.x) * t : p.x;
+      const y = prev ? prev.y + (p.y - prev.y) * t : p.y;
+      if (dab) ctx.drawImage(dab, x - dab.width / 2, y - dab.height / 2);
+      else { ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill(); }
+    }
+  }
+}
+
 // Mute / solo per layer, as in a mixer (Matej, 2026-10-24): a muted layer isn't drawn; while
 // any layer is soloed, only the soloed ones are (a soloed layer that's also muted stays
 // hidden and doesn't count as a solo). The export is what you see.
@@ -3781,13 +3834,7 @@ async function renderCoverCanvas() {
     if (layer.eraseStrokes && layer.eraseStrokes.length) {
       tctx.save();
       tctx.globalCompositeOperation = 'destination-out';
-      layer.eraseStrokes.forEach((stroke) => {
-        stroke.forEach((pt) => {
-          tctx.beginPath();
-          tctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
-          tctx.fill();
-        });
-      });
+      layer.eraseStrokes.forEach((stroke) => eraseStroke(tctx, stroke));
       tctx.restore();
     }
     octx.drawImage(tmp, 0, 0);
@@ -3813,7 +3860,7 @@ function wireCoverEraser() {
   const toCanvasPoint = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scale = COVER_CANVAS_SIZE / rect.width; // square canvas — one scale factor covers both axes
-    return { x: (e.clientX - rect.left) * scale, y: (e.clientY - rect.top) * scale, r: coverEraserRadius };
+    return { x: (e.clientX - rect.left) * scale, y: (e.clientY - rect.top) * scale, r: coverEraserRadius, s: coverEraserSoft };
   };
 
   canvas.addEventListener('pointerdown', (e) => {
@@ -4667,6 +4714,7 @@ el('mixZoomOutBtn').addEventListener('click', () => zoomMix(1 / 1.4));
 el('coverSaveBtn').addEventListener('click', () => { saveDraft(); el('coverStatus').textContent = 'saved ✓'; });
 el('coverExportBtn').addEventListener('click', exportCoverPng);
 el('coverEraserSize').addEventListener('input', (e) => { coverEraserRadius = Number(e.target.value); });
+el('coverEraserSoft').addEventListener('input', (e) => { coverEraserSoft = Number(e.target.value) / 100; });
 el('coverEraserBtn').addEventListener('click', () => {
   coverEraserActive = !coverEraserActive;
   el('coverEraserBtn').classList.toggle('active', coverEraserActive);

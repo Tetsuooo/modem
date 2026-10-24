@@ -80,6 +80,11 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   luma handle; a grip ⠿ on each layer that reorders with a finger, pen or mouse (the
   browser's drag-and-drop doesn't work with a finger); a double tap on a luma handle
   splits/joins its feather; erasing with a finger no longer scrolls the page.
+- **Covers: a soft eraser.** A "soft" slider beside the eraser size (0 = hard … 100 = fully
+  soft, 70 by default): each stroke is laid as soft dabs (a cached radial fade per size and
+  softness) every quarter radius, so quick strokes are one smooth band — the old eraser
+  left a row of circles on a fast drag. Strokes made before keep their look (points
+  without `s`).
 - **Covers: ◀ ▶ beside Contrast, Lightness and Saturation** — a click = one step (Shift:
   10), held = keeps stepping (after 0.4 s, ~16 a second), Enter/Space on a focused arrow
   too; one undo step per press, nothing at the ends of the range. (The rows are no
