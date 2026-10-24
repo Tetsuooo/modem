@@ -1,0 +1,313 @@
+{
+  "modem-250": {
+    "type": "show",
+    "slug": "modem-250",
+    "number": 250,
+    "title": "modem ///250",
+    "url": "https://radiostudent.si/glasba/modem/modem-250",
+    "date": "26. 10. 2026",
+    "cover": "/assets/modem_covers/modem250.webp",
+    "mp3": null,
+    "soundcloud": null,
+    "artists": [
+      {
+        "name": "Dilian",
+        "url": null,
+        "seg": 0
+      },
+      {
+        "name": "Computer man",
+        "url": null,
+        "seg": 1
+      },
+      {
+        "name": "ant. adventure.ᐟ",
+        "url": null,
+        "seg": 1
+      },
+      {
+        "name": "ant. adventure.ᐟ",
+        "url": null,
+        "seg": 2
+      },
+      {
+        "name": "ToySoldier",
+        "url": null,
+        "seg": 3
+      },
+      {
+        "name": "4h4",
+        "url": null,
+        "seg": 4
+      },
+      {
+        "name": "ranena",
+        "url": null,
+        "seg": 5
+      },
+      {
+        "name": "ValuableScholar",
+        "url": null,
+        "seg": 6
+      },
+      {
+        "name": "хмора",
+        "url": null,
+        "seg": 7
+      },
+      {
+        "name": "strange pressure vessel",
+        "url": null,
+        "seg": 8
+      },
+      {
+        "name": "yves aoi",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "kęnåi",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "asciiwings",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "ixosyd",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "lucra400",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "egoseed",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "parka neko michra",
+        "url": null,
+        "seg": 10
+      },
+      {
+        "name": "Pairi Daeza",
+        "url": null,
+        "seg": 11
+      },
+      {
+        "name": "icfam",
+        "url": null,
+        "seg": 12
+      },
+      {
+        "name": "Metoronori",
+        "url": null,
+        "seg": 13
+      },
+      {
+        "name": "boyhoodie",
+        "url": null,
+        "seg": 14
+      },
+      {
+        "name": "hill swum",
+        "url": null,
+        "seg": 15
+      },
+      {
+        "name": "Rafatisu",
+        "url": null,
+        "seg": 16
+      },
+      {
+        "name": "supersheep",
+        "url": null,
+        "seg": 17
+      },
+      {
+        "name": "NATOOO",
+        "url": null,
+        "seg": 18
+      },
+      {
+        "name": "✰ 103110 ✰",
+        "url": null,
+        "seg": 19
+      }
+    ],
+    "labels": [
+      {
+        "name": "Clam",
+        "url": null,
+        "seg": 0
+      },
+      {
+        "name": "Muzik",
+        "url": null,
+        "seg": 3
+      },
+      {
+        "name": "Color:inc",
+        "url": null,
+        "seg": 9
+      },
+      {
+        "name": "moli del tro",
+        "url": null,
+        "seg": 11
+      },
+      {
+        "name": "katharsis",
+        "url": null,
+        "seg": 12
+      },
+      {
+        "name": "sair",
+        "url": null,
+        "seg": 13
+      },
+      {
+        "name": "Ukiuki Atama",
+        "url": null,
+        "seg": 16
+      }
+    ],
+    "embeds": [
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3309943983/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3992736859/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3651519720/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1320293791/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3148654056/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=635235998/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3008188927/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=656489146/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=464095200/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3790764043/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=2185131822/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2613508347/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=2480980952/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3552800349/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3007317970/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1536067133/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3426559499/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3727197259/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=3457656995/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3590038563/transparent=true/"
+      },
+      {
+        "kind": "bandcamp",
+        "src": "https://bandcamp.com/EmbeddedPlayer/album=2494084077/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3416061919/transparent=true/"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2421169926&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2209742735&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2423647209&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422645593&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416470051&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416561878&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422677687&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401251432&show_artwork=true&maxheight=100"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401263315&show_artwork=true&maxheight=100"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401255890&show_artwork=true&maxheight=100"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401253412&show_artwork=true&maxheight=100"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401286598&show_artwork=true&maxheight=100"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2418520782&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416445697&show_artwork=true"
+      },
+      {
+        "kind": "soundcloud",
+        "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2417454366&show_artwork=true"
+      }
+    ],
+    "segments": [
+      "Dilian",
+      "Computer man",
+      "ant. adventure.ᐟ",
+      "ToySoldier",
+      "4h4",
+      "ranena",
+      "ValuableScholar",
+      "хмора",
+      "strange pressure vessel",
+      "Color:inc",
+      "parka neko michra",
+      "Pairi Daeza",
+      "icfam",
+      "Metoronori",
+      "boyhoodie",
+      "hill swum",
+      "Rafatisu",
+      "supersheep",
+      "NATOOO",
+      "✰ 103110 ✰"
+    ],
+    "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">Dilian ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3309943983/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3992736859/transparent=true/\"><a href=\"https://clam-pressure.bandcamp.com/track/juicy-macro\">Juicy Macro by Dilian</a></iframe></p>\n<p data-seg=\"1\" class=\"seg-marker\">Computer man ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3651519720/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1320293791/transparent=true/\"><a href=\"https://c0mput3rm4n.bandcamp.com/track/i-am-evan-of-the-panax-flower-feat-ant-adventure-2\">I am Evan of the Panax Flower feat. ant. adventure.ᐟ by Computer man &amp; ant. adventure.ᐟ</a></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2421169926&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2209742735&show_artwork=true\"></iframe></p>\n<p data-seg=\"2\" class=\"seg-marker\">ant. adventure.ᐟ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2423647209&show_artwork=true\"></iframe></p>\n<p data-seg=\"3\" class=\"seg-marker\">ToySoldier ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3148654056/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=635235998/transparent=true/\"><a href=\"https://muzik-label.bandcamp.com/track/take-me-home\">Take Me Home by ToySoldier</a></iframe></p>\n<p data-seg=\"4\" class=\"seg-marker\">4h4 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422645593&show_artwork=true\"></iframe></p>\n<p data-seg=\"5\" class=\"seg-marker\">ranena ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416470051&show_artwork=true\"></iframe></p>\n<p data-seg=\"6\" class=\"seg-marker\">ValuableScholar ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416561878&show_artwork=true\"></iframe></p>\n<p data-seg=\"7\" class=\"seg-marker\">хмора ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422677687&show_artwork=true\"></iframe></p>\n<p data-seg=\"8\" class=\"seg-marker\">strange pressure vessel ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3008188927/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=656489146/transparent=true/\"><a href=\"https://calligraphyofbear.bandcamp.com/track/hydrangea\">hydrangea by strange pressure vessel</a></iframe></p>\n<p data-seg=\"9\" class=\"seg-marker\">Color:inc ///////</p>\n<p><iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401251432&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401263315&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401255890&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401253412&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401286598&show_artwork=true&maxheight=100\"></iframe></p>\n<p data-seg=\"10\" class=\"seg-marker\">parka neko michra ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2418520782&show_artwork=true\"></iframe></p>\n<p data-seg=\"11\" class=\"seg-marker\">Pairi Daeza ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=464095200/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3790764043/transparent=true/\"><a href=\"https://molideltro.bandcamp.com/track/herb-ball\">Herb Ball by Pairi Daeza</a></iframe></p>\n<p data-seg=\"12\" class=\"seg-marker\">icfam ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2185131822/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2613508347/transparent=true/\"><a href=\"https://katharsis-label.bandcamp.com/track/my-home-2\">My Home by icfam</a></iframe></p>\n<p data-seg=\"13\" class=\"seg-marker\">Metoronori ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2480980952/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3552800349/transparent=true/\"><a href=\"https://ssair.bandcamp.com/track/-\">逃げた分身 by Metoronori</a></iframe></p>\n<p data-seg=\"14\" class=\"seg-marker\">boyhoodie ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3007317970/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1536067133/transparent=true/\"><a href=\"https://boyhoodie.bandcamp.com/track/cavity-filled-lurking\">cavity-filled lurking by boyhoodie</a></iframe></p>\n<p data-seg=\"15\" class=\"seg-marker\">hill swum ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3426559499/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3727197259/transparent=true/\"><a href=\"https://hillswum.bandcamp.com/track/wither\">wither by hill swum</a></iframe></p>\n<p data-seg=\"16\" class=\"seg-marker\">Rafatisu ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3457656995/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3590038563/transparent=true/\"><a href=\"https://ukiukiatama.bandcamp.com/track/baaaaaaaaaa-2\">Baaaaaaaaaa !!!! by Rafatisu</a></iframe></p>\n<p data-seg=\"17\" class=\"seg-marker\">supersheep ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416445697&show_artwork=true\"></iframe></p>\n<p data-seg=\"18\" class=\"seg-marker\">NATOOO ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2494084077/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3416061919/transparent=true/\"><a href=\"https://nat000.bandcamp.com/track/workers-experience\">workers experience by NATOOO</a></iframe></p>\n<p data-seg=\"19\" class=\"seg-marker\">✰ 103110 ✰ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2417454366&show_artwork=true\"></iframe></p>",
+    "searchText": "modem ///250 \n 26. 10. 2026 \n Dilian Computer man ant. adventure.ᐟ ant. adventure.ᐟ ToySoldier 4h4 ranena ValuableScholar хмора strange pressure vessel yves aoi kęnåi asciiwings ixosyd lucra400 egoseed parka neko michra Pairi Daeza icfam Metoronori boyhoodie hill swum Rafatisu supersheep NATOOO ✰ 103110 ✰ \n Clam Muzik Color:inc moli del tro katharsis sair Ukiuki Atama \n Dilian /////// Juicy Macro by Dilian Computer man /////// I am Evan of the Panax Flower feat. ant. adventure.ᐟ by Computer man & ant. adventure.ᐟ ant. adventure.ᐟ /////// ToySoldier /////// Take Me Home by ToySoldier 4h4 /////// ranena /////// ValuableScholar /////// хмора /////// strange pressure vessel /////// hydrangea by strange pressure vessel Color:inc /////// parka neko michra /////// Pairi Daeza /////// Herb Ball by Pairi Daeza icfam /////// My Home by icfam Metoronori /////// 逃げた分身 by Metoronori boyhoodie /////// cavity-filled lurking by boyhoodie hill swum /////// wither by hill swum Rafatisu /////// Baaaaaaaaaa !!!! by Rafatisu supersheep /////// NATOOO /////// workers experience by NATOOO ✰ 103110 ✰ ///////",
+    "origin": "show-builder"
+  }
+}
