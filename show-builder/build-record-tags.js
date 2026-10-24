@@ -11,6 +11,7 @@
 // scrape-modem.js's field-umetniki/field-zalozba scrape correctly found
 // nothing to attach.
 const { groupRuns, runHeading, namesOf } = require('./generate-html');
+const { nameKey } = require('./lib');
 
 // Deliberately NOT split on commas: a track's artist/label field is treated
 // as ONE atomic tag string, matching both injectSegTagsPreview() (what the
@@ -56,23 +57,27 @@ function buildRecordTags(items) {
       const seen = new Set();
       group.forEach((it) => {
         namesOf(it, 'artist').forEach((nm) => {
-          const key = nm.toLowerCase();
+          const key = nameKey(nm);
           if (seen.has(key)) return;
           seen.add(key);
           artists.push({ name: nm, url: null, seg });
         });
       });
       const heading = String(runHeading(items, i) || '').trim();
-      const seenLabels = new Set();
-      if (heading && !seen.has(heading.toLowerCase())) {
+      // a name that is one of these artists, or one track's whole credit, is never also a
+      // label — the heading over the artist's own tracks ("Computer man", or "galen tipton &
+      // Junior Astronaut" over the duo's), or a label field holding the artist's own name
+      const seenLabels = new Set(seen);
+      group.forEach((it) => seenLabels.add(nameKey(namesOf(it, 'artist').join(' & '))));
+      if (heading && !seenLabels.has(nameKey(heading))) {
         labels.push({ name: heading, url: null, seg });
-        seenLabels.add(heading.toLowerCase());
+        seenLabels.add(nameKey(heading));
       }
       // each track's own label too: since one artist's tracks off different releases share
       // a heading (groupRuns()), their labels would otherwise vanish from the tags
       group.forEach((it) => {
         namesOf(it, 'label').forEach((nm) => {
-          const key = nm.toLowerCase();
+          const key = nameKey(nm);
           if (seenLabels.has(key)) return;
           seenLabels.add(key);
           labels.push({ name: nm, url: null, seg });
@@ -81,8 +86,9 @@ function buildRecordTags(items) {
       i = j + 1;
     } else {
       const it = items[i];
+      const own = new Set([...namesOf(it, 'artist'), namesOf(it, 'artist').join(' & ')].map(nameKey));
       namesOf(it, 'artist').forEach((nm) => artists.push({ name: nm, url: null, seg }));
-      namesOf(it, 'label').forEach((nm) => labels.push({ name: nm, url: null, seg }));
+      namesOf(it, 'label').filter((nm) => !own.has(nameKey(nm))).forEach((nm) => labels.push({ name: nm, url: null, seg }));
       i++;
     }
     seg++;

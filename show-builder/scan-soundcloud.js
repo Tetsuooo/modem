@@ -5,7 +5,7 @@
 // third-party SoundCloud tool uses. Cached (it's stable for weeks/months),
 // re-derived automatically if a request comes back 401.
 const { execFileSync } = require('child_process');
-const { UA, cacheGet, cacheSet } = require('./lib');
+const { UA, cacheGet, cacheSet, cleanName } = require('./lib');
 
 const SC_USER = 'modemodemodem';
 
@@ -104,7 +104,7 @@ function scanReposts(cutoffDate) {
         // published it (track.user.username) — prefer that when set, so a
         // various-artists compilation shows its real artists, not just the
         // publisher's name repeated on every track.
-        artist: (track.publisher_metadata && track.publisher_metadata.artist) || (track.user && track.user.username) || item.user?.username || 'unknown',
+        artist: cleanName((track.publisher_metadata && track.publisher_metadata.artist) || (track.user && track.user.username) || item.user?.username) || 'unknown',
         url: track.permalink_url,
         // Some uploaders restrict embedding to themselves ("embeddable_by":
         // "me" instead of "all") — SoundCloud's oEmbed API then refuses to
@@ -129,7 +129,7 @@ function scanReposts(cutoffDate) {
         // For a playlist this is its total length, not one track's.
         duration: track.duration ? Math.round(track.duration / 1000) : null,
         // the uploader's own "record label" field, when they filled it in
-        label: track.label_name || null,
+        label: cleanName(track.label_name) || null,
         labelChecked: true,
       });
     }
@@ -172,7 +172,7 @@ function resolveTracks(item) {
       // username — this is what makes a various-artists SoundCloud
       // compilation (e.g. an OST uploaded under one curator account) show
       // each track's actual artist once expanded.
-      artist: (t.publisher_metadata && t.publisher_metadata.artist) || (t.user && t.user.username) || null,
+      artist: cleanName((t.publisher_metadata && t.publisher_metadata.artist) || (t.user && t.user.username)) || null,
       url: t.permalink_url,
       artwork: t.artwork_url || null,
       duration: t.duration ? Math.round(t.duration / 1000) : null,
@@ -182,7 +182,7 @@ function resolveTracks(item) {
       // display_date (see scanReposts' comment above) over release_date/
       // created_at: it's what SoundCloud itself shows as the publish date.
       releaseDate: t.display_date || t.release_date || t.created_at || null,
-      label: t.label_name || null,
+      label: cleanName(t.label_name) || null,
     }));
 }
 
@@ -190,7 +190,7 @@ function resolveTracks(item) {
 // track picked before the builder read labels (show-builder's /release-label).
 function trackLabel(url) {
   const { data } = apiV2Get('https://api-v2.soundcloud.com/resolve?url=' + encodeURIComponent(url), getClientId(false));
-  return (data && data.label_name) || null;
+  return cleanName(data && data.label_name) || null;
 }
 
 // Resolves a single track permalink to a directly-playable progressive

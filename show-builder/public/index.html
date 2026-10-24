@@ -911,7 +911,7 @@ function releaseRuns(items) {
 function runHeading(items, start, rel) {
   rel = rel || releaseRuns(items);
   const it = items[start];
-  return rel[start] === start ? (it.groupHeading || headingName(it)) : headingName(it);
+  return rel[start] === start ? (cleanName(it.groupHeading) || headingName(it)) : headingName(it);
 }
 
 // groupRuns: who shares ONE heading — a release run, and (since 2026-10-24) neighbours
@@ -923,7 +923,7 @@ function groupRuns(items) {
   while (i < items.length) {
     let j = i;
     if (rel[i] === i) while (j + 1 < items.length && rel[j + 1] === i) j++;
-    units.push({ start: i, end: j, key: String(runHeading(items, i, rel) || '').trim().toLowerCase() });
+    units.push({ start: i, end: j, key: nameKey(runHeading(items, i, rel)) });
     i = j + 1;
   }
   const runOf = new Array(items.length).fill(-1);
@@ -1694,7 +1694,7 @@ function renderSelected() {
     const ownGroup = String(it.groupKey || '').startsWith('grp:');
     const groupBar = !groupStart ? '' : relOf[i] === i ? `
     <div class="group-heading-bar">
-      <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="${ownGroup ? 'group heading' : 'compilation / release heading'}" value="${escAttr(it.groupHeading || '')}">
+      <input class="edit-field group-heading-field" list="headingNamesList" data-group-key="${escAttr(it.groupKey)}" placeholder="${ownGroup ? 'group heading' : 'compilation / release heading'}" value="${escAttr(cleanName(it.groupHeading))}">
       <span class="group-heading-hint">${ownGroup ? 'your group' : 'shared heading'} · ${runLen} tracks</span>
       <button class="pill-btn group-ungroup" data-group-key="${escAttr(it.groupKey)}" title="each of these tracks gets its own heading again">ungroup</button>
     </div>` : `
@@ -4213,13 +4213,28 @@ async function preloadMixBuffers() {
 // mirrors generate-html.js's namesOf(): every distinct name, first field
 // first, each its own tag; a multi-name heading joins them " & " (artists)
 // or " / " (labels), matching the live archive's own collab headings.
+// Mirrors lib.js's cleanName(): no invisible direction / zero-width marks (Bandcamp's
+// "Computer‎ ‎man" didn't match a plainly typed "Computer man").
+function cleanName(s) {
+  return String(s == null ? '' : s)
+    .replace(/[​‎‏‪-‮⁠⁦-⁩﻿]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Mirrors lib.js's nameKey() — see there.
+function nameKey(s) {
+  const c = cleanName(s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  return c.replace(/[\s._*|~^;:`'"()\[\]\-]/g, '') || c;
+}
+
 function namesOf(it, field) {
   const extra = field === 'label' ? it.extraLabels : it.extraArtists;
   const seen = new Set();
   const out = [];
   [it[field], ...(Array.isArray(extra) ? extra : [])].forEach((n) => {
-    const name = String(n || '').trim();
-    const key = name.toLowerCase();
+    const name = cleanName(n);
+    const key = nameKey(name);
     if (name && !seen.has(key)) { seen.add(key); out.push(name); }
   });
   return out;
@@ -4243,7 +4258,7 @@ function dedupedField(field) {
   selected.forEach((it) => {
     namesOf(it, field).forEach((n) => {
       const name = n.replace(/@/g, '').trim();
-      const key = name.toLowerCase();
+      const key = nameKey(name);
       if (name && !seen.has(key)) { seen.add(key); names.push(name); }
     });
   });
@@ -4264,29 +4279,44 @@ function creditNames(it, field) {
 // on it in brackets (it used to follow the heading, so an artist-headed track came out
 // "Artist [ Label ]"). A co-release's labels share one line ("A / B [ Artist ]"); one
 // artist's tracks on different labels get a line per label. Tracks without a label: a run
-// with a heading of its own (a compilation, your own group) is "Heading [ artists ]",
-// a single track is just its artist(s).
+// whose heading names none of its artists (a compilation, your own group with its own name)
+// is "Heading [ artists ]"; otherwise just the artists — "A, B", or "A & B" when every
+// track has the same credit (a single track, a duo's tracks). The rules: README.md, "The rules".
 function creditLines(items, heading) {
   const byLabel = new Map(); // "Label / Label" -> artists, in order
   const noLabel = [];
-  const add = (list, names) => names.forEach((n) => { if (!list.some((x) => x.toLowerCase() === n.toLowerCase())) list.push(n); });
+  const credits = [], noLabelCredits = []; // each track's whole credit, "A & B"
+  const add = (list, names) => names.forEach((n) => { if (!list.some((x) => nameKey(x) === nameKey(n))) list.push(n); });
   items.forEach((it) => {
-    const labels = creditNames(it, 'label');
     const artists = creditNames(it, 'artist');
+    const credit = artists.join(' & ');
+    credits.push(credit);
+    // a label field holding the artist's own name (or the whole credit) is no label
+    const own = [...artists, credit].map(nameKey);
+    const labels = creditNames(it, 'label').filter((l) => !own.includes(nameKey(l)));
     if (labels.length) {
       const key = labels.join(' / ');
       if (!byLabel.has(key)) byLabel.set(key, []);
-      add(byLabel.get(key), artists.filter((a) => a.toLowerCase() !== key.toLowerCase()));
-    } else add(noLabel, artists);
+      add(byLabel.get(key), artists.filter((a) => nameKey(a) !== nameKey(key)));
+    } else {
+      add(noLabel, artists);
+      noLabelCredits.push(credit);
+    }
   });
   const lines = [];
   byLabel.forEach((artists, label) => lines.push(artists.length ? `${label} [ ${artists.join(', ')} ]` : label));
   if (noLabel.length) {
-    const h = String(heading || '').replace(/@/g, '').trim();
-    const others = noLabel.filter((a) => a.toLowerCase() !== h.toLowerCase());
-    if (items.length > 1 && h && !byLabel.has(h)) lines.push(others.length ? `${h} [ ${others.join(', ')} ]` : h);
-    else if (items.length > 1) lines.push(noLabel.join(', '));
-    else lines.push(noLabel.join(' & '));
+    const h = cleanName(String(heading || '').replace(/@/g, ''));
+    // a heading that is one of the artists or one track's whole credit ("Computer man" over
+    // his own tracks, "A & B" over the duo's) isn't a label: no brackets — those mean
+    // "label [ artists ]" here
+    const headingIsArtist = [...noLabel, ...credits].some((a) => nameKey(a) === nameKey(h));
+    const labelled = [...byLabel.keys()].some((l) => nameKey(l) === nameKey(h));
+    // tracks all by the same artist(s) read like one track: "4h4", "A & B"
+    const oneCredit = noLabelCredits.every((c) => nameKey(c) === nameKey(noLabelCredits[0]));
+    if (items.length > 1 && h && !headingIsArtist && !labelled) lines.push(`${h} [ ${noLabel.join(', ')} ]`);
+    else if (oneCredit) lines.push(noLabel.join(' & '));
+    else lines.push(noLabel.join(', '));
   }
   return lines;
 }
@@ -4426,19 +4456,22 @@ function injectSegTagsPreview(root, items) {
       const artistParts = [];
       group.forEach((item) => {
         namesOf(item, 'artist').forEach((nm) => {
-          const key = nm.toLowerCase();
+          const key = nameKey(nm);
           if (seen.has(key)) return;
           seen.add(key);
           artistParts.push(chip('artist-chip', nm));
         });
       });
+      // never a label: one of these artists, or one track's whole credit ("A & B" over the
+      // duo's tracks) — mirrors build-record-tags.js
+      const own = new Set([...seen, ...group.map((item) => nameKey(namesOf(item, 'artist').join(' & ')))]);
       const heading = String(group.heading || '').trim();
-      const labelParts = (heading && !seen.has(heading.toLowerCase())) ? [chip('label-chip', heading)] : [];
-      // each track's own label too — mirrors build-record-tags.js
-      const seenLabels = new Set(labelParts.length ? [heading.toLowerCase()] : []);
+      const labelParts = (heading && !own.has(nameKey(heading))) ? [chip('label-chip', heading)] : [];
+      // each track's own label too
+      const seenLabels = new Set([...own, ...(labelParts.length ? [nameKey(heading)] : [])]);
       group.forEach((item) => {
         namesOf(item, 'label').forEach((nm) => {
-          const key = nm.toLowerCase();
+          const key = nameKey(nm);
           if (seenLabels.has(key)) return;
           seenLabels.add(key);
           labelParts.push(chip('label-chip', nm));
@@ -4447,8 +4480,9 @@ function injectSegTagsPreview(root, items) {
       chips = artistParts.join('') + labelParts.join('');
     } else {
       const item = group[0];
+      const own = new Set([...namesOf(item, 'artist'), namesOf(item, 'artist').join(' & ')].map(nameKey));
       chips = namesOf(item, 'artist').map((n) => chip('artist-chip', n)).join('') +
-        namesOf(item, 'label').map((n) => chip('label-chip', n)).join('');
+        namesOf(item, 'label').filter((n) => !own.has(nameKey(n))).map((n) => chip('label-chip', n)).join('');
     }
     const slashes = `<span class="seg-slashes"> ${'/'.repeat(60)}</span>`;
     p.innerHTML = slashes + (chips ? `<span class="seg-tags">${chips}</span>` : '');

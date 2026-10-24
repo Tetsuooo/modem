@@ -2,7 +2,7 @@
 // shape scripts/scrape-modem.js's extractEmbeds()/annotateAndSegment() expect
 // once the page is live: a "<p>Name ////...</p>" heading followed by a
 // "<p><iframe ...></iframe></p>" embed (the "recent" dialect).
-const { curlGet, escapeHtml } = require('./lib');
+const { curlGet, escapeHtml, cleanName, nameKey } = require('./lib');
 const { INTRO_BANNER_TEXT } = require('./intro-banner');
 
 const SLASHES = '/'.repeat(34);
@@ -112,8 +112,8 @@ function namesOf(item, field) {
   const seen = new Set();
   const out = [];
   [item[field], ...(Array.isArray(extra) ? extra : [])].forEach((n) => {
-    const name = String(n || '').trim();
-    const key = name.toLowerCase();
+    const name = cleanName(n); // no invisible marks (lib.js cleanName)
+    const key = nameKey(name);
     if (name && !seen.has(key)) { seen.add(key); out.push(name); }
   });
   return out;
@@ -159,14 +159,14 @@ function releaseRuns(items) {
 function runHeading(items, start, rel) {
   rel = rel || releaseRuns(items);
   const it = items[start];
-  return rel[start] === start ? (it.groupHeading || headingName(it)) : headingName(it);
+  return rel[start] === start ? (cleanName(it.groupHeading) || headingName(it)) : headingName(it);
 }
 
 // groupRuns(): which tracks share ONE heading — same return shape as releaseRuns().
 // Tracks off one release (releaseRuns()), and since 2026-10-24 also neighbours whose
 // heading would be the same name: three tracks by one artist from three different
 // releases, in a row, go under one heading (Matej: "they should all fall under one and
-// the same heading"). Compared case-insensitively; an empty heading never joins.
+// the same heading"). Compared with nameKey() (lib.js); an empty heading never joins.
 // public/index.html has a copy of these three — keep them in step.
 function groupRuns(items) {
   const rel = releaseRuns(items);
@@ -175,7 +175,7 @@ function groupRuns(items) {
   while (i < items.length) {
     let j = i;
     if (rel[i] === i) while (j + 1 < items.length && rel[j + 1] === i) j++;
-    units.push({ start: i, end: j, key: String(runHeading(items, i, rel) || '').trim().toLowerCase() });
+    units.push({ start: i, end: j, key: nameKey(runHeading(items, i, rel)) });
     i = j + 1;
   }
   const runOf = new Array(items.length).fill(-1);

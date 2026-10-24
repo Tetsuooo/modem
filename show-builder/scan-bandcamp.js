@@ -2,7 +2,7 @@
 // anything added in the last N days. Both are public, unauthenticated — the
 // fancollection API just needs a fan_id, read once off the wishlist page's
 // #pagedata blob (the same JSON blob that hydrates Bandcamp's own React UI).
-const { curlGet, curlPostJson, cacheGet, cacheSet } = require('./lib');
+const { curlGet, curlPostJson, cacheGet, cacheSet, cleanName } = require('./lib');
 
 const BC_USER = 'Tetsuooo';
 
@@ -35,7 +35,8 @@ function mapItem(item, sourceLabel) {
     source: sourceLabel,
     key: 'bc:' + item.tralbum_id,
     title: item.item_title,
-    artist: item.band_name,
+    artist: cleanName(item.band_name), // some come with invisible direction marks
+
     url: item.item_url,
     artwork: item.item_art_url || null,
     date: item.added,
@@ -43,7 +44,7 @@ function mapItem(item, sourceLabel) {
     trackId: isAlbum ? item.featured_track || null : item.tralbum_id,
     // Bandcamp's own label field — only some releases fill it (e.g. "Drag City Records");
     // the rest are found on the release page (labelFromPage(), in checkReleaseStatus())
-    label: item.label || null,
+    label: cleanName(item.label) || null,
   };
 }
 
@@ -55,7 +56,7 @@ function norm(s) {
 // albumRelease[].recordLabel on an album page, under inAlbum on a track page.
 function recordLabelOf(node, depth) {
   if (!node || typeof node !== 'object' || depth > 6) return null;
-  if (node.recordLabel && node.recordLabel.name) return String(node.recordLabel.name).trim();
+  if (node.recordLabel && node.recordLabel.name) return cleanName(node.recordLabel.name);
   for (const v of Object.values(node)) {
     const found = recordLabelOf(v, depth + 1);
     if (found) return found;
@@ -85,7 +86,7 @@ function labelFromPage(html, artist) {
   try { page = (b && JSON.parse(decodeEntities(b[1])).name) || ''; } catch (e) { page = ''; }
   const p = norm(page), a = norm(artist);
   if (!p || !a || p === a || p.includes(a) || a.includes(p)) return null;
-  return page.trim();
+  return cleanName(page);
 }
 
 // For a track picked before the builder read labels (show-builder's /release-label).
@@ -136,7 +137,7 @@ function checkReleaseStatus(item) {
         id: t.track_id,
         title: t.title,
         // a compilation's tracks name their own artists (else the release's, in the page)
-        artist: t.artist || null,
+        artist: cleanName(t.artist) || null,
         url: new URL(t.title_link, item.url).href,
         duration: t.duration ? Math.round(t.duration) : null,
       }));

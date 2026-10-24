@@ -132,6 +132,19 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   came out "Artist [ Label ]"): a co-release = "A / B [ Artist ]", one artist on several
   labels = a line per label, no label = the artist alone, a compilation or your own group
   without labels = "Heading [ artists ]" (`creditLines()`).
+- **Show 250's "Computer man" fixed, and the rules written down** (section "The rules"
+  below). Bandcamp gave that artist's name with invisible direction marks in it, and the
+  group heading came from it. So the heading didn't match the artist "Computer man": it was
+  tagged as a label, and the artist list read "Computer man [ Computer man, ant.
+  adventure.ᐟ ]". Now:
+  - names lose those marks when scanned (`cleanName()`);
+  - names are compared ignoring case, spaces, accents and styling punctuation
+    (`nameKey()`) everywhere it matters: grouping, label or not, duplicates;
+  - a heading that is one of its artists, or a track's whole credit ("A & B" over a duo's
+    tracks), is never a label;
+  - a label field holding the artist's own name adds no label.
+  Matej's saved HTML for show 250 was edited by hand before the full-size fix, so it still
+  had the small packed player until Generate HTML is pressed again.
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
@@ -471,6 +484,67 @@ in the title ("Dj-c - Night of the living liquor store"); releases without a rea
 (just "-" or an emoji) are never merged. The label is the one tagged in the shows, else the
 Bandcamp account it's on when that isn't the artist's own. Names come without invisible
 direction marks (Bandcamp's "Computer man" account has them), so they don't end up in the HTML.
+
+---
+
+## The rules: headings, players, artist and label pills, the artist list
+
+Written down 2026-10-24, after show 250's "Computer man" came out as a label (Matej:
+"explain the rules clearly now so there is no confusion or a false positive"). The code:
+generate-html.js (the HTML), build-record-tags.js (the site's tags), public/index.html
+(Arrange, the artist list, the Preview, with copies of the same functions; keep them in step).
+
+**Same name or not.** Two names are the same when they match after ignoring case, spaces,
+accents, invisible marks and the punctuation `` . _ * | ~ ^ ; : ` ' " ( ) [ ] - ``. So "Computer
+man" = "computer-man" = "COMPUTER MAN" = "Computer man" with Bandcamp's invisible marks in
+it. Letters, digits, `& / , ! ?` and symbols like ᐟ do count, so "Computer man" ≠ "Computer
+mann" and "A & B" ≠ "A / B". Every rule below compares names this way (`nameKey()` in lib.js;
+the site's `hardKey()` uses the same idea). Names are also stored without invisible marks
+(`cleanName()`, when scanning).
+
+1. **Which tracks share one heading.** Only tracks next to each other, and only when they:
+   - come off one release: an album, a compilation or a playlist, expanded together;
+   - are in one of your own groups (tick → "group" in Arrange);
+   - or would get the same heading, e.g. one artist's tracks off different releases.
+   The same artist later in the show gets a heading of its own again.
+2. **What the heading says.**
+   - A lone track: its artist ("A & B" for a collab), or its label if you switched the
+     heading to the label.
+   - A release or your own group: the group heading. You can edit it in Arrange; it starts
+     as the release's artist or label.
+   - Neighbours with the same name: that name, as the first one spells it.
+3. **Small or full-size players.**
+   - Small players, packed into one paragraph: only tracks off ONE release (an album, a
+     compilation), as radioštudent does it.
+   - Everything else is full size, each player in its own paragraph: lone tracks, one
+     artist's tracks off different releases, your own groups.
+4. **Artist pills:** every artist of the tracks under the heading, once each.
+5. **Label pills:**
+   - Each track's own label field(s), once each.
+   - The heading too, but only when it is none of the artists under it and none of the
+     tracks' whole credits. "mappa" over a compilation, or your own group called "Night
+     shift", is a label. "Computer man" over his tracks, or "galen tipton & Junior Astronaut"
+     over the duo's tracks, is not.
+   - Never a name that is one of the artists: a label field holding the artist's own name
+     ("Sun Araw" released on "Sun Araw") adds no label pill.
+6. **The artist list (Publish).**
+   - Tracks with a label: "Label [ Artist ]". A co-release is "A / B [ Artist ]"; one artist
+     on two labels gets a line per label.
+   - Without a label, several tracks under a heading that names none of them (a compilation,
+     your own group with a name of its own): "Heading [ artists ]".
+   - Otherwise just the artists: "Computer man, ant. adventure.ᐟ", or "A & B" / "4h4" when
+     every track has the same credit (a lone track, a duo's or one artist's tracks).
+7. **On the site** the show's page shows the pills from 4 and 5. The one exception: a
+   paragraph packing several players (rule 3) is read as a compilation, and the site then
+   also adds a pill for each track's own artist from the embed (e.g. a SoundCloud account
+   name). That is why only a real one-release block is packed.
+
+**If pills or lines still look wrong:**
+- A name spelled with a different letter is a different name. Fix the artist field in
+  Arrange, or tick the tracks and "group" them.
+- HTML edited by hand keeps the shape it had when you saved it. After a builder fix, press
+  Generate HTML again; it asks before replacing your edits. The same goes for an artist list
+  edited by hand: press Generate artist list.
 
 ---
 
@@ -867,9 +941,35 @@ selection up/down steps each one (a block stays a block — the usual list behav
 failed track is retried by the next click; the page sends only those, so the downloader
 never re-reads the others and their `_download` (with any trimming) is left alone.
 
+**2026-10-24 — One "same name?" rule.** Show 250's "Computer man" heading carried invisible
+marks, so a plain text comparison called it a label. Stripping the marks fixed that case.
+But any small spelling difference (a dash, double spaces, accents) would have done the same,
+and so would a duo's credit "A & B" over their own tracks. *Choices:* one comparison key
+everywhere names are compared (case, spaces, accents, invisible marks, styling punctuation
+don't count), the same idea the site already uses to hide a label chip that repeats the
+artist. A heading is a label only when it is none of the artists and none of the tracks'
+whole credits, and a label field holding the artist's own name is dropped. Different
+letters still mean different names: merging "Computer man" and "Computer mann" would hide
+real mistakes, and own groups cover the rest. The rules are in "The rules".
+
 ---
 
 ## How it was tested (2026-10-24)
+
+The rules (headings, players, pills, the artist list), on Matej's synced show 250 and on
+made-up shows:
+- Show 250 on a throwaway clone (:8190), in Playwright's Chromium. Arrange shows one group
+  "Computer man" (3 tracks). The artist list reads "* Computer man, ant. adventure.ᐟ". After
+  Generate HTML, the Preview gives that heading the pills Computer man and ant. adventure.ᐟ,
+  with no label; the Bandcamp track is size=large; each player is in its own paragraph. The
+  old code and the new code give the same 20 headings and tags except that one.
+- 11 made-up shows through `generateShowHtml()` / `buildRecordTags()`: an own group headed
+  "computer-man", "COMPUTER MAN" or with invisible marks; one artist spelled three ways in a
+  row; a compilation headed "mappa" (small players, a label pill); an own group "Night
+  shift" (a label pill); a lone track on a label; a label field holding the artist's own
+  name; a co-release with it; a duo's tracks in a row; "Computer man" vs "Computer mann".
+  All pass.
+- 9 artist-list cases through `creditLines()` in the page. All pass, no page errors.
 
 Arrange, on a throwaway clone (:8190) with a draft of five real SoundCloud tracks from the
 current draft (without this machine's downloads), in Playwright's Chromium — 28 checks, all

@@ -63,4 +63,28 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-module.exports = { ROOT, CACHE_DIR, UA, curlGet, curlPostJson, cacheGet, cacheSet, escapeHtml };
+// A name without invisible formatting characters — Bandcamp hands some out with
+// direction marks in them ("Computer‎ ‎man"), which then didn't match the same
+// name typed plainly (a group heading that looked like the artist got tagged as a label,
+// 2026-10-24). Zero-width/direction/isolate marks and BOMs go; ZWJ (U+200D) and ZWNJ
+// (U+200C) stay — emoji sequences and some scripts need them. Spaces collapse to one.
+function cleanName(s) {
+  return String(s == null ? '' : s)
+    .replace(/[​‎‏‪-‮⁠⁦-⁩﻿]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// The key for "is this the same name?", used wherever names are compared: is a group's
+// heading one of its artists (then it's no label), do neighbours share a heading, is a name
+// a duplicate. Case, spaces, accents, invisible marks and styling punctuation
+// (. _ * | ~ ^ ; : ` ' " ( ) [ ] -) don't count: "Computer man" = "computer-man" =
+// "COMPUTER MAN" = the same with invisible marks. Same rule as the site's hardKey()
+// (src/archive.html), which drops a label chip that just restates the artist. & / , ! ?
+// and letters/digits count. A name that is only punctuation is compared as it is.
+function nameKey(s) {
+  const c = cleanName(s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  return c.replace(/[\s._*|~^;:`'"()\[\]\-]/g, '') || c;
+}
+
+module.exports = { ROOT, CACHE_DIR, UA, curlGet, curlPostJson, cacheGet, cacheSet, escapeHtml, cleanName, nameKey };
