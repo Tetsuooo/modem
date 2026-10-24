@@ -142,7 +142,10 @@ Nothing is live until step 6 — if anything looks off before that, just stop.
 
 - Double-click **`show-builder\start.bat`** — opens a console window (the server)
   and the page at <http://localhost:8090>. Or from the repo folder: `npm run showbuilder`.
-- To restart (needed after pulling new code): close the console window, run `start.bat` again.
+- To restart (needed after pulling new code): run `start.bat` again. Since 2026-10-24 it
+  closes a show builder that's still running first (its window, or whatever holds port
+  8090). Before that, a still-open server window kept the port, the new one failed to start
+  and the page was the OLD version — an update that "did nothing".
 - Needs Node.js, plus Python for the "Download selected" button (`modem_download.py`).
 
 ### Getting the latest version onto another machine (e.g. the Surface Pro)
