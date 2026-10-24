@@ -58,6 +58,13 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
     where the playhead is (a 15 ms crossfade, no click) and leaves the rest playing. Mute
     used to stop and restart the whole mix. Also fixed: after Play from the middle, clips
     already under way started ~0.1 s ahead of the others.
+  - **Each track's own volume** (Matej: "making individual songs louder or more silent"):
+    the "0 dB" tag at a clip's bottom-left — drag up/down (0.25 dB per pixel, Shift 0.05),
+    mouse wheel (0.5 dB a step), double-click = back to 0 dB; −30 … +12 dB. Heard at once
+    while playing (its own gain stage, no restart), in the export too, undoable. The
+    waveform grows/shrinks with it, and turns red along the edges where a boost would push
+    it past full scale (it would distort — turn the others down instead). Saved as
+    `gainDb` on the clip.
 - **One heading for one artist's tracks in a row.** Tracks next to each other whose heading
   would be the same name (the same artist — or the same label, when that's the heading)
   now share ONE heading, even off different releases, like tracks off one release always

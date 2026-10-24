@@ -320,6 +320,14 @@
   .mix-clip-waves { position: absolute; left: 0; right: 0; top: 4px; bottom: 4px; pointer-events: none; transform-origin: 0 0; }
   .mix-clip-waves canvas { position: absolute; top: 0; height: 100%; }
   .mix-clip.lane-moving { transition: top 140ms ease; }
+  /* a clip's volume: drag up/down, wheel, double-click = 0 dB (wireMixClipDrag()) */
+  .mix-clip-gain {
+    position: absolute; left: 18px; bottom: 4px; z-index: 4; font-size: 10px; line-height: 1; padding: 3px 5px;
+    border-radius: 4px; background: rgba(0, 0, 0, .5); color: #c7d4f0; cursor: ns-resize; touch-action: none;
+    font-variant-numeric: tabular-nums; user-select: none;
+  }
+  .mix-clip-gain:hover { background: rgba(0, 0, 0, .75); }
+  .mix-clip-gain.changed { color: #ffd166; }
   .mix-snap-line { position: absolute; top: 0; bottom: 0; width: 1px; background: #ffd166; z-index: 6; pointer-events: none; box-shadow: 0 0 4px rgba(255, 209, 102, .8); }
   .mix-clip-fill {
     position: absolute; inset: 0;
@@ -2082,15 +2090,25 @@ function getWaveformPeaks(src) {
   return peaks;
 }
 
+// A clip's volume (clip.gainDb, 0 = as recorded): Matej, 2026-10-24 — "making individual
+// songs louder or more silent in the mix tab". Applied on the clip's own gain stage
+// (mixStartClip(); the export too), and shown by the waveform's height.
+const MIX_GAIN_MIN = -30, MIX_GAIN_MAX = 12;
+const dbToGain = (db) => Math.pow(10, (db || 0) / 20);
+const fmtDb = (db) => (!db ? '0 dB' : (db > 0 ? '+' : '−') + Math.abs(db).toFixed(1) + ' dB');
+
 // One canvas of a clip's waveform: `t0` = the audio time at its left edge, `span` = the
 // seconds it covers. Every pixel column takes the min/max (and loudest RMS) of ALL the
 // points under it — picking one point per column skipped peaks when zoomed out.
-function drawWaveTile(cv, peaks, t0, span) {
+// `scale`: the clip's volume as a factor, so a louder clip looks bigger (capped at the edge).
+function drawWaveTile(cv, peaks, t0, span, scale) {
+  scale = scale || 1;
   const g = cv.getContext('2d');
   const W = cv.width, H = cv.height, mid = H / 2;
   g.clearRect(0, 0, W, H);
   const first = t0 * peaks.rate, perCol = (span * peaks.rate) / W;
   const top = new Float32Array(W), bot = new Float32Array(W), body = new Float32Array(W);
+  const over = new Uint8Array(W); // turned up past full scale here: it would distort
   for (let x = 0; x < W; x++) {
     let b0 = Math.floor(first + x * perCol), b1 = Math.floor(first + (x + 1) * perCol);
     if (b1 <= b0) b1 = b0 + 1;
@@ -2101,12 +2119,17 @@ function drawWaveTile(cv, peaks, t0, span) {
       if (peaks.max[b] > hi) hi = peaks.max[b];
       if (peaks.rms[b] > r) r = peaks.rms[b];
     }
-    top[x] = hi; bot[x] = lo; body[x] = r;
+    top[x] = Math.min(1, hi * scale); bot[x] = Math.max(-1, lo * scale); body[x] = Math.min(1, r * scale);
+    over[x] = hi * scale > 1 || lo * scale < -1 ? 1 : 0;
   }
   g.fillStyle = 'rgba(150, 180, 255, 0.45)'; // peaks
   for (let x = 0; x < W; x++) g.fillRect(x, mid - top[x] * mid, 1, Math.max(1, (top[x] - bot[x]) * mid));
   g.fillStyle = 'rgba(205, 222, 255, 0.85)'; // the RMS body inside
   for (let x = 0; x < W; x++) g.fillRect(x, mid - body[x] * mid, 1, Math.max(1, 2 * body[x] * mid));
+  // red along the edges where a clip turned up (gainDb) would distort
+  const edge = Math.max(2, Math.round(H * 0.06));
+  g.fillStyle = '#ff4d5e';
+  for (let x = 0; x < W; x++) if (over[x]) { g.fillRect(x, 0, 1, edge); g.fillRect(x, H - edge, 1, edge); }
 }
 
 // A clip's waveform, as a row of canvases (one per MIX_WAVE_TILE CSS px — a long track
@@ -2132,7 +2155,7 @@ function drawClipWaves(clipEl, clip) {
     cv.height = Math.max(1, Math.round(cssH * dpr));
     cv.style.left = x0 + 'px';
     cv.style.width = w + 'px';
-    drawWaveTile(cv, peaks, t0 + x0 / MIX_PX_PER_SEC, w / MIX_PX_PER_SEC);
+    drawWaveTile(cv, peaks, t0 + x0 / MIX_PX_PER_SEC, w / MIX_PX_PER_SEC, dbToGain(clip.gainDb));
     box.appendChild(cv);
   }
 }
@@ -2303,7 +2326,7 @@ function updateMixPlayheadPosition() {
 // What the timeline shows, for "did the mix change?" (syncMixToShowOrder()).
 let mixLastSig = '';
 function mixSignature() {
-  return JSON.stringify(mixClips.map((c) => [c.id, c.start, c.duration, c.trimStart, c.fadeIn, c.fadeOut, !!c.muted]));
+  return JSON.stringify(mixClips.map((c) => [c.id, c.start, c.duration, c.trimStart, c.fadeIn, c.fadeOut, !!c.muted, c.gainDb || 0]));
 }
 
 // Lane = position in START-TIME order, not array/insertion order — so
@@ -2383,6 +2406,7 @@ function renderMixTimeline() {
       <div class="mix-clip-fill" style="--fade-in:${fadeInPct}%;--fade-out:${fadeOutPct}%"></div>
       <div class="mix-clip-label"><span class="mc-title">${esc(c.title)}</span><span class="mc-artist">${esc(c.artist || '')}</span></div>
       <button class="mix-clip-mute${c.muted ? ' active' : ''}" data-id="${escAttr(c.id)}" title="${c.muted ? 'unmute' : 'mute'}">M</button>
+      <div class="mix-clip-gain${c.gainDb ? ' changed' : ''}" data-id="${escAttr(c.id)}" title="volume — drag up/down (Shift: finer), or the mouse wheel; double-click: back to 0 dB">${fmtDb(c.gainDb)}</div>
       <button class="mix-clip-remove" data-id="${escAttr(c.id)}" title="remove">×</button>
       <div class="mix-fade-handle left" data-id="${escAttr(c.id)}" data-side="in" title="drag to set fade-in"></div>
       <div class="mix-fade-handle right" data-id="${escAttr(c.id)}" data-side="out" title="drag to set fade-out"></div>
@@ -2469,7 +2493,7 @@ function wireMixClipDrag() {
   timeline.querySelectorAll('.mix-clip').forEach((clipEl) => {
     clipEl.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
-      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove') || e.target.closest('.mix-clip-mute')) return;
+      if (e.target.closest('.mix-fade-handle') || e.target.closest('.mix-trim-handle') || e.target.closest('.mix-clip-remove') || e.target.closest('.mix-clip-mute') || e.target.closest('.mix-clip-gain')) return;
       const clip = mixClips.find((c) => c.id === clipEl.dataset.id);
       if (!clip) return;
       e.preventDefault();
@@ -2528,6 +2552,64 @@ function wireMixClipDrag() {
       window.addEventListener('pointerup', onUp);
       window.addEventListener('pointercancel', onUp);
     });
+  });
+
+  // A clip's volume: drag the dB tag up/down (0.25 dB per px, Shift 0.05), the mouse wheel
+  // (0.5 dB a step), double-click = 0 dB. Heard at once while playing (mixApplyGain()), the
+  // waveform follows; one undo step per drag / double-click / burst of wheel steps.
+  timeline.querySelectorAll('.mix-clip-gain').forEach((tag) => {
+    const clip = mixClips.find((c) => c.id === tag.dataset.id);
+    const clipEl = tag.closest('.mix-clip');
+    if (!clip) return;
+    let redraw = 0;
+    const setDb = (db) => {
+      clip.gainDb = Math.round(Math.max(MIX_GAIN_MIN, Math.min(MIX_GAIN_MAX, db)) * 10) / 10 || 0;
+      tag.textContent = fmtDb(clip.gainDb);
+      tag.classList.toggle('changed', !!clip.gainDb);
+      mixApplyGain(clip);
+      if (!redraw) redraw = requestAnimationFrame(() => { redraw = 0; drawClipWaves(clipEl, clip); });
+    };
+    const done = (before) => {
+      pushUndoForClipChange(clip, { gainDb: before });
+      mixLastSig = mixSignature();
+      debouncedSaveDraft();
+    };
+    tag.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      try { tag.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic event */ }
+      const startY = e.clientY, before = clip.gainDb || 0;
+      let lastY = startY, db = before;
+      const onMove = (ev) => {
+        db += (lastY - ev.clientY) * (ev.shiftKey ? 0.05 : 0.25);
+        lastY = ev.clientY;
+        setDb(db);
+      };
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        done(before);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+    });
+    tag.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const before = clip.gainDb || 0;
+      setDb(0);
+      done(before);
+    });
+    let wheelBefore = null, wheelTimer = null;
+    tag.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (wheelBefore == null) wheelBefore = clip.gainDb || 0;
+      setDb((clip.gainDb || 0) + (e.deltaY < 0 ? 0.5 : -0.5));
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => { done(wheelBefore); wheelBefore = null; }, 500);
+    }, { passive: false });
   });
 
   timeline.querySelectorAll('.mix-fade-handle').forEach((handle) => {
@@ -2791,6 +2873,8 @@ function mixAudioSig(c) {
 
 // Schedules one clip through its own small gain stage (`out`, the crossfade), remembered
 // in mixLive. originTime/seekFrom: the ctx time at which mix position seekFrom plays.
+// The chain: source → fades (scheduleMixClip) → vol (the clip's volume, changed live by
+// mixApplyGain()) → out (the crossfade) → speakers.
 function mixStartClip(clip, originTime, seekFrom, crossfadeIn) {
   const ctx = mixAudioCtx;
   const out = ctx.createGain();
@@ -2799,9 +2883,18 @@ function mixStartClip(clip, originTime, seekFrom, crossfadeIn) {
     out.gain.setValueAtTime(0, originTime);
     out.gain.linearRampToValueAtTime(1, originTime + 0.015);
   }
-  const src = scheduleMixClip(ctx, clip, originTime, seekFrom, out);
-  mixLive.set(clip.id, { src, out, sig: mixAudioSig(clip) });
+  const vol = ctx.createGain();
+  vol.gain.value = dbToGain(clip.gainDb);
+  vol.connect(out);
+  const src = scheduleMixClip(ctx, clip, originTime, seekFrom, vol);
+  mixLive.set(clip.id, { src, out, vol, sig: mixAudioSig(clip) });
   return src;
+}
+
+// A clip's volume changed: heard at once, smoothly (no re-scheduling needed).
+function mixApplyGain(clip) {
+  const live = mixPlaying && mixLive.get(clip.id);
+  if (live) live.vol.gain.setTargetAtTime(dbToGain(clip.gainDb), mixAudioCtx.currentTime, 0.015);
 }
 
 function mixStopLive(id, at) {
@@ -2824,7 +2917,7 @@ function mixResync() {
   [...mixLive.keys()].forEach((id) => { if (!ids.has(id)) mixStopLive(id, at); });
   mixClips.forEach((clip) => {
     const live = mixLive.get(clip.id);
-    if (live && live.sig === mixAudioSig(clip)) return;
+    if (live && live.sig === mixAudioSig(clip)) { mixApplyGain(clip); return; } // volume: e.g. undone
     if (live) mixStopLive(clip.id, at);
     if (clip.muted || clip.start + clip.duration <= pos || !mixBuffers.get(clip.src)) return;
     mixStartClip(clip, at, pos, true);
@@ -2839,7 +2932,12 @@ async function renderMixOffline() {
   const sampleRate = 44100;
   const totalDur = Math.max(...mixClips.map((c) => c.start + c.duration)) + 1;
   const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDur * sampleRate), sampleRate);
-  mixClips.filter((clip) => !clip.muted).forEach((clip) => scheduleMixClip(offlineCtx, clip, 0));
+  mixClips.filter((clip) => !clip.muted).forEach((clip) => {
+    const vol = offlineCtx.createGain(); // the clip's volume, as in live playback
+    vol.gain.value = dbToGain(clip.gainDb);
+    vol.connect(offlineCtx.destination);
+    scheduleMixClip(offlineCtx, clip, 0, 0, vol);
+  });
   return offlineCtx.startRendering();
 }
 
