@@ -466,24 +466,22 @@
      one): bigger buttons, handles and sliders; the layer's buttons go to a second row so
      they fit. A computer with only a mouse keeps the compact look. */
   @media (any-pointer: coarse) {
-    .cover-sidebar { flex-basis: 340px; max-width: 340px; }
-    .cover-layer { padding: 8px 10px; }
-    .cover-layer-head { flex-wrap: wrap; gap: 6px 4px; }
-    .cover-layer-title { flex: 1 1 150px; font-size: 13px; }
-    .cover-layer-thumb { width: 36px; height: 36px; }
-    .cover-grip { width: 28px; font-size: 20px; }
-    .cover-toggle { font-size: 12px; padding: 8px 10px; min-width: 36px; min-height: 36px; }
-    .cover-layer .move-buttons { gap: 4px; }
-    .cover-layer .move-btn { font-size: 15px; padding: 8px 9px; min-width: 36px; min-height: 36px; }
-    .cover-layer-remove { font-size: 20px; padding: 4px 10px; min-width: 36px; min-height: 36px; margin-left: auto; }
-    .lumakey-bar { height: 36px; }
-    .lumakey-track { top: 10px; height: 10px; }
-    .lumakey-bridge { top: 10px; height: 10px; }
-    .lumakey-handle { top: 20px; transform: scale(1.5); transform-origin: 50% 0; }
-    .cover-global-adjust { gap: 8px; }
-    .cover-global-adjust label { font-size: 13px; }
-    .cover-global-adjust input[type=range], #coverEraserSize { height: 32px; }
-    #panel-covers .actions button { padding: 9px 14px; }
+    /* toned down a step (Matej, 2026-10-24: 36-px buttons were "too big") */
+    .cover-sidebar { flex-basis: 316px; max-width: 316px; }
+    .cover-layer-head { flex-wrap: wrap; gap: 4px 3px; }
+    .cover-layer-title { flex: 1 1 150px; }
+    .cover-layer-thumb { width: 30px; height: 30px; }
+    .cover-grip { width: 22px; font-size: 17px; }
+    .cover-toggle { font-size: 11px; padding: 5px 7px; min-width: 28px; min-height: 28px; }
+    .cover-layer .move-buttons { gap: 2px; }
+    .cover-layer .move-btn { font-size: 13px; padding: 5px 6px; min-width: 28px; min-height: 28px; }
+    .cover-layer-remove { font-size: 17px; padding: 2px 7px; min-width: 28px; min-height: 28px; margin-left: auto; }
+    .lumakey-bar { height: 30px; }
+    .lumakey-track { top: 9px; height: 8px; }
+    .lumakey-bridge { top: 9px; height: 8px; }
+    .lumakey-handle { top: 17px; transform: scale(1.25); transform-origin: 50% 0; }
+    .cover-global-adjust { gap: 6px; }
+    .cover-global-adjust input[type=range], #coverEraserSize { height: 26px; }
   }
   .history-entry { border: 1px solid #2a2b33; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
   .history-entry-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }

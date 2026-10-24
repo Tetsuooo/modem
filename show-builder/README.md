@@ -74,8 +74,9 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   as before (byte-for-byte the same size); falls back to the old way only if a worker
   can't start.
 - **Covers on a touch screen** (any-pointer: coarse — the Surface; a mouse-only computer
-  keeps the compact look): 36-px M/S/move/× buttons (on a second row), bigger thumbnails,
-  luma-key bar and handles, 32-px sliders. Always: an invisible bigger grab area on each
+  keeps the compact look): 28-px M/S/move/× buttons (the move buttons on a second row),
+  slightly bigger thumbnails, luma-key bar and handles, 26-px sliders — first 36/32 px,
+  toned down the same day ("too big"). Always: an invisible bigger grab area on each
   luma handle; a grip ⠿ on each layer that reorders with a finger, pen or mouse (the
   browser's drag-and-drop doesn't work with a finger); a double tap on a luma handle
   splits/joins its feather; erasing with a finger no longer scrolls the page.
