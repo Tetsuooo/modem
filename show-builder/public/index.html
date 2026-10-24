@@ -407,6 +407,16 @@
   .cover-layer-title { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cover-layer-remove { background: none; border: none; color: #6f7080; cursor: pointer; font-size: 14px; flex: none; padding: 0 2px; }
   .cover-layer-remove:hover { color: #ff8080; }
+  /* mute / solo per layer (coverLayerShown()) */
+  .cover-layer-toggles { display: flex; gap: 2px; flex: none; }
+  .cover-toggle {
+    background: none; border: 1px solid #3a3b45; color: #9a9ba5; font-size: 10px; font-weight: 600;
+    line-height: 1; padding: 3px 5px; border-radius: 4px; cursor: pointer;
+  }
+  .cover-toggle:hover { color: #e8e8ea; border-color: #55566a; }
+  .cover-toggle.mute.active { background: #b5442a; border-color: #b5442a; color: #fff; }
+  .cover-toggle.solo.active { background: #d4a72c; border-color: #d4a72c; color: #14151a; }
+  .cover-layer.off .cover-layer-thumb, .cover-layer.off .cover-layer-title { opacity: .35; }
   /* ---- Luma key ("Blend If") bar: one gradient track, a black handle and a
      white handle — double-click either to split it into a draggable
      black/white pair (the feather width), same interaction as Photoshop's
@@ -3161,11 +3171,16 @@ function renderCoverLayerList() {
   // immediately — re-picked whenever the previously-selected one no longer
   // exists (removed, or nothing selected yet).
   if (!coverLayers.some((l) => l.id === selectedCoverLayerId)) selectedCoverLayerId = coverLayers[0].id;
+  const anySolo = coverAnySolo();
   box.innerHTML = coverLayers.map((l, i) => `
-    <div class="cover-layer${l.id === selectedCoverLayerId ? ' selected' : ''}" data-id="${escAttr(l.id)}">
+    <div class="cover-layer${l.id === selectedCoverLayerId ? ' selected' : ''}${coverLayerShown(l, anySolo) ? '' : ' off'}" data-id="${escAttr(l.id)}">
       <div class="cover-layer-head" draggable="true" title="click to select (for the eraser) — drag to reorder">
         <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
         <span class="cover-layer-title">${esc(l.title)}</span>
+        <div class="cover-layer-toggles">
+          <button class="cover-toggle mute${l.muted ? ' active' : ''}" data-id="${escAttr(l.id)}" data-act="mute" title="mute: hide this layer">M</button>
+          <button class="cover-toggle solo${l.solo ? ' active' : ''}" data-id="${escAttr(l.id)}" data-act="solo" title="solo: show only the soloed layers — Ctrl-click: only this one">S</button>
+        </div>
         <div class="move-buttons">
           <button class="move-btn cover-move-btn" data-index="${i}" data-dir="top" title="move to top" ${i === 0 ? 'disabled' : ''}>⇑</button>
           <button class="move-btn cover-move-btn" data-index="${i}" data-dir="up" title="move up" ${i === 0 ? 'disabled' : ''}>▲</button>
@@ -3207,11 +3222,28 @@ function renderCoverLayerList() {
       moveCoverLayer(Number(b.dataset.index), b.dataset.dir);
     });
   });
+  box.querySelectorAll('.cover-toggle').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const layer = coverLayers.find((l) => l.id === b.dataset.id);
+      if (!layer) return;
+      pushUndoSnapshot();
+      if (b.dataset.act === 'mute') layer.muted = !layer.muted;
+      else if (e.ctrlKey || e.metaKey) {
+        // only this one soloed — or, if it already is the only one, no solo at all
+        const onlyThis = !(layer.solo && coverLayers.every((l) => l === layer || !l.solo));
+        coverLayers.forEach((l) => { l.solo = onlyThis && l === layer; });
+      } else layer.solo = !layer.solo;
+      renderCoverLayerList();
+      scheduleCoverRender();
+      debouncedSaveDraft();
+    });
+  });
   // Selecting a layer (for the eraser) is a click anywhere on its head
   // EXCEPT the controls that already have their own click meaning.
   box.querySelectorAll('.cover-layer-head').forEach((head) => {
     head.addEventListener('click', (e) => {
-      if (e.target.closest('.move-buttons') || e.target.closest('.cover-layer-remove')) return;
+      if (e.target.closest('.move-buttons') || e.target.closest('.cover-layer-remove') || e.target.closest('.cover-layer-toggles')) return;
       selectedCoverLayerId = head.closest('.cover-layer').dataset.id;
       renderCoverLayerList();
     });
@@ -3439,6 +3471,16 @@ function buildCoverFilterCss() {
   return `contrast(${c}%) brightness(${b}%) saturate(${s}%)`;
 }
 
+// Mute / solo per layer, as in a mixer (Matej, 2026-10-24): a muted layer isn't drawn; while
+// any layer is soloed, only the soloed ones are (a soloed layer that's also muted stays
+// hidden and doesn't count as a solo). The export is what you see.
+function coverAnySolo() {
+  return coverLayers.some((l) => l.solo && !l.muted);
+}
+function coverLayerShown(layer, anySolo) {
+  return !layer.muted && (!anySolo || !!layer.solo);
+}
+
 let coverRenderQueued = false;
 function scheduleCoverRender() {
   if (coverRenderQueued) return;
@@ -3469,8 +3511,10 @@ async function renderCoverCanvas() {
   octx.fillRect(0, 0, COVER_CANVAS_SIZE, COVER_CANVAS_SIZE);
 
   // Draw bottom-to-top (list index 0 = front, so walk the array backwards).
+  const anySolo = coverAnySolo();
   for (let i = coverLayers.length - 1; i >= 0; i--) {
     const layer = coverLayers[i];
+    if (!coverLayerShown(layer, anySolo)) continue; // muted, or another layer is soloed
     let img;
     try { img = await getCoverImage(layer.src); } catch (e) { continue; }
     const tmp = document.createElement('canvas');
@@ -3577,6 +3621,9 @@ async function exportCoverPng() {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     el('coverStatus').textContent = kept ? 'exported ✓ — and kept for the site' : (/^\d+$/.test(showNum) ? 'exported ✓ (could not keep a copy for the site)' : 'exported ✓ — set the Show # (Publish tab) to also keep it for the site');
+    const anySolo = coverAnySolo();
+    const hidden = coverLayers.filter((l) => !coverLayerShown(l, anySolo)).length;
+    if (hidden) el('coverStatus').textContent += ` — without ${hidden} hidden layer${hidden > 1 ? 's' : ''} (${anySolo ? 'solo is on' : 'muted'})`;
     refreshCoverStatus();
   } catch (e) {
     el('coverStatus').textContent = 'export failed: ' + (e.message || e);

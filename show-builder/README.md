@@ -65,6 +65,11 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
     waveform grows/shrinks with it, and turns red along the edges where a boost would push
     it past full scale (it would distort — turn the others down instead). Saved as
     `gainDb` on the clip.
+- **Covers tab: mute and solo per layer.** M hides a layer, S shows only the soloed layers
+  (several can be soloed; Ctrl-click S = only this one; a soloed layer that's also muted
+  doesn't count). Hidden layers are dimmed in the list. The export is what you see — its
+  message says when layers are hidden. Saved with the draft (`muted`/`solo` on the layer),
+  undoable.
 - **One heading for one artist's tracks in a row.** Tracks next to each other whose heading
   would be the same name (the same artist — or the same label, when that's the heading)
   now share ONE heading, even off different releases, like tracks off one release always
