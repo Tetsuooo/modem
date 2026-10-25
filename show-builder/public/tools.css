@@ -196,6 +196,10 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 
 /* ---------- Year-end list tab (public/yearend.js) ---------- */
 .ye-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+#yeSaved.ye-unsaved { color: #ff9b9b; font-weight: 600; }
+.ye-rescue { background: #3a331f; color: #ffd98b; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin: -4px 0 12px; }
+.ye-rescue[hidden] { display: none; }
+.ye-rescue button { margin-left: 6px; }
 .ye-head .grow { flex: 1; }
 .ye-head select { background: #101117; color: #e8e8ea; border: 1px solid #3a3b45; border-radius: 6px; padding: 5px 8px; }
 .ye-year { font-size: 13px; color: #9a9ba5; display: flex; align-items: center; gap: 6px; }

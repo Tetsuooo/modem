@@ -52,25 +52,81 @@
   window.yearendUndo = () => { if (!S.undo.length) return; S.redo.push(snapshot()); restore(S.undo.pop()); };
   window.yearendRedo = () => { if (!S.redo.length) return; S.undo.push(snapshot()); restore(S.redo.pop()); };
 
+  // ---------- saving: an edit is never lost ------------------------------------------
+  // Every change is also kept in this browser (localStorage) until the builder says it's
+  // saved (Matej, 2026-10-25: a list's picks were gone after the builder had been
+  // restarted). A save that doesn't get through — the builder restarting or not answering —
+  // is tried again every 3 s with a red note, and a reload in between brings the changes
+  // back (restorePending(), from load()). The server also keeps a copy per day
+  // (year-end.js backUp()).
+  const PENDING = 'sb-ye-pending';
+  function readPending() { try { return JSON.parse(localStorage.getItem(PENDING) || 'null'); } catch (e) { return null; } }
+  function keepPending() {
+    try { localStorage.setItem(PENDING, JSON.stringify({ year: S.year, base: S.savedAt || 0, at: Date.now(), d: S.decisions, o: S.order, e: S.edits })); } catch (e) { /* private mode: no safety copy */ }
+  }
+  function dropPending(upTo) {
+    const p = readPending();
+    if (p && p.at <= upTo) { try { localStorage.removeItem(PENDING); } catch (e) { /* ignore */ } }
+  }
   function scheduleSave() {
     clearTimeout(S.saveTimer);
-    const s = el('yeSaved'); if (s) s.textContent = 'saving…';
+    if (!S.year) return;
+    keepPending();
+    const at = Date.now();
+    const s = el('yeSaved'); if (s) { s.textContent = 'saving…'; s.classList.remove('ye-unsaved'); }
     S.saveTimer = setTimeout(async () => {
       try {
         const j = await post('/ye/save', { year: S.year, decisions: S.decisions, order: S.order, edits: S.edits });
-        if (el('yeSaved')) el('yeSaved').textContent = j.ok ? 'saved' : ('not saved: ' + (j.error || ''));
-      } catch (e) { if (el('yeSaved')) el('yeSaved').textContent = 'not saved: ' + e.message; }
+        if (!j.ok) throw new Error(j.error || 'not saved');
+        S.savedAt = j.savedAt;
+        dropPending(at);
+        if (el('yeSaved')) el('yeSaved').textContent = 'saved';
+      } catch (e) {
+        const s2 = el('yeSaved');
+        if (s2) { s2.textContent = 'NOT SAVED — the builder isn’t answering. Your changes are kept in this browser and saved as soon as it’s back.'; s2.classList.add('ye-unsaved'); }
+        S.saveTimer = setTimeout(scheduleSave, 3000);
+      }
     }, 500);
+  }
+
+  // Changes that never reached the builder (a reload or restart in between): when the
+  // builder's copy hasn't changed since, they're the newest, so they come back and are
+  // saved; when it has (a Sync from the other computer, say), it's asked first.
+  function restorePending() {
+    const box = el('yeRescue');
+    const p = readPending();
+    if (!box) return;
+    box.hidden = true;
+    if (!p || p.year !== S.year) return;
+    if (JSON.stringify({ d: p.d, o: p.o, e: p.e }) === snapshot()) { dropPending(p.at); return; } // it did get saved
+    const when = new Date(p.at).toLocaleString();
+    if ((S.savedAt || 0) === (p.base || 0)) {
+      useRescue();
+      box.innerHTML = `Brought back your changes from ${esc(when)} that hadn’t been saved yet — saved now. <button id="yeRescueOk">OK</button>`;
+    } else {
+      box.innerHTML = `This browser has changes from ${esc(when)} that never got saved, but the list has changed since (a Sync from the other computer?). ` +
+        '<button id="yeRescueUse">Use my unsaved changes</button> <button id="yeRescueDrop">Drop them</button>';
+    }
+    box.hidden = false;
+  }
+  function useRescue() {
+    const p = readPending();
+    if (!p) return;
+    S.undo.push(snapshot()); S.redo = [];
+    S.decisions = p.d || {}; S.order = p.o || []; S.edits = p.e || {};
+    afterChange(); // draws it and saves it
+    const box = el('yeRescue'); if (box) box.hidden = true;
   }
 
   async function load(year) {
     const j = await fetch('/ye/state?year=' + year).then((r) => r.json());
-    S.year = j.year; S.data = j; S.listSize = j.listSize || 50;
+    S.year = j.year; S.data = j; S.listSize = j.listSize || 50; S.savedAt = j.savedAt || 0;
     S.byKey = new Map((j.candidates || []).map((c) => [c.key, c]));
     S.decisions = j.decisions || {}; S.order = j.order || []; S.edits = j.edits || {}; S.editing = null;
     setAliases(j.aliases);
     S.undo = []; S.redo = []; S.open.clear();
     renderAll();
+    restorePending();
   }
 
   // a release with the names fixed by hand (see the ✎ editor in the list)
@@ -316,6 +372,7 @@
       <button id="yeUndo" title="undo (Ctrl+Z)">↶ Undo</button><button id="yeRedo" title="redo (Ctrl+Y)">↷ Redo</button>
       <span id="yeSaved" class="status"></span>
     </div>
+    <div id="yeRescue" class="ye-rescue" hidden></div>
     <div class="ye-cols">
       <section class="ye-pool">
         <div class="ye-bar">
@@ -726,6 +783,9 @@
       if (t.id === 'yeAliasBtn' || t.id === 'yeAliasClose') return toggleAliases();
       if (t.id === 'yeAliasSave') return saveAliases();
       if (t.id === 'yeGather') return gather();
+      if (t.id === 'yeRescueUse') return useRescue();
+      if (t.id === 'yeRescueDrop') { const p = readPending(); if (p) dropPending(p.at); el('yeRescue').hidden = true; return; }
+      if (t.id === 'yeRescueOk') { el('yeRescue').hidden = true; return; }
       if (t.id === 'yeUndo') return window.yearendUndo();
       if (t.id === 'yeRedo') return window.yearendRedo();
       if (t.id === 'yeHtmlBtn') return makeHtml();

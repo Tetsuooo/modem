@@ -121,6 +121,41 @@ function localSharedDraft() {
   };
 }
 
+// raw contents of these repo files (null = not there), also written to
+// data/.cache/sync-backups/<time>/ — the last 20 syncs are kept
+function backUpLocal(rels) {
+  const originals = new Map();
+  const dir = path.join(DATA_DIR, '.cache', 'sync-backups', new Date().toISOString().replace(/[:.]/g, '-'));
+  for (const rel of rels) {
+    const file = path.join(REPO_ROOT, rel);
+    let raw = null;
+    try { raw = fs.readFileSync(file); } catch (e) { /* not there */ }
+    originals.set(rel, raw);
+    if (raw) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, rel.replace(/[\\/]/g, '__')), raw);
+      } catch (e) { /* a backup that can't be written doesn't stop the sync */ }
+    }
+  }
+  try {
+    const root = path.join(DATA_DIR, '.cache', 'sync-backups');
+    fs.readdirSync(root).sort().slice(0, -20).forEach((d) => fs.rmSync(path.join(root, d), { recursive: true, force: true }));
+  } catch (e) { /* nothing to prune */ }
+  return originals;
+}
+
+function restoreLocal(originals) {
+  for (const [rel, raw] of originals) {
+    const file = path.join(REPO_ROOT, rel);
+    try {
+      if (raw) fs.writeFileSync(file, raw);
+      else if (fs.existsSync(file)) fs.unlinkSync(file);
+      git(['reset', '-q', '--', rel]); // and out of the index the checkout put it in
+    } catch (e) { /* best effort, the backup folder still has it */ }
+  }
+}
+
 function pickNewest(a, b) {
   if (!a) return b;
   if (!b) return a;
@@ -217,15 +252,26 @@ function runSync() {
     const mergedHistory = mergeHistory(localHistory, remoteHistory);
     const mergedYearEnd = mergeYearEnd(localYearEnd, remoteYearEnd);
 
-    // Reset the working tree to remote for exactly these managed paths so the
-    // upcoming pull has nothing local to conflict with — our own merge
-    // (computed above, from local+remote) gets written back over them right
-    // after, regardless of what the pull leaves there.
-    for (const relPath of [...MANAGED_RELS, ...decisions.map((d) => d.rel)]) {
-      if (existsAtRef('origin/main', relPath)) git(['checkout', 'origin/main', '--', relPath]);
-    }
+    // This machine's own copies of everything about to be reset, as they are now: kept in
+    // data/.cache/sync-backups/ (the last 20 syncs), and put back if anything below fails.
+    // Before 2026-10-25 a pull that failed after the reset left GitHub's copies in place,
+    // and whatever was only here (year-end picks, the draft, unpublished edits) was gone.
+    const touched = [...MANAGED_RELS, ...decisions.map((d) => d.rel)];
+    const originals = backUpLocal(touched);
 
-    git(['pull', 'origin', 'main']);
+    try {
+      // Reset the working tree to remote for exactly these managed paths so the
+      // upcoming pull has nothing local to conflict with — our own merge
+      // (computed above, from local+remote) gets written back over them right
+      // after, regardless of what the pull leaves there.
+      for (const relPath of touched) {
+        if (existsAtRef('origin/main', relPath)) git(['checkout', 'origin/main', '--', relPath]);
+      }
+      git(['pull', 'origin', 'main']);
+    } catch (e) {
+      restoreLocal(originals);
+      throw new Error('Sync stopped (nothing was lost — this machine\'s files are as before): ' + String(e.message || e));
+    }
 
     // Back to this machine's decisions, merged with whatever came in. Left
     // uncommitted on purpose: they're pushed by the next publish, not by Sync.

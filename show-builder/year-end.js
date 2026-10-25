@@ -34,8 +34,22 @@ function readAll() { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } c
 function writeAll(all) {
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   const tmp = FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(all, null, 1));
+  const text = JSON.stringify(all, null, 1);
+  fs.writeFileSync(tmp, text);
   fs.renameSync(tmp, FILE);
+  backUp(text);
+}
+
+// A copy per day in data/.cache/year-end-backups/ (the last 60 days): the list is worked on
+// for months, and once its picks were lost on a machine with nothing to go back to
+// (Matej, 2026-10-25). Not synced — each machine keeps its own.
+function backUp(text) {
+  try {
+    const dir = path.join(__dirname, 'data', '.cache', 'year-end-backups');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, new Date().toISOString().slice(0, 10) + '.json'), text);
+    fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().slice(0, -60).forEach((f) => fs.unlinkSync(path.join(dir, f)));
+  } catch (e) { /* a backup that can't be written never stops a save */ }
 }
 const isYear = (k) => /^\d{4}$/.test(k);
 // Matej, 2026-10-22: "computer man, computer doctor and dj-c are the same artist"

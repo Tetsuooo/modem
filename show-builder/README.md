@@ -213,6 +213,19 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
       message to Sync and push again (`pushTakingInGitHub()` in server.js);
     - Sync also pushes commits still only on this machine after its merge (it used to
       push only its own data files).
+- **Year-end picks lost on a machine (2026-10-25).** GitHub never had a single pick (every
+  version of year-end.json: 0 decisions), so they were only on the machine and got replaced
+  there. The likely ways were edits that never saved while the builder restarted (only a
+  small "not saved" note) and a Sync whose `git pull` failed after it had already reset the
+  synced files to GitHub's copies (a failure left GitHub's copies; the draft, used-tracks
+  and unpublished edits were exposed the same way). Both are closed:
+  - Sync backs up and restores (`backUpLocal()` / `restoreLocal()` in sync.js);
+  - the Year-end tab keeps unsaved changes in localStorage, retries, and restores after a
+    reload (`restorePending()` in yearend.js);
+  - year-end.js keeps a daily copy (`backUp()`).
+  Tested on a scratch remote: saved plus backup, a save that failed then retried, a reload
+  rescue, asking when the list changed meanwhile, a Sync whose pull failed (picks kept, a
+  backup, nothing left staged) and then went through.
 - **Show backups (2026-10-25).** Matej: "make it a habit of backing up all of the modem shows
   to that folder". `D:/MODEM/oddaje` held 1–218 (minus 100/200) as
   `Modem_NNN_<air date>.mp3`. They're radioštudent's own 320 kbps broadcast recordings,
@@ -585,6 +598,15 @@ of each year wins, like the draft, so finish on one machine and Sync before swit
 `data/year-end.json`, apart from the show draft: **Start fresh** never touches it, so a list
 can grow over months (each change is saved half a second after you make it, "saved" next to
 Undo/Redo).
+
+Since 2026-10-25 nothing done here can be lost:
+- every change is also kept in the browser until the builder confirms it;
+- a save that doesn't get through (the builder restarting) shows a red "NOT SAVED" and is
+  retried every 3 s;
+- a reload in between brings the changes back. If the list changed meanwhile, it asks first;
+- the builder keeps a copy per day in `data/.cache/year-end-backups/` (60 days);
+- Sync keeps this machine's synced files in `data/.cache/sync-backups/` (the last 20) and
+  puts them back if a step fails.
 
 How a release's type is decided: on Bandcamp from its tracks — a **single** is 1 track, or 2
 under 15 minutes together; an **LP** has 7+ tracks or runs 30+ minutes; an **EP** is in
