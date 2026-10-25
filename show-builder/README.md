@@ -168,11 +168,16 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   Each Sync now also records `builderRunning` in the shared draft: the version the
   syncing machine's builder started on, which it runs until it restarts. That shows from
   here whether the Surface restarted.
-- **The modem icon (2026-10-25).** The builder's browser tab shows the website's icon
-  (`/favicon.ico` serves `src/assets/modem.ico`, so there's one copy). The desktop shortcut
-  got it too: `show-builder\make-shortcut.bat` (double-click) makes or updates a "modem show
-  builder" shortcut on the desktop. It runs `start.bat` minimised, as the old one did. Done
-  on the desktop PC; on the Surface, double-click it once.
+- **The modem icon (2026-10-25).** The builder's browser tab and its desktop shortcut show
+  the website's icon. `public/favicon.ico` is `src/assets/modem.ico` (32 px) in six sizes,
+  16 to 256 px, enlarged pixel-sharp, so it stays crisp on the Surface's screen. It's a
+  plain file, so a running builder serves it as soon as a Sync brings it, with no restart.
+  The page asks for `/favicon.ico?v=2`, so a browser that remembered "no icon" asks again.
+  The first version served it from a server route, which the Surface's still-running old
+  builder didn't have. `show-builder\make-shortcut.bat` (double-click) makes or updates
+  the "modem show builder" desktop shortcut with it (runs `start.bat` minimised, as
+  before). Done on the desktop PC, plus an icon-cache refresh (`ie4uinit.exe -show`); on
+  the Surface, double-click it once.
 - **"Look for the show on SoundCloud" (Publish, 2026-10-25).** Matej: re-run the search
   for the show's upload by hand, so its player is on the site right away instead of after
   the Monday/Tuesday automatic update. From SoundCloud only ("source the tracks from

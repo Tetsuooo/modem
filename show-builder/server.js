@@ -56,8 +56,6 @@ const PYTHON_CMD = process.platform === 'win32' ? 'python' : 'python3';
 const app = express();
 app.use(express.json({ limit: '4mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-// the site's own icon for the builder's browser tab (Matej, 2026-10-25)
-app.get('/favicon.ico', (req, res) => res.sendFile(path.join(REPO_ROOT, 'src', 'assets', 'modem.ico')));
 // Lets the browser play downloaded files directly (native <audio>) once a
 // track is on disk, instead of the source platform's iframe embed.
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
