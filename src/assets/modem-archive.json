@@ -5,7 +5,7 @@
     "total": 271,
     "shows": 250,
     "lists": 21,
-    "withSoundcloud": 247,
+    "withSoundcloud": 248,
     "lastScraped": [
       "modem-250"
     ],
@@ -25,7 +25,12 @@
       "date": "26. 10. 2026",
       "cover": "/assets/modem_covers/modem250.webp",
       "mp3": null,
-      "soundcloud": null,
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-250",
+        "api": "https://api.soundcloud.com/tracks/2425510812",
+        "title": "modem ///250 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-mAzfllw5gVLTjd7H-a59DuA-t500x500.jpg"
+      },
       "artists": [
         {
           "name": "Dilian",
