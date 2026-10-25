@@ -12,8 +12,9 @@
     "tracks": 4640,
     "scMatched": 1572,
     "tagMerges": 171,
-    "tagEdits": 189,
-    "segEdits": 82
+    "tagEdits": 190,
+    "segEdits": 83,
+    "orderEdits": 0
   },
   "records": [
     {
@@ -36,16 +37,6 @@
           "name": "Dilian",
           "url": null,
           "seg": 0
-        },
-        {
-          "name": "Computer man",
-          "url": null,
-          "seg": 1
-        },
-        {
-          "name": "ant. adventure.ᐟ",
-          "url": null,
-          "seg": 1
         },
         {
           "name": "ToySoldier",
@@ -156,6 +147,11 @@
           "name": "103110",
           "url": null,
           "seg": 19
+        },
+        {
+          "name": "Computer man",
+          "url": null,
+          "seg": 1
         }
       ],
       "labels": [
@@ -325,7 +321,10 @@
       ],
       "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">Dilian ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3309943983/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3992736859/transparent=true/\"><a href=\"https://clam-pressure.bandcamp.com/track/juicy-macro\">Juicy Macro by Dilian</a></iframe></p>\n<p data-seg=\"1\" class=\"seg-marker\">Computer man ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3651519720/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1320293791/transparent=true/\"><a href=\"https://c0mput3rm4n.bandcamp.com/track/i-am-evan-of-the-panax-flower-feat-ant-adventure-2\">I am Evan of the Panax Flower feat. ant. adventure.ᐟ by Computer man &amp; ant. adventure.ᐟ</a></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2421169926&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2209742735&show_artwork=true\"></iframe></p>\n<p data-seg=\"2\" class=\"seg-marker\">ant. adventure.ᐟ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2423647209&show_artwork=true\"></iframe></p>\n<p data-seg=\"3\" class=\"seg-marker\">ToySoldier ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3148654056/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=635235998/transparent=true/\"><a href=\"https://muzik-label.bandcamp.com/track/take-me-home\">Take Me Home by ToySoldier</a></iframe></p>\n<p data-seg=\"4\" class=\"seg-marker\">4h4 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422645593&show_artwork=true\"></iframe></p>\n<p data-seg=\"5\" class=\"seg-marker\">ranena ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416470051&show_artwork=true\"></iframe></p>\n<p data-seg=\"6\" class=\"seg-marker\">ValuableScholar ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416561878&show_artwork=true\"></iframe></p>\n<p data-seg=\"7\" class=\"seg-marker\">хмора ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2422677687&show_artwork=true\"></iframe></p>\n<p data-seg=\"8\" class=\"seg-marker\">strange pressure vessel ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3008188927/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=656489146/transparent=true/\"><a href=\"https://calligraphyofbear.bandcamp.com/track/hydrangea\">hydrangea by strange pressure vessel</a></iframe></p>\n<p data-seg=\"9\" class=\"seg-marker\">Color:inc ///////</p>\n<p><iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401251432&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401263315&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401255890&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401253412&show_artwork=true&maxheight=100\"></iframe> <iframe width=\"100%\" height=\"100\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401286598&show_artwork=true&maxheight=100\"></iframe></p>\n<p data-seg=\"10\" class=\"seg-marker\">parka neko michra ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2418520782&show_artwork=true\"></iframe></p>\n<p data-seg=\"11\" class=\"seg-marker\">Pairi Daeza ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=464095200/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3790764043/transparent=true/\"><a href=\"https://molideltro.bandcamp.com/track/herb-ball\">Herb Ball by Pairi Daeza</a></iframe></p>\n<p data-seg=\"12\" class=\"seg-marker\">icfam ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2185131822/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2613508347/transparent=true/\"><a href=\"https://katharsis-label.bandcamp.com/track/my-home-2\">My Home by icfam</a></iframe></p>\n<p data-seg=\"13\" class=\"seg-marker\">Metoronori ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2480980952/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3552800349/transparent=true/\"><a href=\"https://ssair.bandcamp.com/track/-\">逃げた分身 by Metoronori</a></iframe></p>\n<p data-seg=\"14\" class=\"seg-marker\">boyhoodie ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3007317970/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1536067133/transparent=true/\"><a href=\"https://boyhoodie.bandcamp.com/track/cavity-filled-lurking\">cavity-filled lurking by boyhoodie</a></iframe></p>\n<p data-seg=\"15\" class=\"seg-marker\">hill swum ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3426559499/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3727197259/transparent=true/\"><a href=\"https://hillswum.bandcamp.com/track/wither\">wither by hill swum</a></iframe></p>\n<p data-seg=\"16\" class=\"seg-marker\">Rafatisu ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3457656995/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3590038563/transparent=true/\"><a href=\"https://ukiukiatama.bandcamp.com/track/baaaaaaaaaa-2\">Baaaaaaaaaa !!!! by Rafatisu</a></iframe></p>\n<p data-seg=\"17\" class=\"seg-marker\">supersheep ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2416445697&show_artwork=true\"></iframe></p>\n<p data-seg=\"18\" class=\"seg-marker\">NATOOO ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2494084077/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3416061919/transparent=true/\"><a href=\"https://nat000.bandcamp.com/track/workers-experience\">workers experience by NATOOO</a></iframe></p>\n<p data-seg=\"19\" class=\"seg-marker\">✰ 103110 ✰ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2417454366&show_artwork=true\"></iframe></p>",
       "searchText": "modem ///250 \n 26. 10. 2026 \n Dilian Computer man ant. adventure.ᐟ ant. adventure.ᐟ ToySoldier 4h4 ranena ValuableScholar хмора strange pressure vessel yves aoi kęnåi asciiwings ixosyd lucra400 egoseed parka neko michra Pairi Daeza icfam Metoronori boyhoodie hill swum Rafatisu supersheep NATOOO ✰ 103110 ✰ \n Clam Muzik Color:inc moli del tro katharsis sair Ukiuki Atama \n Dilian /////// Juicy Macro by Dilian Computer man /////// I am Evan of the Panax Flower feat. ant. adventure.ᐟ by Computer man & ant. adventure.ᐟ ant. adventure.ᐟ /////// ToySoldier /////// Take Me Home by ToySoldier 4h4 /////// ranena /////// ValuableScholar /////// хмора /////// strange pressure vessel /////// hydrangea by strange pressure vessel Color:inc /////// parka neko michra /////// Pairi Daeza /////// Herb Ball by Pairi Daeza icfam /////// My Home by icfam Metoronori /////// 逃げた分身 by Metoronori boyhoodie /////// cavity-filled lurking by boyhoodie hill swum /////// wither by hill swum Rafatisu /////// Baaaaaaaaaa !!!! by Rafatisu supersheep /////// NATOOO /////// workers experience by NATOOO ✰ 103110 ✰ ///////",
-      "origin": "show-builder"
+      "origin": "show-builder",
+      "segEditedSegs": [
+        1
+      ]
     },
     {
       "type": "show",
@@ -78252,30 +78251,6 @@
       "searchText": "step into my body but its a car \n ✨*:･ﾟ✧ Skærm Følelse *:･ﾟ✧✨ \n ✨*:･ﾟ✧ Skærm Følelse *:･ﾟ✧✨ \n modem 145 \n 145"
     },
     {
-      "key": "sc:2417454366",
-      "kind": "soundcloud",
-      "title": "listen 2 ur soul",
-      "artist": "103110",
-      "artUrl": "https://i1.sndcdn.com/artworks-vAHVNwmJx1UkSDfW-tGRZHA-t500x500.jpg",
-      "link": "https://soundcloud.com/user-937970859",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2417454366&show_artwork=true",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 19,
-          "segLabel": "103110",
-          "labels": []
-        }
-      ],
-      "searchText": "listen 2 ur soul \n 103110 \n 103110 \n modem 250 \n 250"
-    },
-    {
       "key": "sc:1904286527",
       "kind": "soundcloud",
       "title": "martin Freestyle @1lifesoldier 2024-08-26 03-15-41 prod annalily",
@@ -79202,6 +79177,30 @@
       "scPlay": 2120822499,
       "scPlayTitle": "103110 - bubbl3z of fr33dom",
       "scPlayArtist": "Marmint"
+    },
+    {
+      "key": "sc:2417454366",
+      "kind": "soundcloud",
+      "title": "listen 2 ur soul",
+      "artist": "103110",
+      "artUrl": "https://i1.sndcdn.com/artworks-vAHVNwmJx1UkSDfW-tGRZHA-t500x500.jpg",
+      "link": "https://soundcloud.com/user-937970859",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2417454366&show_artwork=true",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 19,
+          "segLabel": "103110",
+          "labels": []
+        }
+      ],
+      "searchText": "listen 2 ur soul \n 103110 \n 103110 \n modem 250 \n 250"
     },
     {
       "key": "bc:4077758567:1523136459",
@@ -87368,6 +87367,32 @@
         }
       ],
       "searchText": "9 - 22 - 20 \n asciiwings \n asciiwings \n modem 178 \n 178"
+    },
+    {
+      "key": "sc:2401255890",
+      "kind": "soundcloud",
+      "title": "piano diagram",
+      "artist": "asciiwings",
+      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+      "link": "https://soundcloud.com/color-inc",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401255890&show_artwork=true&maxheight=100",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Color:inc",
+          "labels": [
+            "Color:inc"
+          ]
+        }
+      ],
+      "searchText": "piano diagram \n asciiwings \n Color:inc \n modem 250 \n 250"
     },
     {
       "key": "sc:775748062",
@@ -98865,151 +98890,6 @@
       "searchText": "༡࿌ice༡ fire࿌⠀༡ spirits࿌psycle⠀༡eyes༡ ༡࿌  sleep⠀storie࿌s⠀༡ \n color:blue name:࿂࿏࿐྿༨ age:6543 height:10.17cm \n color:blue name:࿂࿏࿐྿༨ age:6543 height:10.17cm \n modem 124 \n 124"
     },
     {
-      "key": "sc:2401255890",
-      "kind": "soundcloud",
-      "title": "piano diagram",
-      "artist": "asciiwings",
-      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
-      "link": "https://soundcloud.com/color-inc",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401255890&show_artwork=true&maxheight=100",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 9,
-          "segLabel": "Color:inc",
-          "labels": [
-            "Color:inc"
-          ]
-        }
-      ],
-      "searchText": "piano diagram \n asciiwings \n Color:inc \n modem 250 \n 250",
-      "artists": [
-        "asciiwings"
-      ]
-    },
-    {
-      "key": "sc:2401253412",
-      "kind": "soundcloud",
-      "title": "snail posie",
-      "artist": "ixosyd",
-      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
-      "link": "https://soundcloud.com/color-inc",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401253412&show_artwork=true&maxheight=100",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 9,
-          "segLabel": "Color:inc",
-          "labels": [
-            "Color:inc"
-          ]
-        }
-      ],
-      "searchText": "snail posie \n ixosyd \n Color:inc \n modem 250 \n 250",
-      "artists": [
-        "ixosyd"
-      ]
-    },
-    {
-      "key": "sc:2401263315",
-      "kind": "soundcloud",
-      "title": "paint the sky",
-      "artist": "kęnåi",
-      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
-      "link": "https://soundcloud.com/color-inc",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401263315&show_artwork=true&maxheight=100",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 9,
-          "segLabel": "Color:inc",
-          "labels": [
-            "Color:inc"
-          ]
-        }
-      ],
-      "searchText": "paint the sky \n kęnåi \n Color:inc \n modem 250 \n 250",
-      "artists": [
-        "kęnåi"
-      ]
-    },
-    {
-      "key": "sc:2401286598",
-      "kind": "soundcloud",
-      "title": "Lemon",
-      "artist": "lucra400 x egoseed",
-      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
-      "link": "https://soundcloud.com/color-inc",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401286598&show_artwork=true&maxheight=100",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 9,
-          "segLabel": "Color:inc",
-          "labels": [
-            "Color:inc"
-          ]
-        }
-      ],
-      "searchText": "Lemon \n lucra400 x egoseed \n Color:inc \n modem 250 \n 250",
-      "artists": [
-        "lucra400 x egoseed"
-      ]
-    },
-    {
-      "key": "sc:2401251432",
-      "kind": "soundcloud",
-      "title": "a different way of seeing",
-      "artist": "yves aoi",
-      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
-      "link": "https://soundcloud.com/color-inc",
-      "duration": null,
-      "album": null,
-      "albumUrl": null,
-      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401251432&show_artwork=true&maxheight=100",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 9,
-          "segLabel": "Color:inc",
-          "labels": [
-            "Color:inc"
-          ]
-        }
-      ],
-      "searchText": "a different way of seeing \n yves aoi \n Color:inc \n modem 250 \n 250",
-      "artists": [
-        "yves aoi"
-      ]
-    },
-    {
       "key": "bc:266520904:2449478295",
       "kind": "bandcamp",
       "title": "фетиш203",
@@ -99318,33 +99198,6 @@
         }
       ],
       "searchText": "Hydrocodones \n Computer man \n Computer man \n modem 247 \n 247"
-    },
-    {
-      "key": "bc:3651519720:1320293791",
-      "kind": "bandcamp",
-      "title": "I am Evan of the Panax Flower feat. ant. adventure.ᐟ",
-      "artist": "Computer man",
-      "artUrl": "https://f4.bcbits.com/img/a3140260037_16.jpg",
-      "link": "https://c0mput3rm4n.bandcamp.com/track/i-am-evan-of-the-panax-flower-feat-ant-adventure-2",
-      "duration": 204,
-      "album": "The recluse",
-      "albumUrl": "https://c0mput3rm4n.bandcamp.com/album/the-recluse-2",
-      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=3651519720/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1320293791/transparent=true/",
-      "shows": [
-        {
-          "number": 250,
-          "slug": "modem-250",
-          "date": "26. 10. 2026",
-          "type": "show",
-          "seg": 1,
-          "segLabel": "Computer man",
-          "labels": []
-        }
-      ],
-      "searchText": "I am Evan of the Panax Flower feat. ant. adventure.ᐟ \n Computer man \n Computer man \n modem 250 \n 250 \n I am Evan of the Panax flower \n Computer man",
-      "scPlay": 2420752020,
-      "scPlayTitle": "I am Evan of the Panax flower",
-      "scPlayArtist": "Computer man"
     },
     {
       "key": "sc:2198062575",
@@ -99666,6 +99519,37 @@
         }
       ],
       "searchText": "I am evan from lunenburg / panax flower -Single mix- \n Computer man & ant. adventure.ᐟ \n Computer man & ant. adventure.ᐟ \n modem 244 \n 244"
+    },
+    {
+      "key": "bc:3651519720:1320293791",
+      "kind": "bandcamp",
+      "title": "I am Evan of the Panax Flower feat. ant. adventure.ᐟ",
+      "artist": "Computer man & ant. adventure.ᐟ",
+      "artUrl": "https://f4.bcbits.com/img/a3140260037_16.jpg",
+      "link": "https://c0mput3rm4n.bandcamp.com/track/i-am-evan-of-the-panax-flower-feat-ant-adventure-2",
+      "duration": 204,
+      "album": "The recluse",
+      "albumUrl": "https://c0mput3rm4n.bandcamp.com/album/the-recluse-2",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=3651519720/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1320293791/transparent=true/",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 1,
+          "segLabel": "Computer man",
+          "labels": []
+        }
+      ],
+      "searchText": "I am Evan of the Panax Flower feat. ant. adventure.ᐟ \n Computer man & ant. adventure.ᐟ \n Computer man \n modem 250 \n 250 \n I am Evan of the Panax flower \n Computer man",
+      "scPlay": 2420752020,
+      "scPlayTitle": "I am Evan of the Panax flower",
+      "scPlayArtist": "Computer man",
+      "artists": [
+        "Computer man",
+        "ant. adventure.ᐟ"
+      ]
     },
     {
       "key": "bc:-:741814162",
@@ -129900,6 +129784,32 @@
       "searchText": "Best wishes \n ixosyd \n ixosyd \n modem 240 \n 240"
     },
     {
+      "key": "sc:2401253412",
+      "kind": "soundcloud",
+      "title": "snail posie",
+      "artist": "ixosyd",
+      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+      "link": "https://soundcloud.com/color-inc",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401253412&show_artwork=true&maxheight=100",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Color:inc",
+          "labels": [
+            "Color:inc"
+          ]
+        }
+      ],
+      "searchText": "snail posie \n ixosyd \n Color:inc \n modem 250 \n 250"
+    },
+    {
       "key": "bc:3494241267:2370779934",
       "kind": "bandcamp",
       "title": "dExTroverts {colliseums}",
@@ -136584,6 +136494,32 @@
       "scPlay": 2208996362,
       "scPlayTitle": "kęnåi - Oak",
       "scPlayArtist": "Mizuha 罔象 / Mizuha +"
+    },
+    {
+      "key": "sc:2401263315",
+      "kind": "soundcloud",
+      "title": "paint the sky",
+      "artist": "kęnåi iiii i i i i i i",
+      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+      "link": "https://soundcloud.com/color-inc",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401263315&show_artwork=true&maxheight=100",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Color:inc",
+          "labels": [
+            "Color:inc"
+          ]
+        }
+      ],
+      "searchText": "paint the sky \n kęnåi iiii i i i i i i \n Color:inc \n modem 250 \n 250"
     },
     {
       "key": "sc:1944199455",
@@ -144703,6 +144639,32 @@
         }
       ],
       "searchText": "franklin clips [soap runner + lucra400] \n lucra400 \n soap runner + lucra400 \n modem 140 \n 140"
+    },
+    {
+      "key": "sc:2401286598",
+      "kind": "soundcloud",
+      "title": "Lemon",
+      "artist": "lucra400 x egoseed",
+      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+      "link": "https://soundcloud.com/color-inc",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401286598&show_artwork=true&maxheight=100",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Color:inc",
+          "labels": [
+            "Color:inc"
+          ]
+        }
+      ],
+      "searchText": "Lemon \n lucra400 x egoseed \n Color:inc \n modem 250 \n 250"
     },
     {
       "key": "bc:21340386:4078894689",
@@ -198376,6 +198338,32 @@
       "scPlay": 2072243836,
       "scPlayTitle": "contrast (deprecation spell)",
       "scPlayArtist": "yve~tte"
+    },
+    {
+      "key": "sc:2401251432",
+      "kind": "soundcloud",
+      "title": "a different way of seeing",
+      "artist": "yves aoi",
+      "artUrl": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+      "link": "https://soundcloud.com/color-inc",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=false&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2401251432&show_artwork=true&maxheight=100",
+      "shows": [
+        {
+          "number": 250,
+          "slug": "modem-250",
+          "date": "26. 10. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Color:inc",
+          "labels": [
+            "Color:inc"
+          ]
+        }
+      ],
+      "searchText": "a different way of seeing \n yves aoi \n Color:inc \n modem 250 \n 250"
     },
     {
       "key": "sc:1927839446",
