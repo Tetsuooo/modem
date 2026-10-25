@@ -174,10 +174,15 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   plain file, so a running builder serves it as soon as a Sync brings it, with no restart.
   The page asks for `/favicon.ico?v=2`, so a browser that remembered "no icon" asks again.
   The first version served it from a server route, which the Surface's still-running old
-  builder didn't have. `show-builder\make-shortcut.bat` (double-click) makes or updates
-  the "modem show builder" desktop shortcut with it (runs `start.bat` minimised, as
-  before). Done on the desktop PC, plus an icon-cache refresh (`ie4uinit.exe -show`); on
-  the Surface, double-click it once.
+  builder didn't have. Desktop shortcut: `start.bat` now runs `make-shortcut.ps1 -FixOnly`
+  in the background each time the builder starts or restarts. It gives every desktop
+  shortcut that starts `start.bat` the icon, whatever its name, and refreshes Explorer's
+  icon cache when it changed one. The Surface's shortcut stayed blank, since that needed a
+  double-click there, so now a Sync plus a restart is enough. `make-shortcut.bat`
+  (double-click) also makes a "modem show builder" shortcut when there's none. Tested on
+  scratch folders (a renamed shortcut gets the icon, others are untouched, a second run
+  changes nothing) and the `start.bat` line on its own (it runs in the background; the
+  batch carries on at once).
 - **"Look for the show on SoundCloud" (Publish, 2026-10-25).** Matej: re-run the search
   for the show's upload by hand, so its player is on the site right away instead of after
   the Monday/Tuesday automatic update. From SoundCloud only ("source the tracks from

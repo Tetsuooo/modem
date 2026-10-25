@@ -7,6 +7,8 @@ rem nothing). So close the old server first - its window, then anything else on 
 taskkill /fi "WINDOWTITLE eq modem show builder - server*" /t /f >nul 2>&1
 for /f "tokens=5" %%p in ('netstat -ano ^| findstr /r /c:":8090 .*LISTENING"') do taskkill /pid %%p /t /f >nul 2>&1
 timeout /t 1 /nobreak >nul
+rem desktop shortcuts that start the builder get the modem icon (in the background, see make-shortcut.ps1)
+start "" /b powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%~dp0make-shortcut.ps1" -FixOnly >nul 2>&1
 if /i "%~1"=="--restart" (
   rem restarted from the Health tab: minimised, and no new browser tab (the page reloads itself)
   start "modem show builder - server" /min cmd /k node show-builder\server.js
