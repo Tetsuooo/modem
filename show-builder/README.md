@@ -196,6 +196,18 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   - Server: `/show-audio`, `/show-audio-run` (publish job kind `audio`); `/publish-push`
     commits "modem-N: full-show SoundCloud player via show-builder"; `/publish-discard`
     takes it too. `latestUploads()` is in scan-soundcloud.js.
+  - **"Already has it" but the live site didn't (the same day).** The check read this
+    computer's copy of the archive, and show 250's player there was never pushed: most
+    likely the Surface's Confirm & push was turned down, because GitHub had newer builder
+    commits than its last Sync. Now:
+    - the check compares with GitHub (`origin/main`). "This computer has it built, but it
+      was never pushed" offers the button again;
+    - Confirm & push pushes a commit stuck here even when there's nothing new to commit;
+    - a push GitHub turns down because it moved on takes GitHub's commits in (`git pull
+      --no-rebase`) and pushes again. A real clash is backed out (`merge --abort`) with a
+      message to Sync and push again (`pushTakingInGitHub()` in server.js);
+    - Sync also pushes commits still only on this machine after its merge (it used to
+      push only its own data files).
 - **Edit site: moving tracks within a heading, and several artists per track
   (2026-10-25).** Matej: "move the individual entries within one section up and down"
   (the tracks, he picked), and "add another artist to a track's credits".
@@ -1061,6 +1073,20 @@ the pills or the artists inside credits. *Choices:*
 - Changing or removing a move re-derives, the same rule as an undone tag edit.
 
 ---
+
+## How it was tested (2026-10-25: a show's player that never reached GitHub)
+
+On throwaway copies with a scratch bare repo as GitHub, plus a second copy as "the other
+machine" — 14 checks, all passing:
+- Built here, never pushed (show 250): "never pushed" plus the button → review "modem-250:
+  soundcloud" → pushed. Looking again: "already has the player".
+- Committed here, push never happened (249): "never pushed" → review "(no changes)" →
+  Confirm & push pushed the stuck commit.
+- The other machine pushed first: Confirm & push took its commit in (a merge) and went
+  through; nothing was left unpushed or half-merged.
+- A stuck publish commit plus the other machine's push: Sync merged and pushed it.
+- Git for Windows sets `pull.rebase=false` system-wide, so the old Sync's plain `git pull`
+  merges without an editor. It just didn't push the stuck commit.
 
 ## How it was tested (2026-10-25: Edit site moving tracks, several artists)
 

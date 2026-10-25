@@ -817,17 +817,46 @@ app.post('/publish-push', (req, res) => {
     }
     execFileSync('git', ['add', '-A'], { cwd: REPO_ROOT });
     const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
-    if (!status.trim()) return res.json({ ok: true, pushed: false, message: 'nothing to commit' });
+    if (!status.trim()) {
+      // nothing new — but a publish committed here whose push failed is still only on this
+      // computer: push that (else the site never gets it and this keeps saying "nothing")
+      let ahead = 0;
+      try { ahead = Number(execFileSync('git', ['rev-list', '--count', '@{u}..HEAD'], { cwd: REPO_ROOT, encoding: 'utf8' }).trim()) || 0; } catch (e) { /* no upstream */ }
+      if (!ahead) return res.json({ ok: true, pushed: false, message: 'nothing to commit' });
+      const log = pushTakingInGitHub();
+      publishJob = null;
+      return res.json({ ok: true, pushed: true, log, message: `pushed ${ahead} commit(s) that hadn't reached GitHub` });
+    }
     const message = audio ? `modem-${show}: full-show SoundCloud player${publishJob.withEdits ? ' + site edits' : ''} via show-builder [skip ci]`
       : edits ? 'Site edits (tags / SoundCloud links) via show-builder [skip ci]' : `Publish modem-${show} via show-builder [skip ci]`;
     execFileSync('git', ['commit', '-m', message], { cwd: REPO_ROOT, encoding: 'utf8' });
-    const log = execFileSync('git', ['push'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const log = pushTakingInGitHub();
     publishJob = null; // require a fresh /publish-run before another push is allowed
     res.json({ ok: true, pushed: true, log });
   } catch (e) {
     res.status(500).json({ ok: false, error: String(e.message || e) });
   }
 });
+
+// git push; if GitHub got commits since this machine last synced (a builder update pushed
+// from the other machine, the automatic Monday/Tuesday update), take them in and push again
+// — 2026-10-25: show 250's player was committed on the Surface but its push was turned
+// down, so the site never got it. A real clash (both changed the same lines) is backed out.
+function pushTakingInGitHub() {
+  const run = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  try {
+    return run(['push']);
+  } catch (e) {
+    if (!/rejected|fetch first|non-fast-forward/i.test(String(e.stderr || e.message || e))) throw e;
+  }
+  try {
+    run(['pull', '--no-rebase', '--no-edit', 'origin', 'main']);
+  } catch (e) {
+    try { run(['merge', '--abort']); } catch (e2) { /* nothing to abort */ }
+    throw new Error('GitHub has newer changes to the same files, so this couldn\'t be pushed. It\'s committed on this computer: press Sync, then Confirm & push again (or run it again). ' + String(e.stderr || e.message || e).slice(0, 300));
+  }
+  return run(['push']);
+}
 
 // ---------- /open-covers-folder -----------------------------------------------
 // Opens downloads/_covers in the OS file browser — a fixed local path, not

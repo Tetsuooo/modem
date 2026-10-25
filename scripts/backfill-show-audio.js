@@ -40,12 +40,26 @@ const d = JSON.parse(fs.readFileSync(DATA, 'utf8'));
 
 if (CHECK) {
   if (!ONLY) { console.error('--check needs --show N'); process.exit(1); }
-  const rec = d.records.find((r) => r.type === 'show' && Number(r.number) === ONLY) || null;
+  const find = (data) => ((data && data.records) || []).find((r) => r.type === 'show' && Number(r.number) === ONLY) || null;
+  const rec = find(d);
+  // What the live site gets is what's on GitHub, not this computer's copy: a run that wasn't
+  // pushed (2026-10-25: show 250 said "already has it" but the site didn't) only has it here.
+  // origin/main = GitHub as of the last Sync/push; this computer's last commit if there's no remote.
+  let pushed = null;
+  for (const ref of ['origin/main', 'HEAD']) {
+    try {
+      pushed = find(JSON.parse(execFileSync('git', ['show', `${ref}:src/assets/modem-archive.json`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] })));
+      break;
+    } catch (e) { /* try the next */ }
+  }
   console.log(JSON.stringify({
-    show: ONLY, onSite: !!rec, siteHasPlayer: !!(rec && rec.soundcloud),
+    show: ONLY,
+    onSite: !!(rec || pushed),
+    siteHasPlayer: !!(pushed && pushed.soundcloud), // on GitHub → on the live site
+    builtHere: !!(rec && rec.soundcloud) && !(pushed && pushed.soundcloud), // in this computer's copy only
     // the address the site looks for (scrape-modem.js resolveSoundcloud; old shows have a few exceptions)
     expected: `https://soundcloud.com/modemodemodem/modem-${ONLY < 10 ? '0' + ONLY : ONLY}`,
-    soundcloud: (rec && rec.soundcloud) || resolveSoundcloud(ONLY, { hit: false }),
+    soundcloud: (pushed && pushed.soundcloud) || (rec && rec.soundcloud) || resolveSoundcloud(ONLY, { hit: false }),
   }));
   process.exit(0);
 }

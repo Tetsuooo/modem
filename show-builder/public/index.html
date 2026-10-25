@@ -4685,8 +4685,11 @@ async function checkShowAudio() {
       }
     }
     if (!j.onSite) lines.push(`modem-${show} isn't on the site yet. Run publish pipeline above: it looks for the upload too.`);
-    else if (j.siteHasPlayer) lines.push('The site already has the player.');
-    else if (j.soundcloud) {
+    else if (j.siteHasPlayer) lines.push('The site already has the player (on GitHub; the live site shows it a minute or two after a push).');
+    else if (j.builtHere) {
+      lines.push('This computer has it built, but it was never pushed, so the live site doesn’t have it. Put it on the site, then Confirm & push.');
+      el('audioAddRow').style.display = '';
+    } else if (j.soundcloud) {
       lines.push("The site doesn't have the player yet.");
       el('audioAddRow').style.display = '';
     } else lines.push('Nothing to put on the site yet: look again once the show is uploaded.');

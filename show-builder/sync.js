@@ -253,6 +253,12 @@ function runSync() {
         pushed = true;
       }
     }
+    // A publish confirmed here whose push was turned down (GitHub had moved on) is still only
+    // on this machine; the pull above merged it with GitHub's commits — push it now, or the
+    // site never gets it (2026-10-25, show 250's SoundCloud player).
+    let ahead = 0;
+    try { ahead = Number(git(['rev-list', '--count', 'origin/main..HEAD']).trim()) || 0; } catch (e) { /* no remote branch */ }
+    if (ahead) { git(['push']); pushed = true; }
 
     return { ok: true, pushed, shared: mergedShared, usedCount: mergedUsed.length, history: mergedHistory };
   } catch (e) {
