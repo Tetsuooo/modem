@@ -599,6 +599,12 @@ of each year wins, like the draft, so finish on one machine and Sync before swit
 can grow over months (each change is saved half a second after you make it, "saved" next to
 Undo/Redo).
 
+The two columns (all the releases on the left, the list on the right) each scroll on their
+own, with their own scroll bar, and fill the window below the tab's header. The page itself
+doesn't scroll (Matej, 2026-10-25: the left one used to scroll the whole page). They re-fit
+when the window changes size or something above them appears (`fitCols()` in yearend.js).
+On a narrow window they stack and the page scrolls.
+
 Since 2026-10-25 nothing done here can be lost:
 - every change is also kept in the browser until the builder confirms it;
 - a save that doesn't get through (the builder restarting) shows a red "NOT SAVED" and is

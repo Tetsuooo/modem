@@ -108,6 +108,7 @@
         '<button id="yeRescueUse">Use my unsaved changes</button> <button id="yeRescueDrop">Drop them</button>';
     }
     box.hidden = false;
+    fitCols();
   }
   function useRescue() {
     const p = readPending();
@@ -116,6 +117,7 @@
     S.decisions = p.d || {}; S.order = p.o || []; S.edits = p.e || {};
     afterChange(); // draws it and saves it
     const box = el('yeRescue'); if (box) box.hidden = true;
+    fitCols();
   }
 
   async function load(year) {
@@ -357,11 +359,36 @@
     const box = host();
     if (!box) return;
     const playing = rememberPlaying();
-    if (!box.querySelector('.ye-head')) box.innerHTML = shell();
+    if (!box.querySelector('.ye-head')) { box.innerHTML = shell(); if (S.observeTab) S.observeTab(box); }
     renderHead();
     renderPool();
     renderList();
     reopenPlayers(playing);
+    fitCols();
+  }
+
+  // The two columns fill the window from where they start down to its bottom edge and each
+  // scrolls on its own (tools.css .ye-cols) — the page itself then doesn't scroll. Measured
+  // again when the window changes size or something above them (the rescue note) comes or goes.
+  function fitCols() {
+    const cols = host() && host().querySelector('.ye-cols');
+    if (!cols || !cols.offsetParent) return; // the tab isn't showing
+    if (window.matchMedia('(max-width: 1100px)').matches) { cols.style.removeProperty('--ye-cols-h'); return; }
+    const top = cols.getBoundingClientRect().top + window.scrollY;
+    let h = Math.max(320, Math.floor(window.innerHeight - top - 14));
+    cols.style.setProperty('--ye-cols-h', h + 'px');
+    // whatever the page still overflows by (padding below, rounding) comes off too: not even
+    // 1 px of page scroll, or the page's own scroll bar is back
+    const over = document.scrollingElement.scrollHeight - window.innerHeight;
+    if (over > 0 && h - over >= 320) { h -= over; cols.style.setProperty('--ye-cols-h', h + 'px'); }
+  }
+  window.addEventListener('resize', () => fitCols());
+  // ...and when anything above them changes size: the restart bar or an error line
+  // appearing after a Sync, the tab's own header wrapping, the rescue note
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => fitCols());
+    ['header', '#restartBanner', '#errorsBox'].forEach((s) => { const n = document.querySelector(s); if (n) ro.observe(n); });
+    S.observeTab = (box) => ['.ye-head', '#yeRescue'].forEach((s) => { const n = box.querySelector(s); if (n) ro.observe(n); });
   }
   function shell() {
     return `<div class="ye-head">
@@ -784,8 +811,8 @@
       if (t.id === 'yeAliasSave') return saveAliases();
       if (t.id === 'yeGather') return gather();
       if (t.id === 'yeRescueUse') return useRescue();
-      if (t.id === 'yeRescueDrop') { const p = readPending(); if (p) dropPending(p.at); el('yeRescue').hidden = true; return; }
-      if (t.id === 'yeRescueOk') { el('yeRescue').hidden = true; return; }
+      if (t.id === 'yeRescueDrop') { const p = readPending(); if (p) dropPending(p.at); el('yeRescue').hidden = true; fitCols(); return; }
+      if (t.id === 'yeRescueOk') { el('yeRescue').hidden = true; fitCols(); return; }
       if (t.id === 'yeUndo') return window.yearendUndo();
       if (t.id === 'yeRedo') return window.yearendRedo();
       if (t.id === 'yeHtmlBtn') return makeHtml();
@@ -814,7 +841,7 @@
   }
 
   window.yearendTabActivated = async function () {
-    if (S.loaded) return;
+    if (S.loaded) { fitCols(); return; } // the window may have changed size meanwhile
     S.loaded = true;
     host().innerHTML = '<div class="status">loading…</div>';
     wire();
