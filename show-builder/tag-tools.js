@@ -42,7 +42,7 @@ function mount(app) {
           (t.shows || []).map((s) => 'modem ' + s.number).join(' ')).toLowerCase();
         if (!terms.every((x) => hay.includes(x))) continue;
         hits.push({
-          key: t.key, title: t.title || '', artist: t.artist || '', artUrl: t.artUrl || '',
+          key: t.key, title: t.title || '', artist: t.artist || '', artists: Array.isArray(t.artists) ? t.artists : null, artUrl: t.artUrl || '',
           shows: (t.shows || []).map((s) => ({ type: s.type, slug: s.slug, number: s.number })),
           labels: [...new Set((t.shows || []).flatMap((s) => s.labels || []))],
         });

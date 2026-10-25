@@ -13,6 +13,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 const express = require('express');
 const { getArchive } = require('./archive-cache');
+const { playersBySeg, decode } = require('../scripts/track-order');
 
 const DOCS_DIR = path.join(__dirname, '..', 'docs');
 const LIVE_SITE = 'https://modemodemodem.xyz';
@@ -45,6 +46,8 @@ function headingsFor(rec, tracks) {
   const re = /<p data-seg="(\d+)" class="seg-marker">([\s\S]*?)<\/p>/g;
   let m;
   while ((m = re.exec(body))) markers.push({ seg: Number(m[1]), inner: m[2], start: m.index, end: re.lastIndex });
+  // each heading's players (track embeds), in page order — for moving tracks (track-order.js)
+  const players = playersBySeg(body);
 
   const arts = {}, labs = {};
   const add = (map, seg, n) => { if (seg != null && n) (map[seg] = map[seg] || []).includes(n) || map[seg].push(n); };
@@ -70,6 +73,7 @@ function headingsFor(rec, tracks) {
       const row = {
         key: t.key, title: t.title || '', artist: t.artist || '', artists: Array.isArray(t.artists) ? t.artists : null,
         labels: (s.labels || []).slice(), link: t.link || '', artUrl: t.artUrl || '', kind: t.kind || '',
+        src: decode(t.embedSrc || ''), // its player on the page
       };
       if (s.seg == null || !markers.some((mk) => mk.seg === s.seg)) { if (!loose.some((x) => x.key === row.key)) loose.push(row); continue; }
       (segTracks[s.seg] = segTracks[s.seg] || []).push(row);
@@ -79,12 +83,26 @@ function headingsFor(rec, tracks) {
     }
   }
 
+  // a heading's tracks in the order their players have on the page (the track index has
+  // its own order); a track without a player there goes last
+  Object.keys(segTracks).forEach((seg) => {
+    const order = players[seg] || [];
+    const used = new Set();
+    const pos = new Map(segTracks[seg].map((row) => {
+      const i = order.findIndex((src, k) => src === row.src && !used.has(k));
+      used.add(i);
+      return [row, i < 0 ? Infinity : i];
+    }));
+    segTracks[seg].sort((a, b) => pos.get(a) - pos.get(b));
+  });
+
   const headings = markers.map((mk) => ({
     seg: mk.seg,
     text: plainText(mk.inner),
     edited: editedSegs.has(mk.seg),
     hasContent: !/^\s*$/.test(between[mk.seg] || ''), // the site's test: is the very next element another heading?
     tracks: segTracks[mk.seg] || [],
+    players: players[mk.seg] || [],
   }));
   // Chips, in page order, with the site's empty-heading hand-on.
   headings.forEach((h, i) => {
@@ -183,10 +201,13 @@ function mount(app, opts = {}) {
       const parse = (s) => { try { return JSON.parse(s); } catch (e) { return {}; } };
       const before = parse(committed('src/assets/overrides.json')), now = parse(working('src/assets/overrides.json'));
       const changedKeys = (a = {}, b = {}) => [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
-      const segs = [];
-      for (const slug of changedKeys(before.segEdits, now.segEdits)) {
-        changedKeys((before.segEdits || {})[slug], (now.segEdits || {})[slug]).forEach((seg) => segs.push(slug + '::' + seg));
+      const segSet = new Set();
+      for (const field of ['segEdits', 'orderEdits']) { // a heading's tags, or its moved tracks
+        for (const slug of changedKeys(before[field], now[field])) {
+          changedKeys((before[field] || {})[slug], (now[field] || {})[slug]).forEach((seg) => segSet.add(slug + '::' + seg));
+        }
       }
+      const segs = [...segSet];
       const merges = changedKeys(before.tagMerges, now.tagMerges);
       const edits = changedKeys(before.tagEdits, now.tagEdits);
       const sc = changedKeys(parse(committed('scripts/approvals.json')), parse(working('scripts/approvals.json')));

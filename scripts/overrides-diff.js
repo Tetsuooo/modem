@@ -1,7 +1,8 @@
 /*
  * overrides-diff.js — does a new version of src/assets/overrides.json TAKE BACK
  * something the previous one had applied (a merge removed or pointed at a
- * different name, an edit reset, a segment edit dropped)?
+ * different name, an edit reset, a segment edit dropped, moved tracks moved again or
+ * put back)?
  *
  * That's the one case where applying the overrides on top of the archive isn't
  * enough: the archive no longer holds the original spelling, so it has to be
@@ -22,7 +23,11 @@ function undoesSomething(prev, next) {
   // that keeps other edited headings is a take-back too — apply-overrides.js only
   // rewrites the headings still listed, so the reset one would keep its edit.
   const segGone = Object.keys(prev.segEdits || {}).some((slug) => gone(prev.segEdits[slug], (next.segEdits || {})[slug], false));
-  return gone(prev.tagMerges, next.tagMerges, true) || gone(prev.tagEdits, next.tagEdits, false) || segGone;
+  // orderEdits (show → heading, moved tracks): moving a heading's tracks again or putting
+  // them back needs the original order, and once a move is applied the archive only holds
+  // the new one — so a changed order counts too, not just a removed one (track-order.js)
+  const orderGone = Object.keys(prev.orderEdits || {}).some((slug) => gone(prev.orderEdits[slug], (next.orderEdits || {})[slug], true));
+  return gone(prev.tagMerges, next.tagMerges, true) || gone(prev.tagEdits, next.tagEdits, false) || segGone || orderGone;
 }
 
 module.exports = { undoesSomething };

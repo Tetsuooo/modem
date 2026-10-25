@@ -196,6 +196,31 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   - Server: `/show-audio`, `/show-audio-run` (publish job kind `audio`); `/publish-push`
     commits "modem-N: full-show SoundCloud player via show-builder"; `/publish-discard`
     takes it too. `latestUploads()` is in scan-soundcloud.js.
+- **Edit site: moving tracks within a heading, and several artists per track
+  (2026-10-25).** Matej: "move the individual entries within one section up and down"
+  (the tracks, he picked), and "add another artist to a track's credits".
+  - ▲▼ on a track moves it within its heading. It's saved as `orderEdits`
+    (`{ slug: { seg: { base, order } } }`, players named by their src) and applied at
+    publish by `apply-overrides.js` through the new `scripts/track-order.js`. A player in
+    its own paragraph moves with the SoundCloud credit line right after it; players packed
+    into one paragraph swap places.
+  - The move is applied only while the heading still has those players in the original
+    order (or already in the new one). If the show is published again from the builder
+    with other tracks or another order, that newer order wins, and the run says so.
+  - "put them back" drops the move. Moving again, or putting back, counts as a take-back
+    (`overrides-diff.js`), so the publish re-derives from source first, since the archive
+    then only holds the moved order.
+  - The tab now lists a heading's tracks in page order (it used the track index's order),
+    each with its player (`site-tools.js`).
+  - credits: artists are chips like labels: "+ add artist", ×, and click a name (artist or
+    label) to change it. Saved as `artists` plus `artist` joined with " & ". Search and tags
+    then find the track under each name.
+  - Builder-made shows' covers show in Edit site now (`/assets/modem_covers`).
+  - The main dev server's save (`/save-overrides`, for the local site preview's editor)
+    keeps `orderEdits`, which that page doesn't know about.
+  - Sync merges `orderEdits` per show, like the other sections of overrides.json (before,
+    an unknown section was taken whole from this machine, so the other machine's moves
+    could vanish).
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
@@ -526,7 +551,10 @@ matching run never loses them.
 
 Everything saves as you go; **Ctrl+Z / Ctrl+Y** undo / redo here (only the list's own
 changes while this tab is open). **Sync** carries it to the other machine — newest version
-of each year wins, like the draft, so finish on one machine and Sync before switching.
+of each year wins, like the draft, so finish on one machine and Sync before switching. It lives in
+`data/year-end.json`, apart from the show draft: **Start fresh** never touches it, so a list
+can grow over months (each change is saved half a second after you make it, "saved" next to
+Undo/Redo).
 
 How a release's type is decided: on Bandcamp from its tracks — a **single** is 1 track, or 2
 under 15 minutes together; an **LP** has 7+ tracks or runs 30+ minutes; an **EP** is in
@@ -741,9 +769,14 @@ heading text. White = artist, lavender = label.
   you don't make a near-duplicate).
 - An edit replaces that heading's tags as a whole (`segEdits`). **reset to original**
   drops the edit; the scraped tags come back when you publish.
-- Under each heading: its tracks. **credits** fixes that one track's own artist/labels
-  (`tagEdits`) — what search and the player show. A heading's edit also fixes its track
-  when it has just one.
+- Under each heading: its tracks, in the order the page plays them. **▲▼** moves a track
+  within its heading (`orderEdits`). The heading then says "tracks moved here", and **put
+  them back** returns the original order. If a show built here is published again with
+  other tracks or another order, that newer order wins.
+- **credits** fixes that one track's own artists/labels (`tagEdits`), which is what search
+  and the player show. Each artist is a chip: **+ add artist** and Enter adds another one
+  (the field stays ready for the next), × removes, and a click on a name changes it (the
+  same for labels). A heading's edit also fixes its track when it has just one.
 - Badges: **unsaved** (press ✔ save) · **not on the site yet** (saved, not published) ·
   **edited** (an edit that's live).
 - Tags that aren't under any heading are listed at the bottom (the site only shows them in
@@ -1012,7 +1045,51 @@ whole credits, and a label field holding the artist's own name is dropped. Diffe
 letters still mean different names: merging "Computer man" and "Computer mann" would hide
 real mistakes, and own groups cover the rest. The rules are in "The rules".
 
+**2026-10-25 — Moving tracks on a published show page.** Matej picked "the tracks" over
+the pills or the artists inside credits. *Choices:*
+- It's an override like the tag edits, not an edit of the page itself, so it survives
+  re-derives and republishing.
+- Players are named by their src: every track in the index matched its page player (4,325
+  of 4,325, after decoding `&amp;`).
+- Only the players move. A SoundCloud credit line moves with its player; anything else
+  stays. The other layouts are packed small players (375 headings) and credit lines (38).
+- It applies only while the heading is in the original order (or already in the new one).
+  That way a later republish with another Arrange order isn't silently overruled by an old
+  move.
+- "base" is kept with each move. Without it, a move made after an earlier published one
+  couldn't tell the original order apart from the current one.
+- Changing or removing a move re-derives, the same rule as an undone tag edit.
+
 ---
+
+## How it was tested (2026-10-25: Edit site moving tracks, several artists)
+
+- `scripts/track-order.js` on every real show page: `pieces()` rebuilds all 271 pages
+  exactly. Every heading with 2+ players (506) was reversed:
+  - the players come out in the new order, with the same length;
+  - the other headings and the rest of the page are untouched;
+  - SoundCloud credit lines stay with their player (63 of 63);
+  - moving back gives the original page byte for byte (506 of 506);
+  - a heading in another order, or with other tracks, is left alone;
+  - the embeds list follows.
+- `overrides-diff.js`: a new move needs no re-derive; a changed or removed move does.
+- On a throwaway copy with a scratch bare remote (`scripts/.cache` linked in, its
+  `reparse-guard-snapshot.json` backed up and put back after), modem-250's "Computer man"
+  heading:
+  - the tab lists its 3 tracks in page order, with ▲▼ (dim at the ends; none on a
+    one-track heading);
+  - ▲ on the last moves it up ("tracks moved here", unsaved);
+  - credits: "Test Friend" added (the field stays ready), then renamed to "Test Friend 2"
+    by clicking it; the row shows "Computer man & Test Friend 2";
+  - saved: `orderEdits` has base + order, and `tagEdits` has `artists`;
+  - Publish site edits: the page order is the moved one, the track has both artists, and
+    the review names modem-250. Pushed to the scratch remote;
+  - after a reload: the moved order, "tracks moved here";
+  - put them back → save → publish: the run re-derived (the snapshot was written), the
+    original order is back, and the second artist stayed. Re-deriving + rebuilding took
+    14 s.
+- Gotcha for tests: pressing Enter in the show search loads the show twice (Enter, then
+  the field's change event). Wait before clicking in the freshly drawn show.
 
 ## How it was tested (2026-10-24)
 

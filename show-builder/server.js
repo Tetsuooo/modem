@@ -59,6 +59,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Lets the browser play downloaded files directly (native <audio>) once a
 // track is on disk, instead of the source platform's iframe embed.
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+// the site's own copies of show covers: a show built here has "assets/modem_covers/…" as its
+// cover, which Edit site shows (it was a broken image there)
+app.use('/assets/modem_covers', express.static(path.join(REPO_ROOT, 'src', 'assets', 'modem_covers')));
 
 // modem_download.py copies every cover (single tracks via embed_cover_single,
 // albums via copy_album_cover_to_global) here, renamed "<title>_cover.jpg" —

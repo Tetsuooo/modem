@@ -25,7 +25,7 @@
     loaded: false, loading: false, sub: 'show', saving: false, dirty: 0,
     unsaved: new Set(), // "slug::seg" / track keys changed since the last save (badges in Edit a show)
     tags: { artist: {}, label: {} },
-    overrides: { tagMerges: {}, tagEdits: {}, segEdits: {} },
+    overrides: { tagMerges: {}, tagEdits: {}, segEdits: {}, orderEdits: {} },
     selected: new Set(), canonPick: null,
     dismissed: new Set(), editQ: '', editTracks: [], editTimer: null,
   };
@@ -45,7 +45,7 @@
       T.tags = { artist: r.artists, label: r.labels };
       // segEdits ride along untouched — they're written by the inline editor on
       // the site's show pages; dropping the field here would wipe them on save.
-      T.overrides = { ...r.overrides, tagMerges: r.overrides.tagMerges || {}, tagEdits: r.overrides.tagEdits || {}, segEdits: r.overrides.segEdits || {} };
+      T.overrides = { ...r.overrides, tagMerges: r.overrides.tagMerges || {}, tagEdits: r.overrides.tagEdits || {}, segEdits: r.overrides.segEdits || {}, orderEdits: r.overrides.orderEdits || {} };
       T.loaded = true;
     } catch (e) {
       host().innerHTML = `<div class="errors">could not load tags: ${esc(e.message || e)}</div>`;
@@ -276,13 +276,22 @@
 
   // ---------- edit a release's tags ----------
   // Same data model as src/admin.html, plus: edits already on record may carry
-  // fields this editor doesn't show (`artists`, `title` — written by the site's
-  // inline editor). Those are kept, and `artists` is updated along with
-  // `artist` so the artist you type is the one that wins when it's applied.
+  // fields this editor doesn't show (`title` — written by the site's inline
+  // editor); those are kept. A track's artists are chips like its labels (Matej,
+  // 2026-10-25: "add another artist to a track's credits") — saved as `artists`
+  // (each its own name: search and tags find the track under any of them) and
+  // `artist` (them joined with " & ", for src/admin.html), see apply-overrides.js.
   const edit = (key) => T.overrides.tagEdits[key];
-  const curArtist = (t) => { const e = edit(t.key); if (e && Array.isArray(e.artists) && e.artists.length) return e.artists.join(' & '); return e && e.artist != null ? e.artist : (t.artist || ''); };
+  const origArtists = (t) => (Array.isArray(t.artists) && t.artists.length ? t.artists.slice() : (t.artist ? [t.artist] : []));
+  const curArtists = (t) => {
+    const e = edit(t.key);
+    if (e && Array.isArray(e.artists) && e.artists.length) return e.artists.slice();
+    if (e && e.artist) return [e.artist];
+    return origArtists(t);
+  };
+  const curArtist = (t) => curArtists(t).join(' & ');
   const curLabels = (t) => { const e = edit(t.key); return e && Array.isArray(e.labels) ? e.labels.slice() : t.labels.slice(); };
-  const labChip = (n) => `<span class="tg-lab" data-name="${escAttr(n)}">${esc(n)} <button class="rm" title="remove">×</button></span>`;
+  const labChip = (n) => `<span class="tg-lab" data-name="${escAttr(n)}"><span class="tg-chip-name" title="click to change the name">${esc(n)}</span> <button class="rm" title="remove">×</button></span>`;
 
   function editCardHtml(t) {
     const edited = !!edit(t.key);
@@ -290,10 +299,36 @@
     return `<div class="tg-card${edited ? ' edited' : ''}" data-key="${escAttr(t.key)}">
       <div class="tg-card-head">${t.artUrl ? `<img src="${escAttr(t.artUrl)}" loading="lazy" alt="">` : '<span class="tg-thumb"></span>'}
         <div><div class="tg-card-title">${esc(t.title || '(untitled)')}</div><div class="tg-card-sub">${[esc(shows), edited ? '<b>edited</b>' : ''].filter(Boolean).join(' · ')}</div></div></div>
-      <div class="tg-field"><label>artist</label><input class="tg-input tg-artist" value="${escAttr(curArtist(t))}"></div>
-      <div class="tg-field"><label>labels</label><span class="tg-labs">${curLabels(t).map(labChip).join('')}</span>
-        <input class="tg-input tg-addlab" placeholder="+ add label, Enter"></div>
+      <div class="tg-field"><label>artists</label><span class="tg-labs tg-arts">${curArtists(t).map(labChip).join('')}</span>
+        <input class="tg-input tg-addart" data-list="artistNamesList" placeholder="+ add artist, Enter"></div>
+      <div class="tg-field"><label>labels</label><span class="tg-labs tg-labels">${curLabels(t).map(labChip).join('')}</span>
+        <input class="tg-input tg-addlab" data-list="labelNamesList" placeholder="+ add label, Enter"></div>
       <div class="tg-field">${edited ? '<button class="tg-reset pill-btn">reset to original</button>' : ''}</div></div>`;
+  }
+
+  // Click a name in a credits card to change it: Enter keeps it, Esc goes back, empty removes it.
+  function renameChip(chip, commit) {
+    const name = chip.dataset.name;
+    const input = document.createElement('input');
+    input.className = 'tg-input tg-rename';
+    input.value = name;
+    input.dataset.list = chip.closest('.tg-arts') ? 'artistNamesList' : 'labelNamesList';
+    deferList(input);
+    chip.replaceWith(input);
+    input.focus(); input.select();
+    let done = false;
+    const finish = (keep) => {
+      if (done) return;
+      done = true;
+      const v = input.value.trim();
+      if (!keep || v === name) { input.replaceWith(chip); return; }
+      if (v) { chip.dataset.name = v; chip.querySelector('.tg-chip-name').textContent = v; input.replaceWith(chip); } else input.remove();
+      commit();
+    };
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    };
+    input.onblur = () => finish(true);
   }
 
   // box/list/onChange: the "Edit a release" search results by default; Edit a
@@ -301,15 +336,12 @@
   function commitCard(card, box, list, onChange) {
     const key = card.dataset.key, t = list.find((x) => x.key === key);
     if (!t) return;
-    const artist = card.querySelector('.tg-artist').value.trim();
-    const labels = [...card.querySelectorAll('.tg-lab')].map((x) => x.dataset.name);
+    const artists = [...card.querySelectorAll('.tg-arts .tg-lab')].map((x) => x.dataset.name);
+    const labels = [...card.querySelectorAll('.tg-labels .tg-lab')].map((x) => x.dataset.name);
     const prev = edit(key);
-    const unchanged = artist === (t.artist || '') && labels.join('|') === t.labels.join('|');
+    const unchanged = artists.join('|') === origArtists(t).join('|') && labels.join('|') === t.labels.join('|');
     if (!prev && unchanged) return; // nothing to record
-    const next = { ...(prev || {}), artist, labels };
-    if (prev && Array.isArray(prev.artists) && prev.artists.length && artist !== prev.artists.join(' & ')) {
-      next.artists = artist.split(' & ').map((n) => n.trim()).filter(Boolean);
-    }
+    const next = { ...(prev || {}), artist: artists.join(' & '), artists, labels };
     T.overrides.tagEdits[key] = next;
     T.unsaved.add(key);
     T.dirty++; updateStat();
@@ -321,14 +353,25 @@
     box.querySelectorAll('.tg-card').forEach((card) => {
       const commit = () => commitCard(card, box, list, onChange);
       card.querySelectorAll('.rm').forEach((b) => { b.onclick = () => { b.closest('.tg-lab').remove(); commit(); }; });
-      card.querySelector('.tg-artist').onchange = commit;
-      const add = card.querySelector('.tg-addlab');
-      add.onkeydown = (e) => {
-        if (e.key !== 'Enter') return;
-        e.preventDefault();
-        const v = add.value.trim();
-        if (v) { card.querySelector('.tg-labs').insertAdjacentHTML('beforeend', labChip(v)); add.value = ''; commit(); }
-      };
+      card.querySelectorAll('.tg-chip-name').forEach((n) => { n.onclick = () => renameChip(n.closest('.tg-lab'), commit); });
+      [['.tg-addart', '.tg-arts'], ['.tg-addlab', '.tg-labels']].forEach(([inputSel, chipsSel]) => {
+        const add = card.querySelector(inputSel);
+        deferList(add);
+        add.onkeydown = (e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          const v = add.value.trim();
+          const chips = card.querySelector(chipsSel);
+          add.value = '';
+          if (!v || [...chips.querySelectorAll('.tg-lab')].some((x) => x.dataset.name.toLowerCase() === v.toLowerCase())) return;
+          chips.insertAdjacentHTML('beforeend', labChip(v));
+          const key = card.dataset.key;
+          commit();
+          // the card was drawn again: ready for the next name
+          const again = document.querySelector(`.tg-card[data-key="${CSS.escape(key)}"] ${inputSel}`);
+          if (again) again.focus();
+        };
+      });
       const reset = card.querySelector('.tg-reset');
       if (reset) {
         reset.onclick = () => {
@@ -440,15 +483,57 @@
   }
   const allTracks = () => (S.data ? [...S.data.headings.flatMap((h) => h.tracks), ...S.data.looseTracks] : []);
 
+  // ---- moving tracks within a heading (Matej, 2026-10-25) → overrides.json orderEdits ----
+  // { base: the players' original order, order: the new one } per heading — see
+  // scripts/track-order.js. h.players is the order on the site now (the archive), which is
+  // already the moved one once a move is published; base stays the original throughout.
+  const orderEditOf = (seg) => (T.overrides.orderEdits[S.slug] || {})[seg];
+  // a move taken back here but still on the site: show the original until it's published
+  S.putBack = S.putBack || {};
+  const orderOf = (h) => { const e = orderEditOf(h.seg); return e ? e.order : (S.putBack[S.slug + '::' + h.seg] || h.players); };
+  const canMove = (h) => h.players.length > 1 && new Set(h.players).size === h.players.length &&
+    h.tracks.filter((t) => h.players.includes(t.src)).length > 1;
+  function tracksInOrder(h) {
+    const order = orderOf(h);
+    const at = (t) => { const i = order.indexOf(t.src); return i < 0 ? Infinity : i; };
+    return h.tracks.slice().sort((a, b) => at(a) - at(b));
+  }
+  function setOrder(h, order) {
+    const id = S.slug + '::' + h.seg;
+    const all = T.overrides.orderEdits;
+    const m = (all[S.slug] = all[S.slug] || {});
+    const base = m[h.seg] ? m[h.seg].base : (S.putBack[id] || h.players.slice());
+    if (!order || order.join('\n') === base.join('\n')) {
+      if (m[h.seg] && h.players.join('\n') !== base.join('\n')) S.putBack[id] = base; // the site has the moved order
+      delete m[h.seg];
+    } else m[h.seg] = { base, order };
+    if (!Object.keys(m).length) delete all[S.slug];
+    T.unsaved.add(id);
+    T.dirty++;
+    updateStat();
+    renderShow();
+  }
+  function moveTrack(h, key, dir) {
+    const rows = tracksInOrder(h).filter((t) => h.players.includes(t.src));
+    const i = rows.findIndex((t) => t.key === key), j = i + dir;
+    if (i < 0 || j < 0 || j >= rows.length) return;
+    const order = orderOf(h).slice();
+    const a = order.indexOf(rows[i].src), b = order.indexOf(rows[j].src);
+    [order[a], order[b]] = [order[b], order[a]];
+    setOrder(h, order);
+  }
+
   function chipHtml(kind, n) {
     return `<span class="se-chip ${kind}" data-kind="${kind}" data-name="${escAttr(n)}"><span class="se-name" title="click to rename">${esc(n)}</span>` +
       `<button class="se-mv" title="make it ${kind === 'artist' ? 'a label' : 'an artist'}">⇄</button><button class="se-rm" title="remove">×</button></span>`;
   }
-  function trackHtml(t) {
+  // mv: { first, last } when the track can be moved within its heading
+  function trackHtml(t, mv) {
     const e = edit(t.key);
     const artist = curArtist(t), labels = curLabels(t);
     const open = S.editTrack === t.key;
     return `<div class="se-track${e ? ' edited' : ''}" data-key="${escAttr(t.key)}">
+        ${mv ? `<span class="se-move"><button class="pill-btn se-up" title="move up"${mv.first ? ' disabled' : ''}>▲</button><button class="pill-btn se-down" title="move down"${mv.last ? ' disabled' : ''}>▼</button></span>` : ''}
         ${t.artUrl ? `<img src="${escAttr(t.artUrl)}" loading="lazy" alt="">` : '<span class="tg-thumb"></span>'}
         <span class="se-ttitle">${esc(t.title || '(untitled)')}</span>
         <span class="se-tcred">${esc(artist || '—')}${labels.length ? ' · ' + esc(labels.join(', ')) : ''}</span>
@@ -464,6 +549,10 @@
     const badge = T.unsaved.has(id) ? '<span class="se-badge unsaved">unsaved</span>'
       : S.pending.has(id) ? '<span class="se-badge pending">not on the site yet</span>'
       : c.state === 'edited' ? '<span class="se-badge">edited</span>' : '';
+    const tracks = tracksInOrder(h);
+    const movable = canMove(h);
+    const rows = tracks.filter((t) => h.players.includes(t.src)); // the ones with a player here
+    const moved = !!orderEditOf(h.seg);
     const row = (kind, names) => `<div class="tg-field se-field"><label>${kind}s</label><span class="se-chips">${names.map((n) => chipHtml(kind, n)).join('')}</span>
         <input class="tg-input se-add" data-kind="${kind}" data-list="${kind === 'artist' ? 'artistNamesList' : 'labelNamesList'}" placeholder="+ ${kind}, Enter"></div>`;
     return `<div class="se-head ${c.state}" data-seg="${h.seg}">
@@ -474,7 +563,9 @@
       ${c.state === 'reset' ? '<div class="tg-hint">edit removed — this heading goes back to its original tags when you publish.</div>' : ''}
       ${h.handsOnTo != null ? '<div class="tg-hint">empty heading (nothing under it) — on the site its tags show on the next heading.</div>' : ''}
       ${row('artist', c.artists)}${row('label', c.labels)}
-      <div class="se-tracks">${h.tracks.length ? h.tracks.map(trackHtml).join('') : '<div class="tg-hint">no track found under this heading (a dead embed or a plain link).</div>'}</div>
+      ${moved ? `<div class="tg-hint se-moved">tracks moved here (▲▼), so the show's page plays them in this order. <button class="pill-btn se-unmove" title="the original order, as published from the builder or radioštudent">put them back</button></div>` : ''}
+      ${!moved && S.putBack[id] ? '<div class="tg-hint">put back in their original order when you publish.</div>' : ''}
+      <div class="se-tracks">${tracks.length ? tracks.map((t) => trackHtml(t, movable && rows.includes(t) ? { first: t === rows[0], last: t === rows[rows.length - 1] } : null)).join('') : '<div class="tg-hint">no track found under this heading (a dead embed or a plain link).</div>'}</div>
     </div>`;
   }
 
@@ -497,10 +588,10 @@
       <div class="se-rec">${rec.cover ? `<img src="${escAttr(rec.cover)}" alt="">` : ''}<div>
         <div class="tg-card-title">${esc(rec.title)}</div>
         <div class="tg-card-sub">${esc(rec.date || '')}${rec.source ? ` · <a href="${escAttr(rec.source)}" target="_blank" rel="noopener">radioštudent page</a>` : ''}${rec.origin === 'show-builder' ? ' · built in the show builder' : ''}</div></div></div>
-      <div class="tg-hint">Each heading shows these tags on the site. Click a name to rename it, <b>⇄</b> to switch it between artist and label, <b>×</b> to remove it, or type a new one. <b>credits</b> on a track fixes that track’s own artist/labels (what search and the player use).</div>
+      <div class="tg-hint">Each heading shows these tags on the site. Click a name to rename it, <b>⇄</b> to switch it between artist and label, <b>×</b> to remove it, or type a new one. <b>▲▼</b> on a track moves it within its heading. <b>credits</b> on a track fixes that track’s own artists/labels (what search and the player use).</div>
       ${S.data.headings.map(headingHtml).join('') || '<div class="tg-hint">this page has no headings — fix each track’s own credits below.</div>'}
       ${S.data.looseTracks.length ? `<div class="se-head se-loose"><div class="tg-row se-top"><span class="se-text">${S.data.headings.length ? 'tracks not under a heading' : 'tracks'}</span></div>
-        <div class="se-tracks">${S.data.looseTracks.map(trackHtml).join('')}</div></div>` : ''}
+        <div class="se-tracks">${S.data.looseTracks.map((t) => trackHtml(t)).join('')}</div></div>` : ''}
       ${untied}`;
     window.scrollTo(0, scrollY);
     wireShow(box);
@@ -593,7 +684,12 @@
       };
       head.querySelectorAll('.se-track').forEach((row) => {
         row.querySelector('.se-tedit').onclick = () => { S.editTrack = S.editTrack === row.dataset.key ? null : row.dataset.key; renderShow(); };
+        const up = row.querySelector('.se-up'), down = row.querySelector('.se-down');
+        if (up) up.onclick = () => moveTrack(h, row.dataset.key, -1);
+        if (down) down.onclick = () => moveTrack(h, row.dataset.key, 1);
       });
+      const unmove = head.querySelector('.se-unmove');
+      if (unmove) unmove.onclick = () => setOrder(h, null);
       const card = head.querySelector('.se-tcard');
       if (card) wireCards(card, allTracks(), renderShow);
     });

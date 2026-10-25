@@ -96,9 +96,11 @@ app.post('/save-overrides', (req, res) => {
         const file = path.join(__dirname, 'src', 'assets', 'overrides.json');
         let previous = {};
         try { previous = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { /* first save */ }
-        const rederive = undoesSomething(previous, overrides);
         // tracklist start-time fixes are only edited in the show builder — keep them
         if (previous.timeEdits) overrides.timeEdits = previous.timeEdits;
+        // moved tracks too (show builder → Edit site); this page doesn't know them
+        if (previous.orderEdits && !overrides.orderEdits) overrides.orderEdits = previous.orderEdits;
+        const rederive = undoesSomething(previous, overrides);
         fs.writeFileSync(file, JSON.stringify(overrides, null, 2));
         const run = (script, args = []) => execFileSync(process.execPath, [path.join(__dirname, 'scripts', script), ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
         if (rederive) {

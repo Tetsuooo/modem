@@ -118,6 +118,8 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .tg-labs { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .tg-lab { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border: 1px solid #4a4b55; border-radius: 999px; padding: 1px 4px 1px 10px; background: #14151a; }
 .tg-lab button { border: 0; background: transparent; color: #ff8080; padding: 0 5px; font-size: 14px; line-height: 1; }
+.tg-chip-name { cursor: text; }
+.tg-field .tg-input.tg-rename { flex: 0 1 180px; }
 .tg-addlab { min-width: 130px; flex: 0 1 160px !important; border-style: dashed !important; }
 
 /* ---- Edit site → Edit a show + Publish site edits (tags.js) ---- */
@@ -161,6 +163,10 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .se-tcred { color: #8a8b95; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .se-track a.pill-btn { text-decoration: none; color: inherit; border: 1px solid #3a3b45; }
 .se-tedit.on { border-color: #3a6ff0; }
+.se-move { display: inline-flex; gap: 2px; flex: none; }
+.se-move .pill-btn { padding: 0 6px; font-size: 9px; line-height: 16px; }
+.se-move .pill-btn:disabled { opacity: .25; cursor: default; }
+.se-moved .pill-btn { margin-left: 6px; }
 .se-tcard { margin: 4px 0 6px 30px; }
 .se-untied { margin-top: 12px; }
 
