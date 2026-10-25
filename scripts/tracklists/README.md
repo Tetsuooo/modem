@@ -93,6 +93,36 @@ and yt-dlp.
 - Weakest: 162 (51 short pieces, 23 matched) and the early 2017–2018 shows (fewer files). Shows
   130–140 have no iTunes playlist and use the page order.
 
+## Audio found online (2026-10-25)
+
+Matej asked whether something like Shazam could time the tracks that weren't placed, then
+picked "find audio online first". The matcher had left 459 tracks unplaced: 248 with no
+audio anywhere (191 only in the iTunes playlist, 57 dead on the page), 138 heard nowhere in
+the show, 73 too weak. Shazam was left out: its catalogue misses much of this music, and the
+free route is an unofficial library.
+
+- **`find_online()`**: for a track with no file and no page stream, search SoundCloud, then
+  YouTube, by artist + title (yt-dlp `scsearch` / `ytsearch`). Bandcamp's search page turns
+  scripts away. A result must have the playlist's length (±3 s / 2 %) when that's known, and
+  a similar title (`_ratio()`, which keeps non-Latin scripts). A wrong pick costs nothing:
+  the matcher then doesn't hear it in the show.
+  - The search is cached per track (`iNN.online.json`); bump `ONLINE_V` to search again.
+  - The audio counts as `"audio": "online"` in result.json.
+  - `MODEM_ONLINE=''` turns it off.
+- **Runs without the Mac keep its fingerprints.** With the Mac off, a track's Mac path no
+  longer resolves, and `get_audio()` used to delete the fingerprint made from it (~2400
+  tracks) as "made from another source". It now keeps them.
+- **The run:** the 98 shows with audio-less tracks (`rerun-2026-10-25.txt`; the earlier
+  results kept as `result.prev.json`), `MODEM_MAC=''`. 0 errors.
+  - Online audio was found for 101 tracks; 85 were heard in the show.
+  - Exactly timed: 1738 → 1827 (+90, −1).
+  - On the site, after Matej's 247 hand fixes: estimates 135 → 107. Shows 4 and 10 got a
+    tracklist for the first time.
+  - The one loss: 39's "Try $ error 7-54-18 (excerpt)" (34:00, score 0.614). The new
+    "Ruoh – po" lands at 32:59, so one of the two is wrong.
+- Run again for some shows: delete their `result.json` and run `build_tracklists.py` with
+  them, then `--site-json` (it re-applies the hand fixes).
+
 ## Fixing start times by hand (show builder → Tracklist tab)
 
 - **Where fixes live:** `src/assets/overrides.json` → `"timeEdits"`, a flat map

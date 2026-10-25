@@ -6,8 +6,9 @@ Per show:
   linking    each playlist entry is paired with the show page's track (similar title/artist,
              in order) -> the site's cover art + bandcamp / soundcloud links
   audio      show: D:/MODEM/oddaje/Modem_NNN_*.mp3 (identical to the SoundCloud upload), else
-             the SoundCloud upload. Track: its own file on D: (HEWZ muska), else the Bandcamp /
-             SoundCloud stream of the paired page track
+             the SoundCloud upload. Track: its own file on D: (HEWZ muska) or the Mac, else the
+             Bandcamp / SoundCloud stream of the paired page track, else the same track found
+             on SoundCloud / YouTube by artist + title and length (find_online)
   matching   12 s spectrogram pieces of each track, normalised cross-correlation along the whole
              show, the best chain in tracklist order; then which part of each track is heard
 Tracks with no audio (or not found) are placed in the gap between their neighbours by length.
@@ -33,6 +34,11 @@ HEWZ = 'D:/HEWZ muska'                                   # Matej's music drive (
 # Set MODEM_MAC='' to skip it when the Mac isn't on.
 MAC = os.environ.get('MODEM_MAC', '//192.168.100.6')
 MAC_SHARES = (('/Users/matejmihevc/Music/', 'Music/'), ('/Users/matejmihevc/', 'matejmihevc/'))
+# A track with no file and no page stream is looked for online by artist + title (SoundCloud,
+# then YouTube) — see find_online(). MODEM_ONLINE='' turns that off. Bump ONLINE_V to search
+# again for tracks whose search found nothing.
+ONLINE = os.environ.get('MODEM_ONLINE', '1')
+ONLINE_V = 1
 WORK = 'E:/ART/websites/modem-tracklists-work'
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36'
 
@@ -264,8 +270,9 @@ def src_done(wav, src, why):
     return src
 
 
-def get_audio(dst_wav, local=None, site=None):
-    """the item's audio as a wav: own file, else the paired page track's stream"""
+def get_audio(dst_wav, local=None, site=None, want=None):
+    """the item's audio as a wav: own file, else the paired page track's stream, else (with
+    `want` = its title/artist/length) the same track found online"""
     why = json.dumps([local, (site or {}).get('key')])
     srcf = dst_wav[:-4] + '.src'
     if os.path.exists(dst_wav) or os.path.exists(dst_wav[:-4] + '.npy'):
@@ -275,11 +282,17 @@ def get_audio(dst_wav, local=None, site=None):
             site_key = (site or {}).get('key')
             if got.get('src') in ('bandcamp', 'soundcloud') and site_key and json.loads(got['why'])[1] == site_key:
                 return got['src']
+            # read from the Mac last time and the Mac isn't on the network now (its path no
+            # longer resolves): keep that fingerprint, or a run without the Mac would throw
+            # away ~2400 of them (2026-10-25)
+            if got.get('src') == 'local' and str(json.loads(got['why'])[0] or '').startswith('//') and not local:
+                return 'local'
         except Exception:
             pass
         for f in (dst_wav, dst_wav[:-4] + '.npy', srcf):        # made from another source: redo
             if os.path.exists(f): os.remove(f)
-    if os.path.exists(dst_wav + '.none') and open(dst_wav + '.none').read() == why: return None
+    if os.path.exists(dst_wav + '.none') and open(dst_wav + '.none').read() == why:
+        return online_audio(dst_wav, want, why)
     base = dst_wav[:-4]
     try:
         if local and os.path.exists(local):
@@ -297,7 +310,98 @@ def get_audio(dst_wav, local=None, site=None):
         if local and local.startswith('//'):
             return None        # the Mac asleep / off the network: try again next run, don't remember it
     open(dst_wav + '.none', 'w').write(why)
+    return online_audio(dst_wav, want, why)
+
+
+# ---------------------------------------------------------------- online, by artist + title
+# For the tracks with no file anywhere and no stream on the show page (2026-10-25: 248 of
+# them, mostly playlist entries that aren't on the page). SoundCloud and YouTube searches
+# through yt-dlp (Bandcamp's search page turns scripts away). A candidate must have the
+# playlist's length (±3 s / 2 %) when that's known, and a similar title. A wrong pick costs
+# nothing: the matcher then doesn't hear it in the show and the track stays an estimate.
+def _n(s):
+    """like norm(), but keeps every script (norm() drops the Japanese of 'スリーアウト (feat. …)')"""
+    s = unicodedata.normalize('NFKC', str(s or '')).lower()
+    s = re.sub(r'-\d{6,}$', '', s)
+    s = re.sub(r'\((feat|ft|with|w)\b[^)]*\)|\[[^\]]*\]', ' ', s)
+    s = ''.join(ch if ch.isalnum() else ' ' for ch in s)
+    return re.sub(r'\s+', ' ', s).strip()
+
+
+def _ratio(a, b):
+    a, b = _n(a), _n(b)
+    if not a or not b: return 0.0
+    r = difflib.SequenceMatcher(None, a, b).ratio()
+    return max(r, 0.85) if (a in b or b in a) else r
+
+
+def online_query(want):
+    title = re.sub(r'_+', ' ', str(want.get('title') or ''))
+    title = re.sub(r'^\s*\d{1,2}[.\s-]+', '', title)            # leading track number
+    return re.sub(r'\s+', ' ', f"{want.get('artist') or ''} {title}").strip()
+
+
+def search_candidates(q):
+    out = []
+    for prefix, via in (('scsearch', 'soundcloud'), ('ytsearch', 'youtube')):
+        try:
+            r = subprocess.run(['yt-dlp', '--no-warnings', '-J', '--flat-playlist', f'{prefix}8:{q}'],
+                               capture_output=True, text=True, encoding='utf-8', timeout=120)
+            entries = (json.loads(r.stdout).get('entries') or []) if r.returncode == 0 else []
+        except Exception:
+            entries = []
+        for e in entries:
+            out.append({'via': via, 'title': e.get('title') or '', 'by': e.get('uploader') or e.get('channel') or '',
+                        'dur': e.get('duration'), 'url': e.get('url') or e.get('webpage_url')})
+    return out
+
+
+def find_online(want):
+    q = online_query(want)
+    if len(_n(q)) < 4: return None
+    wd = want.get('duration')
+    best = None
+    for c in search_candidates(q):
+        if not c['url']: continue
+        dur_ok = None if not (wd and c['dur']) else abs(wd - c['dur']) <= max(3.0, 0.02 * wd)
+        if dur_ok is False: continue
+        parts = c['title'].split(' - ', 1)                       # "Artist - Title" in one field
+        st = max(_ratio(want['title'], c['title']), _ratio(want['title'], parts[1]) if len(parts) == 2 else 0)
+        sa = 0.5 if not want.get('artist') else max(_ratio(want['artist'], c['by']), _ratio(want['artist'], parts[0]) if len(parts) == 2 else 0)
+        score = 0.75 * st + 0.25 * sa
+        if score >= (0.55 if dur_ok else 0.8) and (best is None or score > best['score']):  # a matching length vouches for a so-so title
+            best = dict(c, score=round(score, 3))
+    return best
+
+
+def online_audio(dst_wav, want, why):
+    """the found track's audio as the item's wav; the search is cached in <item>.online.json"""
+    if not ONLINE or not want: return None
+    cache = dst_wav[:-4] + '.online.json'
+    try:
+        c = json.load(open(cache, encoding='utf-8'))
+    except Exception:
+        c = None
+    if not c or c.get('v') != ONLINE_V:
+        c = {'v': ONLINE_V, 'query': online_query(want), 'hit': find_online(want)}
+        json.dump(c, open(cache, 'w', encoding='utf-8'), ensure_ascii=False)
+    hit = c.get('hit')
+    if not hit: return None
+    base = dst_wav[:-4]
+    try:
+        run(['yt-dlp', '--no-warnings', '-q', '-f', 'bestaudio', '-o', base + '.%(ext)s', hit['url']])
+        got = [f for f in glob.glob(base + '.*') if not f.endswith(('.wav', '.npy', '.none', '.json', '.src'))]
+        if got:
+            to_wav(got[0], dst_wav); os.remove(got[0])
+            json.dump({'src': 'online', 'why': why, 'url': hit['url']}, open(srcf_of(dst_wav), 'w', encoding='utf-8'))
+            return 'online'
+    except Exception:
+        pass
     return None
+
+
+def srcf_of(wav):
+    return wav[:-4] + '.src'
 
 
 def show_audio(rec, d):
@@ -338,7 +442,8 @@ def build(args):
         cands, tf = [], []
         for k, it in enumerate(items):
             w = os.path.join(d, f'i{k:02d}.wav')
-            it['audio'] = get_audio(w, it.get('path'), it.get('site'))
+            it['audio'] = get_audio(w, it.get('path'), it.get('site'),
+                                    {'title': it.get('title'), 'artist': it.get('artist'), 'duration': it.get('duration')})
             if not os.path.exists(w) and not os.path.exists(w[:-4] + '.npy'): cands.append([]); tf.append(None); continue
             F = feats_cached(w); dur = len(F) / FPS; tf.append(F)
             it['duration'] = it.get('duration') or dur
