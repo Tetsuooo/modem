@@ -432,7 +432,11 @@
             previewImage.src = imageSrc;
             previewWrap.classList.add('show');
           }
-          const slug = (item.getAttribute('href') || '').split('/').pop();
+          // the archive's own slug, kept by markLocalArchiveLists() when it rewrote the
+          // href: the rewritten one is prettySlug()'d, and best-releases-of-2024-0 (the
+          // only list whose radioštudent page has a "-0") then read as
+          // best-releases-of-2024 and found no chips (Matej, 2026-10-25)
+          const slug = item.dataset.slug || (item.getAttribute('href') || '').split('/').pop();
           revealChips(slugChipData && slug ? slugChipData.get(slug) : null);
         });
 
@@ -456,6 +460,7 @@
           document.querySelectorAll('.list-item[href]').forEach((a) => {
             const slug = (a.getAttribute('href') || '').split('/').pop();
             if (slug && local.has(slug)) {
+              a.dataset.slug = slug; // the hover chips' key (the href below loses a "-0")
               a.setAttribute('href', '/' + prettySlug(slug));
               a.classList.add('in-archive');
             }
