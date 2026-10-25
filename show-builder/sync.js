@@ -116,7 +116,8 @@ function localSharedDraft() {
   return {
     selected, showNumber: draft.showNumber || null, airDate: draft.airDate || null,
     generatedHtml: draft.generatedHtml || null, htmlEdited: !!draft.htmlEdited,
-    artistList: draft.artistList || null, artistListEdited: !!draft.artistListEdited, savedAt,
+    artistList: draft.artistList || null, artistListEdited: !!draft.artistListEdited,
+    scTracklist: draft.scTracklist || null, scTracklistEdited: !!draft.scTracklistEdited, savedAt,
     builderRunning: RUNNING,
   };
 }

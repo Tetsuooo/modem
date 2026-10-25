@@ -54,6 +54,7 @@ function timestampsFromDraft(draft) {
       key: siteKey(item),
       title: item.title || '',
       artist: (namesOf(item, 'artist') || []).join(' & ') || item.artist || '',
+      labels: namesOf(item, 'label') || [], // for the SoundCloud tracklist (show-builder /sc-tracklist)
     });
   }
   out.sort((a, b) => a.t - b.t);

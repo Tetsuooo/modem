@@ -213,6 +213,18 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
       message to Sync and push again (`pushTakingInGitHub()` in server.js);
     - Sync also pushes commits still only on this machine after its merge (it used to
       push only its own data files).
+- **SoundCloud tracklist (Publish, 2026-10-25).** Matej: "a tracklist to soundcloud …
+  formatted like the artist list but with a timestamp for every track". His pick:
+  `0:42 Dilian - Juicy Macro [ Clam ]`.
+  - The times are the Mix tab's clip starts, the same as the site's live tracklist (`/sc-tracklist`
+    → `timestampsFromDraft()`; the jingle and muted clips are left out). So it's made on the
+    computer the show was mixed on; elsewhere it says so.
+  - No brackets when there's no label, or the label is the artist's own name. Co-releases
+    read "A / B". A SoundCloud title that repeats the artist ("yves aoi - a different way of
+    seeing") loses that part.
+  - It's kept and editable like the artist list (`scTracklist` / `scTracklistEdited`, synced;
+    Generate asks before replacing hand edits; Start fresh clears it).
+  - Tested with show 250's draft and its Mix times: 26 lines, 0:42 … 56:37.
 - **Year-end picks lost on a machine (2026-10-25).** GitHub never had a single pick (every
   version of year-end.json: 0 decisions), so they were only on the machine and got replaced
   there. The likely ways were edits that never saved while the builder restarted (only a
@@ -703,6 +715,8 @@ page is no longer read. The show builder is the single source of truth: tweak th
 3. **Publish & Edit:** check **Show #** and **Air date** (filled in from the two-week
    schedule — 249 aired 12. 10. 2026 — change it if the show is off-schedule).
 4. **Generate HTML** → copy → paste into radioštudent (for the radio's own page).
+   **SoundCloud tracklist** → copy → paste into the description of the show's SoundCloud
+   upload: a time for every track, from the Mix tab.
 5. **Run publish pipeline.** Doesn't need the radioštudent page to be live. It:
    - builds the show's record from the draft (`scripts/add-show-from-draft.js`),
    - times every track for the site's **live tracklist** straight from the Mix tab: each

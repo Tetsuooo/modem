@@ -20,7 +20,8 @@ const scanSoundcloud = require('./scan-soundcloud');
 const scanBandcamp = require('./scan-bandcamp');
 const { generateShowHtml } = require('./generate-html');
 const { previewDraft } = require('./preview');
-const { curlGet } = require('./lib');
+const { curlGet, nameKey } = require('./lib');
+const { timestampsFromDraft } = require('../scripts/tracklists/draft-timestamps');
 const { checkDuplicate } = require('./duplicate-check');
 const { getNames } = require('./artist-names');
 const { runSync, getHistory, addHistoryEntry } = require('./sync');
@@ -228,6 +229,41 @@ app.get('/draft', (req, res) => {
 app.post('/draft', (req, res) => {
   writeJson(DRAFT_FILE, req.body || {});
   res.json({ ok: true });
+});
+
+// ---------- /sc-tracklist — the tracklist for the show's SoundCloud upload --------------
+// Matej, 2026-10-25: a time for every track, for the upload's description. The times are the
+// Mix tab's clip starts, exactly as the site's live tracklist gets them
+// (scripts/tracklists/draft-timestamps.js: the jingle and muted clips left out), so it needs
+// the mix — the computer the show was mixed on. A line per track, his pick:
+// "0:42 Artist - Title [ Label ]"; a label that's the artist's own name is left out (README,
+// "The rules").
+app.post('/sc-tracklist', (req, res) => {
+  try {
+    const rows = timestampsFromDraft(readJson(DRAFT_FILE, null));
+    if (!rows) return res.json({ ok: false, error: 'There\'s no mix on this computer, and the times come from the Mix tab: make the tracklist on the computer the show was mixed on.' });
+    const clock = (sec) => {
+      const t = Math.round(sec), h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+      return (h ? `${h}:${String(m).padStart(2, '0')}` : String(m)) + ':' + String(s).padStart(2, '0');
+    };
+    const lines = rows.map((r) => {
+      const names = String(r.artist || '').split(' & ').filter(Boolean);
+      const own = new Set([...names, r.artist].map(nameKey));
+      const labels = (r.labels || []).filter((l) => !own.has(nameKey(l)));
+      // SoundCloud titles often repeat the artist ("yves aoi - a different way of seeing" by
+      // yves aoi, "lucra400 x egoseed - Lemon" by lucra400 & egoseed): drop that part
+      let title = String(r.title || '');
+      const dash = title.indexOf(' - ');
+      if (dash > 0) {
+        const pre = nameKey(title.slice(0, dash)), all = nameKey(r.artist);
+        if (pre && (pre === all || names.every((n) => pre.includes(nameKey(n))) || (pre.length >= 3 && all.includes(pre)))) title = title.slice(dash + 3);
+      }
+      return `${clock(r.t)} ${r.artist} - ${title}${labels.length ? ` [ ${labels.join(' / ')} ]` : ''}`;
+    });
+    res.json({ ok: true, text: lines.join('\n'), count: lines.length });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e.message || e) });
+  }
 });
 
 // ---------- /sync -----------------------------------------------------------

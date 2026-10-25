@@ -250,6 +250,7 @@
   }
   .actions { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; align-items: center; }
   #listOutputText { height: 140px; }
+  #scListText { height: 220px; }
   textarea:focus { outline: none; border-color: #3a6ff0; }
   .html-edited-note { margin-top: 6px; color: #ffd166; }
   .empty { color: #6f7080; font-size: 12px; padding: 10px 8px; }
@@ -599,6 +600,7 @@
       <label class="show-num-label" title="when the show airs — shown on the site. Filled in from the two-week schedule; change it if this show is off-schedule">Air date <input type="text" id="airDate" placeholder="26. 10. 2026" size="11" style="width:92px"></label>
       <button id="generateBtn" class="primary">Generate HTML</button>
       <button id="generateListBtn">Generate artist list</button>
+      <button id="generateScListBtn" title="a time for every track, from the Mix tab — for the description of the show's SoundCloud upload">SoundCloud tracklist</button>
       <button id="previewBtn">Preview</button>
     </div>
     <div id="outputBox" style="display:none">
@@ -612,6 +614,12 @@
       <textarea id="listOutputText" spellcheck="false"></textarea>
       <div id="listEditedNote" class="status html-edited-note" hidden>✎ Edited by hand — kept with the show. Generate artist list starts over from “Your show”.</div>
       <div class="actions"><button id="copyListBtn">Copy to clipboard</button></div>
+    </div>
+    <div id="scListBox" style="display:none">
+      <h2>SoundCloud tracklist — for the upload's description</h2>
+      <textarea id="scListText" spellcheck="false"></textarea>
+      <div id="scListEditedNote" class="status html-edited-note" hidden>✎ Edited by hand — kept with the show. SoundCloud tracklist starts over from the Mix tab.</div>
+      <div class="actions"><button id="copyScListBtn">Copy to clipboard</button><span id="scListStatus" class="status"></span></div>
     </div>
     <div id="previewBox" style="display:none">
       <h2>Preview — same parser the live site uses</h2>
@@ -4131,6 +4139,29 @@ function setHtmlEdited(on) {
 }
 // The artist list can be edited by hand too (Matej, 2026-10-24): kept with the draft
 // (artistList / artistListEdited, synced), Generate artist list asks before replacing it.
+// The SoundCloud tracklist (Matej, 2026-10-25): for the description of the show's upload, a
+// time for every track from the Mix tab — server.js /sc-tracklist, "0:42 Artist - Title
+// [ Label ]". Kept with the show and editable like the artist list (scTracklist /
+// scTracklistEdited in the draft, synced).
+let scListEditedByHand = false;
+function setScListEdited(on) {
+  scListEditedByHand = !!on;
+  el('scListEditedNote').hidden = !scListEditedByHand;
+}
+async function generateScTracklist() {
+  if (!selected.length) return;
+  if (scListEditedByHand && !window.confirm('Replace your hand edits with a tracklist made from the Mix tab?')) return;
+  await saveDraft(); // the server reads the mix from the saved draft
+  let j;
+  try { j = await (await fetch('/sc-tracklist', { method: 'POST' })).json(); } catch (e) { j = { ok: false, error: 'the builder isn’t answering' }; }
+  el('scListBox').style.display = '';
+  if (!j.ok) { el('scListStatus').textContent = j.error || 'it didn’t work'; return; }
+  el('scListText').value = j.text;
+  el('scListStatus').textContent = `${j.count} tracks — the times are the Mix tab's, so upload exactly the mix you exported`;
+  setScListEdited(false);
+  saveDraft();
+}
+
 let listEditedByHand = false;
 function setListEdited(on) {
   listEditedByHand = !!on;
@@ -4176,6 +4207,7 @@ async function saveDraft() {
         selected, mixClips, coverLayers, coverAdjust,
         generatedHtml: el('outputText').value || null, htmlEdited: htmlEditedByHand && !!el('outputText').value,
         artistList: el('listOutputText').value || null, artistListEdited: listEditedByHand && !!el('listOutputText').value,
+        scTracklist: el('scListText').value || null, scTracklistEdited: scListEditedByHand && !!el('scListText').value,
         showNumber: el('showNumber').value || null,
         airDate: el('airDate').value || null,
       }),
@@ -4199,6 +4231,8 @@ async function loadDraft() {
     setHtmlEdited(j.generatedHtml && j.htmlEdited);
     if (j.artistList) { el('listOutputBox').style.display = ''; el('listOutputText').value = j.artistList; }
     setListEdited(j.artistList && j.artistListEdited);
+    if (j.scTracklist) { el('scListBox').style.display = ''; el('scListText').value = j.scTracklist; }
+    setScListEdited(j.scTracklist && j.scTracklistEdited);
     if (j.showNumber) el('showNumber').value = j.showNumber;
     else {
       try {
@@ -4899,6 +4933,13 @@ el('copyListBtn').addEventListener('click', () => {
   el('copyListBtn').textContent = 'Copied!';
   setTimeout(() => (el('copyListBtn').textContent = 'Copy to clipboard'), 1200);
 });
+el('generateScListBtn').addEventListener('click', generateScTracklist);
+el('scListText').addEventListener('input', () => { setScListEdited(true); debouncedSaveDraft(); });
+el('copyScListBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(el('scListText').value);
+  el('copyScListBtn').textContent = 'Copied!';
+  setTimeout(() => (el('copyScListBtn').textContent = 'Copy to clipboard'), 1200);
+});
 el('previewBtn').addEventListener('click', runPreview);
 el('showNumber').addEventListener('input', () => { refreshAirDateDefault(); refreshCoverStatus(); debouncedSaveDraft(); });
 el('airDate').addEventListener('input', () => { airDateTouched = true; debouncedSaveDraft(); });
@@ -5152,6 +5193,11 @@ function applySyncedDraft(shared) {
     el('listOutputText').value = shared.artistList;
     setListEdited(shared.artistListEdited);
   }
+  if (shared.scTracklist) {
+    el('scListBox').style.display = '';
+    el('scListText').value = shared.scTracklist;
+    setScListEdited(shared.scTracklistEdited);
+  }
   renderSelected();
   renderScanResults();
   saveDraft();
@@ -5223,6 +5269,10 @@ async function clearDraftClick() {
   el('listOutputBox').style.display = 'none';
   el('listOutputText').value = '';
   setListEdited(false);
+  el('scListBox').style.display = 'none';
+  el('scListText').value = '';
+  el('scListStatus').textContent = '';
+  setScListEdited(false);
   try {
     const n = await (await fetch('/next-show-number')).json();
     el('showNumber').value = (n && n.next) || '';
