@@ -724,6 +724,186 @@
         "year": 2026
       },
       {
+        "key": "sc:p:2312117703",
+        "source": "soundcloud",
+        "kind": "set",
+        "scId": "2312117703",
+        "setType": "compilation",
+        "title": "Color:inc compilation project vol.2",
+        "artist": "Color:inc",
+        "account": "Color:inc",
+        "label": "Color:inc",
+        "labelFrom": "tag",
+        "url": "https://soundcloud.com/color-inc/sets/color-inc-compilation-1",
+        "artistUrl": "https://soundcloud.com/color-inc",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-XghJiMLIMb5C4ZZ9-zXRLzA-t500x500.jpg",
+        "releaseDate": "2026-10-10",
+        "trackCount": 18,
+        "duration": 3084,
+        "type": "comp",
+        "tracks": [
+          {
+            "id": 2401251432,
+            "title": "yves aoi - a different way of seeing",
+            "artist": "Color:inc",
+            "url": "https://soundcloud.com/color-inc/yves-aoi-a-different-way-of",
+            "duration": 149,
+            "playable": true
+          },
+          {
+            "id": 2413610181,
+            "title": "Ptfboi - Horizon",
+            "artist": "Color:inc",
+            "url": "https://soundcloud.com/color-inc/horizon-ptfboi",
+            "duration": 202,
+            "playable": true
+          },
+          {
+            "id": 2401253412,
+            "title": "ixosyd - snail posie",
+            "artist": "Color:inc",
+            "url": "https://soundcloud.com/color-inc/ixosyd-snail-posie",
+            "duration": 134,
+            "playable": true
+          },
+          {
+            "id": 2401255122,
+            "title": "Micro Bandicam - Secret Ball",
+            "artist": "Color:inc",
+            "url": "https://soundcloud.com/color-inc/micro-bandicam-secret-ball",
+            "duration": 151,
+            "playable": true
+          },
+          {
+            "id": 2401260948,
+            "title": "ingern - Dog and Infant",
+            "artist": "Color:inc",
+            "url": "https://soundcloud.com/color-inc/ingern-dog-and-infant",
+            "duration": 258,
+            "playable": true
+          },
+          {
+            "id": 2401262010,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401255608,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401264176,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401285374,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401259865,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401262340,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401255890,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401262862,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401264461,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401263315,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401286598,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401263615,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          },
+          {
+            "id": 2401261335,
+            "title": null,
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2401251432",
+              "2401263315",
+              "2401255890",
+              "2401253412",
+              "2401286598"
+            ]
+          }
+        ],
+        "playedTracks": 5,
+        "year": 2026
+      },
+      {
         "key": "bc:a:2667061622",
         "source": "bandcamp",
         "kind": "album",
@@ -2172,16 +2352,16 @@
         "artwork": "https://f4.bcbits.com/img/a2501546216_16.jpg",
         "releaseDate": "2026-07-10",
         "trackCount": 5,
-        "duration": 368,
+        "duration": 1241,
         "type": "EP",
         "tracks": [
           {
             "id": 2039016272,
             "title": "gears inside",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://prototypemoney.bandcamp.com/track/gears-inside",
+            "duration": 124,
+            "playable": true
           },
           {
             "id": 3056275617,
@@ -2195,25 +2375,25 @@
             "id": 2354937698,
             "title": "off the map",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://prototypemoney.bandcamp.com/track/off-the-map",
+            "duration": 178,
+            "playable": true
           },
           {
             "id": 170974726,
             "title": "home means home",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://prototypemoney.bandcamp.com/track/home-means-home",
+            "duration": 365,
+            "playable": true
           },
           {
             "id": 4248948939,
             "title": "mute",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://prototypemoney.bandcamp.com/track/mute",
+            "duration": 206,
+            "playable": true
           }
         ],
         "shows": [
@@ -3118,6 +3298,1847 @@
         "year": 5026
       },
       {
+        "key": "bc:a:3309943983",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3309943983",
+        "trackId": "692804770",
+        "title": "GOLEM",
+        "artist": "Dilian",
+        "account": "CLAM",
+        "label": "Clam",
+        "labelFrom": "tag",
+        "url": "https://clam-pressure.bandcamp.com/album/golem",
+        "artistUrl": null,
+        "labelUrl": "https://clam-pressure.bandcamp.com",
+        "artwork": "https://f4.bcbits.com/img/a2841401889_16.jpg",
+        "releaseDate": "2026-10-29",
+        "trackCount": 7,
+        "duration": 652,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 2228133539,
+            "title": "La Cumbia De La Pace",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 166559559,
+            "title": "Melchor Malhechor",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 692804770,
+            "title": "Vale Vale, Mucho Vale",
+            "artist": "",
+            "url": "https://clam-pressure.bandcamp.com/track/vale-vale-mucho-vale",
+            "duration": 325,
+            "playable": true
+          },
+          {
+            "id": 903843385,
+            "title": "Am I Naked In The Scene?",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 403994578,
+            "title": "Margarito Sofrito",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 3992736859,
+            "title": "Juicy Macro",
+            "artist": "",
+            "url": "https://clam-pressure.bandcamp.com/track/juicy-macro",
+            "duration": 327,
+            "playable": true
+          },
+          {
+            "id": 3845616165,
+            "title": "Locarotonda",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3992736859"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:2185131822",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "2185131822",
+        "trackId": "2613508347",
+        "title": "White Moon",
+        "artist": "icfam",
+        "account": "katharsis",
+        "label": "katharsis",
+        "labelFrom": "tag",
+        "url": "https://katharsis-label.bandcamp.com/album/white-moon",
+        "artistUrl": null,
+        "labelUrl": "https://katharsis-label.bandcamp.com",
+        "artwork": "https://f4.bcbits.com/img/a3205933588_16.jpg",
+        "releaseDate": "2026-10-26",
+        "trackCount": 12,
+        "duration": 502,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 2950464976,
+            "title": "White Moon",
+            "artist": "",
+            "url": "https://katharsis-label.bandcamp.com/track/white-moon",
+            "duration": 156,
+            "playable": true
+          },
+          {
+            "id": 576949940,
+            "title": "Bright Hearts (ft. nvu)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 2191074614,
+            "title": "Digital King",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 4031288635,
+            "title": "UB Blizzard",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 2516225821,
+            "title": "Talking From The Root (ft. Arbella-Karmen)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 1648220093,
+            "title": "Nokhoi (ft. TxtSmith)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 1358022901,
+            "title": "Weathered (Ba-Dala)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 369886525,
+            "title": "Track 8 (ft. Lasse Laurentius)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 2957175192,
+            "title": "Floaty Me (ft. Arbella-Karmen)",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 4276383308,
+            "title": "Inside Alone",
+            "artist": "",
+            "url": null,
+            "duration": null,
+            "playable": false
+          },
+          {
+            "id": 3193715269,
+            "title": "The Cables at Sea",
+            "artist": "",
+            "url": "https://katharsis-label.bandcamp.com/track/the-cables-at-sea",
+            "duration": 204,
+            "playable": true
+          },
+          {
+            "id": 2613508347,
+            "title": "My Home",
+            "artist": "",
+            "url": "https://katharsis-label.bandcamp.com/track/my-home-2",
+            "duration": 142,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2613508347"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "katharsis",
+            "url": "https://soundcloud.com/katharsislabel"
+          }
+        ]
+      },
+      {
+        "key": "bc:a:464095200",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "464095200",
+        "trackId": "342947938",
+        "title": "Phosphene Island",
+        "artist": "Pairi Daeza",
+        "account": "moli del tro records",
+        "label": "moli del tro",
+        "labelFrom": "tag",
+        "url": "https://molideltro.bandcamp.com/album/phosphene-island",
+        "artistUrl": null,
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a1179610502_16.jpg",
+        "releaseDate": "2026-10-23",
+        "trackCount": 6,
+        "duration": 2121,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 342947938,
+            "title": "Café au sable",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/caf-au-sable",
+            "duration": 352,
+            "playable": true
+          },
+          {
+            "id": 4096126655,
+            "title": "Dinghy Simulator",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/dinghy-simulator",
+            "duration": 341,
+            "playable": true
+          },
+          {
+            "id": 1029164583,
+            "title": "Atlas",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/atlas",
+            "duration": 358,
+            "playable": true
+          },
+          {
+            "id": 2119046376,
+            "title": "Orcande",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/orcande",
+            "duration": 264,
+            "playable": true
+          },
+          {
+            "id": 3790764043,
+            "title": "Herb Ball",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/herb-ball",
+            "duration": 281,
+            "playable": true
+          },
+          {
+            "id": 1666408124,
+            "title": "Vairons",
+            "artist": "",
+            "url": "https://molideltro.bandcamp.com/track/vairons",
+            "duration": 525,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3790764043"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:2480980952",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "2480980952",
+        "trackId": "782493581",
+        "title": "forgot reef number",
+        "artist": "Metoronori",
+        "account": "sair",
+        "label": "sair",
+        "labelFrom": "tag",
+        "url": "https://ssair.bandcamp.com/album/forgot-reef-number",
+        "artistUrl": null,
+        "labelUrl": "https://ssair.bandcamp.com",
+        "artwork": "https://f4.bcbits.com/img/a1385372373_16.jpg",
+        "releaseDate": "2026-10-23",
+        "trackCount": 8,
+        "duration": 1985,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 2276040067,
+            "title": "forgot reef number",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/forgot-reef-number",
+            "duration": 311,
+            "playable": true
+          },
+          {
+            "id": 782493581,
+            "title": "夜風・Shellfish Cuisine",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/shellfish-cuisine",
+            "duration": 297,
+            "playable": true
+          },
+          {
+            "id": 438139966,
+            "title": "Pearl? Ptyx?",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/pearl-ptyx",
+            "duration": 284,
+            "playable": true
+          },
+          {
+            "id": 108032208,
+            "title": "lights of the bay",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/lights-of-the-bay",
+            "duration": 226,
+            "playable": true
+          },
+          {
+            "id": 910444421,
+            "title": "Coin in the Sand",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/coin-in-the-sand",
+            "duration": 234,
+            "playable": true
+          },
+          {
+            "id": 3552800349,
+            "title": "逃げた分身",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/-",
+            "duration": 153,
+            "playable": true
+          },
+          {
+            "id": 2988819229,
+            "title": "Hall",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/hall",
+            "duration": 246,
+            "playable": true
+          },
+          {
+            "id": 4290281195,
+            "title": "手の先、どこか",
+            "artist": "",
+            "url": "https://ssair.bandcamp.com/track/--2",
+            "duration": 234,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3552800349"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "sair",
+            "url": "https://soundcloud.com/ssair"
+          }
+        ]
+      },
+      {
+        "key": "sc:t:2423647209",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2423647209",
+        "title": "Spalding's hidden treasure. !",
+        "artist": "ant. adventure.ᐟ",
+        "account": "ant. adventure.ᐟ",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/anteaterworld/spaldings-hidden-treasure",
+        "artistUrl": "https://soundcloud.com/anteaterworld",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-VQrjbBZz63KeGY4J-9k6SGA-t500x500.jpg",
+        "releaseDate": "2026-10-22",
+        "trackCount": 1,
+        "duration": 134,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2423647209,
+            "title": "Spalding's hidden treasure. !",
+            "artist": "ant. adventure.ᐟ",
+            "url": "https://soundcloud.com/anteaterworld/spaldings-hidden-treasure",
+            "duration": 134,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2423647209"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:3148654056",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3148654056",
+        "trackId": "203138771",
+        "title": "ToySoldier - Recital",
+        "artist": "ToySoldier",
+        "account": "Muzik",
+        "label": "Muzik",
+        "labelFrom": "tag",
+        "url": "https://muzik-label.bandcamp.com/album/toysoldier-recital",
+        "artistUrl": null,
+        "labelUrl": "https://muzik-label.bandcamp.com",
+        "artwork": "https://f4.bcbits.com/img/a1846361508_16.jpg",
+        "releaseDate": "2026-10-20",
+        "trackCount": 4,
+        "duration": 471,
+        "type": "EP",
+        "tracks": [
+          {
+            "id": 203138771,
+            "title": "Forgiveness",
+            "artist": "",
+            "url": "https://muzik-label.bandcamp.com/track/forgiveness",
+            "duration": 97,
+            "playable": true
+          },
+          {
+            "id": 635235998,
+            "title": "Take Me Home",
+            "artist": "",
+            "url": "https://muzik-label.bandcamp.com/track/take-me-home",
+            "duration": 136,
+            "playable": true
+          },
+          {
+            "id": 934501000,
+            "title": "Burdened by images",
+            "artist": "",
+            "url": "https://muzik-label.bandcamp.com/track/burdened-by-images",
+            "duration": 104,
+            "playable": true
+          },
+          {
+            "id": 2853326965,
+            "title": "Terminal Beach",
+            "artist": "",
+            "url": "https://muzik-label.bandcamp.com/track/terminal-beach",
+            "duration": 134,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "635235998"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "Muzik",
+            "url": "https://soundcloud.com/muzik_label"
+          }
+        ]
+      },
+      {
+        "key": "bc:a:3007317970",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3007317970",
+        "trackId": "2217254678",
+        "title": "pedestrian",
+        "artist": "boyhoodie",
+        "account": "boyhoodie",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://boyhoodie.bandcamp.com/album/pedestrian",
+        "artistUrl": "https://boyhoodie.bandcamp.com",
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a137600878_16.jpg",
+        "releaseDate": "2026-10-20",
+        "trackCount": 25,
+        "duration": 4089,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 2254260824,
+            "title": "[]",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/--2",
+            "duration": 211,
+            "playable": true
+          },
+          {
+            "id": 3674906768,
+            "title": "could you hate me if you hate all love?",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/could-you-hate-me-if-you-hate-all-love",
+            "duration": 138,
+            "playable": true
+          },
+          {
+            "id": 2217254678,
+            "title": "lue",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/lue",
+            "duration": 210,
+            "playable": true
+          },
+          {
+            "id": 39967819,
+            "title": "deep down, functions",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/deep-down-functions",
+            "duration": 131,
+            "playable": true
+          },
+          {
+            "id": 523713882,
+            "title": "to become, it makes me like a fish",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/to-become-it-makes-me-like-a-fish",
+            "duration": 163,
+            "playable": true
+          },
+          {
+            "id": 3580359838,
+            "title": "festivals of the moon",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/festivals-of-the-moon",
+            "duration": 133,
+            "playable": true
+          },
+          {
+            "id": 1261341562,
+            "title": "I walk 1n the room with color and my cicadas",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/i-walk-1n-the-room-with-color-and-my-cicadas",
+            "duration": 152,
+            "playable": true
+          },
+          {
+            "id": 24439225,
+            "title": "u will b so great. Hridaya",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/u-will-b-so-great-hridaya",
+            "duration": 226,
+            "playable": true
+          },
+          {
+            "id": 1692486551,
+            "title": "does this dress make me look like the human",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/does-this-dress-make-me-look-like-the-human",
+            "duration": 129,
+            "playable": true
+          },
+          {
+            "id": 1683396256,
+            "title": "remember",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/remember",
+            "duration": 134,
+            "playable": true
+          },
+          {
+            "id": 3040636279,
+            "title": "from the start x",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/from-the-start-x",
+            "duration": 183,
+            "playable": true
+          },
+          {
+            "id": 2559033272,
+            "title": "this is how it feels to lose things knowing that you were going to lose things",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/this-is-how-it-feels-to-lose-things-knowing-that-you-were-going-to-lose-things",
+            "duration": 282,
+            "playable": true
+          },
+          {
+            "id": 2835441779,
+            "title": "IM BORN",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/im-born",
+            "duration": 99,
+            "playable": true
+          },
+          {
+            "id": 1104433982,
+            "title": "shock keys and dancing instruments x",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/shock-keys-and-dancing-instruments-x",
+            "duration": 224,
+            "playable": true
+          },
+          {
+            "id": 3531065987,
+            "title": "X#WWW#X",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/x-www-x",
+            "duration": 222,
+            "playable": true
+          },
+          {
+            "id": 1431965570,
+            "title": "cautious and confused x",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/cautious-and-confused-x",
+            "duration": 216,
+            "playable": true
+          },
+          {
+            "id": 2644214978,
+            "title": "naturally everything is no one that is here",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/naturally-everything-is-no-one-that-is-here",
+            "duration": 140,
+            "playable": true
+          },
+          {
+            "id": 1012788613,
+            "title": "soaking my jeans from my cut i didnt mean to do this make me feel better please",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/soaking-my-jeans-from-my-cut-i-didnt-mean-to-do-this-make-me-feel-better-please",
+            "duration": 95,
+            "playable": true
+          },
+          {
+            "id": 1855808991,
+            "title": "cus i wanted you",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/cus-i-wanted-you",
+            "duration": 114,
+            "playable": true
+          },
+          {
+            "id": 618130790,
+            "title": "apple journey",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/apple-journey",
+            "duration": 136,
+            "playable": true
+          },
+          {
+            "id": 4142332110,
+            "title": "no more pills",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/no-more-pills",
+            "duration": 290,
+            "playable": true
+          },
+          {
+            "id": 3859384582,
+            "title": "cover your mouth and blow your eyes",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/cover-your-mouth-and-blow-your-eyes",
+            "duration": 128,
+            "playable": true
+          },
+          {
+            "id": 1536067133,
+            "title": "cavity-filled lurking",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/cavity-filled-lurking",
+            "duration": 78,
+            "playable": true
+          },
+          {
+            "id": 519473086,
+            "title": "messversion5",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/messversion5",
+            "duration": 136,
+            "playable": true
+          },
+          {
+            "id": 2785559723,
+            "title": "sages",
+            "artist": "",
+            "url": "https://boyhoodie.bandcamp.com/track/sages",
+            "duration": 119,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "1536067133"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "boyhoodie",
+            "url": "https://soundcloud.com/boyhoodie"
+          }
+        ]
+      },
+      {
+        "key": "sc:p:2316765267",
+        "source": "soundcloud",
+        "kind": "set",
+        "scId": "2316765267",
+        "setType": "ep",
+        "title": "Four music songs",
+        "artist": "Computer man",
+        "account": "Computer man",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/c0mput3rm4n/sets/three-music-songs",
+        "artistUrl": "https://soundcloud.com/c0mput3rm4n",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-UzvE6EzaVAaYCTur-e3aWTg-t500x500.jpg",
+        "releaseDate": "2026-10-20",
+        "trackCount": 4,
+        "duration": 694,
+        "type": "EP",
+        "tracks": [
+          {
+            "id": 2198062575,
+            "title": "Ilus",
+            "artist": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n/ilus",
+            "duration": 210,
+            "playable": true
+          },
+          {
+            "id": 2198871367,
+            "title": "Bungee",
+            "artist": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n/euhhhhh",
+            "duration": 202,
+            "playable": true
+          },
+          {
+            "id": 2209701857,
+            "title": "High",
+            "artist": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n/high",
+            "duration": 207,
+            "playable": true
+          },
+          {
+            "id": 2209742735,
+            "title": "Witz",
+            "artist": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n/witz",
+            "duration": 76,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2209742735"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2422645593",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2422645593",
+        "title": "im doing my best 🍫🍫🍫🍫🍫🍫✿i dontknowwhat to think:&////follow 4hal4 on instagram",
+        "artist": "4h4",
+        "account": "4h4",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/4hal4/chocolatae",
+        "artistUrl": "https://soundcloud.com/4hal4",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-z4wxyLTRPjpwPNng-T7wb7Q-t500x500.jpg",
+        "releaseDate": "2026-10-20",
+        "trackCount": 1,
+        "duration": 68,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2422645593,
+            "title": "im doing my best 🍫🍫🍫🍫🍫🍫✿i dontknowwhat to think:&////follow 4hal4 on instagram",
+            "artist": "",
+            "url": "https://soundcloud.com/4hal4/chocolatae",
+            "duration": 68,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2422645593"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2422677687",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2422677687",
+        "title": "funny, isn't it",
+        "artist": "хмора",
+        "account": "хмора",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/shosha-shasha/funny-isnt-it",
+        "artistUrl": "https://soundcloud.com/shosha-shasha",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-CtXZY524JUU9ae5v-X51aug-t500x500.jpg",
+        "releaseDate": "2026-10-20",
+        "trackCount": 1,
+        "duration": 98,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2422677687,
+            "title": "funny, isn't it",
+            "artist": "хмора",
+            "url": "https://soundcloud.com/shosha-shasha/funny-isnt-it",
+            "duration": 98,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2422677687"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2421169926",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2421169926",
+        "title": "All that hath remained of Computer man",
+        "artist": "Computer man",
+        "account": "Computer man",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/c0mput3rm4n/the-great-computer-man",
+        "artistUrl": "https://soundcloud.com/c0mput3rm4n",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-ufrTtVkKZkbAP2Ll-928Arg-t500x500.png",
+        "releaseDate": "2026-10-18",
+        "trackCount": 1,
+        "duration": 144,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2421169926,
+            "title": "All that hath remained of Computer man",
+            "artist": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n/the-great-computer-man",
+            "duration": 144,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2421169926"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:3651519720",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3651519720",
+        "trackId": "1320293791",
+        "title": "The recluse",
+        "artist": "Computer man",
+        "account": "Computer man",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://c0mput3rm4n.bandcamp.com/album/the-recluse-2",
+        "artistUrl": "https://c0mput3rm4n.bandcamp.com",
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a3140260037_16.jpg",
+        "releaseDate": "2026-10-17",
+        "trackCount": 16,
+        "duration": 2274,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 1320293791,
+            "title": "I am Evan of the Panax Flower feat. ant. adventure.ᐟ",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/i-am-evan-of-the-panax-flower-feat-ant-adventure-2",
+            "duration": 204,
+            "playable": true
+          },
+          {
+            "id": 4251001207,
+            "title": "Save meaning",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/save-meaning-3",
+            "duration": 87,
+            "playable": true
+          },
+          {
+            "id": 3660045843,
+            "title": "Charade",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/charade-3",
+            "duration": 217,
+            "playable": true
+          },
+          {
+            "id": 3538306770,
+            "title": "Hume",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/hume-3",
+            "duration": 124,
+            "playable": true
+          },
+          {
+            "id": 2851475770,
+            "title": "Thanks you The dishwasher",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/thanks-you-the-dishwasher-2",
+            "duration": 195,
+            "playable": true
+          },
+          {
+            "id": 976607109,
+            "title": "Lake ella",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/lake-ella-3",
+            "duration": 92,
+            "playable": true
+          },
+          {
+            "id": 3222276882,
+            "title": "Yarn boy",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/yarn-boy-3",
+            "duration": 84,
+            "playable": true
+          },
+          {
+            "id": 3682911828,
+            "title": "Amphetamines",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/amphetamines",
+            "duration": 147,
+            "playable": true
+          },
+          {
+            "id": 3822758908,
+            "title": "Seroquel",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/seroquel",
+            "duration": 243,
+            "playable": true
+          },
+          {
+            "id": 2371855213,
+            "title": "Awake again",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/awake-again-3",
+            "duration": 190,
+            "playable": true
+          },
+          {
+            "id": 402615085,
+            "title": "Vitalia",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/vitalia-3",
+            "duration": 72,
+            "playable": true
+          },
+          {
+            "id": 2471506993,
+            "title": "Sprocket",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/sprocket-3",
+            "duration": 127,
+            "playable": true
+          },
+          {
+            "id": 2078852737,
+            "title": "Untitled",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/untitled-4",
+            "duration": 153,
+            "playable": true
+          },
+          {
+            "id": 1531694431,
+            "title": "Office",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/office-2",
+            "duration": 78,
+            "playable": true
+          },
+          {
+            "id": 3260192331,
+            "title": "Sedative use disorder feat. serpuline",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/sedative-use-disorder-feat-serpuline",
+            "duration": 141,
+            "playable": true
+          },
+          {
+            "id": 1934231821,
+            "title": "Vitalia pt. 2 (Evil)",
+            "artist": "",
+            "url": "https://c0mput3rm4n.bandcamp.com/track/vitalia-pt-2-evil-2",
+            "duration": 120,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "1320293791"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "Computer man",
+            "url": "https://soundcloud.com/c0mput3rm4n"
+          }
+        ]
+      },
+      {
+        "key": "bc:a:3426559499",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3426559499",
+        "trackId": "634339113",
+        "title": "the ocean",
+        "artist": "hill swum",
+        "account": "hill swum",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://hillswum.bandcamp.com/album/the-ocean",
+        "artistUrl": "https://hillswum.bandcamp.com",
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a1595730936_16.jpg",
+        "releaseDate": "2026-10-15",
+        "trackCount": 14,
+        "duration": 1736,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 1093429121,
+            "title": "the ocean",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/the-ocean",
+            "duration": 122,
+            "playable": true
+          },
+          {
+            "id": 634339113,
+            "title": "henry thoreau",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/henry-thoreau",
+            "duration": 131,
+            "playable": true
+          },
+          {
+            "id": 3575159071,
+            "title": "sunbeam",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/sunbeam",
+            "duration": 128,
+            "playable": true
+          },
+          {
+            "id": 3406331986,
+            "title": "americajin",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/americajin",
+            "duration": 112,
+            "playable": true
+          },
+          {
+            "id": 374512096,
+            "title": "wristband",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/wristband",
+            "duration": 143,
+            "playable": true
+          },
+          {
+            "id": 72865339,
+            "title": "blood",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/blood",
+            "duration": 122,
+            "playable": true
+          },
+          {
+            "id": 1630589430,
+            "title": "parable of the shogun",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/parable-of-the-shogun",
+            "duration": 133,
+            "playable": true
+          },
+          {
+            "id": 67958863,
+            "title": "frosted flakes",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/frosted-flakes",
+            "duration": 105,
+            "playable": true
+          },
+          {
+            "id": 3727197259,
+            "title": "wither",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/wither",
+            "duration": 85,
+            "playable": true
+          },
+          {
+            "id": 222873517,
+            "title": "nightlight",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/nightlight",
+            "duration": 125,
+            "playable": true
+          },
+          {
+            "id": 3293685243,
+            "title": "catfish",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/catfish",
+            "duration": 138,
+            "playable": true
+          },
+          {
+            "id": 2418716609,
+            "title": "little blanket",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/little-blanket",
+            "duration": 59,
+            "playable": true
+          },
+          {
+            "id": 365826751,
+            "title": "pluto",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/pluto",
+            "duration": 203,
+            "playable": true
+          },
+          {
+            "id": 3287321570,
+            "title": "sentimental presents",
+            "artist": "",
+            "url": "https://hillswum.bandcamp.com/track/sentimental-presents",
+            "duration": 130,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3727197259"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2418520782",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2418520782",
+        "title": "intrapersonal",
+        "artist": "parka neko michra",
+        "account": "parka neko michra",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/parka-neko-michra/intrapersonal",
+        "artistUrl": "https://soundcloud.com/parka-neko-michra",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-CTIx9yn7kAHPk9rI-fzp2Kg-t500x500.jpg",
+        "releaseDate": "2026-10-14",
+        "trackCount": 1,
+        "duration": 167,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2418520782,
+            "title": "intrapersonal",
+            "artist": "parka neko michra",
+            "url": "https://soundcloud.com/parka-neko-michra/intrapersonal",
+            "duration": 167,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2418520782"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:3008188927",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3008188927",
+        "trackId": "4156407647",
+        "title": "hollow carapace",
+        "artist": "strange pressure vessel",
+        "account": "strange pressure vessel",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://calligraphyofbear.bandcamp.com/album/hollow-carapace",
+        "artistUrl": "https://calligraphyofbear.bandcamp.com",
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a854408010_16.jpg",
+        "releaseDate": "2026-10-12",
+        "trackCount": 17,
+        "duration": 2168,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 4156407647,
+            "title": "tetrapods",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/tetrapods",
+            "duration": 156,
+            "playable": true
+          },
+          {
+            "id": 656489146,
+            "title": "hydrangea",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/hydrangea",
+            "duration": 125,
+            "playable": true
+          },
+          {
+            "id": 698069695,
+            "title": "rosewood",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/rosewood",
+            "duration": 102,
+            "playable": true
+          },
+          {
+            "id": 1888268677,
+            "title": "dolmens",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/dolmens",
+            "duration": 105,
+            "playable": true
+          },
+          {
+            "id": 585329314,
+            "title": "plumdust drifter",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/plumdust-drifter",
+            "duration": 143,
+            "playable": true
+          },
+          {
+            "id": 2658199010,
+            "title": "red lacquer",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/red-lacquer",
+            "duration": 77,
+            "playable": true
+          },
+          {
+            "id": 985541228,
+            "title": "metal plates",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/metal-plates",
+            "duration": 137,
+            "playable": true
+          },
+          {
+            "id": 3970582738,
+            "title": "what comes out of the water",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/what-comes-out-of-the-water",
+            "duration": 108,
+            "playable": true
+          },
+          {
+            "id": 3265203268,
+            "title": "nothing princess",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/nothing-princess",
+            "duration": 125,
+            "playable": true
+          },
+          {
+            "id": 2698907338,
+            "title": "contact",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/contact",
+            "duration": 149,
+            "playable": true
+          },
+          {
+            "id": 2188864202,
+            "title": "ritual banquet",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/ritual-banquet",
+            "duration": 183,
+            "playable": true
+          },
+          {
+            "id": 1877347881,
+            "title": "for old times' sake",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/for-old-times-sake",
+            "duration": 144,
+            "playable": true
+          },
+          {
+            "id": 3962083656,
+            "title": "shedding of the tree resin",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/shedding-of-the-tree-resin",
+            "duration": 102,
+            "playable": true
+          },
+          {
+            "id": 3470007892,
+            "title": "rabbit garden",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/rabbit-garden",
+            "duration": 99,
+            "playable": true
+          },
+          {
+            "id": 3115656669,
+            "title": "crystal window",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/crystal-window",
+            "duration": 151,
+            "playable": true
+          },
+          {
+            "id": 4083919844,
+            "title": "crash site",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/crash-site",
+            "duration": 136,
+            "playable": true
+          },
+          {
+            "id": 1872865973,
+            "title": "skip zone",
+            "artist": "",
+            "url": "https://calligraphyofbear.bandcamp.com/track/skip-zone",
+            "duration": 126,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "656489146"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "strange pressure vessel",
+            "url": "https://soundcloud.com/hentenna"
+          }
+        ]
+      },
+      {
+        "key": "sc:t:2417454366",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2417454366",
+        "title": "103110 - listen 2 ur soul",
+        "artist": "✰ 103110 ✰",
+        "account": "✰ 103110 ✰",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/user-937970859/103110-listen-2-ur-soul",
+        "artistUrl": "https://soundcloud.com/user-937970859",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-vAHVNwmJx1UkSDfW-tGRZHA-t500x500.jpg",
+        "releaseDate": "2026-10-12",
+        "trackCount": 1,
+        "duration": 173,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2417454366,
+            "title": "103110 - listen 2 ur soul",
+            "artist": "✰ 103110 ✰",
+            "url": "https://soundcloud.com/user-937970859/103110-listen-2-ur-soul",
+            "duration": 173,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2417454366"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "bc:a:3457656995",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "3457656995",
+        "trackId": "425803934",
+        "title": "bedroomyear",
+        "artist": "Rafatisu",
+        "account": "Ukiuki Atama",
+        "label": "Ukiuki Atama",
+        "labelFrom": "tag",
+        "url": "https://ukiukiatama.bandcamp.com/album/bedroomyear",
+        "artistUrl": null,
+        "labelUrl": "https://ukiukiatama.bandcamp.com",
+        "artwork": "https://f4.bcbits.com/img/a1336242668_16.jpg",
+        "releaseDate": "2026-10-10",
+        "trackCount": 13,
+        "duration": 2041,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 2833070032,
+            "title": "Waaaaaaaaaa !",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/waaaaaaaaaa",
+            "duration": 132,
+            "playable": true
+          },
+          {
+            "id": 425803934,
+            "title": "Ainda",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/ainda",
+            "duration": 307,
+            "playable": true
+          },
+          {
+            "id": 745290404,
+            "title": "Correspond feeling",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/correspond-feeling",
+            "duration": 155,
+            "playable": true
+          },
+          {
+            "id": 691529186,
+            "title": "Haaaaaaaaaa !!",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/haaaaaaaaaa",
+            "duration": 52,
+            "playable": true
+          },
+          {
+            "id": 1670520429,
+            "title": "Saw wing",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/saw-wing",
+            "duration": 118,
+            "playable": true
+          },
+          {
+            "id": 293445351,
+            "title": "Turnip strategy",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/turnip-strategy",
+            "duration": 176,
+            "playable": true
+          },
+          {
+            "id": 516577926,
+            "title": "Quotidien",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/quotidien",
+            "duration": 107,
+            "playable": true
+          },
+          {
+            "id": 601992028,
+            "title": "Sorbitol",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/sorbitol",
+            "duration": 169,
+            "playable": true
+          },
+          {
+            "id": 767533348,
+            "title": "Naaaaaaaaaa !!!",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/naaaaaaaaaa",
+            "duration": 99,
+            "playable": true
+          },
+          {
+            "id": 3364102984,
+            "title": "Orange blossoms",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/orange-blossoms",
+            "duration": 159,
+            "playable": true
+          },
+          {
+            "id": 1158140048,
+            "title": "Palmtrees",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/palmtrees",
+            "duration": 248,
+            "playable": true
+          },
+          {
+            "id": 3590038563,
+            "title": "Baaaaaaaaaa !!!!",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/baaaaaaaaaa-2",
+            "duration": 90,
+            "playable": true
+          },
+          {
+            "id": 2458422358,
+            "title": "Im happy drowsy",
+            "artist": "",
+            "url": "https://ukiukiatama.bandcamp.com/track/im-happy-drowsy",
+            "duration": 229,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3590038563"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026,
+        "scProfiles": [
+          {
+            "name": "Ukiuki Atama",
+            "url": "https://soundcloud.com/ukiukiatama"
+          }
+        ]
+      },
+      {
+        "key": "bc:a:2494084077",
+        "source": "bandcamp",
+        "kind": "album",
+        "albumId": "2494084077",
+        "trackId": "3859869596",
+        "title": "lost tracks",
+        "artist": "NATOOO",
+        "account": "NATOOO",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://nat000.bandcamp.com/album/lost-tracks",
+        "artistUrl": "https://nat000.bandcamp.com",
+        "labelUrl": null,
+        "artwork": "https://f4.bcbits.com/img/a3730066325_16.jpg",
+        "releaseDate": "2026-10-10",
+        "trackCount": 7,
+        "duration": 2536,
+        "type": "LP",
+        "tracks": [
+          {
+            "id": 3859869596,
+            "title": "foresta",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/foresta",
+            "duration": 427,
+            "playable": true
+          },
+          {
+            "id": 2461571589,
+            "title": "medi (we are 7:20)",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/medi-we-are-7-20",
+            "duration": 439,
+            "playable": true
+          },
+          {
+            "id": 3160463422,
+            "title": "nova hole",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/nova-hole",
+            "duration": 242,
+            "playable": true
+          },
+          {
+            "id": 2504219693,
+            "title": "thinkin'low",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/thinkinlow",
+            "duration": 533,
+            "playable": true
+          },
+          {
+            "id": 3416061919,
+            "title": "workers experience",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/workers-experience",
+            "duration": 218,
+            "playable": true
+          },
+          {
+            "id": 2489056414,
+            "title": "ongaku",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/ongaku",
+            "duration": 475,
+            "playable": true
+          },
+          {
+            "id": 2688792601,
+            "title": "taico song",
+            "artist": "",
+            "url": "https://nat000.bandcamp.com/track/taico-song",
+            "duration": 202,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "3416061919"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2416470051",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2416470051",
+        "title": "My Song 6",
+        "artist": "ranena",
+        "account": "ranena",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/ranena9/my-song",
+        "artistUrl": "https://soundcloud.com/ranena9",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-vuimRgJQgTe5YBy8-yQkmGQ-t500x500.jpg",
+        "releaseDate": "2026-10-10",
+        "trackCount": 1,
+        "duration": 17,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2416470051,
+            "title": "My Song 6",
+            "artist": "ranena",
+            "url": "https://soundcloud.com/ranena9/my-song",
+            "duration": 17,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2416470051"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2416561878",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2416561878",
+        "title": "Staircase",
+        "artist": "ValuableScholar",
+        "account": "ValuableScholar",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/valuablescholar/staircase",
+        "artistUrl": "https://soundcloud.com/valuablescholar",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-MSEfb79O8QrtGywD-RdnoUQ-t500x500.jpg",
+        "releaseDate": "2026-10-10",
+        "trackCount": 1,
+        "duration": 116,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2416561878,
+            "title": "Staircase",
+            "artist": "ValuableScholar",
+            "url": "https://soundcloud.com/valuablescholar/staircase",
+            "duration": 116,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2416561878"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
+        "key": "sc:t:2416445697",
+        "source": "soundcloud",
+        "kind": "track",
+        "scId": "2416445697",
+        "title": "figuring out who i am٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶becoming something new before time gets me i like to get hypnotized c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●] nice playtime buddyt",
+        "artist": "supersheep",
+        "account": "supersheep𓆙𓆙𓆙𖠌",
+        "label": null,
+        "labelFrom": null,
+        "url": "https://soundcloud.com/supersheepworms/figuring-out-who-i-am-o-o-o-o",
+        "artistUrl": "https://soundcloud.com/supersheepworms",
+        "labelUrl": null,
+        "artwork": "https://i1.sndcdn.com/artworks-0XSgW71xZQyFBEeS-siGKDA-t500x500.png",
+        "releaseDate": "2026-10-10",
+        "trackCount": 1,
+        "duration": 105,
+        "type": "single",
+        "tracks": [
+          {
+            "id": 2416445697,
+            "title": "figuring out who i am٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶٩(̾●̮̮̃̾•̃̾)۶becoming something new before time gets me i like to get hypnotized c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●]כ c[○┬●] nice playtime buddyt",
+            "artist": "supersheep",
+            "url": "https://soundcloud.com/supersheepworms/figuring-out-who-i-am-o-o-o-o",
+            "duration": 105,
+            "playable": true
+          }
+        ],
+        "shows": [
+          {
+            "number": 250,
+            "tracks": [
+              "2416445697"
+            ]
+          }
+        ],
+        "playedTracks": 1,
+        "year": 2026
+      },
+      {
         "key": "sc:t:2413905219",
         "source": "soundcloud",
         "kind": "track",
@@ -3267,45 +5288,6 @@
             "number": 249,
             "tracks": [
               "2413380705"
-            ]
-          }
-        ],
-        "playedTracks": 1,
-        "year": 2026
-      },
-      {
-        "key": "sc:t:2413343829",
-        "source": "soundcloud",
-        "kind": "track",
-        "scId": "2413343829",
-        "title": "ti ne veš kje je tvoje mesto cluny",
-        "artist": "rne",
-        "account": "rne",
-        "label": null,
-        "labelFrom": null,
-        "url": "https://soundcloud.com/burekzazajtrk/ti-ne-ves-kje-je-tvoje-mesto",
-        "artistUrl": "https://soundcloud.com/burekzazajtrk",
-        "labelUrl": null,
-        "artwork": "https://i1.sndcdn.com/artworks-XzZuKDQYHy9SpUXL-bGLqMQ-t500x500.jpg",
-        "releaseDate": "2026-10-05",
-        "trackCount": 1,
-        "duration": 121,
-        "type": "single",
-        "tracks": [
-          {
-            "id": 2413343829,
-            "title": "ti ne veš kje je tvoje mesto cluny",
-            "artist": "rne",
-            "url": "https://soundcloud.com/burekzazajtrk/ti-ne-ves-kje-je-tvoje-mesto",
-            "duration": 121,
-            "playable": true
-          }
-        ],
-        "shows": [
-          {
-            "number": 249,
-            "tracks": [
-              "2413343829"
             ]
           }
         ],
@@ -4241,45 +6223,6 @@
             "number": 248,
             "tracks": [
               "2404822962"
-            ]
-          }
-        ],
-        "playedTracks": 1,
-        "year": 2026
-      },
-      {
-        "key": "sc:t:2404811436",
-        "source": "soundcloud",
-        "kind": "track",
-        "scId": "2404811436",
-        "title": "yume",
-        "artist": "jumango",
-        "account": "jumango",
-        "label": null,
-        "labelFrom": null,
-        "url": "https://soundcloud.com/jumang4423/yuumee",
-        "artistUrl": "https://soundcloud.com/jumang4423",
-        "labelUrl": null,
-        "artwork": "https://i1.sndcdn.com/artworks-jdyniPGVZzAu9ULy-i0FHpQ-t500x500.jpg",
-        "releaseDate": "2026-09-21",
-        "trackCount": 1,
-        "duration": 157,
-        "type": "single",
-        "tracks": [
-          {
-            "id": 2404811436,
-            "title": "yume",
-            "artist": "jumango",
-            "url": "https://soundcloud.com/jumang4423/yuumee",
-            "duration": 157,
-            "playable": true
-          }
-        ],
-        "shows": [
-          {
-            "number": 248,
-            "tracks": [
-              "2404811436"
             ]
           }
         ],
@@ -8440,7 +10383,7 @@
         "source": "bandcamp",
         "kind": "album",
         "albumId": "1335763063",
-        "trackId": "3572842796",
+        "trackId": "492702250",
         "title": "Telegogue",
         "artist": "Charlie Thall",
         "account": "Artetetra",
@@ -8452,7 +10395,7 @@
         "artwork": "https://f4.bcbits.com/img/a1787241538_16.jpg",
         "releaseDate": "2026-07-29",
         "trackCount": 11,
-        "duration": 299,
+        "duration": 1736,
         "type": "LP",
         "tracks": [
           {
@@ -8467,33 +10410,33 @@
             "id": 2692444907,
             "title": "Stevings 7th Stomach",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/stevings-7th-stomach",
+            "duration": 195,
+            "playable": true
           },
           {
             "id": 2635456567,
             "title": "Meeted My Maker",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/meeted-my-maker",
+            "duration": 149,
+            "playable": true
           },
           {
             "id": 3470772255,
             "title": "Our Fosters",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/our-fosters",
+            "duration": 193,
+            "playable": true
           },
           {
             "id": 1328179294,
             "title": "Zoo People",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/zoo-people",
+            "duration": 141,
+            "playable": true
           },
           {
             "id": 3572842796,
@@ -8507,41 +10450,41 @@
             "id": 834128660,
             "title": "Winning Animation",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/winning-animation",
+            "duration": 180,
+            "playable": true
           },
           {
             "id": 4290980451,
             "title": "The Earners Cycle",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/the-earners-cycle",
+            "duration": 138,
+            "playable": true
           },
           {
             "id": 3008144184,
             "title": "Gadget Bastards",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/gadget-bastards",
+            "duration": 157,
+            "playable": true
           },
           {
             "id": 3432197117,
             "title": "TV Show",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/tv-show",
+            "duration": 140,
+            "playable": true
           },
           {
             "id": 1087431948,
             "title": "Bella's Swim Trunks",
             "artist": "",
-            "url": null,
-            "duration": null,
-            "playable": false
+            "url": "https://artetetra.bandcamp.com/track/bellas-swim-trunks",
+            "duration": 144,
+            "playable": true
           }
         ],
         "shows": [
@@ -10292,8 +12235,8 @@
         "account": "z",
         "label": null,
         "labelFrom": null,
-        "url": "https://soundcloud.com/zombiebasketball/ad21412412",
-        "artistUrl": "https://soundcloud.com/zombiebasketball",
+        "url": "https://soundcloud.com/z00o1/ad21412412",
+        "artistUrl": "https://soundcloud.com/z00o1",
         "labelUrl": null,
         "artwork": "https://i1.sndcdn.com/artworks-cGUCv14KArzjAzcI-PJDyWQ-t500x500.jpg",
         "releaseDate": "2026-07-08",
@@ -10305,7 +12248,7 @@
             "id": 2355928262,
             "title": "🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸🛸",
             "artist": "zombie basketball",
-            "url": "https://soundcloud.com/zombiebasketball/ad21412412",
+            "url": "https://soundcloud.com/z00o1/ad21412412",
             "duration": 66,
             "playable": true
           }
@@ -13293,42 +15236,42 @@
           },
           {
             "id": 2340405587,
-            "title": null,
-            "artist": "",
-            "url": null,
-            "duration": null,
+            "title": "Save Me",
+            "artist": "dj poser",
+            "url": "https://soundcloud.com/dj-poser/2-for-footworker",
+            "duration": 144,
             "playable": true
           },
           {
             "id": 2364356258,
-            "title": null,
-            "artist": "",
-            "url": null,
-            "duration": null,
+            "title": "Fall Back (w/ DJ MC)",
+            "artist": "dj poser",
+            "url": "https://soundcloud.com/dj-poser/fall-back-w-dj-mc",
+            "duration": 160,
             "playable": true
           },
           {
             "id": 2326877597,
-            "title": null,
-            "artist": "",
-            "url": null,
-            "duration": null,
+            "title": "Drum Theory",
+            "artist": "dj poser",
+            "url": "https://soundcloud.com/dj-poser/theory-footwork",
+            "duration": 159,
             "playable": true
           },
           {
             "id": 2341786643,
-            "title": null,
-            "artist": "",
-            "url": null,
-            "duration": null,
+            "title": "God Damn (w/ skylong)",
+            "artist": "dj poser",
+            "url": "https://soundcloud.com/dj-poser/god-damn-with-sky-long",
+            "duration": 170,
             "playable": true
           },
           {
             "id": 2366985911,
-            "title": null,
-            "artist": "",
-            "url": null,
-            "duration": null,
+            "title": "The Whole World is a Battlegroundz",
+            "artist": "dj poser",
+            "url": "https://soundcloud.com/dj-poser/the-whole-world-is-a",
+            "duration": 171,
             "playable": true
           }
         ],
@@ -14066,44 +16009,6 @@
             "url": "https://soundcloud.com/vanda100"
           }
         ]
-      },
-      {
-        "key": "bc:a:3799102483",
-        "source": "bandcamp",
-        "kind": "album",
-        "albumId": "3799102483",
-        "trackId": "810807776",
-        "title": "Anything I touch I bruised",
-        "artist": "Bruised SpringsTeen feat. DJ Torpedo",
-        "account": "Señor Service",
-        "label": "Señor Service",
-        "labelFrom": "account",
-        "url": "https://senorservice.bandcamp.com/album/anything-i-touch-i-bruised",
-        "artistUrl": null,
-        "labelUrl": "https://senorservice.bandcamp.com",
-        "artwork": "https://f4.bcbits.com/img/a1595912289_16.jpg",
-        "releaseDate": "2026-05-22",
-        "trackCount": 1,
-        "duration": 110,
-        "type": "single",
-        "tracks": [
-          {
-            "id": 810807776,
-            "title": "Anything I touch I bruised",
-            "artist": "",
-            "url": "https://senorservice.bandcamp.com/track/anything-i-touch-i-bruised",
-            "duration": 110,
-            "playable": true
-          }
-        ],
-        "shows": [
-          {
-            "number": 239,
-            "tracks": []
-          }
-        ],
-        "playedTracks": 1,
-        "year": 2026
       },
       {
         "key": "bc:a:461624552",
@@ -15619,76 +17524,6 @@
             "artist": "",
             "url": "https://awaport.bandcamp.com/track/charades-your-iphone-8-is-dead-remix",
             "duration": 182,
-            "playable": true
-          }
-        ],
-        "shows": [
-          {
-            "number": 238,
-            "tracks": []
-          }
-        ],
-        "playedTracks": 1,
-        "year": 2026
-      },
-      {
-        "key": "bc:a:2082944026",
-        "source": "bandcamp",
-        "kind": "album",
-        "albumId": "2082944026",
-        "trackId": "4098358853",
-        "title": "orc tape to drop fw this tape dude seriously fw this tape why not man just fw it fr🧟🏀TEAMZOMBIE tape to drop (((( ( (( ( im movin wayy SHOUTOUT 3c for the cover we gon do this n im not failin yeh go follow my ig",
-        "artist": "Zombie Basketball",
-        "account": "Zombie Basketball",
-        "label": null,
-        "labelFrom": null,
-        "url": "https://zombiebasketball.bandcamp.com/album/orc-tape-to-drop-fw-this-tape-dude-seriously-fw-this-tape-why-not-man-just-fw-it-fr-teamzombie-tape-to-drop-im-movin-wayy-shoutout-3c-for-the-cover-we-gon-do-this-n-im-not-failin-yeh-go-follow-my",
-        "artistUrl": "https://zombiebasketball.bandcamp.com",
-        "labelUrl": null,
-        "artwork": "https://f4.bcbits.com/img/a3092807528_16.jpg",
-        "releaseDate": "2026-05-01",
-        "trackCount": 5,
-        "duration": 455,
-        "type": "EP",
-        "tracks": [
-          {
-            "id": 4098358853,
-            "title": "frankenstein emojis. Prod Me Page 6 | Fright Images | Free Vectors, Stock Photos & PSD The Frankenstein emoji represents a green, scary creature symbolizing monsters, horror, and scientific experimentation. The Frankenstein emoji depicts a green, monstr",
-            "artist": "",
-            "url": "https://zombiebasketball.bandcamp.com/track/frankenstein-emojis-prod-me-page-6-fright-images-free-vectors-stock-photos-psd-the-frankenstein-emoji-represents-a-green-scary-creature-symbolizing-monsters-horror-and-scientific-experimentation",
-            "duration": 130,
-            "playable": true
-          },
-          {
-            "id": 24207116,
-            "title": "i b lookinu p my name but non really come up so it dont rlly matter ngl im js seeing wassup w wtv used tk's mel go fw traykoolin go fw me https://instagram.com/orchead420 https://www.instagram.com/traykoolinn",
-            "artist": "",
-            "url": "https://zombiebasketball.bandcamp.com/track/i-b-lookinu-p-my-name-but-non-really-come-up-so-it-dont-rlly-matter-ngl-im-js-seeing-wassup-w-wtv-used-tks-mel-go-fw-traykoolin-go-fw-me-https-instagram-com-orchead420-https-www-instagram-com-tra",
-            "duration": 87,
-            "playable": true
-          },
-          {
-            "id": 202663914,
-            "title": "mino xae is a multifaceted societal issue plaguing every1 around me n i hav my faults but u need to understand there is a zenith of negativity trapped within an individual undercover in a virtual society anyways big rochead420 go fw me",
-            "artist": "",
-            "url": "https://zombiebasketball.bandcamp.com/track/mino-xae-is-a-multifaceted-societal-issue-plaguing-every1-around-me-n-i-hav-my-faults-but-u-need-to-understand-there-is-a-zenith-of-negativity-trapped-within-an-individual-undercover-in-a-virtual",
-            "duration": 89,
-            "playable": true
-          },
-          {
-            "id": 2708686198,
-            "title": "﴾◣.,,.◢﴿ - ion kno what to name this i was laid up out the crib texting santana tellin him to send me somn to drop shoutout big bro for clutching it up for me this prod me n him go fw my bro thats day 1 ong",
-            "artist": "",
-            "url": "https://zombiebasketball.bandcamp.com/track/ion-kno-what-to-name-this-i-was-laid-up-out-the-crib-texting-santana-tellin-him-to-send-me-somn-to-drop-shoutout-big-bro-for-clutching-it-up-for-me-this-prod-me-n-him-go-fw-my-bro-thats-day-1-ong",
-            "duration": 65,
-            "playable": true
-          },
-          {
-            "id": 2013764059,
-            "title": "6fig - mouth box (Prod orc n kita) https://www.instagram.com/6figpunkin/ + https://www.instagram.com/orchead420/ + https://www.instagram.com/kita1x/",
-            "artist": "",
-            "url": "https://zombiebasketball.bandcamp.com/track/6fig-mouth-box-prod-orc-n-kita-https-www-instagram-com-6figpunkin-https-www-instagram-com-orchead420-https-www-instagram-com-kita1x",
-            "duration": 84,
             "playable": true
           }
         ],
@@ -18837,46 +20672,6 @@
         "year": 2026
       },
       {
-        "key": "bc:t:4097474195",
-        "source": "bandcamp",
-        "kind": "track",
-        "albumId": null,
-        "trackId": "4097474195",
-        "title": "orchead420 - #robots",
-        "artist": "orchead420",
-        "account": "Zombie Basketball",
-        "label": "Zombie Basketball",
-        "labelFrom": "account",
-        "url": "https://zombiebasketball.bandcamp.com/track/robots",
-        "artistUrl": null,
-        "labelUrl": "https://zombiebasketball.bandcamp.com",
-        "artwork": "https://f4.bcbits.com/img/a1379247329_16.jpg",
-        "releaseDate": "2026-03-26",
-        "trackCount": 1,
-        "duration": 140,
-        "type": "single",
-        "tracks": [
-          {
-            "id": 4097474195,
-            "title": "orchead420 - #robots",
-            "artist": "orchead420",
-            "url": "https://zombiebasketball.bandcamp.com/track/robots",
-            "duration": 140,
-            "playable": true
-          }
-        ],
-        "shows": [
-          {
-            "number": 236,
-            "tracks": [
-              "4097474195"
-            ]
-          }
-        ],
-        "playedTracks": 1,
-        "year": 2026
-      },
-      {
         "key": "bc:a:29051778",
         "source": "bandcamp",
         "kind": "album",
@@ -19050,8 +20845,8 @@
         "trackId": "1028339051",
         "title": "\"lyserian little one screams their heart out until breathing becomes merely a suggestion\"",
         "artist": "eileen & norway",
-        "account": "focusupo",
-        "label": "focusupo",
+        "account": "allofitsflowers",
+        "label": "allofitsflowers",
         "labelFrom": "account",
         "url": "https://focusupo.bandcamp.com/album/lyserian-little-one-screams-their-heart-out-until-breathing-becomes-merely-a-suggestion",
         "artistUrl": null,
@@ -24111,8 +25906,8 @@
         "account": "z",
         "label": null,
         "labelFrom": null,
-        "url": "https://soundcloud.com/zombiebasketball/camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo",
-        "artistUrl": "https://soundcloud.com/zombiebasketball",
+        "url": "https://soundcloud.com/z00o1/camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo",
+        "artistUrl": "https://soundcloud.com/z00o1",
         "labelUrl": null,
         "artwork": "https://i1.sndcdn.com/artworks-I7TTIwGBoyDCG8lb-XNixeg-t500x500.png",
         "releaseDate": "2026-01-18",
@@ -24124,7 +25919,7 @@
             "id": 2249862890,
             "title": "camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆ camo ☆",
             "artist": "zombie basketball",
-            "url": "https://soundcloud.com/zombiebasketball/camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo",
+            "url": "https://soundcloud.com/z00o1/camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo-camo",
             "duration": 135,
             "playable": true
           }
@@ -24228,8 +26023,8 @@
         "account": "z",
         "label": null,
         "labelFrom": null,
-        "url": "https://soundcloud.com/zombiebasketball/zombie-basketball",
-        "artistUrl": "https://soundcloud.com/zombiebasketball",
+        "url": "https://soundcloud.com/z00o1/zombie-basketball",
+        "artistUrl": "https://soundcloud.com/z00o1",
         "labelUrl": null,
         "artwork": "https://i1.sndcdn.com/artworks-09vuq3WMDmdWTxg2-tObtaQ-t500x500.jpg",
         "releaseDate": "2026-01-16",
@@ -24241,7 +26036,7 @@
             "id": 2248834373,
             "title": "zombie basketball basketball",
             "artist": "zombie basketball",
-            "url": "https://soundcloud.com/zombiebasketball/zombie-basketball",
+            "url": "https://soundcloud.com/z00o1/zombie-basketball",
             "duration": 116,
             "playable": true
           }
@@ -27587,8 +29382,8 @@
         "trackId": "3325070566",
         "title": "Ornamental Hermits",
         "artist": "C.D. Noé",
-        "account": "iriai verden",
-        "label": "iriai verden",
+        "account": "iriai verlag",
+        "label": "iriai verlag",
         "labelFrom": "account",
         "url": "https://iriai.bandcamp.com/album/ornamental-hermits",
         "artistUrl": null,
@@ -28876,10 +30671,54 @@
         "year": 2016
       }
     ],
-    "decisions": {},
-    "order": [],
+    "decisions": {
+      "bc:a:968084798": "in",
+      "bc:a:4163463262": "in",
+      "bc:a:1518172827": "in",
+      "bc:a:3025477923": "in",
+      "bc:a:2112714760": "in",
+      "bc:a:754563394": "in",
+      "bc:a:1245262590": "in",
+      "bc:a:2508841876": "in",
+      "bc:a:4215731890": "in",
+      "bc:a:4187872915": "in",
+      "bc:a:3661532075": "in",
+      "bc:a:430878210": "in",
+      "bc:a:576741943": "in",
+      "bc:a:28366204": "in",
+      "bc:a:3211619469": "in",
+      "bc:a:2012030593": "in",
+      "bc:a:3880270804": "in",
+      "bc:a:1878880625": "in",
+      "bc:a:147029047": "in",
+      "bc:a:3651519720": "in",
+      "bc:a:1604024973": "in"
+    },
+    "order": [
+      "bc:a:968084798",
+      "bc:a:4163463262",
+      "bc:a:1518172827",
+      "bc:a:3025477923",
+      "bc:a:2112714760",
+      "bc:a:754563394",
+      "bc:a:1245262590",
+      "bc:a:2508841876",
+      "bc:a:4215731890",
+      "bc:a:4187872915",
+      "bc:a:3661532075",
+      "bc:a:430878210",
+      "bc:a:576741943",
+      "bc:a:28366204",
+      "bc:a:3211619469",
+      "bc:a:2012030593",
+      "bc:a:3880270804",
+      "bc:a:1878880625",
+      "bc:a:147029047",
+      "bc:a:3651519720",
+      "bc:a:1604024973"
+    ],
     "edits": {},
-    "gatheredAt": "2026-10-22T08:17:24.271Z",
+    "gatheredAt": "2026-10-25T12:52:30.379Z",
     "shows": [
       229,
       230,
@@ -28901,9 +30740,10 @@
       246,
       247,
       248,
-      249
+      249,
+      250
     ],
-    "savedAt": 1792657044271
+    "savedAt": 1792933156481
   },
   "aliases": {
     "groups": [
