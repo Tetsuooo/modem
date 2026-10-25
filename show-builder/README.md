@@ -168,6 +168,29 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
   Each Sync now also records `builderRunning` in the shared draft: the version the
   syncing machine's builder started on, which it runs until it restarts. That shows from
   here whether the Surface restarted.
+- **The modem icon (2026-10-25).** The builder's browser tab shows the website's icon
+  (`/favicon.ico` serves `src/assets/modem.ico`, so there's one copy). The desktop shortcut
+  got it too: `show-builder\make-shortcut.bat` (double-click) makes or updates a "modem show
+  builder" shortcut on the desktop. It runs `start.bat` minimised, as the old one did. Done
+  on the desktop PC; on the Surface, double-click it once.
+- **"Look for the show on SoundCloud" (Publish, 2026-10-25).** Matej: re-run the search
+  for the show's upload by hand, so its player is on the site right away instead of after
+  the Monday/Tuesday automatic update. From SoundCloud only ("source the tracks from
+  soundcloud"); radioštudent's broadcast mp3 stays with the automatic update.
+  - It looks at soundcloud.com/modemodemodem/modem-N, the address the site expects (the same
+    lookup as the update: `scripts/backfill-show-audio.js --show N --check`).
+  - It says whether the site already has the player, or that the show isn't on the site yet
+    (then the publish pipeline finds the upload itself).
+  - Not found: it lists the account's newest uploads. If one has the show's number but
+    another address (e.g. modem-252-1), it says to change the address on SoundCloud, since
+    the site only finds modem-N.
+  - "Put it on the site": the same script with `--show N` fills in the player and rebuilds
+    `docs/`. Then the usual review ("modem-249: soundcloud") → Confirm & push, or Discard.
+    The review comes back after a page reload. Site edits saved but not published yet go
+    along (built in and listed), since a push would commit them anyway.
+  - Server: `/show-audio`, `/show-audio-run` (publish job kind `audio`); `/publish-push`
+    commits "modem-N: full-show SoundCloud player via show-builder"; `/publish-discard`
+    takes it too. `latestUploads()` is in scan-soundcloud.js.
 - **Your own groups in Arrange:** tick tracks → "group" in the tick bar: they're put next
   to each other under ONE heading you can edit, exactly like tracks off one release (the
   HTML, the artist list, the site's tags); each keeps its label field. "ungroup" on the
@@ -352,6 +375,8 @@ Nothing is live until step 6 — if anything looks off before that, just stop.
 
 - Double-click **`show-builder\start.bat`** — opens a console window (the server)
   and the page at <http://localhost:8090>. Or from the repo folder: `npm run showbuilder`.
+  `show-builder\make-shortcut.bat` puts a shortcut to it, with the modem icon, on the
+  desktop.
 - To restart (needed after pulling new code): run `start.bat` again. Since 2026-10-24 it
   closes a show builder that's still running first (its window, or whatever holds port
   8090). Before that, a still-open server window kept the port, the new one failed to start
@@ -606,7 +631,10 @@ Good to know:
 - No cover exported? The site takes the cover from radioštudent if the page is already up
   there, otherwise the show has none (the log warns). Export one and publish again.
 - The broadcast mp3 and the full-show SoundCloud upload only exist after the show airs —
-  the automatic GitHub update (Monday/Tuesday mornings) fills them in, as before.
+  the automatic GitHub update (Monday/Tuesday mornings) fills them in, as before. To put
+  the SoundCloud player on the site as soon as the show is uploaded, press **Look for the
+  show on SoundCloud** (under the pipeline), then **Put it on the site** → review →
+  Confirm & push.
 - Publishing a show number that's already on the site *from before* (scraped from
   radioštudent) asks you to confirm before replacing it — a typo can't overwrite an old show.
 - Re-publishing a show built here simply rebuilds it (e.g. after fixing a tag).
@@ -1018,6 +1046,26 @@ Matej's synced show 250 (hand-edited HTML) as the draft:
 - A plain reload generates nothing and asks nothing.
 - Sync: the scratch remote's shared draft has `builderRunning` = the version the server
   started on, `htmlEdited: false`, and the full-size player.
+
+"Look for the show on SoundCloud" and the icon (2026-10-25), on a throwaway copy with a
+scratch bare repo as GitHub, where show 249 had its SoundCloud player and mp3 removed —
+13 checks, all passing:
+- `/favicon.ico` is modem.ico (4286 bytes), and the page links it.
+- 250 (uploaded, not published yet): found, "isn't on the site yet", no button.
+- 251 (not uploaded): not found at …/modem-251; the newest uploads are listed.
+- An upload at the wrong address (a faked answer, modem-252-1): it says where it is and to
+  change it to modem-252.
+- 249: found, "the site doesn't have the player yet", the button, nothing about
+  radioštudent.
+- Put it on the site: the review is "modem-249: soundcloud", only the archive + `docs/`. It
+  comes back after a reload. Pushed: the commit message is right, and the archive and
+  `docs/` have the player. The mp3 stayed empty, untouched. Looking again: "the site
+  already has the player".
+- Discard (248 with its player removed in the working copy): the working copy is clean
+  again, and the site still has its player.
+- First try, before "SoundCloud only": radioštudent's page for 249 answered 500/503 (248's
+  loaded fine), so the mp3 part said "not up yet". That's one more reason to leave the mp3
+  to the automatic update.
 
 Arrange, on a throwaway clone (:8190) with a draft of five real SoundCloud tracks from the
 current draft (without this machine's downloads), in Playwright's Chromium — 28 checks, all

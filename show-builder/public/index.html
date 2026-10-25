@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>modem show builder</title>
+<link rel="icon" href="/favicon.ico">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -28,6 +29,7 @@
   .errors { padding: 8px 20px; background: #3a1f1f; color: #ff9b9b; font-size: 12px; }
   .restart-banner { display: flex; align-items: center; gap: 12px; padding: 8px 20px; background: #3a331f; color: #ffd98b; font-size: 12px; }
   .restart-banner[hidden] { display: none; }
+  .audio-out div { margin: 3px 0; }
   .tab-panel { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
   .tab-panel.tab-panel-wide { max-width: 1400px; }
   .tab-panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #9a9ba5; margin: 0 0 10px; }
@@ -630,6 +632,20 @@
         <div class="preorder" style="margin:6px 0">Review before pushing — this touches the live site:</div>
         <pre id="publishDiff" class="diff-pre"></pre>
         <div class="actions"><button id="confirmPushBtn" class="danger">Confirm &amp; push</button></div>
+      </div>
+      <h2 style="margin-top:22px">The full show on SoundCloud</h2>
+      <p class="status">Once the show is uploaded to SoundCloud, this puts its player on the show's page right away, instead of waiting for the automatic update on Monday or Tuesday morning. The site finds the upload at soundcloud.com/modemodemodem/modem-<i>number</i>.</p>
+      <div class="actions">
+        <button id="audioCheckBtn">Look for the show on SoundCloud</button>
+        <span id="audioStatus" class="status"></span>
+      </div>
+      <div id="audioOut" class="status audio-out"></div>
+      <div class="actions" id="audioAddRow" style="display:none"><button id="audioAddBtn" class="primary">Put it on the site</button></div>
+      <div id="audioLog" class="log" style="display:none"></div>
+      <div id="audioDiffBox" style="display:none">
+        <div class="preorder" style="margin:6px 0">Review before pushing — this touches the live site:</div>
+        <pre id="audioDiff" class="diff-pre"></pre>
+        <div class="actions"><button id="audioPushBtn" class="danger">Confirm &amp; push</button><button id="audioDiscardBtn">Discard</button></div>
       </div>
     </div>
   </section>
@@ -4636,6 +4652,133 @@ async function confirmPush() {
   }
 }
 
+// ---------- The full show on SoundCloud (Publish) — see server.js /show-audio ----------
+// Matej, 2026-10-25: put the full-show player on the site as soon as the upload is up,
+// instead of waiting for the Monday/Tuesday automatic update — from SoundCloud only (the
+// radioštudent mp3 stays with that update). Look first; "Put it on the site" only when the
+// upload is there and the site lacks it; then review → push.
+async function checkShowAudio() {
+  const show = el('showNumber').value.trim();
+  const status = el('audioStatus');
+  if (!/^\d+$/.test(show)) { status.textContent = 'set the Show # first'; return; }
+  el('audioCheckBtn').disabled = true;
+  status.textContent = 'looking…';
+  el('audioOut').innerHTML = '';
+  el('audioAddRow').style.display = 'none';
+  try {
+    const j = await (await fetch(`/show-audio?show=${show}`)).json();
+    if (!j.ok) throw new Error(j.error || 'the lookup failed');
+    const link = (u, t) => `<a href="${escAttr(u)}" target="_blank" rel="noopener">${esc(t || u)}</a>`;
+    const lines = [];
+    if (j.soundcloud) lines.push(`✓ On SoundCloud: ${link(j.soundcloud.track, j.soundcloud.title)}`);
+    else {
+      // an upload with this number but another address: the site can't find that one itself
+      const num = new RegExp(`(^|\\D)0*${show}(\\D|$)`);
+      const near = (j.latest || []).find((t) => num.test(`${t.title} ${t.url.split('/').pop()}`));
+      if (near) lines.push(`✗ “${esc(near.title)}” is at ${link(near.url)}, but the site only looks at ${link(j.expected)}. Change the track's address on SoundCloud (Edit track → the link under the title) to modem-${show}, then look again.`);
+      else {
+        lines.push(`✗ Not on SoundCloud at ${link(j.expected)} yet. (Uploaded already? Check that it's public.)`);
+        if (j.latest && j.latest.length) lines.push(`Newest uploads there: ${j.latest.map((t) => link(t.url, t.title)).join(' · ')}`);
+      }
+    }
+    if (!j.onSite) lines.push(`modem-${show} isn't on the site yet. Run publish pipeline above: it looks for the upload too.`);
+    else if (j.siteHasPlayer) lines.push('The site already has the player.');
+    else if (j.soundcloud) {
+      lines.push("The site doesn't have the player yet.");
+      el('audioAddRow').style.display = '';
+    } else lines.push('Nothing to put on the site yet: look again once the show is uploaded.');
+    el('audioOut').innerHTML = lines.map((l) => `<div>${l}</div>`).join('');
+    status.textContent = '';
+  } catch (e) {
+    status.textContent = 'the lookup failed: ' + (e.message || e);
+  } finally {
+    el('audioCheckBtn').disabled = false;
+  }
+}
+
+function showAudioReview(j) {
+  const what = j.changed && j.changed.records && j.changed.records.length ? j.changed.records.join('\n') + '\n\n' : '';
+  el('audioDiff').textContent = what + (j.diffSummary || '');
+  el('audioDiffBox').style.display = '';
+  el('audioPushBtn').disabled = false;
+  el('audioPushBtn').textContent = 'Confirm & push';
+  el('audioDiscardBtn').disabled = false;
+}
+
+async function runShowAudio() {
+  const show = el('showNumber').value.trim();
+  const btn = el('audioAddBtn');
+  btn.disabled = true;
+  btn.textContent = 'Working…';
+  el('audioDiffBox').style.display = 'none';
+  el('errorsBox').innerHTML = '';
+  let start;
+  try {
+    start = await (await fetch('/show-audio-run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show }) })).json();
+  } catch (e) {
+    start = { ok: false, error: 'could not reach the server: ' + (e.message || e) };
+  }
+  if (!start.ok) {
+    btn.disabled = false;
+    btn.textContent = 'Put it on the site';
+    const extra = start.dirtyFiles ? '<br>' + start.dirtyFiles.map(esc).join('<br>') : '';
+    el('errorsBox').innerHTML = `<div class="errors">${esc(start.error || 'could not start')}${extra}</div>`;
+    return;
+  }
+  el('audioLog').style.display = '';
+  const poll = setInterval(async () => {
+    let j;
+    try { j = await (await fetch('/publish-status')).json(); } catch (e) { return; }
+    el('audioLog').textContent = (j.log || []).join('\n');
+    if (j.running) return;
+    clearInterval(poll);
+    btn.disabled = false;
+    btn.textContent = 'Put it on the site';
+    if (j.error) { el('errorsBox').innerHTML = `<div class="errors">it stopped: ${esc(j.error)}</div>`; return; }
+    el('audioAddRow').style.display = 'none';
+    showAudioReview(j);
+  }, 1500);
+}
+
+async function pushShowAudio() {
+  if (!confirm('This will commit and push to the live site’s repository. Continue?')) return;
+  el('audioPushBtn').disabled = true;
+  el('audioPushBtn').textContent = 'Pushing…';
+  el('audioDiscardBtn').disabled = true;
+  try {
+    const j = await (await fetch('/publish-push', { method: 'POST' })).json();
+    if (!j.ok) throw new Error(j.error || 'push failed');
+    el('audioPushBtn').textContent = j.pushed ? '✔ pushed — the site updates in a minute or two' : 'nothing to commit';
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">push failed: ${esc(e.message || e)}</div>`;
+    el('audioPushBtn').disabled = false;
+    el('audioPushBtn').textContent = 'Confirm & push';
+    el('audioDiscardBtn').disabled = false;
+  }
+}
+
+async function discardShowAudio() {
+  el('audioDiscardBtn').disabled = true;
+  try {
+    const j = await (await fetch('/publish-discard', { method: 'POST' })).json();
+    if (!j.ok) throw new Error(j.error || 'discard failed');
+    el('audioDiffBox').style.display = 'none';
+    el('audioLog').style.display = 'none';
+    el('audioStatus').textContent = 'discarded — nothing changed on the site';
+  } catch (e) {
+    el('errorsBox').innerHTML = `<div class="errors">${esc(e.message || e)}</div>`;
+    el('audioDiscardBtn').disabled = false;
+  }
+}
+
+// a finished show-audio build that wasn't pushed (the page was reloaded): show its review again
+async function resumeShowAudio() {
+  try {
+    const j = await (await fetch('/publish-status')).json();
+    if (j.kind === 'audio' && j.done && !j.error && el('audioDiffBox').style.display === 'none') showAudioReview(j);
+  } catch (e) { /* nothing to resume */ }
+}
+
 // Scan / Download & Arrange / Publish & Edit / Mix tabs — one panel visible
 // at a time, remembered per-browser so a reload doesn't dump you back on Scan.
 const TABS = ['scan', 'arrange', 'publish', 'mix', 'covers', 'sc', 'tags', 'times', 'yearend', 'history', 'health'];
@@ -4651,7 +4794,7 @@ function switchTab(tab) {
   try { localStorage.setItem('sb-tab', tab); } catch (e) { /* ignore */ }
   // The SoundCloud-links and Tags tabs load their data the first time they're
   // opened (see public/sc-links.js, public/tags.js).
-  if (tab === 'publish') { refreshAirDateDefault(); refreshCoverStatus(); }
+  if (tab === 'publish') { refreshAirDateDefault(); refreshCoverStatus(); resumeShowAudio(); }
   if (tab === 'sc' && window.scTabActivated) scTabActivated();
   if (tab === 'tags' && window.tagsTabActivated) tagsTabActivated();
   if (tab === 'times' && window.timesTabActivated) timesTabActivated();
@@ -4759,6 +4902,10 @@ el('openCoversBtn').addEventListener('click', () => {
 el('checkLiveBtn').addEventListener('click', compareLive);
 el('runPublishBtn').addEventListener('click', () => runPublish(false));
 el('confirmPushBtn').addEventListener('click', confirmPush);
+el('audioCheckBtn').addEventListener('click', checkShowAudio);
+el('audioAddBtn').addEventListener('click', runShowAudio);
+el('audioPushBtn').addEventListener('click', pushShowAudio);
+el('audioDiscardBtn').addEventListener('click', discardShowAudio);
 el('mixPlayToggleBtn').addEventListener('click', toggleMixPlayback);
 el('mixJingleBtn').addEventListener('click', addJingleBookend);
 el('mixUndoBtn').addEventListener('click', undoShowChange);

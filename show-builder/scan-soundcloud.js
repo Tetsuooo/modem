@@ -236,10 +236,20 @@ function resolveStreamUrl(url) {
   return { url: null, duration };
 }
 
+// The account's newest public uploads — for "Look for the show on SoundCloud" (Publish),
+// when the show isn't at the address the site looks for: shows what IS there (an upload
+// with another address, e.g. "modem-250-1", the site can't find by itself).
+function latestUploads(n) {
+  const clientId = getClientId(false);
+  const userId = resolveUserId(clientId);
+  const { data } = apiV2Get(`https://api-v2.soundcloud.com/users/${userId}/tracks?limit=${n || 5}`, clientId);
+  return (data.collection || []).map((t) => ({ title: t.title, url: t.permalink_url, at: t.display_date || t.created_at || null }));
+}
+
 function hlsRank(t) {
   const order = ['aac_160k', 'aac_96k'];
   const i = order.indexOf(t.preset);
   return i < 0 ? order.length : i;
 }
 
-module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl, apiV2Get, trackLabel };
+module.exports = { scanReposts, getClientId, resolveTracks, resolveStreamUrl, apiV2Get, trackLabel, latestUploads };

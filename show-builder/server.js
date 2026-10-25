@@ -14,7 +14,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { spawn, execFileSync, exec } = require('child_process');
+const { spawn, execFile, execFileSync, exec } = require('child_process');
 
 const scanSoundcloud = require('./scan-soundcloud');
 const scanBandcamp = require('./scan-bandcamp');
@@ -56,6 +56,8 @@ const PYTHON_CMD = process.platform === 'win32' ? 'python' : 'python3';
 const app = express();
 app.use(express.json({ limit: '4mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+// the site's own icon for the builder's browser tab (Matej, 2026-10-25)
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(REPO_ROOT, 'src', 'assets', 'modem.ico')));
 // Lets the browser play downloaded files directly (native <audio>) once a
 // track is on disk, instead of the source platform's iframe embed.
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
@@ -707,12 +709,73 @@ app.post('/publish-edits-run', (req, res) => {
   res.json({ ok: true, started: true });
 });
 
+// ---------- /show-audio + /show-audio-run — "Look for the show on SoundCloud" --------
+// A show goes on the site before it airs, so its full-show SoundCloud upload comes later:
+// the automatic GitHub update fills it in on Monday/Tuesday mornings
+// (scripts/backfill-show-audio.js). Matej, 2026-10-25: a button to do it right away, from
+// SoundCloud only ("source the tracks from soundcloud" — radioštudent's mp3 stays with that
+// update). /show-audio only looks (the same lookup, `--check`); /show-audio-run fills it in
+// and rebuilds the site, then the usual review → Confirm & push.
+app.get('/show-audio', (req, res) => {
+  const show = String(req.query.show || '').trim();
+  if (!/^\d+$/.test(show)) return res.status(400).json({ ok: false, error: 'the show number must be a plain number' });
+  const args = [path.join(REPO_ROOT, 'scripts', 'backfill-show-audio.js'), '--show', show, '--check'];
+  execFile(process.execPath, args, { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+    let found = null;
+    try { found = JSON.parse(String(stdout).split('\n').filter((l) => l.startsWith('{')).pop()); } catch (e) { /* below */ }
+    if (!found) return res.status(500).json({ ok: false, error: 'the lookup failed: ' + String(stderr || (err && err.message) || stdout).slice(-500) });
+    // not at the address the site looks for: what IS on the account, newest first
+    if (!found.soundcloud) {
+      try { found.latest = scanSoundcloud.latestUploads(4); } catch (e) { found.latest = null; }
+    }
+    res.json({ ok: true, ...found });
+  });
+});
+
+app.post('/show-audio-run', (req, res) => {
+  if (publishJob && publishJob.running) return res.json({ ok: true, already: true });
+  const show = String((req.body && req.body.show) || '').trim();
+  if (!/^\d+$/.test(show)) return res.status(400).json({ ok: false, error: 'the show number must be a plain number' });
+  let files;
+  try {
+    files = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' }).split(/\r?\n/).filter((l) => l.length > 0).map((l) => l.slice(3)); // NOT trimmed first — see /publish-run
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'could not check git status: ' + String(e.message || e) });
+  }
+  if (files.some((f) => SHOW_PUBLISH_OUTPUT.test(f))) {
+    return res.status(409).json({ ok: false, error: 'A show publish was run but not pushed yet. Finish it first (Confirm & push above), then look again.' });
+  }
+  const unrelated = files.filter((f) => !EXPECTED_DIRTY.test(f));
+  if (unrelated.length) {
+    return res.status(409).json({ ok: false, error: 'The repo has uncommitted changes that aren\'t a normal publish. Commit or discard them first (git status in the repo folder).', dirtyFiles: unrelated });
+  }
+  // site edits saved but not published yet go along — a push would commit them anyway, so
+  // they're built into the site too (the review lists them)
+  const withEdits = files.some((f) => /(^|\/)(src\/assets\/overrides\.json|scripts\/approvals\.json)$/.test(f));
+  const rederive = withEdits && tagUndoSinceLastPublish();
+  publishJob = { kind: 'audio', running: true, done: false, error: null, log: [`modem-${show}: putting the full-show SoundCloud player on the site…`], show, withEdits, diffSummary: null };
+  if (withEdits) publishJob.log.push('(your saved site edits that aren\'t on the site yet go along)');
+  const script = (name, ...args) => [process.execPath, [path.join(REPO_ROOT, 'scripts', name), ...args]];
+  runJob([
+    script('backfill-show-audio.js', '--show', show),
+    ...(withEdits ? [
+      ...(rederive ? [script('reparse-guard.js', '--snapshot'), script('scrape-modem.js', '--reparse'), script('reparse-guard.js', '--restore')] : []),
+      script('build-track-index.js'),
+      script('apply-sc-matches.js'),
+      script('apply-overrides.js'),
+      script(path.join('tracklists', 'apply-timestamp-edits.js')),
+    ] : []),
+    WEBPACK_STEP,
+  ]);
+  res.json({ ok: true, started: true });
+});
+
 // ---------- /publish-discard — throw away an unpushed "Publish site edits" build
-// Puts the site's archive and docs/ back to the last commit. The saved edits
-// themselves (overrides.json, approvals.json) stay, ready for the next run.
+// (or a show-audio one). Puts the site's archive and docs/ back to the last commit. The
+// saved edits themselves (overrides.json, approvals.json) stay, ready for the next run.
 app.post('/publish-discard', (req, res) => {
   if (publishJob && publishJob.running) return res.status(409).json({ ok: false, error: 'a run is still going' });
-  if (publishJob && publishJob.kind !== 'edits') return res.status(409).json({ ok: false, error: 'only a "Publish site edits" build can be discarded here' });
+  if (publishJob && !['edits', 'audio'].includes(publishJob.kind)) return res.status(409).json({ ok: false, error: 'only a "Publish site edits" or show-audio build can be discarded here' });
   try {
     const files = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' }).split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
     if (files.some((f) => SHOW_PUBLISH_OUTPUT.test(f))) return res.status(409).json({ ok: false, error: 'a show publish is waiting to be pushed — not touching it' });
@@ -727,7 +790,8 @@ app.post('/publish-discard', (req, res) => {
 app.post('/publish-push', (req, res) => {
   if (!publishJob || !publishJob.done) return res.status(400).json({ ok: false, error: 'run the publish pipeline first' });
   const show = publishJob.show;
-  const edits = publishJob.kind === 'edits';
+  const audio = publishJob.kind === 'audio';
+  const edits = publishJob.kind === 'edits' || (audio && publishJob.withEdits);
   try {
     // The "Review before pushing" box only ever showed `git diff --stat` —
     // line-count totals, not content — so a human glancing at it has no real
@@ -753,7 +817,8 @@ app.post('/publish-push', (req, res) => {
     execFileSync('git', ['add', '-A'], { cwd: REPO_ROOT });
     const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (!status.trim()) return res.json({ ok: true, pushed: false, message: 'nothing to commit' });
-    const message = edits ? 'Site edits (tags / SoundCloud links) via show-builder [skip ci]' : `Publish modem-${show} via show-builder [skip ci]`;
+    const message = audio ? `modem-${show}: full-show SoundCloud player${publishJob.withEdits ? ' + site edits' : ''} via show-builder [skip ci]`
+      : edits ? 'Site edits (tags / SoundCloud links) via show-builder [skip ci]' : `Publish modem-${show} via show-builder [skip ci]`;
     execFileSync('git', ['commit', '-m', message], { cwd: REPO_ROOT, encoding: 'utf8' });
     const log = execFileSync('git', ['push'], { cwd: REPO_ROOT, encoding: 'utf8' });
     publishJob = null; // require a fresh /publish-run before another push is allowed
