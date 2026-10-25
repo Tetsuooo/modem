@@ -213,6 +213,18 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
       message to Sync and push again (`pushTakingInGitHub()` in server.js);
     - Sync also pushes commits still only on this machine after its merge (it used to
       push only its own data files).
+- **Show backups (2026-10-25).** Matej: "make it a habit of backing up all of the modem shows
+  to that folder". `D:/MODEM/oddaje` held 1–218 (minus 100/200) as
+  `Modem_NNN_<air date>.mp3`. They're radioštudent's own 320 kbps broadcast recordings,
+  byte-identical (218 checked); SoundCloud only offers 160 kbps AAC.
+  - `scripts/backup-shows.js` downloads every aired show that isn't there. The source is the
+    show's `mp3`, or radioštudent's address by air date while that's still empty. It writes a
+    .part file and renames it only when the size matches the server's. One run at a time (a
+    lock file). It does nothing on a computer without the folder.
+  - The builder runs it in the background when it starts (only on port 8090; log in
+    `data/.cache/backup-shows.log`). The Health tab has a "Show backups" row with **Back up
+    now**.
+  - First run: 33 shows (100, 200, 219–249).
 - **Edit site: moving tracks within a heading, and several artists per track
   (2026-10-25).** Matej: "move the individual entries within one section up and down"
   (the tracks, he picked), and "add another artist to a track's credits".
@@ -481,6 +493,7 @@ the plain MP3 streams the previews used). The Health tab checks, one row each:
 | SoundCloud show lookups | New shows on the site getting their player | — (code fix) |
 | radioštudent feed | The site's Mon/Tue auto-update seeing new shows | — (code fix) |
 | The website | Up, and its newest show = radioštudent's newest (amber if not — stuck auto-update after a week) | — |
+| Show backups | Every aired show's recording in D:/MODEM/oddaje (skipped on a computer without it) | Back up now |
 
 - **When:** by itself once a day when the builder opens (a run cut short by a restart doesn't
   count), or "Run all checks" / "check again" on one row.

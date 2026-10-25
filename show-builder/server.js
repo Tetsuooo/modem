@@ -888,4 +888,25 @@ app.post('/generate', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8090;
-app.listen(PORT, () => console.log(`show-builder running at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`show-builder running at http://localhost:${PORT}`);
+  backUpShows();
+});
+
+// Every aired show's recording into D:/MODEM/oddaje, in the background each time the builder
+// starts (Matej, 2026-10-25: "make it a habit") — scripts/backup-shows.js, which does nothing
+// on a computer without that folder. Only the real builder (port 8090), not a test copy;
+// the log is data/.cache/backup-shows.log. The Health tab's "Show backups" row shows the state.
+function backUpShows() {
+  if (String(PORT) !== '8090') return;
+  try {
+    fs.mkdirSync(path.join(__dirname, 'data', '.cache'), { recursive: true });
+    const log = fs.openSync(path.join(__dirname, 'data', '.cache', 'backup-shows.log'), 'a');
+    fs.writeSync(log, `\n--- ${new Date().toISOString()}\n`);
+    const child = spawn(process.execPath, [path.join(REPO_ROOT, 'scripts', 'backup-shows.js')],
+      { cwd: REPO_ROOT, detached: true, stdio: ['ignore', log, log], windowsHide: true });
+    child.unref();
+  } catch (e) {
+    console.log('show backups: could not start —', e.message);
+  }
+}

@@ -48,6 +48,7 @@ const CHECKS = [
   { id: 'sc-oembed', name: 'SoundCloud show lookups', what: "How the website finds each show's SoundCloud upload (auto-update, publishing)." },
   { id: 'radio', name: 'radioštudent feed', what: "Where the website's Monday/Tuesday auto-update learns about new shows." },
   { id: 'site', name: 'The website', what: "modemodemodem.xyz is up, and its newest show is radioštudent's newest." },
+  { id: 'backups', name: 'Show backups', what: "Every aired show's recording copied to D:/MODEM/oddaje, on the computer that has that folder (scripts/backup-shows.js; the builder runs it when it starts)." },
 ];
 
 // ---------- small helpers --------------------------------------------------------------
@@ -370,6 +371,14 @@ const RUN = {
     }
     return ok(`Up; newest show ${siteMax}${feedMax ? (feedMax === siteMax ? ', same as radioštudent' : ` (radioštudent: ${feedMax})`) : ''}.`, lastAuto ? `last auto-update with new shows: ${lastAuto}` : '');
   },
+
+  backups() {
+    const out = execFileSync(process.execPath, [path.join(REPO_ROOT, 'scripts', 'backup-shows.js'), '--check'], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+    if (/no backup folder/.test(out)) return skip('No backup folder on this computer (D:/MODEM/oddaje is on the desktop PC).', out);
+    if (/every aired show is in/.test(out)) return ok('Every aired show is backed up.', out);
+    const n = (out.match(/(\d+) show\(s\) not in/) || [])[1] || 'Some';
+    return warn(`${n} aired show(s) aren't backed up yet.`, out, 'backup', 'Back up now');
+  },
 };
 
 // ---------- fixes (run in a child process, or by the server) ---------------------------
@@ -379,6 +388,8 @@ const FIXES = {
   browser: { label: 'Install the test browser', cmd: ['npx', ['playwright', 'install', 'chromium']], shell: true },
   update: { label: 'Sync + get the latest version' },
   restart: { label: 'Restart the builder' },
+  // a show is ~145 MB: up to an hour for a long backlog
+  backup: { label: 'Back up now', cmd: [process.execPath, [path.join(REPO_ROOT, 'scripts', 'backup-shows.js')]], timeout: 3600000 },
 };
 
 function newSoundcloudKey() {
@@ -480,7 +491,7 @@ function mount(app) {
       return res.json({ ok: r.code === 0, log: r.out });
     }
     const [cmd, args] = fix.cmd;
-    const r = await runCmd(cmd, args, { shell: !!fix.shell });
+    const r = await runCmd(cmd, args, { shell: !!fix.shell, timeout: fix.timeout || 600000 });
     res.json({ ok: r.code === 0, log: r.out.slice(-3000) });
   });
 
