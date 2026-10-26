@@ -394,6 +394,7 @@
       const previewChips = document.getElementById('preview-chips');
       const listItems = document.querySelectorAll('.list-item');
       let chipTimer = null;
+      let wantedImage = null; // the image of the link the cursor is on (see mouseenter)
       const CHIP_STAGGER_MS = 65;
 
       function stopChipReveal() {
@@ -429,8 +430,16 @@
         item.addEventListener('mouseenter', () => {
           const imageSrc = item.getAttribute('data-image');
           if (imageSrc) {
+            // the image stays hidden until the new one is decoded, and only shows if this is
+            // still the hovered link — shown straight away (as before), the previously hovered
+            // cover painted for a moment while the new one loaded (Matej, 2026-10-26). The box
+            // has a fixed height, so the chips below don't move meanwhile.
+            wantedImage = imageSrc;
+            previewImage.style.visibility = 'hidden';
             previewImage.src = imageSrc;
             previewWrap.classList.add('show');
+            const ready = previewImage.decode ? previewImage.decode() : new Promise((ok, fail) => { previewImage.onload = ok; previewImage.onerror = fail; });
+            ready.then(() => { if (wantedImage === imageSrc) previewImage.style.visibility = ''; }).catch(() => {});
           }
           // the archive's own slug, kept by markLocalArchiveLists() when it rewrote the
           // href: the rewritten one is prettySlug()'d, and best-releases-of-2024-0 (the
@@ -441,6 +450,7 @@
         });
 
         item.addEventListener('mouseleave', () => {
+          wantedImage = null;
           previewWrap.classList.remove('show');
           stopChipReveal();
         });

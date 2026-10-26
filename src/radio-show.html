@@ -230,6 +230,33 @@
       preview.className = 'preview-image';
       document.body.appendChild(preview);
 
+      // One image moves from cover to cover. It's hidden at once on every hover and shown
+      // only when the new cover is decoded — and only if that's still the hovered number.
+      // Showing it straight away (as before) painted the previously hovered cover for a
+      // moment while the new one loaded (Matej, 2026-10-26).
+      let wantedCover = null;
+      const showCover = (src) => {
+        wantedCover = src;
+        preview.style.transition = 'none';
+        preview.style.opacity = '0';
+        preview.src = src;
+        const maxX = window.innerWidth - 256;
+        const maxY = window.innerHeight - 256;
+        preview.style.left = Math.random() * maxX + 'px';
+        preview.style.top = Math.random() * maxY + 'px';
+        const ready = preview.decode ? preview.decode() : new Promise((ok, fail) => { preview.onload = ok; preview.onerror = fail; });
+        ready.then(() => {
+          if (wantedCover !== src) return; // moved on meanwhile
+          void preview.offsetWidth; // the hidden state first, then the fade in
+          preview.style.transition = '';
+          preview.style.opacity = '1';
+        }).catch(() => {}); // a missing cover stays hidden
+      };
+      const hideCover = () => {
+        wantedCover = null;
+        preview.style.opacity = '0';
+      };
+
       // The "Bag of Toys" anniversary specials (100, 200) are compilations released
       // on Bandcamp — those grid numbers link straight to the album (external), not
       // the on-site archive page.
@@ -276,26 +303,8 @@
             link.style.textDecoration = 'none';
             link.style.color = 'black';
 
-            const handleMouseEnter = () => {
-              preview.src = `./assets/modem_covers/modem${number < 10 ? `0${number}` : number}.webp`;
-              preview.style.opacity = '1';
-              const maxX = window.innerWidth - 256;
-              const maxY = window.innerHeight - 256;
-              preview.style.left = Math.random() * maxX + 'px';
-              preview.style.top = Math.random() * maxY + 'px';
-            };
-
-            const handleMouseLeave = () => {
-              preview.style.opacity = '0';
-            };
-
-            const handlePreviewError = () => {
-              preview.style.opacity = '0';
-            };
-
-            link.addEventListener('mouseenter', handleMouseEnter);
-            link.addEventListener('mouseleave', handleMouseLeave);
-            preview.addEventListener('error', handlePreviewError);
+            link.addEventListener('mouseenter', () => showCover(`./assets/modem_covers/modem${number < 10 ? `0${number}` : number}.webp`));
+            link.addEventListener('mouseleave', hideCover);
 
             div.appendChild(link);
           }
