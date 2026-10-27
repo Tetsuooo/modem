@@ -25,7 +25,7 @@
       "url": "https://radiostudent.si/glasba/modem/modem-250",
       "date": "26. 10. 2026",
       "cover": "/assets/modem_covers/modem250.webp",
-      "mp3": null,
+      "mp3": "https://radiostudent.si/sites/default/files/posnetki/modem/2026-10-26-modem-modem-250.mp3",
       "soundcloud": {
         "track": "https://soundcloud.com/modemodemodem/modem-250",
         "api": "https://api.soundcloud.com/tracks/2425510812",
