@@ -45,7 +45,12 @@ const { getArchive } = require('./archive-cache');
 // src/assets/builder-shows.json, the as-built copy of each show published from
 // the draft (scripts/add-show-from-draft.js), and src/assets/show-timestamps.json,
 // the live tracklist's track times that same script takes from the Mix tab.
-const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json|src\/assets\/show-timestamps\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)/;
+// Sync's own files may be changed too (the Year-end list tab's work, the shared draft, the show
+// history — 2026-10-27 the Year-end list blocked "Publish site edits" on the Surface): they
+// don't block a publish and aren't in its commit (SYNC_ONLY) — they go to GitHub with Sync,
+// which merges them properly; git's text merge in a publish's push could clash on them.
+const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json|src\/assets\/show-timestamps\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)|(^|\/)show-builder\/data\/(year-end|shared-draft|show-history)\.json$/;
+const SYNC_ONLY = ['show-builder/data/year-end.json', 'show-builder/data/shared-draft.json', 'show-builder/data/show-history.json'];
 const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
 
 const REPO_ROOT = path.join(__dirname, '..');
@@ -852,7 +857,10 @@ app.post('/publish-push', (req, res) => {
       return res.status(409).json({ ok: false, error: 'Edits were saved after this run finished, so they aren\'t in it. Run it again, then push.' });
     }
     execFileSync('git', ['add', '-A'], { cwd: REPO_ROOT });
-    const status = execFileSync('git', ['status', '--short'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    // …except Sync's own files (SYNC_ONLY): left as they are, for the next Sync
+    const syncOnly = SYNC_ONLY.filter((rel) => fs.existsSync(path.join(REPO_ROOT, rel)));
+    if (syncOnly.length) execFileSync('git', ['reset', '-q', '--', ...syncOnly], { cwd: REPO_ROOT });
+    const status = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: REPO_ROOT, encoding: 'utf8' });
     if (!status.trim()) {
       // nothing new — but a publish committed here whose push failed is still only on this
       // computer: push that (else the site never gets it and this keeps saying "nothing")

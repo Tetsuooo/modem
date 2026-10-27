@@ -916,7 +916,14 @@ GitHub update applies them too when it adds a new show.)
 - **"uncommitted changes unrelated to a normal publish run"** — the repo has changed files
   the pipeline doesn't expect (e.g. code you're editing). Commit or discard them first.
   The files it does expect: the archive, used-tracks, covers, `docs/`, `approvals.json`,
-  `overrides.json`, `builder-shows.json`.
+  `overrides.json`, `builder-shows.json`. Sync's own files (`year-end.json`,
+  `shared-draft.json`, `show-history.json`) don't block a publish either, and are left out
+  of its commit — Sync takes them to GitHub (2026-10-27: the Year-end list blocked
+  "Publish site edits" on the Surface).
+- **Sync: "Unable to create … .git/index.lock: File exists"** — a git command was left
+  hanging (e.g. a commit waiting for its message in an editor). Close that (VS Code's
+  COMMIT_EDITMSG tab, or `:q!` in a terminal editor); if the message stays, delete
+  `.git/index.lock` in the repo folder. Sync then works again; nothing was lost.
 - **"diff mentions a year-end list"** — the archive change touches a best-of list, which a
   show publish shouldn't. Look at `git diff -- src/assets/modem-archive.json` before pushing.
 - **"modem-N is already on the site (scraped from radioštudent)"** — confirm only if you
