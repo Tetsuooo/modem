@@ -10,6 +10,25 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-11-07)
+
+- **Bandcamp downloads work again.** Bandcamp started answering yt-dlp with a "Client
+  Challenge" page (a bot check), so every Bandcamp download failed ("download failed"; Health:
+  "no impersonate target is available"). SoundCloud wasn't affected. yt-dlp's own retry poses
+  as Chrome, which Bandcamp challenges too; posing as Firefox gets through (yt-dlp issues
+  #17618 / #17822). So `modem_download.py` now reads Bandcamp links posing as Firefox
+  (`opts_for()`, `BANDCAMP_IMPERSONATE`). That needs the `curl_cffi` package.
+  - Surface: curl_cffi 0.17.0 installed (it has a native ARM64 build). Tested with "bun":
+    the whole track (12:40) and its cover.
+  - Desktop: after Sync and a restart, Health's Downloads row says a part is missing. Press
+    **Install the missing part**. "Update yt-dlp" now installs curl_cffi as well.
+  - Health's Bandcamp download test poses as Firefox too, the same as the downloads.
+  - If Bandcamp starts challenging Firefox as well, the Downloads row turns red again. Try
+    "Update yt-dlp" first, or another browser from `python -m yt_dlp --list-impersonate-targets`
+    in `BANDCAMP_IMPERSONATE`.
+
+---
+
 ## Where we left off (2026-10-24)
 
 **New in Download & Arrange (later the same day):**
@@ -523,7 +542,7 @@ the plain MP3 streams the previews used). The Health tab checks, one row each:
 - **When:** by itself once a day when the builder opens (a run cut short by a restart doesn't
   count), or "Run all checks" / "check again" on one row.
 - **Fix buttons** do only safe things: a new SoundCloud key (both caches), `pip install -U
-  yt-dlp requests`, Sync (the same as the Sync button) + `npm install` if the packages
+  yt-dlp requests curl_cffi`, Sync (the same as the Sync button) + `npm install` if the packages
   changed, `npx playwright install chromium`, and restarting the builder (`start.bat
   --restart`: closes this server, starts a new one minimised, the page reloads by itself).
 - **Code fixes:** "copy details" (one row) or "Copy report" (everything) and paste it to

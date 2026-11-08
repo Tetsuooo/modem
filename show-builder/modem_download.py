@@ -9,14 +9,17 @@
 #   2. Each processed URL appends one JSON record to data/download-manifest.jsonl
 #      so show-builder/server.js can learn which local file(s) resulted from
 #      which source URL (the original script only ever printed to stdout).
+#   3. Bandcamp links are read posing as Firefox (see opts_for()).
 import os
 import sys
 import copy
 import json
 import shutil
 import subprocess
+from urllib.parse import urlparse
 import requests
 from yt_dlp import YoutubeDL
+from yt_dlp.networking.impersonate import ImpersonateTarget
 
 # When this script's stdout/stderr are piped (as server.js does via spawn(),
 # rather than a real console), Python falls back to the system codepage
@@ -279,12 +282,31 @@ BASE_OPTS = {
     },
 }
 
+# Bandcamp started answering yt-dlp with a "Client Challenge" page (2026-11-07). yt-dlp
+# then retries posing as Chrome, which is challenged too; posing as Firefox gets through
+# (yt-dlp issues #17618 / #17822). That needs the curl_cffi package (Health's "Update
+# yt-dlp" installs it). SoundCloud works as before, so it's left alone. This script only
+# gets SoundCloud and Bandcamp links, so anything not on soundcloud.com is Bandcamp,
+# artists' own domains on Bandcamp included.
+BANDCAMP_IMPERSONATE = 'firefox'
+
+def is_soundcloud(url):
+    host = (urlparse(url).hostname or '').lower()
+    return host == 'soundcloud.com' or host.endswith('.soundcloud.com')
+
+def opts_for(url):
+    """BASE_OPTS for this URL: Bandcamp links pose as Firefox."""
+    opts = copy.deepcopy(BASE_OPTS)
+    if not is_soundcloud(url):
+        opts['impersonate'] = ImpersonateTarget.from_str(BANDCAMP_IMPERSONATE)
+    return opts
+
 def extract_info_no_download(url):
     """
     Use yt-dlp in simulate mode to determine if the URL is a single track or a playlist.
     Returns (entry_type, info_dict)
     """
-    tmp_opts = copy.deepcopy(BASE_OPTS)
+    tmp_opts = opts_for(url)
     tmp_opts.update({'simulate': True, 'download': False, 'quiet': True, 'verbose': False})
     try:
         with YoutubeDL(tmp_opts) as ydl:
@@ -379,7 +401,7 @@ def download_single(url, info):
             'key': 'FFmpegMetadata',
         },
     ]
-    opts = copy.deepcopy(BASE_OPTS)
+    opts = opts_for(url)
     opts.update({
         'outtmpl': outtmpl,
         'writethumbnail': True,
@@ -439,7 +461,7 @@ def download_playlist(url, info):
         })
         return
     outtmpl = album_outtmpl(album_dir)
-    opts = copy.deepcopy(BASE_OPTS)
+    opts = opts_for(url)
     opts.update({
         'writethumbnail': True,
         'outtmpl': outtmpl,

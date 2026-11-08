@@ -261,9 +261,10 @@ const RUN = {
     const outdated = latest && olderVersion(version, latest);
     const tries = [];
     const sc = newestShow().soundcloud.track;
-    for (const [label, url] of [['SoundCloud', sc], ['Bandcamp', bandcampSample().url]]) {
+    // Bandcamp the way modem_download.py reads it: posing as Firefox (its opts_for())
+    for (const [label, url, extra] of [['SoundCloud', sc, []], ['Bandcamp', bandcampSample().url, ['--impersonate', 'firefox']]]) {
       try {
-        const out = execFileSync(PYTHON_CMD, ['-m', 'yt_dlp', '--simulate', '--no-warnings', '--playlist-items', '1', '--print', '%(extractor)s %(ext)s %(duration)s', url],
+        const out = execFileSync(PYTHON_CMD, ['-m', 'yt_dlp', ...extra, '--simulate', '--no-warnings', '--playlist-items', '1', '--print', '%(extractor)s %(ext)s %(duration)s', url],
           { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 90000 }).trim();
         tries.push({ label, ok: true, out });
       } catch (e) {
@@ -277,6 +278,10 @@ const RUN = {
     const oldPython = olderVersion(python, '3.11');
     if (broken.length) {
       const which = broken.map((t) => t.label).join(' and ');
+      // Bandcamp needs curl_cffi (posing as a browser); without it yt-dlp says the target isn't available
+      if (broken.some((t) => /impersonat\w* target .*not available|no impersonate target/i.test(t.out))) {
+        return fail(`yt-dlp is missing a part it needs to read Bandcamp (curl_cffi), so Bandcamp downloads fail. "Install the missing part" fixes it; then restart the builder.`, detail, 'ytdlp', 'Install the missing part');
+      }
       return outdated
         ? fail(`yt-dlp can't read ${which} any more. A newer yt-dlp is out, which usually fixes exactly this.`, detail, 'ytdlp', 'Update yt-dlp')
         : fail(`yt-dlp can't read ${which} any more, and it's already the newest version. yt-dlp's makers usually fix this within days — try "Update yt-dlp" again in a day or two.`, detail, 'ytdlp', 'Update yt-dlp');
@@ -384,7 +389,8 @@ const RUN = {
 // ---------- fixes (run in a child process, or by the server) ---------------------------
 const FIXES = {
   'sc-key': { label: 'Get a new SoundCloud key', child: true },
-  ytdlp: { label: 'Update yt-dlp', cmd: [PYTHON_CMD, ['-m', 'pip', 'install', '-U', 'yt-dlp', 'requests']] },
+  // curl_cffi: lets yt-dlp pose as a browser, which Bandcamp needs since 2026-11-07
+  ytdlp: { label: 'Update yt-dlp', cmd: [PYTHON_CMD, ['-m', 'pip', 'install', '-U', 'yt-dlp', 'requests', 'curl_cffi']] },
   browser: { label: 'Install the test browser', cmd: ['npx', ['playwright', 'install', 'chromium']], shell: true },
   update: { label: 'Sync + get the latest version' },
   restart: { label: 'Restart the builder' },
