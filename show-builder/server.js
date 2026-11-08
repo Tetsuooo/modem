@@ -49,9 +49,11 @@ const { getArchive } = require('./archive-cache');
 // history — 2026-10-27 the Year-end list blocked "Publish site edits" on the Surface): they
 // don't block a publish and aren't in its commit (SYNC_ONLY) — they go to GitHub with Sync,
 // which merges them properly; git's text merge in a publish's push could clash on them.
-const EXPECTED_DIRTY = /(^|\/)(src\/assets\/modem-archive\.json|show-builder\/data\/used-tracks\.json|scripts\/approvals\.json|src\/assets\/overrides\.json|src\/assets\/builder-shows\.json|src\/assets\/show-timestamps\.json)$|(^|\/)(src\/assets\/modem_covers\/|docs\/)|(^|\/)show-builder\/data\/(year-end|shared-draft|show-history)\.json$/;
+// EXPECTED_DIRTY and LIST_SLUG_PATTERN live in repo-changes.js (2026-11-08), which also lists
+// what a refusal below stopped on, for the page to commit or put back.
+const repoChanges = require('./repo-changes');
+const { EXPECTED_DIRTY, LIST_SLUG_PATTERN } = repoChanges;
 const SYNC_ONLY = ['show-builder/data/year-end.json', 'show-builder/data/shared-draft.json', 'show-builder/data/show-history.json'];
-const LIST_SLUG_PATTERN = /best-releases|best-labels|best-videos|best-of-|community-lists/i;
 
 const REPO_ROOT = path.join(__dirname, '..');
 // macOS/Linux don't ship a bare `python` (it's `python3`); Windows has no
@@ -123,6 +125,8 @@ tagTools.mount(app);
 timeTools.mount(app);
 yearEnd.mount(app);
 const healthApi = health.mount(app);
+// show / commit / put back what a publish stopped on (/repo-changes/*)
+repoChanges.mount(app, { isBusy: () => !!(publishJob && publishJob.running) });
 siteTools.mount(app, { previewPort: Number(process.env.PREVIEW_PORT) || 8091 });
 
 // ---------- /scan ----------------------------------------------------------
@@ -642,10 +646,12 @@ app.post('/publish-run', (req, res) => {
     // actual diff CONTENT for that one file instead — a direct, robust
     // test for the literal thing that went wrong (best-releases-of-2025
     // getting re-scraped alongside an unrelated show).
+    const notes = {}; // for the page's list (repo-changes.js): why a normal-looking path is in it
     if (dirtyLines.some((l) => /src\/assets\/modem-archive\.json$/.test(l.slice(3)))) {
       const archiveDiff = execFileSync('git', ['diff', '--', 'src/assets/modem-archive.json'], { cwd: REPO_ROOT, encoding: 'utf8' });
       if (LIST_SLUG_PATTERN.test(archiveDiff)) {
         suspicious.push('src/assets/modem-archive.json (its diff mentions a year-end list, not just the show being published)');
+        notes['src/assets/modem-archive.json'] = 'its changes mention a year-end list, not just a show: most likely left over from a run that didn’t finish';
       }
     }
     if (suspicious.length) {
@@ -655,6 +661,7 @@ app.post('/publish-run', (req, res) => {
           'different interrupted attempt). Review with "git status"/"git diff" in the repo folder, then either ' +
           'commit them if intentional or "git checkout -- <file>" to discard them — before running the pipeline again.',
         dirtyFiles: suspicious,
+        changes: repoChanges.unexpected((f) => LIST_SLUG_PATTERN.test(f) || !EXPECTED_DIRTY.test(f), notes),
       });
     }
   } catch (e) {
@@ -730,6 +737,7 @@ app.post('/publish-edits-run', (req, res) => {
       ok: false,
       error: 'The repo has uncommitted changes that aren\'t site edits. Commit or discard them first (git status in the repo folder).',
       dirtyFiles: unrelated,
+      changes: repoChanges.unexpected((f) => !EXPECTED_DIRTY.test(f)),
     });
   }
   if (!files.some((f) => /(^|\/)(src\/assets\/overrides\.json|scripts\/approvals\.json)$/.test(f))) {
@@ -789,7 +797,7 @@ app.post('/show-audio-run', (req, res) => {
   }
   const unrelated = files.filter((f) => !EXPECTED_DIRTY.test(f));
   if (unrelated.length) {
-    return res.status(409).json({ ok: false, error: 'The repo has uncommitted changes that aren\'t a normal publish. Commit or discard them first (git status in the repo folder).', dirtyFiles: unrelated });
+    return res.status(409).json({ ok: false, error: 'The repo has uncommitted changes that aren\'t a normal publish. Commit or discard them first (git status in the repo folder).', dirtyFiles: unrelated, changes: repoChanges.unexpected((f) => !EXPECTED_DIRTY.test(f)) });
   }
   // site edits saved but not published yet go along — a push would commit them anyway, so
   // they're built into the site too (the review lists them)

@@ -10,6 +10,42 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-11-08)
+
+- **A publish that stops on stray changes can be sorted out on the page.** Show 251's
+  publish stopped on three code files I (Claude) had changed the day before and not
+  committed. The page only listed them and said to use git. (Matej: "is there a way to avoid
+  these kinds of issues and address them from the interface?") Now, when Run publish
+  pipeline, Publish site edits or Put it on the site stops on changes it didn't make, it
+  lists them in three groups:
+  - **Builder code** (show-builder/, scripts/): changed here and never committed. Usually
+    **commit**. **Commit all N code files** does them at once.
+  - **Website or repo files** (src/ pages and the rest): commit only if the change is meant
+    to go on the site, else put it back.
+  - **Made by a publish run** (e.g. the archive with a year-end list in its changes):
+    **put back** only, never committed on its own.
+  - Every file: **show** (the changes, coloured), **put back** (to the last commit; first
+    a copy goes to `data/.cache/put-back/<time>/`, as the file was plus a patch, the last
+    30 kept).
+  - When the list is empty, the publish carries on by itself.
+  - A commit is not pushed. It goes to GitHub with the next Confirm & push or Sync.
+  - Code: `repo-changes.js` (server, `/repo-changes/*`), `public/repo-changes.js` (the
+    list). `EXPECTED_DIRTY` / `LIST_SLUG_PATTERN` moved there from server.js, unchanged.
+- **Health warns first.** "This copy of the builder" turns amber when builder code was
+  changed on this computer and not committed: a publish would stop on it, and the other
+  computer doesn't get it. **Commit them** commits it. (scripts/approvals.json doesn't count:
+  it's meant to wait for the next publish.)
+- **"Restart the builder" is more accurate.** It used to compare commits. Committing code
+  the builder already runs then asked for a restart, and code changed while it ran but
+  not committed went unnoticed. Now it compares the code as it was on disk when the
+  builder started (`git stash create`, which touches nothing) with the files now.
+- **And so it doesn't happen again:** a `CLAUDE.md` in the repo tells Claude to commit
+  builder code changes when they're done.
+- Tested on a throwaway copy of the repo, with its own builder on another port (40 checks):
+  the three refusals, show / commit / put back for changed, new, staged-only files and new
+  folders, the refusals (publish outputs, a file no longer changed, paths outside the
+  list), the backups, Health's warning and Commit them, and the restart check.
+
 ## Where we left off (2026-11-07)
 
 - **Bandcamp downloads work again.** Bandcamp started answering yt-dlp with a "Client
@@ -524,7 +560,7 @@ the plain MP3 streams the previews used). The Health tab checks, one row each:
 
 | Check | What breaks if it fails | Fix button |
 |---|---|---|
-| This copy of the builder | You're on an old version, or the running one is older than the files | Sync + get the latest version · Restart the builder |
+| This copy of the builder | You're on an old version, the running one is older than the files, or code was changed here and not committed (a publish stops on it) | Sync + get the latest version · Restart the builder · Commit them |
 | SoundCloud access | Everything SoundCloud in the builder | Try a new SoundCloud key |
 | SoundCloud scan | The SoundCloud half of Scan | — (code fix) |
 | SoundCloud previews | The small player for SoundCloud tracks | — (code fix) |
@@ -933,7 +969,8 @@ GitHub update applies them too when it adds a new show.)
 ## Safety rails (why a publish might refuse)
 
 - **"uncommitted changes unrelated to a normal publish run"** — the repo has changed files
-  the pipeline doesn't expect (e.g. code you're editing). Commit or discard them first.
+  the pipeline doesn't expect (e.g. code you're editing). Since 2026-11-08 the page lists
+  them with show / commit / put back, and the publish carries on once they're sorted out.
   The files it does expect: the archive, used-tracks, covers, `docs/`, `approvals.json`,
   `overrides.json`, `builder-shows.json`. Sync's own files (`year-end.json`,
   `shared-draft.json`, `show-history.json`) don't block a publish either, and are left out

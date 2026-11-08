@@ -35,7 +35,7 @@ const WIDGET_QS = '&auto_play=false&buying=false&sharing=false&download=false&sh
 const BC_FALLBACK = 'https://gudserben.bandcamp.com/track/eydn-nanning';
 
 const CHECKS = [
-  { id: 'version', name: 'This copy of the builder', what: 'Whether this computer has the latest version, and whether the builder needs a restart to use it.' },
+  { id: 'version', name: 'This copy of the builder', what: 'Whether this computer has the latest version, whether the builder needs a restart to use it, and whether code was changed here without being committed (a publish stops on that).' },
   { id: 'sc-access', name: 'SoundCloud access', what: 'The key the builder uses to talk to SoundCloud — everything SoundCloud in Scan, previews, SoundCloud links and the Year-end list.' },
   { id: 'sc-scan', name: 'SoundCloud scan', what: "Reading modemodemodem's reposts — the SoundCloud half of Scan." },
   { id: 'sc-preview', name: 'SoundCloud previews', what: 'Playing a SoundCloud track in the small player (Scan, Year-end list).' },
@@ -57,22 +57,32 @@ function git(args) {
 }
 
 // The builder's own code (not its synced data files) or the scripts it runs.
-const CODE_FILE = /^(show-builder\/(?!data\/)|scripts\/|package(-lock)?\.json$)/;
+const repoChanges = require('./repo-changes');
+const { CODE_FILE } = repoChanges;
 
 // The code files that differ between the version this server started with and the one on
 // disk now. Not empty = the running builder is out of date: a Sync (or a git pull) brought
 // new code, and a running server keeps its old code until it restarts (2026-10-25: after a
 // Sync, Generate HTML on the Surface would still have made show 250's old small player).
 // Sync's own data commits don't count.
-function codeChangedSince(startedHead) {
-  if (!startedHead) return [];
+// Since 2026-11-08 `startedRef` is the code as it was on disk when the server started
+// (startRef()), compared with the files on disk now, not commit with commit: committing
+// code the server already runs ("Commit them") is no reason to restart, and code edited
+// while it runs, committed or not, is.
+function codeChangedSince(startedRef) {
+  if (!startedRef) return [];
   try {
-    const head = git(['rev-parse', 'HEAD']).trim();
-    if (head === startedHead) return [];
-    return git(['diff', '--name-only', startedHead, head]).trim().split('\n').filter((f) => CODE_FILE.test(f));
+    return git(['diff', '--name-only', startedRef, '--', 'show-builder', 'scripts', 'package.json', 'package-lock.json'])
+      .trim().split('\n').filter((f) => f && CODE_FILE.test(f));
   } catch (e) {
     return [];
   }
+}
+
+// HEAD plus any uncommitted changes, as a commit object (`git stash create` makes one
+// without touching the files, the index or the stash list); just HEAD when nothing changed
+function startRef() {
+  try { return git(['stash', 'create']).trim() || git(['rev-parse', 'HEAD']).trim(); } catch (e) { return ''; }
 }
 
 // GET with status, response headers and body; `range` asks for the first bytes only.
@@ -137,6 +147,15 @@ const errText = (e) => String((e && (e.stderr || e.message)) || e).trim().slice(
 // ---------- the checks (run in a child process) ----------------------------------------
 const RUN = {
   version(startedHead) {
+    // first: code changed here and not committed stops a publish, and never reaches the
+    // other computer (2026-11-07, show 251) — and a Sync bringing new code merges better
+    // once it's committed
+    const mine = repoChanges.uncommittedCode();
+    if (mine.length) {
+      return warn(`${mine.length} builder code file${mine.length > 1 ? 's were' : ' was'} changed on this computer but not committed. A publish stops on ${mine.length > 1 ? 'them' : 'it'}, and the other computer doesn't get ${mine.length > 1 ? 'them' : 'it'}.`,
+        mine.join('\n') + '\n\nCommitting keeps the change (it goes to GitHub with the next Confirm & push or Sync). To throw a change away instead, run the publish: it lists each file with "show" and "put back".',
+        'commit-code', 'Commit them');
+    }
     const head = git(['rev-parse', 'HEAD']).trim();
     const subject = git(['log', '-1', '--format=%s']).trim();
     let reached = true;
@@ -144,14 +163,14 @@ const RUN = {
     const incoming = git(['log', '--format=%h %s', 'HEAD..origin/main']).trim().split('\n').filter(Boolean);
     const files = incoming.length ? git(['diff', '--name-only', 'HEAD...origin/main']).trim().split('\n') : [];
     const code = files.filter((f) => CODE_FILE.test(f));
-    const restart = codeChangedSince(startedHead).length > 0;
+    const changedSinceStart = codeChangedSince(startedHead);
     if (code.length) {
       return warn(`There's a newer version of the builder on GitHub (${incoming.length} change${incoming.length > 1 ? 's' : ''}).`,
         incoming.slice(0, 12).join('\n'), 'update', 'Sync + get the latest version');
     }
-    if (restart) {
+    if (changedSinceStart.length) {
       return warn('This computer has a newer version than the one running — restart the builder to use it.',
-        `running ${startedHead.slice(0, 7)}, on disk ${head.slice(0, 7)} ${subject}`, 'restart', 'Restart the builder');
+        `changed since the builder started:\n${changedSinceStart.slice(0, 12).join('\n')}\n\non disk: ${head.slice(0, 7)} ${subject}`, 'restart', 'Restart the builder');
     }
     if (!reached) return ok("Running the version on this computer (couldn't reach GitHub to compare).", `${head.slice(0, 7)} ${subject}`);
     return ok(incoming.length
@@ -394,6 +413,7 @@ const FIXES = {
   browser: { label: 'Install the test browser', cmd: ['npx', ['playwright', 'install', 'chromium']], shell: true },
   update: { label: 'Sync + get the latest version' },
   restart: { label: 'Restart the builder' },
+  'commit-code': { label: 'Commit them' }, // repo-changes.js commit(); no push
   // a show is ~145 MB: up to an hour for a long backlog
   backup: { label: 'Back up now', cmd: [process.execPath, [path.join(REPO_ROOT, 'scripts', 'backup-shows.js')]], timeout: 3600000 },
 };
@@ -437,8 +457,8 @@ function runCmd(cmd, args, { shell = false, timeout = 600000, extraArgs = [] } =
 
 function mount(app) {
   const startedAt = new Date().toISOString();
-  let startedHead = '';
-  try { startedHead = git(['rev-parse', 'HEAD']).trim(); } catch (e) { /* not a git checkout */ }
+  // not just HEAD: the code as it was on disk at the start (see codeChangedSince)
+  const startedHead = startRef();
 
   app.get('/health/state', (req, res) => {
     const s = readState();
@@ -479,8 +499,20 @@ function mount(app) {
     const fix = FIXES[id];
     if (!fix) return res.status(400).json({ ok: false, error: 'no such fix' });
     if (id === 'restart') return res.json(restart());
+    if (id === 'commit-code') {
+      try {
+        const files = repoChanges.uncommittedCode();
+        if (!files.length) return res.json({ ok: true, log: 'Nothing to commit any more.' });
+        const hash = repoChanges.commit(files);
+        // no restartNeeded here: committing changes nothing on disk (the check that runs
+        // after a fix says so by itself if the code changed since the builder started)
+        return res.json({ ok: true, log: `Committed (${hash}):\n${files.join('\n')}\n\nIt goes to GitHub with the next Confirm & push or Sync.` });
+      } catch (e) {
+        return res.json({ ok: false, log: errText(e) });
+      }
+    }
     if (id === 'update') {
-      const before = startedHead || git(['rev-parse', 'HEAD']).trim();
+      const before = git(['rev-parse', 'HEAD']).trim(); // (startedHead may hold uncommitted changes: not a commit to log from)
       const result = require('./sync').runSync();
       if (!result.ok) return res.json({ ok: false, log: result.error || result.message || 'Sync stopped' });
       const after = git(['rev-parse', 'HEAD']).trim();

@@ -12,6 +12,30 @@
 button.accent { background: #3a6ff0; border-color: #3a6ff0; }
 button.accent:hover:not(:disabled) { background: #4a7dff; }
 button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
+
+/* ---------- what a publish stopped on (repo-changes.js) ---------- */
+.rc-panel { margin: 8px 0; padding: 10px 14px; background: #241f17; border: 1px solid #5a4523; border-radius: 8px; font-size: 12px; }
+.rc-head { color: #ffd98b; }
+.rc-done { color: #7dffb0; margin-top: 4px; }
+.rc-group { margin-top: 12px; }
+.rc-group-title { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #c7c8d1; }
+.rc-group-hint { color: #9a9ba5; margin: 1px 0 4px; }
+.rc-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 3px 0; }
+.rc-file { font: 12px Consolas, Menlo, monospace; color: #e8e8ea; word-break: break-all; }
+.rc-meta { color: #9a9ba5; }
+.rc-btns { margin-left: auto; display: flex; gap: 4px; }
+.rc-note { color: #ffb066; }
+.rc-err { color: #ff9b9b; margin-top: 2px; }
+.rc-all { margin-top: 12px; }
+.rc-diff {
+  max-height: 340px; overflow: auto; margin: 4px 0 8px; padding: 8px 10px;
+  background: #101117; border: 1px solid #2a2b33; border-radius: 6px;
+  font: 11px/1.45 Consolas, Menlo, monospace; white-space: pre; color: #c7c8d1;
+}
+.rc-d-add { color: #7dffb0; }
+.rc-d-del { color: #ff9b9b; }
+.rc-d-hunk { color: #8bb4ff; }
+.rc-d-file { color: #e8e8ea; font-weight: 600; }
 .sc-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; flex: none; }
 .sc-badge.ok { background: #1a3a2a; color: #7dffb0; }
 .sc-badge.auto { background: #1a2a3a; color: #66b0ff; }

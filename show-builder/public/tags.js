@@ -746,7 +746,10 @@
     try { r = await (await fetch('/publish-edits-run', { method: 'POST' })).json(); } catch (e) { r = { ok: false, error: 'could not reach the show builder: ' + (e.message || e) }; }
     if (!r.ok) {
       el('sePubLog').textContent = '';
-      el('sePubReview').innerHTML = `<div class="errors">${esc(r.error || 'could not start')}${r.dirtyFiles ? '<br>' + r.dirtyFiles.map(esc).join('<br>') : ''}</div>`;
+      // uncommitted changes that aren't site edits: show / commit / put back (repo-changes.js)
+      if (!(window.showRepoChanges && showRepoChanges(el('sePubReview'), r, runPublishEdits))) {
+        el('sePubReview').innerHTML = `<div class="errors">${esc(r.error || 'could not start')}${r.dirtyFiles ? '<br>' + r.dirtyFiles.map(esc).join('<br>') : ''}</div>`;
+      }
       updatePubButton();
       return;
     }

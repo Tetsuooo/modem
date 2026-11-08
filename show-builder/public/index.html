@@ -4652,6 +4652,8 @@ async function runPublish(replace) {
 Replace it with the version built here from your draft?`)) return runPublish(true);
       return;
     }
+    // uncommitted changes it didn't make: list them with show / commit / put back (repo-changes.js)
+    if (window.showRepoChanges && showRepoChanges(el('errorsBox'), startResult, () => runPublish(replace))) return;
     const extra = startResult.dirtyFiles ? '<br>' + startResult.dirtyFiles.map(esc).join('<br>') : '';
     el('errorsBox').innerHTML = `<div class="errors">${esc(startResult.error || 'could not start the publish pipeline')}${extra}</div>`;
     return;
@@ -4761,6 +4763,7 @@ async function runShowAudio() {
   if (!start.ok) {
     btn.disabled = false;
     btn.textContent = 'Put it on the site';
+    if (window.showRepoChanges && showRepoChanges(el('errorsBox'), start, runShowAudio)) return;
     const extra = start.dirtyFiles ? '<br>' + start.dirtyFiles.map(esc).join('<br>') : '';
     el('errorsBox').innerHTML = `<div class="errors">${esc(start.error || 'could not start')}${extra}</div>`;
     return;
@@ -5295,6 +5298,7 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 <!-- Tool tabs: loaded after the inline script above (they share its globals)
      and BEFORE the startup calls below, so the very first render of "Your show"
      already includes their per-track rows. -->
+<script src="/repo-changes.js"></script>
 <script src="/sc-links.js"></script>
 <script src="/tags.js"></script>
 <script src="/timestamps.js"></script>
