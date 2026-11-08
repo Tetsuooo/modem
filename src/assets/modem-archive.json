@@ -1,22 +1,294 @@
 {
-  "generatedAt": "2026-10-24T22:28:30.345Z",
+  "generatedAt": "2026-11-08T18:19:36.619Z",
   "source": "https://radiostudent.si/glasba/modem",
   "counts": {
-    "total": 271,
-    "shows": 250,
+    "total": 272,
+    "shows": 251,
     "lists": 21,
-    "withSoundcloud": 248,
+    "withSoundcloud": 249,
     "lastScraped": [
-      "modem-250"
+      "modem-251"
     ],
-    "tracks": 4640,
-    "scMatched": 1634,
+    "tracks": 4659,
+    "scMatched": 1637,
     "tagMerges": 171,
     "tagEdits": 190,
     "segEdits": 83,
     "orderEdits": 0
   },
   "records": [
+    {
+      "type": "show",
+      "slug": "modem-251",
+      "number": 251,
+      "title": "modem ///251",
+      "url": "https://radiostudent.si/glasba/modem/modem-251",
+      "date": "9. 11. 2026",
+      "cover": "/assets/modem_covers/modem251.webp",
+      "mp3": null,
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-251",
+        "api": "https://api.soundcloud.com/tracks/2434471875",
+        "title": "modem ///251 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-4sh8kZ9Og7NfNuEZ-VkWhTg-t500x500.jpg"
+      },
+      "artists": [
+        {
+          "name": "Shmu",
+          "url": null,
+          "seg": 0
+        },
+        {
+          "name": "Andy Loebs",
+          "url": null,
+          "seg": 0
+        },
+        {
+          "name": "Galen Tipton",
+          "url": null,
+          "seg": 0
+        },
+        {
+          "name": "Fire-Toolz",
+          "url": null,
+          "seg": 1
+        },
+        {
+          "name": "🐦‍🔥⃤⃟⃝🦅earthTylenol",
+          "url": null,
+          "seg": 2
+        },
+        {
+          "name": "志見祥",
+          "url": null,
+          "seg": 3
+        },
+        {
+          "name": "simulacresetsimulation",
+          "url": null,
+          "seg": 4
+        },
+        {
+          "name": "tal egg",
+          "url": null,
+          "seg": 5
+        },
+        {
+          "name": "YNO",
+          "url": null,
+          "seg": 6
+        },
+        {
+          "name": "Kemialliset Ystävät",
+          "url": null,
+          "seg": 7
+        },
+        {
+          "name": "iyrliaes",
+          "url": null,
+          "seg": 8
+        },
+        {
+          "name": "Popbot",
+          "url": null,
+          "seg": 8
+        },
+        {
+          "name": "Inferior Design",
+          "url": null,
+          "seg": 9
+        },
+        {
+          "name": "4",
+          "url": null,
+          "seg": 10
+        },
+        {
+          "name": "4h4",
+          "url": null,
+          "seg": 11
+        },
+        {
+          "name": "rne",
+          "url": null,
+          "seg": 12
+        },
+        {
+          "name": "Will Schorre",
+          "url": null,
+          "seg": 13
+        },
+        {
+          "name": "Portamento",
+          "url": null,
+          "seg": 14
+        },
+        {
+          "name": "103110",
+          "url": null,
+          "seg": 15
+        },
+        {
+          "name": "egoseed",
+          "url": null,
+          "seg": 16
+        },
+        {
+          "name": "U.e.",
+          "url": null,
+          "seg": 17
+        },
+        {
+          "name": "文 aa",
+          "url": null,
+          "seg": 18
+        },
+        {
+          "name": "ato hara",
+          "url": null,
+          "seg": 18
+        }
+      ],
+      "labels": [
+        {
+          "name": "Orange Milk Records",
+          "url": null,
+          "seg": 0
+        },
+        {
+          "name": "Warp Records",
+          "url": null,
+          "seg": 1
+        },
+        {
+          "name": "Puro",
+          "url": null,
+          "seg": 7
+        },
+        {
+          "name": "co:clear",
+          "url": null,
+          "seg": 14
+        },
+        {
+          "name": "s1m0nc3ll0",
+          "url": null,
+          "seg": 15
+        },
+        {
+          "name": "ull",
+          "url": null,
+          "seg": 17
+        },
+        {
+          "name": "DADDYPOWER RECORDS",
+          "url": null,
+          "seg": 18
+        }
+      ],
+      "embeds": [
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1295454538/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3835301177/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=629855286/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1574987288/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1930122305/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4106554525/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=3881606648/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=985484512/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=2267596490/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2122233463/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1358652467/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4206864434/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1025430394/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1589609479/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3589225076/transparent=true/"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432400267&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432660103&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2429540919&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430076902&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427059487&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430758991&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427409707&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432669727&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433589059&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2428134402&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432904525&show_artwork=true"
+        }
+      ],
+      "segments": [
+        "Shmu & Andy Loebs & Galen Tipton",
+        "Fire-Toolz",
+        "🐦‍🔥⃤⃟⃝🦅earthTylenol",
+        "志見祥",
+        "simulacresetsimulation",
+        "tal egg",
+        "YNO",
+        "Kemialliset Ystävät",
+        "iyrliaes & Popbot",
+        "Inferior Design",
+        "4",
+        "4h4",
+        "rne",
+        "Will Schorre",
+        "Portamento",
+        "103110",
+        "egoseed",
+        "U.e.",
+        "文 aa & ato hara"
+      ],
+      "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">Shmu &amp; Andy Loebs &amp; Galen Tipton ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1295454538/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3835301177/transparent=true/\"><a href=\"https://o0o0o0o0.bandcamp.com/track/skiing-on-a-mosoleum\">SKIING ON A MOSOLEUM by Shmu &amp; Andy Loebs &amp; Galen Tipton</a></iframe></p>\n<p data-seg=\"1\" class=\"seg-marker\">Fire-Toolz ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=629855286/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1574987288/transparent=true/\"><a href=\"https://fire-toolz.bandcamp.com/album/clustered-around-my-opening-1\">Clustered Around My Opening! by Fire-Toolz</a></iframe></p>\n<p data-seg=\"2\" class=\"seg-marker\">🐦‍🔥⃤⃟⃝🦅earthTylenol ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432400267&show_artwork=true\"></iframe></p>\n<p data-seg=\"3\" class=\"seg-marker\">志見祥 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432660103&show_artwork=true\"></iframe></p>\n<p data-seg=\"4\" class=\"seg-marker\">simulacresetsimulation ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2429540919&show_artwork=true\"></iframe></p>\n<p data-seg=\"5\" class=\"seg-marker\">tal egg ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430076902&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427059487&show_artwork=true\"></iframe></p>\n<p data-seg=\"6\" class=\"seg-marker\">YNO ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430758991&show_artwork=true\"></iframe></p>\n<p data-seg=\"7\" class=\"seg-marker\">Kemialliset Ystävät ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427409707&show_artwork=true\"></iframe></p>\n<p data-seg=\"8\" class=\"seg-marker\">iyrliaes &amp; Popbot ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1930122305/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4106554525/transparent=true/\"><a href=\"https://iyrliaes.bandcamp.com/track/sgin\">Sgin by iyrliaes &amp; Popbot</a></iframe></p>\n<p data-seg=\"9\" class=\"seg-marker\">ｉｎｆｅｒｉｏｒ░ｄｅｓｉｇｎ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432669727&show_artwork=true\"></iframe></p>\n<p data-seg=\"10\" class=\"seg-marker\">4 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433589059&show_artwork=true\"></iframe></p>\n<p data-seg=\"11\" class=\"seg-marker\">4h4 ///////</p>\n<p><a href=\"https://soundcloud.com/4hal4/lf-148bpm-mp3\">https://soundcloud.com/4hal4/lf-148bpm-mp3</a></p>\n<p data-seg=\"12\" class=\"seg-marker\">rne ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2428134402&show_artwork=true\"></iframe></p>\n<p data-seg=\"13\" class=\"seg-marker\">Will Schorre ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432904525&show_artwork=true\"></iframe></p>\n<p data-seg=\"14\" class=\"seg-marker\">Portamento ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=3881606648/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=985484512/transparent=true/\"><a href=\"https://coclear.bandcamp.com/track/not-ugli\">Not Ugli by Portamento</a></iframe></p>\n<p data-seg=\"15\" class=\"seg-marker\">103110 ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=2267596490/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2122233463/transparent=true/\"><a href=\"https://s1m0nc3ll0.bandcamp.com/track/sl0w-d0wn\">☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶ by 103110</a></iframe></p>\n<p data-seg=\"16\" class=\"seg-marker\">egoseed ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1358652467/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4206864434/transparent=true/\"><a href=\"https://egoseed1.bandcamp.com/track/hind-paw\">hind paw by egoseed</a></iframe></p>\n<p data-seg=\"17\" class=\"seg-marker\">U.e. ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1025430394/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1589609479/transparent=true/\"><a href=\"https://ullastraus.bandcamp.com/track/flute-while-waiting\">Flute While Waiting by U.e.</a></iframe></p>\n<p data-seg=\"18\" class=\"seg-marker\">文 aa &amp; ato hara ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3589225076/transparent=true/\"><a href=\"https://daddypower.bandcamp.com/track/bun\">bun by 文 aa &amp; ato hara</a></iframe></p>",
+      "searchText": "modem ///251 \n 9. 11. 2026 \n Shmu Andy Loebs Galen Tipton Fire-Toolz 🐦‍🔥⃤⃟⃝🦅earthTylenol 志見祥 simulacresetsimulation tal egg YNO Kemialliset Ystävät iyrliaes Popbot ｉｎｆｅｒｉｏｒ░ｄｅｓｉｇｎ 4 4h4 rne Will Schorre Portamento 103110 egoseed U.e. 文 aa ato hara \n Orange Milk Records Warp Records Puro co:clear s1m0nc3ll0 ull DADDYPOWER RECORDS \n Shmu & Andy Loebs & Galen Tipton /////// SKIING ON A MOSOLEUM by Shmu & Andy Loebs & Galen Tipton Fire-Toolz /////// Clustered Around My Opening! by Fire-Toolz 🐦‍🔥⃤⃟⃝🦅earthTylenol /////// 志見祥 /////// simulacresetsimulation /////// tal egg /////// YNO /////// Kemialliset Ystävät /////// iyrliaes & Popbot /////// Sgin by iyrliaes & Popbot ｉｎｆｅｒｉｏｒ░ｄｅｓｉｇｎ /////// 4 /////// 4h4 /////// https://soundcloud.com/4hal4/lf-148bpm-mp3 rne /////// Will Schorre /////// Portamento /////// Not Ugli by Portamento 103110 /////// ☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶ by 103110 egoseed /////// hind paw by egoseed U.e. /////// Flute While Waiting by U.e. 文 aa & ato hara /////// bun by 文 aa & ato hara",
+      "origin": "show-builder"
+    },
     {
       "type": "show",
       "slug": "modem-250",
@@ -78301,6 +78573,30 @@
       "searchText": "🐺 \n 🌳 \n 7FORM \n modem 54 \n 54"
     },
     {
+      "key": "sc:2432400267",
+      "kind": "soundcloud",
+      "title": "soft vinyl silferfish",
+      "artist": "🐦‍🔥⃤⃟⃝🦅earthTylenol",
+      "artUrl": "https://i1.sndcdn.com/avatars-W0v5wzUzvcvUnqtp-Gwl2kA-t500x500.jpg",
+      "link": "https://soundcloud.com/tinyeyesearchengine",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432400267&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 2,
+          "segLabel": "🐦‍🔥⃤⃟⃝🦅earthTylenol",
+          "labels": []
+        }
+      ],
+      "searchText": "soft vinyl silferfish \n 🐦‍🔥⃤⃟⃝🦅earthTylenol \n 🐦‍🔥⃤⃟⃝🦅earthTylenol \n modem 251 \n 251"
+    },
+    {
       "key": "sc:2300899736",
       "kind": "soundcloud",
       "title": "yuour in denial",
@@ -79147,6 +79443,35 @@
         }
       ],
       "searchText": "☾ ⋆_calm mind_°࿐ \n 103110 \n 103110 \n modem 241 \n 241"
+    },
+    {
+      "key": "bc:2267596490:2122233463",
+      "kind": "bandcamp",
+      "title": "☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶",
+      "artist": "103110",
+      "artUrl": "https://f4.bcbits.com/img/a2967054543_16.jpg",
+      "link": "https://s1m0nc3ll0.bandcamp.com/track/sl0w-d0wn",
+      "duration": 181,
+      "album": "33",
+      "albumUrl": "https://s1m0nc3ll0.bandcamp.com/album/33",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=2267596490/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=2122233463/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 15,
+          "segLabel": "103110",
+          "labels": [
+            "s1m0nc3ll0"
+          ]
+        }
+      ],
+      "searchText": "☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶ \n 103110 \n 103110 \n modem 251 \n 251 \n 103110 - ☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶ \n ✰ 103110 ✰",
+      "scPlay": 2035905788,
+      "scPlayTitle": "103110 - ☾ ⋆*sl0w🎼d0wn➶-͙˚ ༘✶",
+      "scPlayArtist": "✰ 103110 ✰"
     },
     {
       "key": "bc:4014441658:2947595715",
@@ -110253,6 +110578,31 @@
       "searchText": "entry \n egoseed \n egoseed \n modem 186 \n 186"
     },
     {
+      "key": "bc:1358652467:4206864434",
+      "kind": "bandcamp",
+      "title": "hind paw",
+      "artist": "egoseed",
+      "artUrl": "https://f4.bcbits.com/img/a1320943839_16.jpg",
+      "link": "https://egoseed1.bandcamp.com/track/hind-paw",
+      "duration": 208,
+      "album": "cedere",
+      "albumUrl": "https://egoseed1.bandcamp.com/album/cedere",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=1358652467/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4206864434/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 16,
+          "segLabel": "egoseed",
+          "labels": []
+        }
+      ],
+      "searchText": "hind paw \n egoseed \n egoseed \n modem 251 \n 251",
+      "scPlay": 2347000919
+    },
+    {
       "key": "sc:1917229151",
       "kind": "soundcloud",
       "title": "i have those moments too but they’re just sparse",
@@ -116110,6 +116460,32 @@
         }
       ],
       "searchText": "All Deth Is U [CODENAME_FINAL TOUCH LOCATION] \n Fire-Toolz \n Hausu Mountain \n modem 5 \n 5"
+    },
+    {
+      "key": "bc:629855286:1574987288",
+      "kind": "bandcamp",
+      "title": "Clustered Around My Opening!",
+      "artist": "Fire-Toolz",
+      "artUrl": "https://f4.bcbits.com/img/a974326140_16.jpg",
+      "link": "https://fire-toolz.bandcamp.com/track/clustered-around-my-opening-1",
+      "duration": 227,
+      "album": "Clustered Around My Opening!",
+      "albumUrl": "https://fire-toolz.bandcamp.com/album/clustered-around-my-opening-1",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=629855286/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1574987288/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 1,
+          "segLabel": "Fire-Toolz",
+          "labels": [
+            "Warp Records"
+          ]
+        }
+      ],
+      "searchText": "Clustered Around My Opening! \n Fire-Toolz \n Fire-Toolz \n modem 251 \n 251"
     },
     {
       "key": "bc:3378121253:-",
@@ -125747,6 +126123,30 @@
       "searchText": "Homeless \n Howie Lee \n Do Hits \n modem 11 \n 11"
     },
     {
+      "key": "sc:2433589059",
+      "kind": "soundcloud",
+      "title": "4 weeks left",
+      "artist": "HP",
+      "artUrl": "https://i1.sndcdn.com/artworks-UKDJn0U6Sp4uAz3c-4tq3yw-t500x500.jpg",
+      "link": "https://soundcloud.com/humanpachinko",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433589059&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 10,
+          "segLabel": "4",
+          "labels": []
+        }
+      ],
+      "searchText": "4 weeks left \n HP \n 4 \n modem 251 \n 251"
+    },
+    {
       "key": "bc:1232293206:159437429",
       "kind": "bandcamp",
       "title": "Stuck in Rockport",
@@ -128429,6 +128829,30 @@
       ]
     },
     {
+      "key": "sc:2432669727",
+      "kind": "soundcloud",
+      "title": "Not Your Turn!",
+      "artist": "Inferior Design",
+      "artUrl": "https://i1.sndcdn.com/artworks-FNyjKHZQ2Mfjh5v5-IfzFcw-t500x500.jpg",
+      "link": "https://soundcloud.com/isabarb",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432669727&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "Inferior Design",
+          "labels": []
+        }
+      ],
+      "searchText": "Not Your Turn! \n Inferior Design \n Inferior Design \n modem 251 \n 251"
+    },
+    {
       "key": "bc:4161814850:1571038486",
       "kind": "bandcamp",
       "title": "Deceived",
@@ -129974,6 +130398,33 @@
       "scPlay": "https://soundcloud.com/iyrliaes/4cd9c248-4dc2-4d41-88af-b11e3d52232c?in=iyrliaes/sets/mini-star-plush-keychain",
       "scPlayTitle": "iyrliaes, aughtta - Like and follow for a chance at winning",
       "scPlayArtist": "iyrliaes"
+    },
+    {
+      "key": "bc:1930122305:4106554525",
+      "kind": "bandcamp",
+      "title": "Sgin",
+      "artist": "iyrliaes, Popbot",
+      "artUrl": "https://f4.bcbits.com/img/a2721798061_16.jpg",
+      "link": "https://iyrliaes.bandcamp.com/track/sgin",
+      "duration": 271,
+      "album": "Villainous Item",
+      "albumUrl": "https://iyrliaes.bandcamp.com/album/villainous-item",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=1930122305/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4106554525/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 8,
+          "segLabel": "iyrliaes & Popbot",
+          "labels": []
+        }
+      ],
+      "searchText": "Sgin \n iyrliaes, Popbot \n iyrliaes & Popbot \n modem 251 \n 251 \n Sgin \n Popbot",
+      "scPlay": 2425884813,
+      "scPlayTitle": "Sgin",
+      "scPlayArtist": "Popbot"
     },
     {
       "key": "bc:1884032152:2190813103",
@@ -136402,6 +136853,32 @@
         }
       ],
       "searchText": "本州モノグラフ / Honshu Monograph \n Kelmanix \n New Masterpiece \n modem 18 \n 18"
+    },
+    {
+      "key": "sc:2427409707",
+      "kind": "soundcloud",
+      "title": "Kasino",
+      "artist": "Kemialliset Ystävät",
+      "artUrl": "https://i1.sndcdn.com/artworks-MIyCHjZXZPhNd80V-FNHziw-t500x500.jpg",
+      "link": "https://soundcloud.com/tomutonttu",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427409707&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 7,
+          "segLabel": "Kemialliset Ystävät",
+          "labels": [
+            "Puro"
+          ]
+        }
+      ],
+      "searchText": "Kasino \n Kemialliset Ystävät \n Kemialliset Ystävät \n modem 251 \n 251"
     },
     {
       "key": "bc:3470721751:-",
@@ -164436,6 +164913,32 @@
       "searchText": "ye♪♪ow raincoat freestyle¹, l🗴fe_and_schism²+expytora \n porkbelly \n porkbelly \n modem 211 \n 211"
     },
     {
+      "key": "bc:3881606648:985484512",
+      "kind": "bandcamp",
+      "title": "Not Ugli",
+      "artist": "Portamento",
+      "artUrl": "https://f4.bcbits.com/img/a2597548160_16.jpg",
+      "link": "https://coclear.bandcamp.com/track/not-ugli",
+      "duration": 202,
+      "album": "At the Right Place at the Right Time",
+      "albumUrl": "https://coclear.bandcamp.com/album/at-the-right-place-at-the-right-time",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=3881606648/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=985484512/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 14,
+          "segLabel": "Portamento",
+          "labels": [
+            "co:clear"
+          ]
+        }
+      ],
+      "searchText": "Not Ugli \n Portamento \n Portamento \n modem 251 \n 251"
+    },
+    {
       "key": "bc:1046287157:-",
       "kind": "bandcamp",
       "title": "[GNM013] un jardín de lamentos",
@@ -169304,6 +169807,30 @@
         }
       ],
       "searchText": "enostavno preboden \n rne \n rne \n modem 248 \n 248"
+    },
+    {
+      "key": "sc:2428134402",
+      "kind": "soundcloud",
+      "title": "jack london, denar, ljubezen in sla",
+      "artist": "rne",
+      "artUrl": "https://i1.sndcdn.com/artworks-HVRcojGRIvXNmymT-ncLFjw-t500x500.jpg",
+      "link": "https://soundcloud.com/burekzazajtrk",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2428134402&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 12,
+          "segLabel": "rne",
+          "labels": []
+        }
+      ],
+      "searchText": "jack london, denar, ljubezen in sla \n rne \n rne \n modem 251 \n 251"
     },
     {
       "key": "sc:2112023295",
@@ -174410,6 +174937,32 @@
       "searchText": "The Universe Is Inside My Body \n Shmu"
     },
     {
+      "key": "bc:1295454538:3835301177",
+      "kind": "bandcamp",
+      "title": "SKIING ON A MOSOLEUM",
+      "artist": "Shmu, Andy Loebs, galen tipton",
+      "artUrl": "https://f4.bcbits.com/img/a3698595915_16.jpg",
+      "link": "https://o0o0o0o0.bandcamp.com/track/skiing-on-a-mosoleum",
+      "duration": 255,
+      "album": "ACROBATS IN THE NIGHT GARDEN",
+      "albumUrl": "https://o0o0o0o0.bandcamp.com/album/acrobats-in-the-night-garden",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=1295454538/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3835301177/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 0,
+          "segLabel": "Shmu & Andy Loebs & Galen Tipton",
+          "labels": [
+            "Orange Milk Records"
+          ]
+        }
+      ],
+      "searchText": "SKIING ON A MOSOLEUM \n Shmu, Andy Loebs, galen tipton \n Shmu & Andy Loebs & Galen Tipton \n modem 251 \n 251"
+    },
+    {
       "key": "bc:1714824017:-",
       "kind": "bandcamp",
       "title": "Faith Exotica",
@@ -175222,6 +175775,30 @@
       "scPlay": 1254979657,
       "scPlayTitle": "Simply Funk - Transparency",
       "scPlayArtist": "‎Club Paradiso"
+    },
+    {
+      "key": "sc:2429540919",
+      "kind": "soundcloud",
+      "title": "Invasion",
+      "artist": "simulacresetsimulation",
+      "artUrl": "https://i1.sndcdn.com/artworks-GwtpbuzK1qgyegp0-DW7CzA-t500x500.jpg",
+      "link": "https://soundcloud.com/camelessential75",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2429540919&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 4,
+          "segLabel": "simulacresetsimulation",
+          "labels": []
+        }
+      ],
+      "searchText": "Invasion \n simulacresetsimulation \n simulacresetsimulation \n modem 251 \n 251"
     },
     {
       "key": "bc:-:1673115647",
@@ -180416,6 +180993,54 @@
         }
       ],
       "searchText": "game over song \n tal egg \n tal egg \n modem 120 \n 120"
+    },
+    {
+      "key": "sc:2427059487",
+      "kind": "soundcloud",
+      "title": "grease monkey",
+      "artist": "tal egg",
+      "artUrl": "https://i1.sndcdn.com/artworks-TYWZnXaUFAKQoxYJ-2ZT6Bg-t500x500.jpg",
+      "link": "https://soundcloud.com/cucuflute",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2427059487&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 5,
+          "segLabel": "tal egg",
+          "labels": []
+        }
+      ],
+      "searchText": "grease monkey \n tal egg \n tal egg \n modem 251 \n 251"
+    },
+    {
+      "key": "sc:2430076902",
+      "kind": "soundcloud",
+      "title": "haha",
+      "artist": "tal egg",
+      "artUrl": "https://i1.sndcdn.com/artworks-XPihdH6FW8rZWyym-NxGdeQ-t500x500.jpg",
+      "link": "https://soundcloud.com/cucuflute",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430076902&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 5,
+          "segLabel": "tal egg",
+          "labels": []
+        }
+      ],
+      "searchText": "haha \n tal egg \n tal egg \n modem 251 \n 251"
     },
     {
       "key": "sc:1488811213",
@@ -186091,6 +186716,32 @@
       "searchText": "oncoming chill \n 𝔗𝔜𝔐𝔅𝔄𝔏𝔖 \n jib kidder \n modem 225 \n 225"
     },
     {
+      "key": "bc:1025430394:1589609479",
+      "kind": "bandcamp",
+      "title": "Flute While Waiting",
+      "artist": "U.e.",
+      "artUrl": "https://f4.bcbits.com/img/a499492258_16.jpg",
+      "link": "https://ullastraus.bandcamp.com/track/flute-while-waiting",
+      "duration": 154,
+      "album": "Carrots",
+      "albumUrl": "https://ullastraus.bandcamp.com/album/carrots",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=1025430394/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1589609479/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 17,
+          "segLabel": "U.e.",
+          "labels": [
+            "ull"
+          ]
+        }
+      ],
+      "searchText": "Flute While Waiting \n U.e. \n U.e. \n modem 251 \n 251"
+    },
+    {
       "key": "bc:3304438992:3315942181",
       "kind": "bandcamp",
       "title": "Froggy Explorer",
@@ -191521,6 +192172,30 @@
       "scPlay": 1633671588,
       "scPlayTitle": "Will More - bronze",
       "scPlayArtist": "Deardogs"
+    },
+    {
+      "key": "sc:2432904525",
+      "kind": "soundcloud",
+      "title": "phasemod_hats_rove",
+      "artist": "Will Schorre",
+      "artUrl": "https://i1.sndcdn.com/avatars-AKn8l6GHkgE6nKmS-uhr4vA-t500x500.jpg",
+      "link": "https://soundcloud.com/willschorre",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432904525&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 13,
+          "segLabel": "Will Schorre",
+          "labels": []
+        }
+      ],
+      "searchText": "phasemod_hats_rove \n Will Schorre \n Will Schorre \n modem 251 \n 251"
     },
     {
       "key": "bc:2334587572:2771597775",
@@ -197316,6 +197991,30 @@
       "searchText": "等絵(LAE) \n YNO \n YNO \n modem 222 \n 222"
     },
     {
+      "key": "sc:2430758991",
+      "kind": "soundcloud",
+      "title": "米乃(MENO)",
+      "artist": "YNO",
+      "artUrl": "https://i1.sndcdn.com/avatars-000425583105-o59kcl-t500x500.jpg",
+      "link": "https://soundcloud.com/user-252471624",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430758991&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 6,
+          "segLabel": "YNO",
+          "labels": []
+        }
+      ],
+      "searchText": "米乃(MENO) \n YNO \n YNO \n modem 251 \n 251"
+    },
+    {
       "key": "sc:2133790272",
       "kind": "soundcloud",
       "title": "米縷(MERU)",
@@ -200502,6 +201201,30 @@
       "searchText": "Sound Composition Film 001 \n 志見祥 \n 志見祥 \n modem 245 \n 245"
     },
     {
+      "key": "sc:2432660103",
+      "kind": "soundcloud",
+      "title": "Sound Composition Film 003",
+      "artist": "志見祥",
+      "artUrl": "https://i1.sndcdn.com/artworks-WHGIAyc8vxL5vy5O-9DhCHA-t500x500.jpg",
+      "link": "https://soundcloud.com/shimisyooo",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432660103&show_artwork=true",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 3,
+          "segLabel": "志見祥",
+          "labels": []
+        }
+      ],
+      "searchText": "Sound Composition Film 003 \n 志見祥 \n 志見祥 \n modem 251 \n 251"
+    },
+    {
       "key": "sc:2350286570",
       "kind": "soundcloud",
       "title": "Untitled_10",
@@ -200601,6 +201324,32 @@
         }
       ],
       "searchText": "The Lighter \n 打火机 \n Orange Milk \n modem 145 \n 145"
+    },
+    {
+      "key": "bc:-:3589225076",
+      "kind": "bandcamp",
+      "title": "bun",
+      "artist": "文 aa x ato hara",
+      "artUrl": "https://f4.bcbits.com/img/a3649126963_16.jpg",
+      "link": "https://daddypower.bandcamp.com/track/bun",
+      "duration": 760,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=3589225076/transparent=true/",
+      "shows": [
+        {
+          "number": 251,
+          "slug": "modem-251",
+          "date": "9. 11. 2026",
+          "type": "show",
+          "seg": 18,
+          "segLabel": "文 aa & ato hara",
+          "labels": [
+            "DADDYPOWER RECORDS"
+          ]
+        }
+      ],
+      "searchText": "bun \n 文 aa x ato hara \n 文 aa & ato hara \n modem 251 \n 251"
     },
     {
       "key": "bc:1097223869:3513792466",
@@ -200869,5 +201618,5 @@
       "searchText": "Nazo House \n 食品まつり a.k.a. foodman \n Diskotopia \n modem 26 \n 26"
     }
   ],
-  "tracksGeneratedAt": "2026-10-24T22:28:30.345Z"
+  "tracksGeneratedAt": "2026-11-08T18:19:36.619Z"
 }
