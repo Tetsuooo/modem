@@ -10,6 +10,30 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-11-11)
+
+- **Covers: the layer list scrolls straight away with the trackpad.** (Matej: on the
+  Surface's trackpad the list started moving late or in jumps.) Cause: the brightness bar in
+  each layer card is drawn after the big cover canvas, so the browser split the list across
+  several drawing layers. A scroll starting over it had to ask the page "what's under the
+  pointer?" first. Whenever the page was busy, the scroll waited. The page is busy for a
+  while after every edit, redrawing the cover with all its layers (120–130 ms here with 20
+  layers, longer on the Surface). Now the list keeps everything it draws to itself
+  (`isolation: isolate` on `.cover-layers-scroll`), and the browser starts the scroll
+  without asking.
+  - Measured on a test copy with 20 big covers, a page busy for 600 ms: the scroll started
+    ~590 ms late before, 0–9 ms now, at nine spots on the list, in the touch-screen and
+    mouse layouts.
+  - A swipe's glide now stops at the list's top and bottom instead of carrying on into the
+    page (`overscroll-behavior: contain`).
+  - The list's thumbnails are small 64-px copies (`coverThumb()`), made once from the cover
+    the canvas loads anyway. It used to show the full covers (often 2000+ px) at 28 px, so
+    each row scrolling into view had its whole cover decoded again: 246 ms of decoding per
+    scroll, now 1 ms. They look the same.
+  - Checked after the change: brightness handles (and their numbers), select, M/S, ⇑▲▼⇓,
+    the grip drag, and the cover still draws.
+  - After Sync, restart the builder (the yellow banner says so) and reload the page.
+
 ## Where we left off (2026-11-08)
 
 - **A publish that stops on stray changes can be sorted out on the page.** Show 251's

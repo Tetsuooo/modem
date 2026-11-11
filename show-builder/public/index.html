@@ -397,7 +397,15 @@
   /* Only the layer list itself scrolls — Adjust (whole-image contrast etc.)
      sits below it as a fixed, always-visible section instead of getting
      scrolled out of view once there are enough layers to fill the box. */
-  .cover-layers-scroll { max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+  /* isolation: the list is its own stacking context, so its positioned bits (the brightness
+     bars) are drawn inside the list instead of after the cover canvas. Without it the browser
+     split the list across several drawing layers and couldn't tell by itself what a touchpad
+     or wheel scroll starting here should move, so it asked the page's script first, and while
+     a cover render was running the scroll waited for it (Matej, 2026-11-11: "late / jerky
+     start" on the Surface's trackpad; measured: a 600-ms busy page held the start ~590 ms,
+     with this 0-3 ms). overscroll-behavior: a swipe's glide stops at the list's ends instead
+     of carrying on into the page. */
+  .cover-layers-scroll { max-height: 60vh; overflow-y: auto; padding-right: 4px; isolation: isolate; overscroll-behavior: contain; }
   .cover-canvas-wrap { flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
   /* max-height (matching the sidebar's own 78vh) + width/height both auto
      lets the square canvas shrink to fit WHICHEVER of width/height is
@@ -3332,6 +3340,28 @@ function getCoverImage(src) {
   return promise;
 }
 
+// The layer list's thumbnails: a 64-px copy of each cover, made once from the image the
+// canvas loads anyway. The list used to show the full-size covers (often 2000+ px) at 28 px,
+// so every row scrolling into view had its whole cover decoded again (Matej, 2026-11-11:
+// the list scrolled late / jerky on the Surface). '' = not made yet (or the cover won't
+// load): the row shows an empty square until it's there.
+const coverThumbCache = new Map(); // src -> data: URL
+const COVER_THUMB_SIZE = 64;
+function coverThumb(src) {
+  if (coverThumbCache.has(src)) return coverThumbCache.get(src);
+  coverThumbCache.set(src, '');
+  getCoverImage(src).then((img) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = COVER_THUMB_SIZE;
+    drawImageCover(c.getContext('2d'), img, COVER_THUMB_SIZE, COVER_THUMB_SIZE);
+    let url;
+    try { url = c.toDataURL('image/jpeg', 0.85); } catch (e) { url = src; }
+    coverThumbCache.set(src, url);
+    document.querySelectorAll('#coverLayerList .cover-layer-thumb').forEach((t) => { if (t.dataset.src === src) t.src = url; });
+  }).catch(() => { coverThumbCache.delete(src); }); // tried again at the next list redraw
+  return '';
+}
+
 async function addCoverLayer(cand) {
   el('coverStatus').textContent = 'loading…';
   try {
@@ -3389,7 +3419,7 @@ function renderCoverLayerList() {
     <div class="cover-layer${l.id === selectedCoverLayerId ? ' selected' : ''}${coverLayerShown(l, anySolo) ? '' : ' off'}" data-id="${escAttr(l.id)}">
       <div class="cover-layer-head" draggable="true" title="click to select (for the eraser) — drag to reorder">
         <span class="cover-grip" title="drag to reorder — with a finger too">⠿</span>
-        <img class="cover-layer-thumb" src="${escAttr(l.src)}" onerror="this.style.visibility='hidden'">
+        <img class="cover-layer-thumb" data-src="${escAttr(l.src)}"${coverThumb(l.src) ? ` src="${escAttr(coverThumb(l.src))}"` : ''} alt="">
         <span class="cover-layer-title">${esc(l.title)}</span>
         <div class="cover-layer-toggles">
           <button class="cover-toggle mute${l.muted ? ' active' : ''}" data-id="${escAttr(l.id)}" data-act="mute" title="mute: hide this layer">M</button>
