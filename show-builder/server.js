@@ -81,6 +81,7 @@ const DRAFT_FILE = path.join(DATA_DIR, 'current-draft.json');
 const USED_FILE = path.join(DATA_DIR, 'used-tracks.json');
 const MANIFEST_FILE = path.join(DATA_DIR, 'download-manifest.jsonl');
 const URLS_FILE = path.join(DATA_DIR, 'download-urls.txt');
+const LAST_SCAN_FILE = path.join(DATA_DIR, 'last-scan.json'); // the Scan tab's last results (git-ignored)
 const DAYS_BACK = 14;
 
 function readJson(file, fallback) {
@@ -156,7 +157,31 @@ app.post('/scan', (req, res) => {
     const dup = checkDuplicate(it);
     if (dup) it.previouslyPlayed = dup;
   }
-  res.json({ ok: true, items, errors, cutoff: cutoff.toISOString() });
+  const result = { ok: true, items, errors, cutoff: cutoff.toISOString(), at: new Date().toISOString() };
+  // kept for /scan-last, so the Scan tab still has it after a reload or a restart
+  try {
+    fs.writeFileSync(LAST_SCAN_FILE + '.tmp', JSON.stringify(result));
+    fs.renameSync(LAST_SCAN_FILE + '.tmp', LAST_SCAN_FILE);
+  } catch (e) { /* the scan still answers; it just isn't kept */ }
+  res.json(result);
+});
+
+// ---------- /scan-last — the last scan, for the Scan tab when the page opens -------
+// (Matej, 2026-11-20: "why doesn't the scan section's scans stay there even if I refresh"
+// — they only lived in the page). Per computer, not synced (data/last-scan.json is
+// git-ignored). Tracks used in a show since are taken out again, and "played before"
+// is checked again against the track index as it is now.
+app.get('/scan-last', (req, res) => {
+  const last = readJson(LAST_SCAN_FILE, null);
+  if (!last || !Array.isArray(last.items)) return res.json({ ok: true, none: true });
+  const used = new Set(readJson(USED_FILE, []));
+  const items = last.items.filter((it) => !used.has(it.key));
+  for (const it of items) {
+    delete it.previouslyPlayed;
+    const dup = checkDuplicate(it);
+    if (dup) it.previouslyPlayed = dup;
+  }
+  res.json({ ok: true, items, errors: last.errors || [], cutoff: last.cutoff, at: last.at || null });
 });
 
 // ---------- /release-tracks (expand a playlist/album into its tracks) ------

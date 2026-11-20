@@ -195,6 +195,51 @@ function scAlbumsOf(trackId) {
   });
 }
 
+// An account's own plain playlists (not albums). Some artists put an album up as a playlist
+// (2026-11-20, Matej: ant. adventure's "The broken umbrellas trick" — "those should count
+// too"), and SoundCloud's "in playlists" for a track leaves out the uploader's own playlist,
+// so the account is asked. Cached for a week: unlike an album's contents, an account's
+// playlists change.
+const OWN_SETS_DAYS = 7;
+function scOwnPlaylists(userId) {
+  const key = 'ye-sc-user-sets-' + userId;
+  if (!FRESH) {
+    const c = cacheGet(key);
+    if (c && Date.now() - Date.parse(c.at) < OWN_SETS_DAYS * 864e5) return c.value;
+  }
+  const out = [];
+  let next = `/users/${userId}/playlists_without_albums?limit=50`;
+  for (let page = 0; next && page < 4; page++) {
+    const j = scGet(next);
+    for (const p of (j && j.collection) || []) out.push({ ...p, tracks: (p.tracks || []).slice(0, 60) });
+    // next_href is a whole address with its own client_id: keep the path and the rest
+    next = null;
+    if (j && j.next_href) {
+      const u = new URL(j.next_href);
+      u.searchParams.delete('client_id');
+      next = u.pathname + u.search;
+    }
+  }
+  cacheSet(key, { value: out, at: new Date().toISOString() });
+  return out;
+}
+
+// The uploader's own playlist a track is on, as its release: 2–40 tracks (an album, not an
+// "everything" playlist), only the uploader's own tracks as far as SoundCloud shows them
+// (not a mix of other people's), the smallest such one. null = none.
+const OWN_SET_MAX = 40;
+function scOwnPlaylistOf(track) {
+  const owner = track && ((track.user && track.user.id) || track.user_id);
+  if (!owner) return null;
+  const ownerOf = (x) => (x.user && x.user.id) || x.user_id;
+  const sets = scOwnPlaylists(owner).filter((p) =>
+    ownerOf(p) === owner && p.track_count >= 2 && p.track_count <= OWN_SET_MAX &&
+    (p.tracks || []).some((t) => String(t.id) === String(track.id)) &&
+    (p.tracks || []).filter(ownerOf).every((t) => ownerOf(t) === owner));
+  sets.sort((a, b) => a.track_count - b.track_count);
+  return sets[0] || null;
+}
+
 function soundcloudSetRaw(p) {
   if (!p) return null;
   const tracks = (p.tracks || []).map((t) => ({
@@ -206,8 +251,10 @@ function soundcloudSetRaw(p) {
     playable: true,
   }));
   const duration = p.duration ? Math.round(p.duration / 1000) : null;
-  const type = SC_SET_TYPES[p.set_type] || typeOf(tracks.length ? tracks : new Array(p.track_count || 0).fill({}), duration);
   const user = p.user || {};
+  // a plain playlist: typed by its tracks, as the account's own — its tracks credited to
+  // "ant. adventure.ᐟ", "… mouseman", "… porkbelly" are one artist's album, not a compilation
+  const type = SC_SET_TYPES[p.set_type] || typeOf(tracks.length ? tracks : new Array(p.track_count || 0).fill({}), duration, { artist: user.username });
   const label = p.label_name || null;
   return {
     key: 'sc:p:' + p.id,
@@ -260,7 +307,8 @@ function soundcloudSingleRaw(t) {
 
 // ---------- a pasted link → a release ----------------------------------------------------------
 // Bandcamp: an album page → that album; a track page → its album, or the track as a single.
-// SoundCloud: a set → that set; a track → the album / EP it's on, or the track as a single.
+// SoundCloud: a set → that set; a track → the album / EP it's on, else the uploader's own
+// playlist it's on (scOwnPlaylistOf), or the track as a single.
 function releaseFromUrl(raw) {
   let url;
   try { url = new URL(String(raw || '').trim()); } catch (e) { throw new Error('not a link'); }
@@ -271,7 +319,9 @@ function releaseFromUrl(raw) {
     if (r.kind === 'playlist') return soundcloudSet(r);
     if (r.kind === 'track') {
       const sets = scAlbumsOf(r.id).filter((p) => p.set_type !== 'single');
-      return sets.length ? soundcloudSet(sets[0]) : soundcloudSingle(r);
+      if (sets.length) return soundcloudSet(sets[0]);
+      const own = scOwnPlaylistOf(r);
+      return own ? soundcloudSet(own) : soundcloudSingle(r);
     }
     throw new Error('that SoundCloud link isn\'t a track or a set');
   }
@@ -292,5 +342,5 @@ const soundcloudSingle = (...a) => tidy(soundcloudSingleRaw(...a));
 module.exports = {
   stats, setFresh, typeOf, norm, releaseId, isoDate, origin,
   bcPage, readTralbum, bandcampAlbum, bandcampTrack,
-  scGet, scCached, scPeek, scPut, scAlbumsOf, soundcloudSet, soundcloudSingle, releaseFromUrl,
+  scGet, scCached, scPeek, scPut, scAlbumsOf, scOwnPlaylistOf, soundcloudSet, soundcloudSingle, releaseFromUrl,
 };

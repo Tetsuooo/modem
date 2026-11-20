@@ -61,14 +61,18 @@ function main() {
     return (s && s.labels) || [];
   };
 
-  // played[releaseKey] = { shows: Map(number -> Set(trackId)), labels: Map(label -> count) }
+  // played[releaseKey] = { shows: Map(number -> Set(trackId)), labels: Map(label -> count),
+  //   credits: Set(the artist the show credited a played track to) — for the tab's search:
+  //   show 250 credits The recluse's track to "Computer man & ant. adventure.ᐟ" }
   const played = new Map();
-  const note = (key, number, trackId, labels) => {
-    if (!played.has(key)) played.set(key, { shows: new Map(), labels: new Map() });
+  const credit = (key) => { const t = key && indexByKey.get(key); return (t && t.artist) || null; };
+  const note = (key, number, trackId, labels, credited) => {
+    if (!played.has(key)) played.set(key, { shows: new Map(), labels: new Map(), credits: new Set() });
     const p = played.get(key);
     if (!p.shows.has(number)) p.shows.set(number, new Set());
     if (trackId) p.shows.get(number).add(String(trackId));
     for (const l of labels || []) p.labels.set(l, (p.labels.get(l) || 0) + 1);
+    if (credited) p.credits.add(credited);
   };
 
   const bcAlbums = new Map(); // albumId -> albumUrl
@@ -82,16 +86,16 @@ function main() {
         if (albumId) {
           const it = indexByKey.get(`bc:${albumId}:${trackId}`) || index.find((t) => t.key.startsWith(`bc:${albumId}:`));
           if (it && it.albumUrl && !bcAlbums.has(albumId)) bcAlbums.set(albumId, it.albumUrl);
-          note('bc:a:' + albumId, s.number, trackId, tagLabels(`bc:${albumId}:${trackId}`, s.number));
+          note('bc:a:' + albumId, s.number, trackId, tagLabels(`bc:${albumId}:${trackId}`, s.number), credit(`bc:${albumId}:${trackId}`));
         } else if (trackId) {
           const it = index.find((t) => t.kind === 'bandcamp' && t.key.endsWith(':' + trackId));
-          bcLooseTracks.push({ trackId, number: s.number, link: it && it.link, labels: it ? tagLabels(it.key, s.number) : [] });
+          bcLooseTracks.push({ trackId, number: s.number, link: it && it.link, labels: it ? tagLabels(it.key, s.number) : [], credited: it ? it.artist : null });
         }
       } else if (e.kind === 'soundcloud') {
         const { id, isPlaylist } = soundcloudIds(e.src);
         if (!id) continue;
         if (isPlaylist) { scSets.add(id); note('sc:p:' + id, s.number, null, []); }
-        else scTracks.push({ id, number: s.number, labels: tagLabels('sc:' + id, s.number) });
+        else scTracks.push({ id, number: s.number, labels: tagLabels('sc:' + id, s.number), credited: credit('sc:' + id) });
       }
     }
   }
@@ -109,10 +113,11 @@ function main() {
   for (const t of bcLooseTracks) {
     if (!t.link) continue;
     const c = add(R.bandcampTrack(t.link, t.trackId));
-    if (c) { note(c.key, t.number, t.trackId, t.labels); log(`[bandcamp track] ${c.kind === 'album' ? 'on an album' : 'a single'}: ${c.artist} – ${c.title}`); }
+    if (c) { note(c.key, t.number, t.trackId, t.labels, t.credited); log(`[bandcamp track] ${c.kind === 'album' ? 'on an album' : 'a single'}: ${c.artist} – ${c.title}`); }
   }
 
-  // SoundCloud: the album / EP a played track is on, else the track itself (a single)
+  // SoundCloud: the album / EP a played track is on, else the uploader's own playlist it's
+  // on (an album put up as a playlist, see scOwnPlaylistOf), else the track itself (a single)
   n = 0;
   const singles = [];
   for (const t of scTracks) {
@@ -120,7 +125,7 @@ function main() {
     const sets = R.scAlbumsOf(t.id).filter((p) => p.set_type !== 'single');
     if (sets.length) {
       const c = add(R.soundcloudSet(sets[0]));
-      note(c.key, t.number, t.id, t.labels);
+      note(c.key, t.number, t.id, t.labels, t.credited);
       if (n % 10 === 0 || n === scTracks.length) log(`[soundcloud ${n}/${scTracks.length}] on ${c.type}: ${c.artist} – ${c.title}`);
     } else {
       singles.push(t);
@@ -133,10 +138,19 @@ function main() {
     const batch = R.scGet('/tracks?ids=' + missing.slice(i, i + 50).map((t) => t.id).join(',')) || [];
     for (const tr of batch) R.scPut('ye-sc-track-' + tr.id, tr);
   }
+  // (one account lookup per uploader, cached for a week)
+  const owners = new Set(singles.map((t) => { const tr = R.scPeek('ye-sc-track-' + t.id); return tr && tr.user && tr.user.id; }).filter(Boolean));
+  log(`[soundcloud] ${singles.length} tracks on no album: looking at their ${owners.size} uploaders' own playlists`);
+  let onOwn = 0;
+  const movedTo = new Map(); // a single's old key -> the playlist release it's part of now
   for (const t of singles) {
-    const cand = add(R.soundcloudSingle(R.scPeek('ye-sc-track-' + t.id)));
-    if (cand) note(cand.key, t.number, t.id, t.labels);
+    const tr = R.scPeek('ye-sc-track-' + t.id);
+    const own = tr ? R.scOwnPlaylistOf(tr) : null;
+    const cand = add(own ? R.soundcloudSet(own) : R.soundcloudSingle(tr));
+    if (cand) note(cand.key, t.number, t.id, t.labels, t.credited);
+    if (own && cand) { onOwn++; movedTo.set('sc:t:' + t.id, cand.key); log(`[soundcloud playlist] ${cand.artist} – ${cand.title} (${cand.type})`); }
   }
+  log(`[soundcloud] ${onOwn} of them are on their uploader's own playlist, ${singles.length - onOwn} singles`);
   for (const id of scSets) {
     const c = R.soundcloudSet(R.scCached('ye-sc-set-' + id, () => R.scGet('/playlists/' + id)));
     if (c) { add(c); log(`[soundcloud set] ${c.artist} – ${c.title} (${c.type})`); }
@@ -147,6 +161,7 @@ function main() {
     const p = played.get(c.key);
     c.shows = p ? [...p.shows.entries()].sort((a, b) => a[0] - b[0]).map(([number, ids]) => ({ number, tracks: [...ids] })) : [];
     c.playedTracks = c.shows.reduce((s, x) => s + Math.max(1, x.tracks.length), 0);
+    c.credits = p ? [...p.credits] : [];
     // the label tagged in the shows wins; its link only if it's the account the release is on
     const tagged = p ? [...p.labels.entries()].sort((a, b) => b[1] - a[1])[0] : null;
     if (tagged && tagged[0]) {
@@ -182,6 +197,7 @@ function main() {
     for (const s of b.shows) { if (!shows.has(s.number)) shows.set(s.number, new Set()); s.tracks.forEach((t) => shows.get(s.number).add(t)); }
     a.shows = [...shows.entries()].sort((x, y) => x[0] - y[0]).map(([number, ids]) => ({ number, tracks: [...ids] }));
     a.playedTracks = a.shows.reduce((s, x) => s + Math.max(1, x.tracks.length), 0);
+    a.credits = [...new Set([...(a.credits || []), ...(b.credits || [])])];
     if (!a.label && b.label) { a.label = b.label; a.labelFrom = b.labelFrom; }
     [...ids, ...idsOf(keep)].forEach((i) => byRelease.set(i, a));
   }
@@ -237,6 +253,20 @@ function main() {
   const gathered = new Set(list.map((c) => c.key));
   const byHand = (y.candidates || []).filter((c) => c.addedByHand && !gathered.has(c.key));
   y.candidates = [...list, ...byHand];
+  // A track that was a single before and is part of its uploader's playlist release now:
+  // its pick (in the list, at its place / out) goes over to that release, unless the
+  // release has one of its own — so no pick vanishes with the old single.
+  y.decisions = y.decisions || {};
+  y.order = y.order || [];
+  for (const [from, to] of movedTo) {
+    if (!y.decisions[from] || gathered.has(from)) continue;
+    if (!y.decisions[to]) {
+      y.decisions[to] = y.decisions[from];
+      log(`pick moved: ${from} (was a single) → ${to}: ${y.decisions[to]}`);
+    }
+    delete y.decisions[from];
+    y.order = y.order.map((k) => (k === from ? to : k)).filter((k, i, a) => a.indexOf(k) === i);
+  }
   y.gatheredAt = new Date().toISOString();
   y.shows = shows.map((s) => s.number);
   y.savedAt = Date.now();

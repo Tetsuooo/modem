@@ -217,15 +217,32 @@
     // self-released last
     label: (a, b) => selfReleased(a) - selfReleased(b) || abc(a.label, b.label) || abc(a.artist, b.artist),
   };
+  // Search (2026-11-20, Matej: "computer man ant. adventure" didn't find The recluse — it was
+  // already in the list while the view was "to do", and only one track names ant. adventure):
+  // every word typed, in any order, at the start of a word anywhere in the release — title,
+  // artist, label, the account, its tracks' titles and artists, and the names the shows
+  // credited its tracks to (`credits`, from Gather) — ignoring case, accents and punctuation.
+  // While there's a search it looks through everything (every view, singles, older releases):
+  // each row says where it is ("#20", "out").
+  const searchKey = (s) => String(s || '').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const searchWords = () => searchKey(S.q).split(' ').filter(Boolean);
+  function haystack(raw, c) {
+    const parts = [c.title, c.artist, c.label, raw.title, raw.artist, raw.label, raw.account, ...(raw.credits || []),
+      ...(raw.tracks || []).flatMap((t) => [t.title, t.artist])];
+    return ' ' + searchKey(parts.filter(Boolean).join(' ')) + ' ';
+  }
   // the releases on the left, filtered and sorted — as groups: with "group by artist" on,
   // an artist's releases sit together, in the order of the artist's best-placed one
   function visible() {
-    const q = S.q.trim().toLowerCase();
+    const words = searchWords();
     const list = [...S.byKey.values()].map((raw) => ({ raw, c: named(raw) })).filter(({ raw, c }) => {
+      if (words.length) {
+        const hay = haystack(raw, c);
+        return words.every((w) => hay.includes(' ' + w));
+      }
       if (S.view !== 'all' && decision(raw.key) !== S.view) return false;
       if (!S.types[raw.type]) return false;
       if (S.hideOld && isOld(raw)) return false;
-      if (q && !`${c.title} ${c.artist} ${c.label || ''} ${raw.account || ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
     const by = SORTS[S.sort] || SORTS.played;
@@ -405,7 +422,7 @@
         <div class="ye-bar">
           <div class="ye-seg" id="yeViews"></div>
           <div class="ye-seg" id="yeTypes"></div>
-          <input id="yeSearch" class="sc-input" placeholder="search title / artist / label">
+          <input id="yeSearch" class="sc-input" placeholder="search all: title, artist, label, tracks" title="every word, in any order — looks through every view, singles and older releases too">
         </div>
         <div class="ye-bar">
           <label class="ye-sortlbl">sort
@@ -478,11 +495,16 @@
       return;
     }
     const groups = visible();
-    pool.innerHTML = groups.length
+    const found = groups.reduce((n, g) => n + g.items.length, 0);
+    const searching = searchWords().length > 0;
+    const note = searching
+      ? `<div class="ye-search-note">${found ? `${found} found` : 'Nothing found'} in all ${S.byKey.size} releases (every view, singles and older ones too).${found ? '' : ` Not played in a ${S.year} show? Paste its link above → <b>+ add to the list</b>.`}</div>`
+      : '';
+    pool.innerHTML = note + (groups.length
       ? groups.map((g) => (g.name
         ? `<div class="ye-group"><div class="ye-group-head">${esc(g.name)} <span>· ${g.items.length} releases</span></div>${g.items.map(candRow).join('')}</div>`
         : g.items.map(candRow).join(''))).join('')
-      : '<div class="empty">Nothing here.</div>';
+      : (searching ? '' : '<div class="empty">Nothing here.</div>'));
   }
   function renderList() {
     const keys = inList();

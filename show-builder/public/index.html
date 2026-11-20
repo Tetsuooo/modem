@@ -4101,6 +4101,19 @@ async function scan() {
   }
 }
 
+// The last scan, when the page opens (Matej, 2026-11-20: a refresh lost the Scan tab's
+// results). The server keeps it (data/last-scan.json, per computer), minus tracks used in a
+// show since. A scan made meanwhile on this page wins.
+async function loadLastScan() {
+  let j;
+  try { j = await (await fetch('/scan-last')).json(); } catch (e) { return; } // an older server: no last scan
+  if (!j || !j.ok || j.none || scanResults.length) return;
+  scanResults = j.items || [];
+  const when = j.at ? new Date(j.at).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+  el('statusText').textContent = `${scanResults.length} items since ${fmtDate(j.cutoff)}${when ? ` · last scan ${when} (Scan again for new ones)` : ''}`;
+  renderScanResults();
+}
+
 // A track with files counts as downloaded; a failed or empty attempt is tried again.
 function isDownloaded(it) {
   return !!(it._download && !it._download.error && it._download.files && it._download.files.length);
@@ -5338,6 +5351,7 @@ el('clearDraftBtn').addEventListener('click', clearDraftClick);
 loadArtistLabelNames();
 loadShowHistory();
 loadDraft().then(() => {
+  loadLastScan(); // after the draft: the rows show which tracks are in "Your show" already
   // Generate HTML asked for a restart first (the page reloads on the new server): carry on
   let again = false;
   try { again = sessionStorage.getItem('sb-generate-after-restart') === '1'; sessionStorage.removeItem('sb-generate-after-restart'); } catch (e) { /* ignore */ }

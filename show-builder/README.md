@@ -10,6 +10,49 @@ Runs on your own computer only (nothing here is public). Last big update: 2026-1
 
 ---
 
+## Where we left off (2026-11-20)
+
+Three things Matej asked about the same morning.
+
+- **Scan keeps its results.** "Why don't the scan section's scans stay there even if I
+  refresh the builder?" They only lived in the page. Now each scan is kept on this computer
+  (`data/last-scan.json`, git-ignored, not synced), and the Scan tab shows the last one when
+  the page opens: "47 items since … · last scan Fri 20. 11., 08:12 (Scan again for new
+  ones)". Tracks used in a show since are left out, and "played before" is checked again.
+  Server: `/scan` keeps it, `/scan-last` gives it back.
+- **Year-end list: an album put up as a SoundCloud playlist counts.** ant. adventure's
+  "The broken umbrellas trick" (6 tracks, played in 248) is a plain playlist, not marked as
+  an album, so its track counted as a single and was hidden. Worse, SoundCloud's own "in
+  playlists" for that track leaves the artist's playlist out. Now Gather also looks at the
+  uploader's own playlists (`scOwnPlaylistOf()` in year-end-releases.js): a playlist of 2–40
+  tracks that holds the played track, with only the uploader's own tracks, counts as the
+  release (the smallest one if several). Its type comes from its tracks, as the account's
+  own, so "ant. adventure.ᐟ", "… mouseman" and "… porkbelly" on one playlist make an EP,
+  not a compilation. 2026 gets 6 such releases instead of 6 singles: ant. adventure – The
+  broken umbrellas trick (EP), Proc Fiskal – Canticle Hardposte (EP), 7ofspa – Scape In Blue
+  (EP), 23.558x23.558 – its 23 clips man (LP), Andrew Snakez – dj poolboy 2026 (EP), io; i 2 –
+  all (LP; maybe "everything I've uploaded" rather than an album: ✕ it if so). Nothing else
+  changed. A single picked before that is now part of such a release passes its pick (and
+  its place in the list) on to it. An account's playlists are cached for a week. The
+  release a pasted track link belongs to (+ add to the list) is found the same way.
+- **Year-end search finds things.** "computer man ant. adventure" didn't find The recluse.
+  It was already #20 in the list, the search only looked in the view shown ("to do"), it
+  matched the typed text as one piece, and only one of its tracks names ant. adventure. Now
+  the search takes every word, in any order, at the start of a word anywhere in a release:
+  the title, artist, label, account, its tracks' titles and artists, and the names the shows
+  credited its tracks to (`credits`, new from Gather; show 250 credits The recluse's track
+  to "Computer man & ant. adventure.ᐟ"). Case, accents and punctuation don't matter. While
+  searching it looks through every view, singles and older releases. Each row says where it
+  is (#20, out), and a line says how many were found. "computer man ant. adventure" now finds
+  The recluse, Psychosomatic piano-person and the I am evan single.
+- **Before using it:** restart the builder, then **Gather** once in the Year-end list tab (it
+  keeps your picks; the lookups are cached already, so it takes seconds).
+- Tested: two gathers of 2026 into a copy of the year-end file (only those 6 singles went,
+  only those 6 playlists came, no other release changed type, the list's order unchanged, a
+  pick planted on the cyclops house single moved to the EP at #5), the search code as written
+  in yearend.js against that data (8 checks), and a real scan on a copy of the repo with its
+  own builder (kept, git-ignored, back after a reload, a used track left out).
+
 ## Where we left off (2026-11-11)
 
 - **Covers: the layer list scrolls straight away with the trackpad.** (Matej: on the
@@ -644,7 +687,9 @@ matching run never loses them.
    in modem 241). **bc ↗** / **sc ↗** (on every release, in the list too) opens its
    Bandcamp / SoundCloud page in a new tab — both when a show played it from both.
    **Sort** by most played, played most recently, release date
-   (newest or oldest first; no date = last), artist, title or label (A–Z), or search.
+   (newest or oldest first; no date = last), artist, title or label (A–Z), or search: every
+   word, any order, in the title, artist, label, tracks or the shows' credits; while searching
+   it looks through everything (every view, singles, older releases).
    **group by artist** (on by default) keeps each artist's releases together, under their
    name, in the place of their best-placed release. **hide released before 2026** hides
    last year's (and older) releases; one with no known date stays. These choices are
@@ -711,8 +756,9 @@ between; a **compilation** has tracks by 3+ different artists and none by the re
 artist (Jonáš Gruska's "Juggler", with guests on some tracks, is an LP; when most titles read
 "Artist - Title", like gud serben's "GUD LUCK !!", the part before the dash counts as the
 track's artist; a release credited to Various Artists / V/A always can be). On SoundCloud, what the
-uploader marked it as (album / EP / single / compilation); a SoundCloud track that isn't on
-any album or EP counts as a single. The same release on Bandcamp and SoundCloud becomes one
+uploader marked it as (album / EP / single / compilation); a track on none of those but on a
+plain playlist of its uploader's own (2–40 tracks, only their own) is on that release, typed
+by its tracks; any other SoundCloud track counts as a single. The same release on Bandcamp and SoundCloud becomes one
 entry (Bandcamp kept, since the lists embed Bandcamp) — also when SoundCloud has the artist
 in the title ("Dj-c - Night of the living liquor store"); releases without a real title
 (just "-" or an emoji) are never merged. The label is the one tagged in the shows, else the

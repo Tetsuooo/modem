@@ -12,6 +12,7 @@ show-builder/downloads
 show-builder/data/.cache
 show-builder/data/*.tmp
 show-builder/data/current-draft.json
+show-builder/data/last-scan.json
 show-builder/data/download-manifest.jsonl
 show-builder/data/download-urls.txt
 show-builder/data/health.json
