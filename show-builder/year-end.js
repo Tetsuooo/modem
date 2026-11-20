@@ -198,6 +198,30 @@ function mount(app) {
   });
   app.get('/ye/gather-status', (req, res) => res.json(jobs.status('year-end-gather')));
 
+  // Is a year's gather out of date? The show being built (the draft) changed, appeared or
+  // went (published, or Start fresh), or the site has a show of that year the gather didn't.
+  // The tab gathers again by itself then (Matej, 2026-11-20: releases from the show being
+  // built belong on the list too). A year never gathered isn't "stale": its button says so.
+  app.get('/ye/stale', (req, res) => {
+    const year = Number(req.query.year) || new Date().getFullYear();
+    const y = readAll()[year];
+    if (!y || !(y.candidates || []).length) return res.json({ ok: true, stale: false, reasons: [] });
+    const reasons = [];
+    const d = releases.showInTheWorks();
+    const draft = d && d.year === year ? d : null;
+    if (draft && draft.sig !== y.draftSig) reasons.push(`the show being built (modem ${draft.number || '?'}) changed`);
+    if (!draft && y.draftShow) reasons.push(`modem ${y.draftShow.number} isn't being built any more`);
+    try {
+      const { getArchive } = require('./archive-cache');
+      const had = new Set(y.shows || []);
+      const fresh = (getArchive().records || [])
+        .filter((r) => r.type === 'show' && Number((String(r.date || '').match(/(\d{4})\s*$/) || [])[1]) === year && !had.has(r.number))
+        .map((r) => '#' + r.number);
+      if (fresh.length) reasons.push(`new on the site: ${fresh.join(' ')}`);
+    } catch (e) { /* no archive: nothing to compare */ }
+    res.json({ ok: true, stale: reasons.length > 0, reasons });
+  });
+
   // A SoundCloud set's full track list (the gather only has the first few) — looked
   // up the first time it's played, and kept.
   app.post('/ye/tracks', (req, res) => {

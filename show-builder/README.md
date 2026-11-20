@@ -75,6 +75,32 @@ Three things Matej asked about the same morning.
   - ▸ / ▾ are bigger (32 px in a 30 px button, was 17 px), with a grey hover area.
   - Tested with real double-clicks in Edge (headless) on a copy of the builder (15 checks):
     title, cover and ▸ of a playlist, single clicks, a single track's row and cover.
+- **Year-end list: the show being built counts too.** (Matej: "it should not wait until a
+  release is published in a show … it could also add albums that are part of the current
+  show build".) Gather now also reads the draft (`showInTheWorks()` in year-end-releases.js:
+  current-draft.json, or Sync's shared-draft.json when newer). Its tracks go through the same
+  lookups as a show's, and the artists and labels typed in Arrange count like a show's tags.
+  That happens when its air date is in the year and that show number isn't on the site yet:
+  once published it comes from the archive, so nothing counts twice.
+  - Its plays say **#252 being built** (a yellow tag), and the status line reads "466
+    releases from 23 shows + modem 252 (being built)".
+  - For 2026 that added 7 LPs/EPs (bone protrusion's ຟɧi๓Şiፈ, tau contrib's myriad sparkle,
+    Paper town, iyrliaes' Every Orchard Today, Mordul Vaga's Cards, a1d's [eee3]-instrumental
+    split, Giovanni Lami's Fantarombo) and 18 singles. Picks untouched.
+  - **The tab gathers again by itself** when it's opened (or shown again, or the year
+    changes) and the draft changed since the last gather, the show being built is gone
+    (published, or Start fresh), or a new show of the year is on the site (`/ye/stale`;
+    Gather keeps `draftShow` and `draftSig`). With the lookups cached it takes seconds. At
+    most once a minute; never while a gather runs.
+  - **Sorted by "played most recently", an artist's releases aren't grouped:** each stays at
+    its own show. "group by artist" is greyed out then, and comes back as it was for the
+    other sorts.
+  - Tested: a gather of 2026 into a copy of the year-end file (only additions, the 252 plays
+    marked, 252 not counted as published, picks untouched), and the tab in headless Edge on
+    a copy of the builder (10 checks: it noticed the draft and gathered again by itself in
+    3 s, "bone" finds the EP marked "#252 ×2 being built", the sort shows 252's releases
+    first with no groups, grouping back for "most played", no new gather when nothing
+    changed).
 - **Before using it:** restart the builder, then **Gather** once in the Year-end list tab (it
   keeps your picks; the lookups are cached already, so it takes seconds).
 - Tested: two gathers of 2026 into a copy of the year-end file (only those 6 singles went,
@@ -709,12 +735,16 @@ matching run never loses them.
 ### Year-end list (the 50 best releases)
 
 1. **Year-end list** tab → pick the year → **Gather** (the first time a few minutes: it
-   reads every show of the year from the site's archive and looks each release up on
-   Bandcamp / SoundCloud; later only what's new). It lists every LP, EP and compilation
+   reads every show of the year from the site's archive, and the show being built (the
+   draft in Download & Arrange, when its air date is in that year), and looks each release
+   up on Bandcamp / SoundCloud; later only what's new). It lists every LP, EP and compilation
    played in those shows. Singles are kept but hidden (the **singles** button shows them).
+   When the show being built changes, or a new show of the year is on the site, the tab
+   gathers again by itself the next time it's opened (a few seconds).
 2. **Left: the releases.** Each shows its type, tracks, length, release month (⚠ if it came
    out before this year), the shows it was played in (**♪ #241 ×3** = three of its tracks
-   in modem 241). **bc ↗** / **sc ↗** (on every release, in the list too) opens its
+   in modem 241; **#252 being built** = in the show you're putting together now). **bc ↗** /
+   **sc ↗** (on every release, in the list too) opens its
    Bandcamp / SoundCloud page in a new tab — both when a show played it from both.
    **Sort** by most played, played most recently, release date
    (newest or oldest first; no date = last), artist, title or label (A–Z), or search: every

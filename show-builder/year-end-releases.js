@@ -7,6 +7,9 @@
 // Bandcamp pages come from the shared cache in scripts/.cache (the same files the
 // SoundCloud matching and the track index read), fetched only if missing.
 // SoundCloud lookups are cached per id in show-builder/data/.cache.
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const { UA, cacheGet, cacheSet } = require('./lib');
 const { getClientId } = require('./scan-soundcloud');
@@ -333,6 +336,38 @@ function releaseFromUrl(raw) {
   return bandcampTrack(page, td.id);
 }
 
+// ---------- the show being built ----------------------------------------------------------------
+// The draft, for Gather to count like a published show (Matej, 2026-11-20: the list
+// "should not wait until a release is published in a show … it could also add albums that are
+// part of the current show build"): data/current-draft.json, or Sync's shared-draft.json (the
+// other computer's draft) when that's newer. Its show number, air date (→ the year) and
+// tracks, with the artists and labels typed in Arrange. `sig` says whether it changed since a
+// gather (the tab gathers again by itself then). null = no draft, or an empty one.
+const DRAFT_FILES = ['current-draft.json', 'shared-draft.json'].map((f) => path.join(__dirname, 'data', f));
+function showInTheWorks() {
+  let best = null;
+  for (const f of DRAFT_FILES) {
+    try {
+      const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+      const at = Math.max(fs.statSync(f).mtimeMs, Number(d.savedAt) || 0);
+      if (d && Array.isArray(d.selected) && (!best || at > best.at)) best = { d, at };
+    } catch (e) { /* no such draft */ }
+  }
+  if (!best || !best.d.selected.length) return null;
+  const d = best.d;
+  const entries = d.selected.map((it) => ({
+    key: String(it.key || ''), source: it.source || '', url: it.url || null,
+    albumId: it.albumId ? String(it.albumId) : null, trackId: it.trackId ? String(it.trackId) : null, isPlaylist: !!it.isPlaylist,
+    artists: [it.artist, ...(it.extraArtists || [])].filter(Boolean),
+    labels: [it.label, ...(it.extraLabels || [])].filter(Boolean),
+  }));
+  const number = Number(d.showNumber) || null;
+  const airDate = d.airDate || null;
+  const year = Number((String(airDate || '').match(/(\d{4})\s*$/) || [])[1]) || new Date().getFullYear();
+  const sig = crypto.createHash('sha1').update(JSON.stringify([number, airDate, entries])).digest('hex').slice(0, 16);
+  return { number, airDate, year, entries, sig };
+}
+
 // every release comes out tidied (see tidy)
 const bandcampAlbum = (...a) => tidy(bandcampAlbumRaw(...a));
 const bandcampTrack = (...a) => tidy(bandcampTrackRaw(...a));
@@ -343,4 +378,5 @@ module.exports = {
   stats, setFresh, typeOf, norm, releaseId, isoDate, origin,
   bcPage, readTralbum, bandcampAlbum, bandcampTrack,
   scGet, scCached, scPeek, scPut, scAlbumsOf, scOwnPlaylistOf, soundcloudSet, soundcloudSingle, releaseFromUrl,
+  showInTheWorks,
 };

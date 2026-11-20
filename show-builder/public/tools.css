@@ -263,6 +263,8 @@ button.warn { background: #3a2a1a; border-color: #6a4a22; color: #ffb066; }
 .ye-dot { color: #4a4b55; }
 .ye-old { color: #ffb066; }
 .ye-played { color: #d08fff; }
+/* a play in the show being built (the draft, not published yet) */
+.ye-wip { font-size: 10px; color: #ffd98b; border: 1px solid #6a5523; border-radius: 999px; padding: 0 5px; }
 .ye-x { color: #6f7080; font-size: 10px; }
 .ye-type { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px; background: #2a2b33; color: #c7c8d1; flex: none; }
 .ye-type.t-LP { background: #1a3a2a; color: #7dffb0; }

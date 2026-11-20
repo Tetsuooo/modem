@@ -99,6 +99,35 @@ function main() {
       }
     }
   }
+  // The show being built (the draft — R.showInTheWorks()) counts like a show: when its air
+  // date is in this year and it isn't on the site yet (once published, it comes from the
+  // archive above, so nothing counts twice). Its plays are marked `draft` on the releases.
+  // The artists and labels typed in Arrange stand in for the site's tags.
+  const draft = R.showInTheWorks();
+  let draftNumber = null;
+  if (draft && draft.year === YEAR && !(draft.number && shows.some((s) => s.number === draft.number))) {
+    draftNumber = draft.number || ((shows.length ? shows[shows.length - 1].number : 0) + 1);
+    const n = draftNumber;
+    for (const e of draft.entries) {
+      const credited = e.artists.join(' & ') || null;
+      const id = e.key.replace(/^(bc|sc):/, '');
+      if (!/^\d+$/.test(id)) continue;
+      if (e.source === 'soundcloud') {
+        if (e.isPlaylist) { scSets.add(id); note('sc:p:' + id, n, null, e.labels, credited); }
+        else scTracks.push({ id, number: n, labels: e.labels, credited });
+      } else if (e.albumId && e.key === 'bc:' + e.albumId) {
+        // a whole Bandcamp album
+        if (e.url && !bcAlbums.has(e.albumId)) bcAlbums.set(e.albumId, e.url);
+        note('bc:a:' + e.albumId, n, null, e.labels, credited);
+      } else if (e.url) {
+        // a Bandcamp track: its page says which album it's on (or that it's a single)
+        bcLooseTracks.push({ trackId: e.trackId || id, number: n, link: e.url, labels: e.labels, credited });
+      }
+    }
+    log(`the show being built: modem ${n}${draft.number ? '' : ' (no number yet)'}, ${draft.entries.length} tracks`);
+  } else if (draft) {
+    log(`the show being built (modem ${draft.number || '?'}, ${draft.airDate || 'no air date'}) ${draft.year !== YEAR ? `is for ${draft.year}` : 'is on the site already'}: not counted again`);
+  }
   log(`found: ${bcAlbums.size} Bandcamp albums, ${bcLooseTracks.length} standalone Bandcamp tracks, ${scTracks.length} SoundCloud tracks, ${scSets.size} SoundCloud playlists`);
 
   const candidates = new Map(); // key -> candidate
@@ -203,6 +232,8 @@ function main() {
   }
   const list = [...new Set(byRelease.values())].sort((a, b) =>
     (b.playedTracks - a.playedTracks) || (b.shows.length - a.shows.length) || String(b.releaseDate || '').localeCompare(String(a.releaseDate || '')));
+  // plays in the show being built, marked for the tab ("#252 being built")
+  if (draftNumber) for (const c of list) c.shows = c.shows.map((s) => (s.number === draftNumber ? { ...s, draft: true } : s));
 
   // The SoundCloud profiles that uploaded a Bandcamp release's tracks — from the SoundCloud
   // versions approved in the show builder (scripts/approvals.json: Bandcamp track → SoundCloud
@@ -269,6 +300,10 @@ function main() {
   }
   y.gatheredAt = new Date().toISOString();
   y.shows = shows.map((s) => s.number);
+  // what was gathered from the show being built, and that draft's fingerprint: the tab
+  // gathers again by itself when the draft changes (year-end.js /ye/stale)
+  y.draftShow = draftNumber ? { number: draftNumber, airDate: draft.airDate, tracks: draft.entries.length } : null;
+  y.draftSig = draft ? draft.sig : null;
   y.savedAt = Date.now();
   all[YEAR] = y;
   fs.mkdirSync(path.dirname(OUT), { recursive: true });

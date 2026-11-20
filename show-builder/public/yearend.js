@@ -129,6 +129,7 @@
     S.undo = []; S.redo = []; S.open.clear();
     renderAll();
     restorePending();
+    checkStale();
   }
 
   // a release with the names fixed by hand (see the ✎ editor in the list)
@@ -172,8 +173,9 @@
       const old = c.year && c.year < S.year;
       bits.push(old ? `<span class="ye-old" title="released ${esc(c.releaseDate)}">⚠ released ${esc(monthYear(c.releaseDate))}</span>` : esc(monthYear(c.releaseDate)));
     }
-    const shows = (c.shows || []).map((s) => `#${s.number}${s.tracks.length > 1 ? ` <span class="ye-x">×${s.tracks.length}</span>` : ''}`).join(' ');
-    if (shows) bits.push(`<span class="ye-played" title="played in these shows (×N: that many of its tracks)">♪ ${shows}</span>`);
+    // (a play in the show being built — the draft, not published yet — says so)
+    const shows = (c.shows || []).map((s) => `#${s.number}${s.tracks.length > 1 ? ` <span class="ye-x">×${s.tracks.length}</span>` : ''}${s.draft ? ' <span class="ye-wip">being built</span>' : ''}`).join(' ');
+    if (shows) bits.push(`<span class="ye-played" title="played in these shows (×N: that many of its tracks; “being built”: the show you're putting together now, not published yet)">♪ ${shows}</span>`);
     else if (c.addedByHand) bits.push('<span class="ye-hand" title="added from a link, not played in a show">added by hand</span>');
     return bits.join(' <span class="ye-dot">·</span> ');
   }
@@ -295,7 +297,7 @@
     });
     const by = SORTS[S.sort] || SORTS.played;
     const cmp = (x, y) => by(x.c, y.c);
-    if (!S.group) return list.sort(cmp).map((x) => ({ name: null, items: [x.raw] }));
+    if (!S.group || S.sort === 'recent') return list.sort(cmp).map((x) => ({ name: null, items: [x.raw] }));
     const groups = new Map();
     for (const x of list) {
       const k = artistKey(x.c.artist) || x.raw.key;
@@ -520,16 +522,20 @@
     el('yeGather').textContent = has ? `↻ Gather again` : `Gather the releases from ${S.year}'s shows`;
     el('yeGather').title = `look through every show from ${S.year} for its LPs, EPs and compilations (a few minutes the first time; your picks stay)`;
     if (!el('yeGatherStatus').dataset.busy) {
+      const wip = S.data.draftShow ? ` + modem ${S.data.draftShow.number} (being built)` : '';
       el('yeGatherStatus').textContent = has
-        ? `${S.byKey.size} releases from ${(S.data.shows || []).length} shows · gathered ${new Date(S.data.gatheredAt).toLocaleString()}`
+        ? `${S.byKey.size} releases from ${(S.data.shows || []).length} shows${wip} · gathered ${new Date(S.data.gatheredAt).toLocaleString()}`
         : '';
     }
     el('yeUndo').disabled = !S.undo.length; el('yeRedo').disabled = !S.redo.length;
   }
   function renderPool() {
     const { v, t, old } = counts();
+    // sorted by when they were played, an artist's releases stay where their shows put them
+    // (Matej, 2026-11-20): grouping is off for that sort, and comes back for the others
+    const groupable = S.sort !== 'recent';
     el('yeOpts').innerHTML =
-      `<button class="ye-seg-btn${S.group ? ' on' : ''}" data-opt="group" title="keep each artist's releases together">group by artist</button>` +
+      `<button class="ye-seg-btn${S.group && groupable ? ' on' : ''}" data-opt="group" ${groupable ? '' : 'disabled'} title="${groupable ? "keep each artist's releases together" : 'not while sorted by when they were played: each release stays at its own show'}">group by artist</button>` +
       `<button class="ye-seg-btn${S.hideOld ? ' on' : ''}" data-opt="hideOld" title="hide everything released before ${S.year} (a release with no known date stays)">hide released before ${S.year} <span>${old}</span></button>`;
     el('yeViews').innerHTML = [['todo', 'to do'], ['in', 'in the list'], ['out', 'out'], ['all', 'all']]
       .map(([k, n]) => `<button class="ye-seg-btn${S.view === k ? ' on' : ''}" data-view="${k}">${n} <span>${v[k]}</span></button>`).join('');
@@ -669,7 +675,7 @@
     const c = S.byKey.get(box.dataset.key);
     const state = S.open.get(box.dataset.where + ':' + c.key) || { i: 0 };
     const playedIds = new Map();
-    (c.shows || []).forEach((s) => s.tracks.forEach((id) => playedIds.set(String(id), (playedIds.get(String(id)) || []).concat(s.number))));
+    (c.shows || []).forEach((s) => s.tracks.forEach((id) => playedIds.set(String(id), (playedIds.get(String(id)) || []).concat(s.draft ? `${s.number} (being built)` : s.number))));
     box.innerHTML = `<div class="ye-now"></div><div class="ye-tl">${(c.tracks || []).map((t, i) => {
       const shows = playedIds.get(String(t.id));
       return `<div class="ye-t${i === state.i ? ' cur' : ''}${t.playable === false ? ' dead' : ''}" data-i="${i}">
@@ -772,6 +778,22 @@
     const j = await post('/ye/gather', { year: S.year });
     if (!j.ok) { el('yeGatherStatus').textContent = j.error || 'could not start'; return; }
     pollGather();
+  }
+  // Gather again by itself when the year's releases are out of date: the show being built
+  // changed (or was published / started fresh), or a new show of the year is on the site
+  // (year-end.js /ye/stale). Checked when the tab opens, when it's shown again and when the
+  // year changes. Lookups are cached, so it takes seconds. At most once a minute.
+  async function checkStale() {
+    if (!S.year || !S.byKey.size || el('yeGatherStatus').dataset.busy) return;
+    if (S.autoGatherAt && Date.now() - S.autoGatherAt < 60000) return;
+    let j;
+    try { j = await fetch('/ye/stale?year=' + S.year).then((r) => r.json()); } catch (e) { return; }
+    if (!j || !j.stale) return;
+    // (one may be running already — started before a reload)
+    try { if ((await fetch('/ye/gather-status').then((r) => r.json())).running) return pollGather(); } catch (e) { return; }
+    S.autoGatherAt = Date.now();
+    el('yeGatherStatus').textContent = `⏳ ${j.reasons.join('; ')}: gathering again…`;
+    gather();
   }
   function pollGather() {
     clearTimeout(S.poll);
@@ -911,7 +933,7 @@
   }
 
   window.yearendTabActivated = async function () {
-    if (S.loaded) { fitCols(); return; } // the window may have changed size meanwhile
+    if (S.loaded) { fitCols(); checkStale(); return; } // the window may have changed size meanwhile; the draft may have changed
     S.loaded = true;
     host().innerHTML = '<div class="status">loading…</div>';
     wire();
