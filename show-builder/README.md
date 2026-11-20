@@ -45,6 +45,17 @@ Three things Matej asked about the same morning.
   searching it looks through every view, singles and older releases. Each row says where it
   is (#20, out), and a line says how many were found. "computer man ant. adventure" now finds
   The recluse, Psychosomatic piano-person and the I am evan single.
+- **Scan: an album with some of its tracks picked shows it.** (Matej: "if a single track from
+  an album is selected the album's tick box also indicates it with a colored frame and a
+  black dot".) An album's or playlist's box gets a blue frame with a black dot, not a
+  tick, while some of its tracks are in "Your show" but the release itself isn't. Hovering it
+  says how many ("2 of its 9 tracks are in your show…"). It works with the album collapsed
+  too, and follows every change to "Your show": a track removed in Arrange, undo, Start fresh.
+  The whole release ticked is a plain tick as before. Tracks picked from a release's list now
+  remember it (`fromRelease`); older picks are found by the album id, the track ids or a
+  SoundCloud set's group. `refreshScanTicks()` / `pickedTracksOf()` in index.html, run from
+  renderSelected() and after every redraw of the Scan list. Checked: the three looks drawn by
+  Edge, and the counting (15 checks, the functions as written in index.html).
 - **Before using it:** restart the builder, then **Gather** once in the Year-end list tab (it
   keeps your picks; the lookups are cached already, so it takes seconds).
 - Tested: two gathers of 2026 into a copy of the year-end file (only those 6 singles went,

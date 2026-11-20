@@ -118,6 +118,14 @@
      JS needed. */
   .select-hit { flex: none; display: flex; align-items: center; justify-content: center; padding: 8px; margin: -8px; cursor: pointer; }
   .select-hit .selectbox { width: 16px; height: 16px; cursor: pointer; }
+  /* An album / playlist with some of its tracks in "Your show", not the whole release: a
+     blue frame with a black dot instead of a tick (refreshScanTicks()). */
+  .select-hit .selectbox.partial {
+    appearance: none; -webkit-appearance: none; /* (keeps a tick box's own margin: rows stay aligned) */
+    border: 2px solid #3a6ff0; border-radius: 4px;
+    background: radial-gradient(circle at center, #000 0 3px, transparent 3.6px), #c9d7ff;
+  }
+  .select-hit .selectbox.partial:hover { border-color: #4a7dff; }
   .row .meta { min-width: 0; flex: 1; }
   /* Arrange: each track's length, in both views (the same number the Show length total adds up) */
   .dur { flex: none; min-width: 40px; text-align: right; font-size: 12px; color: #9a9ba5; font-variant-numeric: tabular-nums; }
@@ -1218,6 +1226,7 @@ async function toggleExpand(key) {
     const subtracks = result.querySelector('.subtracks');
     if (subtracks) wireScanResultRows(subtracks);
   }
+  refreshScanTicks(); // a SoundCloud set's tracks are known now: its mark can count them
 }
 
 function subtrackItem(parent, t) {
@@ -1248,6 +1257,9 @@ function subtrackItem(parent, t) {
     // and a SoundCloud playlist's `.artist` is its uploader/curator account.
     groupKey: isBandcamp ? (parent.albumId ? 'bc:' + parent.albumId : null) : 'scset:' + parent.key,
     groupLabel: parent.artist || '',
+    // the Scan row it was picked from — for that row's "some tracks picked" mark
+    // (pickedTracksOf); groupKey can't tell, it changes when tracks are (un)grouped
+    fromRelease: parent.key,
     // the release's label is each of its tracks' (a SoundCloud set's track may name its own)
     label: t.label || parent.label || '',
     labelChecked: !!(t.label || parent.labelChecked),
@@ -1337,6 +1349,7 @@ function renderScanResults() {
   }
   box.innerHTML = html || '<div class="empty">Nothing in the last 14 days.</div>';
   wireScanResultRows(box);
+  refreshScanTicks();
 }
 
 // Wires selectbox/preview-btn/preview-art/expand-btn/row-dblclick under
@@ -1369,6 +1382,42 @@ function wireScanResultRows(root) {
       if (e.target.closest('.select-hit') || e.target.closest('.expand-btn')) return;
       togglePreview(row.dataset.key);
     });
+  });
+}
+
+// How many of a release's tracks are in "Your show" on their own, picked from its track
+// list (or elsewhere), while the release itself isn't. Picks made before `fromRelease`
+// existed are found by the album id (Bandcamp), the track ids, or a SoundCloud set's group.
+function pickedTracksOf(parent) {
+  if (!parent || !isExpandable(parent)) return 0;
+  const trackKeys = new Set((parent.tracks || []).map((t) => subtrackItem(parent, t).key));
+  return selected.filter((e) => e.key !== parent.key && (
+    e.fromRelease === parent.key ||
+    trackKeys.has(e.key) ||
+    (parent.albumId && e.albumId === parent.albumId) ||
+    (parent.source === 'soundcloud' && e.groupKey === 'scset:' + parent.key))).length;
+}
+
+// Every Scan tick box as "Your show" has it: ticked when it's in, and an album / playlist
+// with only some of its tracks in gets a coloured frame with a dot instead of a tick
+// (Matej, 2026-11-20). Runs after every change to "Your show" (renderSelected) and every
+// redraw of the Scan list, so it also follows removals in Arrange, undo and Start fresh.
+function refreshScanTicks() {
+  const box = el('scanResults');
+  if (!box) return;
+  box.querySelectorAll('.selectbox[data-key]').forEach((cb) => {
+    const key = cb.dataset.key;
+    cb.checked = isSelected(key);
+    const item = itemRegistry.get(key);
+    const n = !cb.checked && !cb.closest('.subtracks') ? pickedTracksOf(item) : 0;
+    cb.classList.toggle('partial', n > 0);
+    cb.indeterminate = n > 0; // read out as "partly ticked"
+    const hit = cb.closest('.select-hit');
+    if (hit) {
+      const total = (item && ((item.tracks && item.tracks.length) || item.trackCount || item.tracksTotal)) || null;
+      const which = total ? `${n} of its ${total} tracks` : `${n} track${n > 1 ? 's' : ''}`; // "1 of its 3 tracks is"
+      hit.title = n ? `${which} ${n > 1 ? 'are' : 'is'} in your show, not the whole release (a tick adds the whole release as well)` : '';
+    }
   });
 }
 
@@ -1686,6 +1735,7 @@ function renderSelected() {
   if (selected.length) { badge.textContent = String(selected.length); badge.hidden = false; }
   else badge.hidden = true;
   updateShowDuration();
+  refreshScanTicks(); // the Scan list's boxes follow "Your show"
   const inShow = new Set(selected.map((it) => it.key));
   pickedKeys = new Set([...pickedKeys].filter((k) => inShow.has(k)));
   updateDownloadButton();
