@@ -224,12 +224,60 @@
   // credited its tracks to (`credits`, from Gather) — ignoring case, accents and punctuation.
   // While there's a search it looks through everything (every view, singles, older releases):
   // each row says where it is ("#20", "out").
-  const searchKey = (s) => String(s || '').normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  //
+  // Letters dressed up as other characters count as the plain letter, in a release and in
+  // what's typed (Matej, 2026-11-20: "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠" should be found with
+  // "bone" or "protrusion"). NFKD already makes most styled letters plain (𝖇𝖔𝖓𝖊, ｂｏｎｅ, ⓑ,
+  // ℯ, accents); FOLD has the ones it leaves: letters with a stroke or an odd shape (ø, ł,
+  // đ, ß, æ), small capitals (ʙᴏɴᴇ), Greek and Cyrillic letters used as Latin ones (ΛPHEX,
+  // ΣTERNAL, вопе — Greek capitals as they're styled: Σ is an E, σ an o), and the emoji
+  // letters (🅱🅾🅽🅴, 🇧🇴🇳🇪). Then only letters of real writing systems (and digits) make
+  // words; hieroglyphs, sigils and symbols stuck to a name (𓊆, 𖥠, ᐟ, ⌖) are spaces.
+  const FOLD = (() => {
+    const m = new Map();
+    const add = (chars, to) => { for (const ch of chars) m.set(ch, to); };
+    add('øǿɵꝋ', 'o'); add('æǽ', 'ae'); add('œ', 'oe'); add('ß', 'ss'); add('þ', 'th');
+    add('đðɖɗ', 'd'); add('łƚɫɬ', 'l'); add('ħɦ', 'h'); add('ŧƭʈ', 't'); add('ƀɓ', 'b'); add('ƈȼ', 'c');
+    add('ıɨɩ', 'i'); add('ȷɉ', 'j'); add('ʉᵾ', 'u'); add('ɍ', 'r'); add('ɏ', 'y'); add('ƶȥʐʑ', 'z');
+    add('ǥɠɡ', 'g'); add('ŋ', 'n'); add('ĸ', 'k'); add('ſ', 's'); add('ɑɐ', 'a'); add('ǝəɛ', 'e');
+    // small capitals
+    for (const [to, ch] of Object.entries({ a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'ꞯ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', y: 'ʏ', z: 'ᴢ' })) add(ch, to);
+    // Greek as Latin: capitals as they're styled, small letters by their shape
+    add('ΑΛΔ', 'a'); add('Β', 'b'); add('ΕΣΞ', 'e'); add('Ζ', 'z'); add('Η', 'h'); add('Ι', 'i'); add('Κ', 'k'); add('Μ', 'm');
+    add('ΝΠ', 'n'); add('ΟΘΦΩ', 'o'); add('Ρ', 'p'); add('Τ', 't'); add('Υ', 'y'); add('Χ', 'x'); add('Γ', 'r');
+    add('α', 'a'); add('β', 'b'); add('γ', 'y'); add('δ', 'd'); add('εξ', 'e'); add('ζ', 'z'); add('ηπ', 'n'); add('ι', 'i'); add('κ', 'k');
+    add('μυ', 'u'); add('ν', 'v'); add('οθσφϕ', 'o'); add('ρ', 'p'); add('ς', 's'); add('τ', 't'); add('χ', 'x'); add('ω', 'w');
+    // Cyrillic as Latin (small and capital alike)
+    for (const [chars, to] of [['аАдД', 'a'], ['вВьЬ', 'b'], ['еЕёЁэЭ', 'e'], ['иИпП', 'n'], ['іІїЇ', 'i'], ['јЈ', 'j'], ['кК', 'k'], ['мМ', 'm'], ['нН', 'h'],
+      ['оО', 'o'], ['рР', 'p'], ['сС', 'c'], ['тТ', 't'], ['уУ', 'y'], ['хХ', 'x'], ['ѕЅ', 's'], ['шШԝ', 'w'], ['яЯгГ', 'r'], ['ԁ', 'd'], ['ԛ', 'q']]) add(chars, to);
+    return m;
+  })();
+  // 🅐…🅩, 🅰…🆉, 🄰…🅉 and the flag letters 🇦…🇿 → a…z
+  const emojiLetter = (cp) => {
+    for (const start of [0x1F150, 0x1F170, 0x1F130, 0x1F1E6]) if (cp >= start && cp <= start + 25) return String.fromCharCode(97 + cp - start);
+    return null;
+  };
+  const NOT_A_WORD = /[^\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}\p{Script=Armenian}\p{Script=Georgian}\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}\p{Script=Ethiopic}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}\p{N}]+/gu;
+  const searchKey = (s) => {
+    let out = '';
+    for (const ch of String(s || '').normalize('NFKD').replace(/\p{M}/gu, '')) {
+      out += FOLD.get(ch) || FOLD.get(ch.toLowerCase()) || emojiLetter(ch.codePointAt(0)) || ch;
+    }
+    return out.toLowerCase().replace(NOT_A_WORD, ' ').trim();
+  };
   const searchWords = () => searchKey(S.q).split(' ').filter(Boolean);
+  // (kept per release until its names are edited: folding letter by letter on every key
+  // pressed, for every release, would be slow)
+  const hayCache = new WeakMap();
   function haystack(raw, c) {
+    const sig = `${c.title}\u0001${c.artist}\u0001${c.label}`;
+    const hit = hayCache.get(raw);
+    if (hit && hit.sig === sig) return hit.hay;
     const parts = [c.title, c.artist, c.label, raw.title, raw.artist, raw.label, raw.account, ...(raw.credits || []),
       ...(raw.tracks || []).flatMap((t) => [t.title, t.artist])];
-    return ' ' + searchKey(parts.filter(Boolean).join(' ')) + ' ';
+    const hay = ' ' + searchKey(parts.filter(Boolean).join(' ')) + ' ';
+    hayCache.set(raw, { sig, hay });
+    return hay;
   }
   // the releases on the left, filtered and sorted — as groups: with "group by artist" on,
   // an artist's releases sit together, in the order of the artist's best-placed one

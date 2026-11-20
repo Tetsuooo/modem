@@ -41,7 +41,14 @@ Three things Matej asked about the same morning.
   the search takes every word, in any order, at the start of a word anywhere in a release:
   the title, artist, label, account, its tracks' titles and artists, and the names the shows
   credited its tracks to (`credits`, new from Gather; show 250 credits The recluse's track
-  to "Computer man & ant. adventure.ᐟ"). Case, accents and punctuation don't matter. While
+  to "Computer man & ant. adventure.ᐟ"). Case, accents and punctuation don't matter, and
+  neither do letters dressed up as others (later the same day, Matej: "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇
+  ⚙︎ 𖥠" should be found with "bone"): ø ł đ ß æ, small capitals (ʙᴏɴᴇ), styled letters
+  (𝖇𝖔𝖓𝖊, ｂｏｎｅ, ⓑⓞⓝⓔ), emoji letters (🅱🅾🅽🅴, 🇧🇴🇳🇪), and Greek or Cyrillic letters used as
+  Latin ones (ΛPHEX, ΣTERNAL, вопе) count as the plain letter, in the names and in what's
+  typed. Hieroglyphs, sigils and symbols around a name (𓊆, 𖥠, ᐟ, ⌖) count as spaces, so that
+  name reads "bone protrusion" (`FOLD` / `searchKey()` in yearend.js; 36 checks). (That
+  artist was played in show 209, March 2025, so is on 2025's list, not 2026's.) While
   searching it looks through every view, singles and older releases. Each row says where it
   is (#20, out), and a line says how many were found. "computer man ant. adventure" now finds
   The recluse, Psychosomatic piano-person and the I am evan single.
