@@ -150,10 +150,11 @@
   .row .embed-flag { font-size: 11px; color: #ff6666; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .preview-art { cursor: pointer; }
   .preview-art:hover { outline: 2px solid #3a6ff0; outline-offset: -2px; }
-  .expand-btn, .expand-spacer { flex: none; width: 22px; }
-  .expand-btn { background: none; border: none; color: #9a9ba5; padding: 4px 0; font-size: 17px; line-height: 1; cursor: pointer; }
-  .expand-btn:hover:not(:disabled) { color: #e8e8ea; background: none; }
-  .subtracks { padding-left: 44px; border-left: 1px solid #2a2b33; margin: 2px 0 4px 18px; }
+  /* ▸ / ▾: bigger since 2026-11-20 (Matej), with a visible hover area */
+  .expand-btn, .expand-spacer { flex: none; width: 30px; }
+  .expand-btn { height: 30px; background: none; border: none; border-radius: 6px; color: #9a9ba5; padding: 0; font-size: 32px; line-height: 1; cursor: pointer; }
+  .expand-btn:hover:not(:disabled) { color: #e8e8ea; background: #2a2b33; }
+  .subtracks { padding-left: 44px; border-left: 1px solid #2a2b33; margin: 2px 0 4px 22px; }
   .subtrack-row { padding: 3px 8px; }
   .subtrack-row .title { font-size: 12px; color: #c8c8ce; }
   .player-row { padding: 2px 8px 10px 8px; }
@@ -1364,25 +1365,59 @@ function wireScanResultRows(root) {
       if (item) toggleSelect(item);
     });
   });
+  // (e.detail > 1: the second click of a double-click — ▶ and ▸ count a double-click as one
+  // press; they used to flip twice, so ▸ opened and closed again)
   root.querySelectorAll('.preview-btn').forEach((b) => {
-    b.addEventListener('click', () => togglePreview(b.dataset.key));
+    b.addEventListener('click', (e) => { if (e.detail > 1) return; togglePreview(b.dataset.key); });
   });
   root.querySelectorAll('.preview-art').forEach((img) => {
-    img.addEventListener('click', () => togglePreview(img.dataset.key));
-  });
-  root.querySelectorAll('.expand-btn').forEach((b) => {
-    b.addEventListener('click', () => toggleExpand(b.dataset.key));
-  });
-  // Double-click anywhere on a row (top-level result or an expanded
-  // sub-track) plays its preview — a faster target than the small ▶ button.
-  // Skips the checkbox and expand-arrow, which already have their own
-  // double-click-unfriendly toggle behavior.
-  root.querySelectorAll('.row[data-key]').forEach((row) => {
-    row.addEventListener('dblclick', (e) => {
-      if (e.target.closest('.select-hit') || e.target.closest('.expand-btn')) return;
-      togglePreview(row.dataset.key);
+    img.addEventListener('click', (e) => {
+      if (e.detail > 1) return;
+      const key = img.dataset.key;
+      // an album's / playlist's cover waits a moment: a double-click opens its track list
+      // instead of the platform's player (see the row's dblclick below)
+      if (isReleaseRow(img.closest('.row'))) {
+        clearTimeout(artClickTimer);
+        artClickTimer = setTimeout(() => togglePreview(key), 300);
+        return;
+      }
+      togglePreview(key);
     });
   });
+  root.querySelectorAll('.expand-btn').forEach((b) => {
+    b.addEventListener('click', (e) => { if (e.detail > 1) return; toggleExpand(b.dataset.key); });
+  });
+  // Double-click anywhere on a row: an album / playlist opens (or closes) its track list,
+  // like ▸ (Matej, 2026-11-20: "double clicking on an album should open it up … it
+  // shouldn't open a SoundCloud or Bandcamp embed"); a track (a single, or one of an album's
+  // tracks) plays its small preview. Skips the tick box and the buttons, which have their own.
+  root.querySelectorAll('.row[data-key]').forEach((row) => {
+    // a double-click doesn't select the row's text
+    row.addEventListener('mousedown', (e) => { if (e.detail > 1 && !e.target.closest('input, a')) e.preventDefault(); });
+    row.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.select-hit') || e.target.closest('.expand-btn') || e.target.closest('.preview-btn')) return;
+      const key = row.dataset.key;
+      if (isReleaseRow(row)) {
+        clearTimeout(artClickTimer);
+        // a slow double-click on the cover may have opened the player already: close it
+        const frame = document.querySelector(`.preview-frame[data-key="${cssEsc(key)}"]`);
+        if (frame && !frame.hidden && e.target.closest('.preview-art')) togglePreview(key);
+        toggleExpand(key);
+        return;
+      }
+      // a track's cover already started its preview with the first click
+      if (e.target.closest('.preview-art')) return;
+      togglePreview(key);
+    });
+  });
+}
+
+// A Scan row for a whole album / playlist (one that opens into its tracks), not a track.
+let artClickTimer = null;
+function isReleaseRow(row) {
+  if (!row || row.classList.contains('subtrack-row')) return false;
+  const item = itemRegistry.get(row.dataset.key);
+  return !!(item && isExpandable(item));
 }
 
 // How many of a release's tracks are in "Your show" on their own, picked from its track

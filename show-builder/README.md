@@ -63,6 +63,18 @@ Three things Matej asked about the same morning.
   SoundCloud set's group. `refreshScanTicks()` / `pickedTracksOf()` in index.html, run from
   renderSelected() and after every redraw of the Scan list. Checked: the three looks drawn by
   Edge, and the counting (15 checks, the functions as written in index.html).
+- **Scan: a double-click opens an album, ▸ is bigger.** (Matej: "double clicking on an album
+  should open it up in the same way as that dropdown arrow … it shouldn't open a SoundCloud or
+  Bandcamp embed".) A double-click on an album's or playlist's row opens or closes its track
+  list, like ▸. It used to open the platform's player. A track's row (a single, or one of an
+  album's tracks) still plays its small preview.
+  - On an album's cover, a single click still opens the player, after a moment (0.3 s), so a
+    double-click there opens the track list without the player popping up.
+  - A double-click on ▸ or ▶ counts as one press (▸ used to open and close again).
+  - A double-click no longer selects the row's text.
+  - ▸ / ▾ are bigger (32 px in a 30 px button, was 17 px), with a grey hover area.
+  - Tested with real double-clicks in Edge (headless) on a copy of the builder (15 checks):
+    title, cover and ▸ of a playlist, single clicks, a single track's row and cover.
 - **Before using it:** restart the builder, then **Gather** once in the Year-end list tab (it
   keeps your picks; the lookups are cached already, so it takes seconds).
 - Tested: two gathers of 2026 into a copy of the year-end file (only those 6 singles went,
