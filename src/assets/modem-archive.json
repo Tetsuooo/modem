@@ -1,22 +1,324 @@
 {
-  "generatedAt": "2026-11-08T18:19:36.619Z",
+  "generatedAt": "2026-11-22T10:20:33.010Z",
   "source": "https://radiostudent.si/glasba/modem",
   "counts": {
-    "total": 272,
-    "shows": 251,
+    "total": 273,
+    "shows": 252,
     "lists": 21,
-    "withSoundcloud": 249,
+    "withSoundcloud": 250,
     "lastScraped": [
-      "modem-251"
+      "modem-252"
     ],
-    "tracks": 4659,
-    "scMatched": 1643,
+    "tracks": 4684,
+    "scMatched": 1638,
     "tagMerges": 171,
     "tagEdits": 190,
     "segEdits": 84,
     "orderEdits": 0
   },
   "records": [
+    {
+      "type": "show",
+      "slug": "modem-252",
+      "number": 252,
+      "title": "modem ///252",
+      "url": "https://radiostudent.si/glasba/modem/modem-252",
+      "date": "23. 11. 2026",
+      "cover": "/assets/modem_covers/modem252.webp",
+      "mp3": null,
+      "soundcloud": {
+        "track": "https://soundcloud.com/modemodemodem/modem-252",
+        "api": "https://api.soundcloud.com/tracks/2442604254",
+        "title": "modem ///252 by modem",
+        "artwork": "https://i1.sndcdn.com/artworks-QZG8WYUZeprrkIO6-Y5jRLA-t500x500.jpg"
+      },
+      "artists": [
+        {
+          "name": "tau contrib",
+          "url": null,
+          "seg": 0
+        },
+        {
+          "name": "pombel",
+          "url": null,
+          "seg": 1
+        },
+        {
+          "name": "olive garden",
+          "url": null,
+          "seg": 1
+        },
+        {
+          "name": "1hani",
+          "url": null,
+          "seg": 2
+        },
+        {
+          "name": "Paper town",
+          "url": null,
+          "seg": 3
+        },
+        {
+          "name": "iyrliaes",
+          "url": null,
+          "seg": 4
+        },
+        {
+          "name": "ant. adventure.ᐟ",
+          "url": null,
+          "seg": 5
+        },
+        {
+          "name": "tenuta",
+          "url": null,
+          "seg": 5
+        },
+        {
+          "name": "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+          "url": null,
+          "seg": 6
+        },
+        {
+          "name": "tomato-mart up'on thyme",
+          "url": null,
+          "seg": 7
+        },
+        {
+          "name": "julek ploski",
+          "url": null,
+          "seg": 8
+        },
+        {
+          "name": "Giant Claw",
+          "url": null,
+          "seg": 8
+        },
+        {
+          "name": "4h4",
+          "url": null,
+          "seg": 9
+        },
+        {
+          "name": "i hit rock bottom every week",
+          "url": null,
+          "seg": 10
+        },
+        {
+          "name": "Mordul Vaga",
+          "url": null,
+          "seg": 11
+        },
+        {
+          "name": "𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇",
+          "url": null,
+          "seg": 12
+        },
+        {
+          "name": "a1d",
+          "url": null,
+          "seg": 13
+        },
+        {
+          "name": "mażagħżugħa",
+          "url": null,
+          "seg": 14
+        },
+        {
+          "name": "tal egg",
+          "url": null,
+          "seg": 15
+        },
+        {
+          "name": "YNO",
+          "url": null,
+          "seg": 16
+        },
+        {
+          "name": "Giovanni Lami",
+          "url": null,
+          "seg": 17
+        },
+        {
+          "name": "+spd",
+          "url": null,
+          "seg": 18
+        },
+        {
+          "name": "charlykrause@hotmail.com",
+          "url": null,
+          "seg": 19
+        },
+        {
+          "name": "imuhki",
+          "url": null,
+          "seg": 20
+        },
+        {
+          "name": "e03",
+          "url": null,
+          "seg": 21
+        },
+        {
+          "name": "juleryk",
+          "url": null,
+          "seg": 22
+        },
+        {
+          "name": "shiv",
+          "url": null,
+          "seg": 23
+        },
+        {
+          "name": "zᶻzᶻzᶻz﹒﹒",
+          "url": null,
+          "seg": 24
+        }
+      ],
+      "labels": [
+        {
+          "name": "M.M.〈Meaningful Music〉 ™",
+          "url": null,
+          "seg": 8
+        },
+        {
+          "name": "Discrepant",
+          "url": null,
+          "seg": 17
+        }
+      ],
+      "embeds": [
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=720533525/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1640904365/transparent=true/"
+        },
+        {
+          "kind": "bandcamp",
+          "src": "https://bandcamp.com/EmbeddedPlayer/album=1544326668/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4253099380/transparent=true/"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440966572&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432851626&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440213074&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435929770&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299692&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299698&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435830668&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439872517&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440208253&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2405000943&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432522940&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432890002&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430251550&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2431838460&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437775604&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439176310&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437141320&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433854706&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440743408&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433861237&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2408162310&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432390535&show_artwork=true"
+        },
+        {
+          "kind": "soundcloud",
+          "src": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440221603&show_artwork=true"
+        }
+      ],
+      "segments": [
+        "tau contrib",
+        "pombel & olive garden",
+        "1hani",
+        "Paper town",
+        "iyrliaes",
+        "ant. adventure.ᐟ & tenuta",
+        "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+        "tomato-mart up'on thyme",
+        "julek ploski & Giant Claw",
+        "4h4",
+        "i hit rock bottom every week",
+        "Mordul Vaga",
+        "𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇",
+        "a1d",
+        "mażagħżugħa",
+        "tal egg",
+        "YNO",
+        "Giovanni Lami",
+        "+spd",
+        "charlykrause@hotmail.com",
+        "imuhki",
+        "e03",
+        "juleryk",
+        "shiv",
+        "zᶻzᶻzᶻz﹒﹒"
+      ],
+      "bodyHtml": "<p data-seg=\"0\" class=\"seg-marker\">tau contrib ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440966572&show_artwork=true\"></iframe></p>\n<p data-seg=\"1\" class=\"seg-marker\">pombel &amp; olive garden ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432851626&show_artwork=true\"></iframe></p>\n<p data-seg=\"2\" class=\"seg-marker\">1hani ///////</p>\n<p><a href=\"https://soundcloud.com/1hani1/descansa-bien-october-20th\">https://soundcloud.com/1hani1/descansa-bien-october-20th</a></p>\n<p data-seg=\"3\" class=\"seg-marker\">Paper town ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440213074&show_artwork=true\"></iframe></p>\n<p data-seg=\"4\" class=\"seg-marker\">iyrliaes ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=720533525/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1640904365/transparent=true/\"><a href=\"https://iyrliaes.bandcamp.com/track/karst-spring\">karst spring by iyrliaes</a></iframe></p>\n<p data-seg=\"5\" class=\"seg-marker\">ant. adventure.ᐟ &amp; tenuta ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435929770&show_artwork=true\"></iframe></p>\n<p data-seg=\"6\" class=\"seg-marker\">𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299692&show_artwork=true\"></iframe></p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299698&show_artwork=true\"></iframe></p>\n<p data-seg=\"7\" class=\"seg-marker\">tomato-mart up'on thyme ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435830668&show_artwork=true\"></iframe></p>\n<p data-seg=\"8\" class=\"seg-marker\">julek ploski &amp; Giant Claw ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439872517&show_artwork=true\"></iframe></p>\n<p data-seg=\"9\" class=\"seg-marker\">4h4 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440208253&show_artwork=true\"></iframe></p>\n<p data-seg=\"10\" class=\"seg-marker\">i hit rock bottom every week ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2405000943&show_artwork=true\"></iframe></p>\n<p data-seg=\"11\" class=\"seg-marker\">Mordul Vaga ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432522940&show_artwork=true\"></iframe></p>\n<p data-seg=\"12\" class=\"seg-marker\">𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432890002&show_artwork=true\"></iframe></p>\n<p data-seg=\"13\" class=\"seg-marker\">a1d ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430251550&show_artwork=true\"></iframe></p>\n<p data-seg=\"14\" class=\"seg-marker\">mażagħżugħa ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2431838460&show_artwork=true\"></iframe></p>\n<p data-seg=\"15\" class=\"seg-marker\">tal egg ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437775604&show_artwork=true\"></iframe></p>\n<p data-seg=\"16\" class=\"seg-marker\">YNO ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439176310&show_artwork=true\"></iframe></p>\n<p data-seg=\"17\" class=\"seg-marker\">Giovanni Lami ///////</p>\n<p><iframe src=\"https://bandcamp.com/EmbeddedPlayer/album=1544326668/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4253099380/transparent=true/\"><a href=\"https://giovannilami.bandcamp.com/track/bradipsico\">Bradipsico by Giovanni Lami</a></iframe></p>\n<p data-seg=\"18\" class=\"seg-marker\">+spd ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437141320&show_artwork=true\"></iframe></p>\n<p data-seg=\"19\" class=\"seg-marker\">charlykrause@hotmail.com ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433854706&show_artwork=true\"></iframe></p>\n<p data-seg=\"20\" class=\"seg-marker\">imuhki ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440743408&show_artwork=true\"></iframe></p>\n<p data-seg=\"21\" class=\"seg-marker\">e03 ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433861237&show_artwork=true\"></iframe></p>\n<p data-seg=\"22\" class=\"seg-marker\">juleryk ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2408162310&show_artwork=true\"></iframe></p>\n<p data-seg=\"23\" class=\"seg-marker\">shiv ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432390535&show_artwork=true\"></iframe></p>\n<p data-seg=\"24\" class=\"seg-marker\">zᶻzᶻzᶻz﹒﹒ ///////</p>\n<p><iframe width=\"100%\" height=\"400\" scrolling=\"no\" frameborder=\"no\" allow=\"autoplay; encrypted-media\" src=\"https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440221603&show_artwork=true\"></iframe></p>",
+      "searchText": "modem ///252 \n 23. 11. 2026 \n tau contrib pombel olive garden 1hani Paper town iyrliaes ant. adventure.ᐟ tenuta 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 tomato-mart up'on thyme julek ploski Giant Claw 4h4 i hit rock bottom every week Mordul Vaga 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 a1d mażagħżugħa tal egg YNO Giovanni Lami +spd charlykrause@hotmail.com imuhki e03 juleryk shiv zᶻzᶻzᶻz﹒﹒ \n M.M.〈Meaningful Music〉 ™ Discrepant \n tau contrib /////// pombel & olive garden /////// 1hani /////// https://soundcloud.com/1hani1/descansa-bien-october-20th Paper town /////// iyrliaes /////// karst spring by iyrliaes ant. adventure.ᐟ & tenuta /////// 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 /////// tomato-mart up'on thyme /////// julek ploski & Giant Claw /////// 4h4 /////// i hit rock bottom every week /////// Mordul Vaga /////// 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 /////// a1d /////// mażagħżugħa /////// tal egg /////// YNO /////// Giovanni Lami /////// Bradipsico by Giovanni Lami +spd /////// charlykrause@hotmail.com /////// imuhki /////// e03 /////// juleryk /////// shiv /////// zᶻzᶻzᶻz﹒﹒ ///////",
+      "origin": "show-builder"
+    },
     {
       "type": "show",
       "slug": "modem-251",
@@ -78105,6 +78407,30 @@
       "searchText": "717-2 \n +0 \n +0 \n modem 244 \n 244"
     },
     {
+      "key": "sc:2437141320",
+      "kind": "soundcloud",
+      "title": "fireflyte down",
+      "artist": "+spd",
+      "artUrl": "https://i1.sndcdn.com/artworks-Kk3YD7DQWHnKSTsq-sxpxcQ-t500x500.jpg",
+      "link": "https://soundcloud.com/soggy-diary",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437141320&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 18,
+          "segLabel": "+spd",
+          "labels": []
+        }
+      ],
+      "searchText": "fireflyte down \n +spd \n +spd \n modem 252 \n 252"
+    },
+    {
       "key": "sc:2227777427",
       "kind": "soundcloud",
       "title": "8j0a8",
@@ -79049,10 +79375,8 @@
           "labels": []
         }
       ],
-      "searchText": "Cercueil \n 0comeups \n 0comeups \n modem 147 \n 147 \n 02 Cercueil \n 0comeups",
-      "scPlay": 1339911271,
-      "scPlayTitle": "02 Cercueil",
-      "scPlayArtist": "0comeups"
+      "searchText": "Cercueil \n 0comeups \n 0comeups \n modem 147 \n 147",
+      "scPlay": 1339911271
     },
     {
       "key": "bc:-:3747423935",
@@ -79128,9 +79452,7 @@
         }
       ],
       "searchText": "IT WILL GET PEAK \n 0comeups \n 0comeups \n modem 122 \n 122",
-      "scPlay": 1130257315,
-      "scPlayTitle": "IT WILL GET PEAK",
-      "scPlayArtist": "0comeups"
+      "scPlay": 1130257315
     },
     {
       "key": "bc:2489608307:2697460315",
@@ -79185,9 +79507,7 @@
         }
       ],
       "searchText": "rwd \n 0comeups \n 0comeups \n modem 182 \n 182",
-      "scPlay": 1746770802,
-      "scPlayTitle": "rwd",
-      "scPlayArtist": "0comeups"
+      "scPlay": 1746770802
     },
     {
       "key": "bc:673437464:552646257",
@@ -79594,10 +79914,8 @@
           ]
         }
       ],
-      "searchText": "Grol \n 1127 \n ANBA \n modem 12 \n 12 \n 1127 - Grol \n ANBA",
-      "scPlay": 325516200,
-      "scPlayTitle": "1127 - Grol",
-      "scPlayArtist": "ANBA"
+      "searchText": "Grol \n 1127 \n ANBA \n modem 12 \n 12",
+      "scPlay": 325516200
     },
     {
       "key": "bc:3598153815:3708091362",
@@ -80484,6 +80802,30 @@
       "artists": [
         "444theGod"
       ]
+    },
+    {
+      "key": "sc:2440208253",
+      "kind": "soundcloud",
+      "title": "4h4",
+      "artist": "4h4",
+      "artUrl": "https://i1.sndcdn.com/artworks-dU2Mh3MJ8oyPImxY-HSyESw-t500x500.jpg",
+      "link": "https://soundcloud.com/4hal4",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440208253&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 9,
+          "segLabel": "4h4",
+          "labels": []
+        }
+      ],
+      "searchText": "4h4 \n 4h4 \n 4h4 \n modem 252 \n 252"
     },
     {
       "key": "sc:2387854515",
@@ -81668,6 +82010,30 @@
       "searchText": "Makistourn \n A1 Amadou K7 \n Simple Music Experience \n modem 78 \n 78"
     },
     {
+      "key": "sc:2430251550",
+      "kind": "soundcloud",
+      "title": "trencher-",
+      "artist": "a1d",
+      "artUrl": "https://i1.sndcdn.com/artworks-eY3zKbK6WjRVpzFy-ncWtPg-t500x500.jpg",
+      "link": "https://soundcloud.com/a1dd",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2430251550&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 13,
+          "segLabel": "a1d",
+          "labels": []
+        }
+      ],
+      "searchText": "trencher- \n a1d \n a1d \n modem 252 \n 252"
+    },
+    {
       "key": "bc:932125684:2790914938",
       "kind": "bandcamp",
       "title": "Body & Soul",
@@ -82176,10 +82542,8 @@
           ]
         }
       ],
-      "searchText": "side A \n Acolytes \n xquisite \n modem 99 \n 99 \n Acolytes - Side A \n Xquisite Releases",
-      "scPlay": 921979921,
-      "scPlayTitle": "Acolytes - Side A",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "side A \n Acolytes \n xquisite \n modem 99 \n 99",
+      "scPlay": 921979921
     },
     {
       "key": "bc:-:2025220173",
@@ -85236,10 +85600,8 @@
           ]
         }
       ],
-      "searchText": "Space Commander Lars Ulrich \n American Sound \n xquisite \n modem 135 \n 135 \n American Sound - Space Commander Lars Ulrich \n Xquisite Releases",
-      "scPlay": 1233410368,
-      "scPlayTitle": "American Sound - Space Commander Lars Ulrich",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "Space Commander Lars Ulrich \n American Sound \n xquisite \n modem 135 \n 135",
+      "scPlay": 1233410368
     },
     {
       "key": "sc:1441108660",
@@ -86276,6 +86638,30 @@
         }
       ],
       "searchText": "cyclops house - hanging the clothes out to dry - \n ant. adventure.ᐟ \n ant. adventure.ᐟ mouseman \n modem 248 \n 248"
+    },
+    {
+      "key": "sc:2435929770",
+      "kind": "soundcloud",
+      "title": "Last summer in Bermuda !",
+      "artist": "ant. adventure.ᐟ",
+      "artUrl": "https://i1.sndcdn.com/artworks-7g3m4qopWuD1BFHR-OaFgTw-t500x500.jpg",
+      "link": "https://soundcloud.com/anteaterworld",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435929770&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 5,
+          "segLabel": "ant. adventure.ᐟ & tenuta",
+          "labels": []
+        }
+      ],
+      "searchText": "Last summer in Bermuda ! \n ant. adventure.ᐟ \n ant. adventure.ᐟ & tenuta \n modem 252 \n 252"
     },
     {
       "key": "sc:2390592144",
@@ -88735,10 +89121,8 @@
           ]
         }
       ],
-      "searchText": "Taste of Metal \n Avbvrn \n ANBA \n modem 12 \n 12 \n Avbvrn - Taste Of Metal \n ANBA",
-      "scPlay": 325515351,
-      "scPlayTitle": "Avbvrn - Taste Of Metal",
-      "scPlayArtist": "ANBA"
+      "searchText": "Taste of Metal \n Avbvrn \n ANBA \n modem 12 \n 12",
+      "scPlay": 325515351
     },
     {
       "key": "bc:3915089380:2203578216",
@@ -89525,10 +89909,10 @@
           ]
         }
       ],
-      "searchText": "Dryad \n Azrel \n Mizuha 罔象 \n modem 164 \n 164 \n Azrel - Dryad \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Dryad \n Azrel \n Mizuha 罔象 \n modem 164 \n 164 \n Azrel - Dryad \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1513885516,
       "scPlayTitle": "Azrel - Dryad",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:1477309929:-",
@@ -90815,10 +91199,7 @@
           "labels": []
         }
       ],
-      "searchText": "t2 rain \n bb \n bb \n modem 247 \n 247",
-      "scPlay": 2392501167,
-      "scPlayTitle": "t2 rain",
-      "scPlayArtist": "bb"
+      "searchText": "t2 rain \n bb \n bb \n modem 247 \n 247"
     },
     {
       "key": "bc:1824651734:190350917",
@@ -92455,10 +92836,10 @@
           "labels": []
         }
       ],
-      "searchText": "Replay Theater +12.6% \n Beskupehn_Espira \n Beskupehn_Espira \n modem 227 \n 227",
+      "searchText": "Replay Theater +12.6% \n Beskupehn_Espira \n Beskupehn_Espira \n modem 227 \n 227 \n Replay Theater +12.6% \n Beskupehn_espira",
       "scPlay": 2314617638,
       "scPlayTitle": "Replay Theater +12.6%",
-      "scPlayArtist": "Beskupehn_Espira"
+      "scPlayArtist": "Beskupehn_espira"
     },
     {
       "key": "sc:1497314263",
@@ -95094,10 +95475,10 @@
           "labels": []
         }
       ],
-      "searchText": "slowly fading away࿐༉ \n Bruised SpringsTeen \n Bruised SpringsTeen \n modem 234 \n 234 \n Bruised SpringsTeen - It will Never hatch - 06 slowly fading away࿐༉ \n Señor Service",
+      "searchText": "slowly fading away࿐༉ \n Bruised SpringsTeen \n Bruised SpringsTeen \n modem 234 \n 234 \n Bruised SpringsTeen - It will Never hatch - 06 slowly fading away࿐༉ \n Bruised SpringsTeen",
       "scPlay": 2278577408,
       "scPlayTitle": "Bruised SpringsTeen - It will Never hatch - 06 slowly fading away࿐༉",
-      "scPlayArtist": "Señor Service"
+      "scPlayArtist": "Bruised SpringsTeen"
     },
     {
       "key": "bc:3799102483:-",
@@ -96556,10 +96937,10 @@
           "labels": []
         }
       ],
-      "searchText": "Construction N°3 \n Capiuz \n Capiuz \n modem 197 \n 197 \n Capiuz - Construction N°3 \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Construction N°3 \n Capiuz \n Capiuz \n modem 197 \n 197 \n Capiuz - Construction N°3 \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1914304124,
       "scPlayTitle": "Capiuz - Construction N°3",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:1022072067:-",
@@ -97521,6 +97902,30 @@
       "searchText": "Telegogue \n Charlie Thall \n Artetetra \n modem 240 \n 240"
     },
     {
+      "key": "sc:2433854706",
+      "kind": "soundcloud",
+      "title": "Kentucky Sunday",
+      "artist": "charlykrause@hotmail.com",
+      "artUrl": "https://i1.sndcdn.com/artworks-b69zWyVp1VycbTTj-I7BnCg-t500x500.jpg",
+      "link": "https://soundcloud.com/unis-krause-134556058",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433854706&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 19,
+          "segLabel": "charlykrause@hotmail.com",
+          "labels": []
+        }
+      ],
+      "searchText": "Kentucky Sunday \n charlykrause@hotmail.com \n charlykrause@hotmail.com \n modem 252 \n 252"
+    },
+    {
       "key": "sc:1141033372",
       "kind": "soundcloud",
       "title": "Soldiers",
@@ -98178,6 +98583,30 @@
         }
       ],
       "searchText": "We going \n 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 \n 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 \n modem 245 \n 245"
+    },
+    {
+      "key": "sc:2432890002",
+      "kind": "soundcloud",
+      "title": "WOW!!!! So many Golden Chests!!!!!!!!!!!!!!!!!!!",
+      "artist": "𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇",
+      "artUrl": "https://i1.sndcdn.com/artworks-lPsHKzO8bVEeRZPc-UkiMQQ-t500x500.jpg",
+      "link": "https://soundcloud.com/ciociarianfolkstar00",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432890002&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 12,
+          "segLabel": "𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇",
+          "labels": []
+        }
+      ],
+      "searchText": "WOW!!!! So many Golden Chests!!!!!!!!!!!!!!!!!!! \n 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 \n 𝒞𝒾𝑜𝒸𝒾𝒶𝓇𝒾𝒶𝓃 𝐹𝑜𝓁𝓀𝓈𝓉𝒶𝓇 \n modem 252 \n 252"
     },
     {
       "key": "sc:303685111",
@@ -101701,10 +102130,10 @@
           ]
         }
       ],
-      "searchText": "Not Everything \n CVN \n Mizuha 罔象 \n modem 227 \n 227 \n CVN - Not Everything \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Not Everything \n CVN \n Mizuha 罔象 \n modem 227 \n 227 \n CVN - Not Everything \n Mizuha 罔象 / Mizuha +",
       "scPlay": 2208990641,
       "scPlayTitle": "CVN - Not Everything",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:-:582437889",
@@ -102070,10 +102499,7 @@
           ]
         }
       ],
-      "searchText": "Appear/Disappear/Reappear \n DADRAS \n UNO NYC \n modem 7 \n 7 \n Appear/Disappear/Reappear \n Dadras",
-      "scPlay": 793712245,
-      "scPlayTitle": "Appear/Disappear/Reappear",
-      "scPlayArtist": "Dadras"
+      "searchText": "Appear/Disappear/Reappear \n DADRAS \n UNO NYC \n modem 7 \n 7"
     },
     {
       "key": "bc:1142780061:1803738501",
@@ -109515,6 +109941,30 @@
       ]
     },
     {
+      "key": "sc:2440221603",
+      "kind": "soundcloud",
+      "title": "dull 2026 snips",
+      "artist": "dull",
+      "artUrl": "https://i1.sndcdn.com/artworks-ytbiOhIbTMm2aJqG-f4N7xg-t500x500.jpg",
+      "link": "https://soundcloud.com/faintthearted",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440221603&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 24,
+          "segLabel": "zᶻzᶻzᶻz﹒﹒",
+          "labels": []
+        }
+      ],
+      "searchText": "dull 2026 snips \n dull \n zᶻzᶻzᶻz﹒﹒ \n modem 252 \n 252"
+    },
+    {
       "key": "bc:997951438:3245265911",
       "kind": "bandcamp",
       "title": "As Soft As A Strangers Hand",
@@ -109945,6 +110395,30 @@
       "searchText": "Club Disk \"CY(ou)\" \n e03 \n e03 \n modem 219 \n 219"
     },
     {
+      "key": "sc:2433861237",
+      "kind": "soundcloud",
+      "title": "tongue (1)",
+      "artist": "e03",
+      "artUrl": "https://i1.sndcdn.com/artworks-ejScVD1WtM9pVJFh-VGeeVQ-t500x500.jpg",
+      "link": "https://soundcloud.com/e0333",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2433861237&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 21,
+          "segLabel": "e03",
+          "labels": []
+        }
+      ],
+      "searchText": "tongue (1) \n e03 \n e03 \n modem 252 \n 252"
+    },
+    {
       "key": "sc:1458187996",
       "kind": "soundcloud",
       "title": "o",
@@ -110303,10 +110777,10 @@
           ]
         }
       ],
-      "searchText": "swash rhytm \n ecology141 \n Mizuha 罔象 \n modem 121 \n 121 \n ecology141 - swash rhytm \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "swash rhytm \n ecology141 \n Mizuha 罔象 \n modem 121 \n 121 \n ecology141 - swash rhytm \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1118107156,
       "scPlayTitle": "ecology141 - swash rhytm",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:2017046220:1539128415",
@@ -120272,10 +120746,8 @@
           ]
         }
       ],
-      "searchText": "Songwriting data \n Genetics and Windsurfing \n Pointless Geometry \n modem 40 \n 40 \n Genetics And Windsurfing - Songwriting Data (POINTLESS GEOMETRY) \n Genetics and Windsurfing/Daniel Jaśniewski",
-      "scPlay": 469480710,
-      "scPlayTitle": "Genetics And Windsurfing - Songwriting Data (POINTLESS GEOMETRY)",
-      "scPlayArtist": "Genetics and Windsurfing/Daniel Jaśniewski"
+      "searchText": "Songwriting data \n Genetics and Windsurfing \n Pointless Geometry \n modem 40 \n 40",
+      "scPlay": 469480710
     },
     {
       "key": "bc:1084395678:2371191751",
@@ -121497,6 +121969,32 @@
         }
       ],
       "searchText": "Twocking Choral \n GILA \n GILA \n modem 192 \n 192"
+    },
+    {
+      "key": "bc:1544326668:4253099380",
+      "kind": "bandcamp",
+      "title": "Bradipsico",
+      "artist": "Giovanni Lami",
+      "artUrl": "https://f4.bcbits.com/img/a662023101_16.jpg",
+      "link": "https://giovannilami.bandcamp.com/track/bradipsico",
+      "duration": 147,
+      "album": "Fantarombo",
+      "albumUrl": "https://giovannilami.bandcamp.com/album/fantarombo",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=1544326668/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=4253099380/transparent=true/",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 17,
+          "segLabel": "Giovanni Lami",
+          "labels": [
+            "Discrepant"
+          ]
+        }
+      ],
+      "searchText": "Bradipsico \n Giovanni Lami \n Giovanni Lami \n modem 252 \n 252"
     },
     {
       "key": "bc:2772873991:1818089195",
@@ -124706,10 +125204,8 @@
           ]
         }
       ],
-      "searchText": "BBBBBB (ft. Alva Alva) \n Hedo Hydr8 \n ANBA \n modem 138 \n 138 \n Hedo Hydr8 - BBBBBB (ft. Alva Alva) \n ANBA",
-      "scPlay": 1258231684,
-      "scPlayTitle": "Hedo Hydr8 - BBBBBB (ft. Alva Alva)",
-      "scPlayArtist": "ANBA"
+      "searchText": "BBBBBB (ft. Alva Alva) \n Hedo Hydr8 \n ANBA \n modem 138 \n 138",
+      "scPlay": 1258231684
     },
     {
       "key": "bc:3268669435:3176773916",
@@ -126379,10 +126875,10 @@
           ]
         }
       ],
-      "searchText": "Orb \n Hugo Calcio \n Mizuha 罔象 \n modem 132 \n 132 \n Hugo Calcio - Orb \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Orb \n Hugo Calcio \n Mizuha 罔象 \n modem 132 \n 132 \n Hugo Calcio - Orb \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1213958104,
       "scPlayTitle": "Hugo Calcio - Orb",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:673569317:-",
@@ -126807,10 +127303,34 @@
           "labels": []
         }
       ],
-      "searchText": "La grande zucca \n I Fanciulli d'Europa \n I Fanciulli d'Europa \n modem 170 \n 170 \n I Fanciulli d'Europa - La Grande Zucca \n Señor Service",
+      "searchText": "La grande zucca \n I Fanciulli d'Europa \n I Fanciulli d'Europa \n modem 170 \n 170 \n I Fanciulli d'Europa - La Grande Zucca \n Bruised SpringsTeen",
       "scPlay": 1574318092,
       "scPlayTitle": "I Fanciulli d'Europa - La Grande Zucca",
-      "scPlayArtist": "Señor Service"
+      "scPlayArtist": "Bruised SpringsTeen"
+    },
+    {
+      "key": "sc:2405000943",
+      "kind": "soundcloud",
+      "title": "14oz paint thinner",
+      "artist": "i hit rock bottom every week",
+      "artUrl": "https://i1.sndcdn.com/artworks-zwjGYBijaQb8aflS-7vrHQQ-t500x500.jpg",
+      "link": "https://soundcloud.com/ihitrockbottomeveryweek",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2405000943&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 10,
+          "segLabel": "i hit rock bottom every week",
+          "labels": []
+        }
+      ],
+      "searchText": "14oz paint thinner \n i hit rock bottom every week \n i hit rock bottom every week \n modem 252 \n 252"
     },
     {
       "key": "yt:8ojV_Bm_wMQ",
@@ -128090,6 +128610,30 @@
         }
       ],
       "searchText": "...traveler contest by xfchiba, phantafiy, nic and renoncemtn \n imago meri \n imago meri \n modem 215 \n 215"
+    },
+    {
+      "key": "sc:2440743408",
+      "kind": "soundcloud",
+      "title": "‎",
+      "artist": "imuhki",
+      "artUrl": "https://i1.sndcdn.com/artworks-G8jECASw1anozTiE-ME2HnA-t500x500.jpg",
+      "link": "https://soundcloud.com/imuhki",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440743408&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 20,
+          "segLabel": "imuhki",
+          "labels": []
+        }
+      ],
+      "searchText": "‎ \n imuhki \n imuhki \n modem 252 \n 252"
     },
     {
       "key": "sc:2360817371",
@@ -130377,6 +130921,33 @@
       "scPlayArtist": "Residual FX"
     },
     {
+      "key": "bc:720533525:1640904365",
+      "kind": "bandcamp",
+      "title": "karst spring",
+      "artist": "iyrliaes",
+      "artUrl": "https://f4.bcbits.com/img/a2821316846_16.jpg",
+      "link": "https://iyrliaes.bandcamp.com/track/karst-spring",
+      "duration": 192,
+      "album": "Every Orchard Today",
+      "albumUrl": "https://iyrliaes.bandcamp.com/album/every-orchard-today",
+      "embedSrc": "https://bandcamp.com/EmbeddedPlayer/album=720533525/size=large/bgcol=ffffff/linkcol=0687f5/tracklist=false/artwork=small/track=1640904365/transparent=true/",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 4,
+          "segLabel": "iyrliaes",
+          "labels": []
+        }
+      ],
+      "searchText": "karst spring \n iyrliaes \n iyrliaes \n modem 252 \n 252",
+      "scPlay": 2432983611,
+      "scPlayTitle": "karst spring",
+      "scPlayArtist": "iyrliaes"
+    },
+    {
       "key": "bc:2114147120:102458212",
       "kind": "bandcamp",
       "title": "Weatherforecasting Stone",
@@ -131918,10 +132489,7 @@
           "labels": []
         }
       ],
-      "searchText": "soundcloud upload [monday.july21.2025] \n Jeffrey Campbell \n <a href=\" https://landscaping.bandcamp.com/album/toysoldiers \">Toysoldiers by Jeffrey Campbell</a> mappa \n modem 246 \n 246",
-      "scPlay": 2134161366,
-      "scPlayTitle": "soundcloud upload [monday.july21.2025]",
-      "scPlayArtist": "Jeffrey Campbell"
+      "searchText": "soundcloud upload [monday.july21.2025] \n Jeffrey Campbell \n <a href=\" https://landscaping.bandcamp.com/album/toysoldiers \">Toysoldiers by Jeffrey Campbell</a> mappa \n modem 246 \n 246"
     },
     {
       "key": "bc:1327707085:4237902281",
@@ -134814,6 +135382,32 @@
       "scPlayArtist": "Julek ploski"
     },
     {
+      "key": "sc:2439872517",
+      "kind": "soundcloud",
+      "title": "The murder of J. L. Curtis (Entitled EDITION)",
+      "artist": "Julek ploski",
+      "artUrl": "https://i1.sndcdn.com/artworks-VqtEpqCWR7nbyGKu-ZqS1hg-t500x500.jpg",
+      "link": "https://soundcloud.com/julekploski",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439872517&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 8,
+          "segLabel": "julek ploski & Giant Claw",
+          "labels": [
+            "M.M.〈Meaningful Music〉 ™"
+          ]
+        }
+      ],
+      "searchText": "The murder of J. L. Curtis (Entitled EDITION) \n Julek ploski \n julek ploski & Giant Claw \n modem 252 \n 252"
+    },
+    {
       "key": "sc:2230729820",
       "kind": "soundcloud",
       "title": "Twa",
@@ -135033,6 +135627,30 @@
         }
       ],
       "searchText": "snowy day \n juleryk \n juleryk \n modem 233 \n 233"
+    },
+    {
+      "key": "sc:2408162310",
+      "kind": "soundcloud",
+      "title": "spinning spokes w/ pombel",
+      "artist": "juleryk",
+      "artUrl": "https://i1.sndcdn.com/artworks-QkK7s1TemW5ycFay-4pwJtg-t500x500.jpg",
+      "link": "https://soundcloud.com/vg3c",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2408162310&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 22,
+          "segLabel": "juleryk",
+          "labels": []
+        }
+      ],
+      "searchText": "spinning spokes w/ pombel \n juleryk \n juleryk \n modem 252 \n 252"
     },
     {
       "key": "bc:2468375713:-",
@@ -137095,10 +137713,10 @@
           ]
         }
       ],
-      "searchText": "Oak \n kęnåi iiii i i i i i i \n Mizuha 罔象 \n modem 227 \n 227 \n kęnåi - Oak \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Oak \n kęnåi iiii i i i i i i \n Mizuha 罔象 \n modem 227 \n 227 \n kęnåi - Oak \n Mizuha 罔象 / Mizuha +",
       "scPlay": 2208996362,
       "scPlayTitle": "kęnåi - Oak",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "sc:2401263315",
@@ -140444,10 +141062,8 @@
           ]
         }
       ],
-      "searchText": "grows \n Ladonna \n xquisite \n modem 122 \n 122 \n Ladonna - Grows \n Xquisite Releases",
-      "scPlay": 1125163774,
-      "scPlayTitle": "Ladonna - Grows",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "grows \n Ladonna \n xquisite \n modem 122 \n 122",
+      "scPlay": 1125163774
     },
     {
       "key": "yt:Fbh4JJEUBD4",
@@ -144122,10 +144738,10 @@
           ]
         }
       ],
-      "searchText": "Another Life \n Lorenzi \n Mizuha 罔象 \n modem 189 \n 189 \n Lorenzi - Another Life \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Another Life \n Lorenzi \n Mizuha 罔象 \n modem 189 \n 189 \n Lorenzi - Another Life \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1818081027,
       "scPlayTitle": "Lorenzi - Another Life",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:4277892768:378899227",
@@ -148834,6 +149450,30 @@
       "searchText": "\"Collages II [excerpt]\" \n Max Park \n Oma333 \n modem 50 \n 50"
     },
     {
+      "key": "sc:2431838460",
+      "kind": "soundcloud",
+      "title": "kk you",
+      "artist": "mażagħżugħa",
+      "artUrl": "https://i1.sndcdn.com/artworks-9x1fjcMxR4ZNn5L3-TW4GtA-t500x500.jpg",
+      "link": "https://soundcloud.com/mazaghzugha",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2431838460&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 14,
+          "segLabel": "mażagħżugħa",
+          "labels": []
+        }
+      ],
+      "searchText": "kk you \n mażagħżugħa \n mażagħżugħa \n modem 252 \n 252"
+    },
+    {
       "key": "bc:4088928632:-",
       "kind": "bandcamp",
       "title": "One Second: A Compilation Album",
@@ -149839,10 +150479,10 @@
           ]
         }
       ],
-      "searchText": "digital water \n metra.vestlud \n Mizuha 罔象 \n modem 121 \n 121 \n metra.vestlud - digital water \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "digital water \n metra.vestlud \n Mizuha 罔象 \n modem 121 \n 121 \n metra.vestlud - digital water \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1118094331,
       "scPlayTitle": "metra.vestlud - digital water",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:3352071420:2267157640",
@@ -153168,6 +153808,30 @@
       "searchText": "2k19domed \n morbid cereal miasma \n morbid cereal miasma \n modem 57 \n 57"
     },
     {
+      "key": "sc:2432522940",
+      "kind": "soundcloud",
+      "title": "Ballout forever anthem (ft. shuvbunga)",
+      "artist": "Mordul Vaga",
+      "artUrl": "https://i1.sndcdn.com/artworks-KOhnGT0Ic0qfMbP2-egmKzg-t500x500.jpg",
+      "link": "https://soundcloud.com/mordulvaga",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432522940&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 11,
+          "segLabel": "Mordul Vaga",
+          "labels": []
+        }
+      ],
+      "searchText": "Ballout forever anthem (ft. shuvbunga) \n Mordul Vaga \n Mordul Vaga \n modem 252 \n 252"
+    },
+    {
       "key": "bc:2823232468:-",
       "kind": "bandcamp",
       "title": "((( still )))",
@@ -153737,10 +154401,8 @@
           ]
         }
       ],
-      "searchText": "last whisker \n Mos Fet \n mos fet \n modem 154 \n 154 \n mos fet - last whisker \n blinx",
+      "searchText": "last whisker \n Mos Fet \n mos fet \n modem 154 \n 154",
       "scPlay": 1417581481,
-      "scPlayTitle": "mos fet - last whisker",
-      "scPlayArtist": "blinx",
       "artists": [
         "Mos Fet"
       ]
@@ -156119,10 +156781,10 @@
           "labels": []
         }
       ],
-      "searchText": "#Ambient \n nic \n nic \n modem 212 \n 212",
+      "searchText": "#Ambient \n nic \n nic \n modem 212 \n 212 \n #Ambient \n nic torrin",
       "scPlay": 2090711106,
       "scPlayTitle": "#Ambient",
-      "scPlayArtist": "nic"
+      "scPlayArtist": "nic torrin"
     },
     {
       "key": "bc:-:2369608006",
@@ -156386,10 +157048,10 @@
           "labels": []
         }
       ],
-      "searchText": "su rf ace \n nic \n nic \n modem 242 \n 242",
+      "searchText": "su rf ace \n nic \n nic \n modem 242 \n 242 \n su rf ace \n nic torrin",
       "scPlay": 2344292156,
       "scPlayTitle": "su rf ace",
-      "scPlayArtist": "nic"
+      "scPlayArtist": "nic torrin"
     },
     {
       "key": "sc:1808773386",
@@ -158984,10 +159646,8 @@
           ]
         }
       ],
-      "searchText": "Who's Brave? \n Object Blue \n ANBA \n modem 23 \n 23 \n Object Blue - Who's Brave? \n ANBA",
-      "scPlay": 351891467,
-      "scPlayTitle": "Object Blue - Who's Brave?",
-      "scPlayArtist": "ANBA"
+      "searchText": "Who's Brave? \n Object Blue \n ANBA \n modem 23 \n 23",
+      "scPlay": 351891467
     },
     {
       "key": "bc:1484528485:2434614678",
@@ -160411,10 +161071,8 @@
           ]
         }
       ],
-      "searchText": "weirdo \n oozini \n xquisite releases \n modem 115 \n 115 \n oozini - weirdo \n Xquisite Releases",
-      "scPlay": 1065076786,
-      "scPlayTitle": "oozini - weirdo",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "weirdo \n oozini \n xquisite releases \n modem 115 \n 115",
+      "scPlay": 1065076786
     },
     {
       "key": "bc:75511957:79787476",
@@ -161411,10 +162069,7 @@
           ]
         }
       ],
-      "searchText": "Placebo \n Otto B \n WNOADIARWB \n modem 180 \n 180 \n Placebo \n WNOADIARWB.US",
-      "scPlay": 1700156871,
-      "scPlayTitle": "Placebo",
-      "scPlayArtist": "WNOADIARWB.US"
+      "searchText": "Placebo \n Otto B \n WNOADIARWB \n modem 180 \n 180"
     },
     {
       "key": "sc:1095275284",
@@ -161783,10 +162438,8 @@
           ]
         }
       ],
-      "searchText": "send them away \n oxhy \n xquisite releases \n modem 167 \n 167 \n oxhy - send them away \n Xquisite Releases",
-      "scPlay": 1394267695,
-      "scPlayTitle": "oxhy - send them away",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "send them away \n oxhy \n xquisite releases \n modem 167 \n 167",
+      "scPlay": 1394267695
     },
     {
       "key": "bc:2096866958:-",
@@ -162237,6 +162890,30 @@
         }
       ],
       "searchText": "The Reason My Beer is Warm \n panty lines \n xayla \n modem 77 \n 77"
+    },
+    {
+      "key": "sc:2440213074",
+      "kind": "soundcloud",
+      "title": "In my scene",
+      "artist": "Paper town",
+      "artUrl": "https://i1.sndcdn.com/artworks-wn87kbLw1gG8PJRi-IrSD6g-t500x500.jpg",
+      "link": "https://soundcloud.com/paper-town-538783621",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440213074&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 3,
+          "segLabel": "Paper town",
+          "labels": []
+        }
+      ],
+      "searchText": "In my scene \n Paper town \n Paper town \n modem 252 \n 252"
     },
     {
       "key": "bc:2217741557:112939481",
@@ -164699,6 +165376,30 @@
         }
       ],
       "searchText": "788 km \n Poly Chain \n Mondoj \n modem 77 \n 77"
+    },
+    {
+      "key": "sc:2432851626",
+      "kind": "soundcloud",
+      "title": "▌│█║♌︎ł♋︎⌘︎♏︎■︎ □︎●︎♓︎⬥︎🙵□︎⬥︎⍓︎ ▌║▌║ w/ olive garden",
+      "artist": "pombel",
+      "artUrl": "https://i1.sndcdn.com/artworks-C6ymLkrNuOYIzs9M-WHoYKw-t500x500.jpg",
+      "link": "https://soundcloud.com/pombel",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432851626&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 1,
+          "segLabel": "pombel & olive garden",
+          "labels": []
+        }
+      ],
+      "searchText": "▌│█║♌︎ł♋︎⌘︎♏︎■︎ □︎●︎♓︎⬥︎🙵□︎⬥︎⍓︎ ▌║▌║ w/ olive garden \n pombel \n pombel & olive garden \n modem 252 \n 252"
     },
     {
       "key": "bc:2983654696:2584030574",
@@ -169644,10 +170345,10 @@
           ]
         }
       ],
-      "searchText": "Revelation \n riuqea \n Mizuha 罔象 \n modem 121 \n 121 \n riuqea - Revelation \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Revelation \n riuqea \n Mizuha 罔象 \n modem 121 \n 121 \n riuqea - Revelation \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1118106058,
       "scPlayTitle": "riuqea - Revelation",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:2711852018:130297782",
@@ -170336,10 +171037,8 @@
           ]
         }
       ],
-      "searchText": "08.Rojîn Outro \n Rosaceae \n xquisite \n modem 94 \n 94 \n Rosaceae - Rojîn Outro \n Xquisite Releases",
-      "scPlay": 879576190,
-      "scPlayTitle": "Rosaceae - Rojîn Outro",
-      "scPlayArtist": "Xquisite Releases"
+      "searchText": "08.Rojîn Outro \n Rosaceae \n xquisite \n modem 94 \n 94",
+      "scPlay": 879576190
     },
     {
       "key": "bc:3549553232:-",
@@ -171289,10 +171988,10 @@
           ]
         }
       ],
-      "searchText": "Flower On The Ground feat. Lorenzi \n s7n \n Mizuha 罔象 \n modem 181 \n 181 \n s7n - Flower On The Ground (+ Lorenzi) \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Flower On The Ground feat. Lorenzi \n s7n \n Mizuha 罔象 \n modem 181 \n 181 \n s7n - Flower On The Ground (+ Lorenzi) \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1726882575,
       "scPlayTitle": "s7n - Flower On The Ground (+ Lorenzi)",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:2529794616:2630715038",
@@ -173514,10 +174213,10 @@
           "labels": []
         }
       ],
-      "searchText": "n🤔n sogno l'america \n Señor Service \n Señor Service \n modem 227 \n 227",
+      "searchText": "n🤔n sogno l'america \n Señor Service \n Señor Service \n modem 227 \n 227 \n n🤔n sogno l'america \n Bruised SpringsTeen",
       "scPlay": 2218050323,
       "scPlayTitle": "n🤔n sogno l'america",
-      "scPlayArtist": "Señor Service"
+      "scPlayArtist": "Bruised SpringsTeen"
     },
     {
       "key": "bc:1572379334:-",
@@ -173600,10 +174299,10 @@
           "labels": []
         }
       ],
-      "searchText": "spaziale splendy 2 \n Señor Service \n Señor Service \n modem 156 \n 156 \n Spaziale Splendy 2 \n Señor Service",
+      "searchText": "spaziale splendy 2 \n Señor Service \n Señor Service \n modem 156 \n 156 \n Spaziale Splendy 2 \n Bruised SpringsTeen",
       "scPlay": 1432064332,
       "scPlayTitle": "Spaziale Splendy 2",
-      "scPlayArtist": "Señor Service"
+      "scPlayArtist": "Bruised SpringsTeen"
     },
     {
       "key": "bc:-:4158320623",
@@ -174755,6 +175454,30 @@
         }
       ],
       "searchText": "i hate the summer \n shiv \n shiv \n modem 241 \n 241"
+    },
+    {
+      "key": "sc:2432390535",
+      "kind": "soundcloud",
+      "title": "november",
+      "artist": "shiv",
+      "artUrl": "https://i1.sndcdn.com/artworks-zsgWluSFmGYe9aTB-qFvmTA-t500x500.jpg",
+      "link": "https://soundcloud.com/shuvbunga",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2432390535&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 23,
+          "segLabel": "shiv",
+          "labels": []
+        }
+      ],
+      "searchText": "november \n shiv \n shiv \n modem 252 \n 252"
     },
     {
       "key": "sc:2308429145",
@@ -177762,10 +178485,10 @@
           ]
         }
       ],
-      "searchText": "Stone (Original Mix) \n Sport DJ \n Mizuha 罔象 \n modem 141 \n 141 \n Sport DJ - Stone (Original Mix) \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Stone (Original Mix) \n Sport DJ \n Mizuha 罔象 \n modem 141 \n 141 \n Sport DJ - Stone (Original Mix) \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1284843169,
       "scPlayTitle": "Sport DJ - Stone (Original Mix)",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "sc:792981154",
@@ -178596,9 +179319,7 @@
         }
       ],
       "searchText": "diamond conversations \n strange pressure vessel \n strange pressure vessel \n modem 196 \n 196",
-      "scPlay": 1913609987,
-      "scPlayTitle": "diamond conversations",
-      "scPlayArtist": "strange pressure vessel"
+      "scPlay": 1913609987
     },
     {
       "key": "bc:1198243973:3430411243",
@@ -178623,9 +179344,7 @@
         }
       ],
       "searchText": "family circumstances \n strange pressure vessel \n strange pressure vessel \n modem 192 \n 192",
-      "scPlay": 1855396434,
-      "scPlayTitle": "family circumstances",
-      "scPlayArtist": "strange pressure vessel"
+      "scPlay": 1855396434
     },
     {
       "key": "bc:3008188927:656489146",
@@ -178727,9 +179446,7 @@
         }
       ],
       "searchText": "some you wrote \n strange pressure vessel \n &amp;lt;a href=\" https://bffmusicbffmusic.bandcamp.com/album/trik-2-3 \"&amp;gt;Trik 2​→​3 by P. Wojtaszek&amp;lt;/a&amp;gt; strange pressure vessel \n modem 216 \n 216",
-      "scPlay": 2120937831,
-      "scPlayTitle": "some you wrote",
-      "scPlayArtist": "strange pressure vessel"
+      "scPlay": 2120937831
     },
     {
       "key": "sc:1849517031",
@@ -181670,6 +182387,30 @@
       "searchText": "warming space ( ode to the 4 watchers ) \n tal egg \n tal egg \n modem 123 \n 123"
     },
     {
+      "key": "sc:2437775604",
+      "kind": "soundcloud",
+      "title": "who's dad made this",
+      "artist": "tal egg",
+      "artUrl": "https://i1.sndcdn.com/artworks-nL1Vj1U7qrYzJFz5-ziuCSw-t500x500.jpg",
+      "link": "https://soundcloud.com/cucuflute",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2437775604&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 15,
+          "segLabel": "tal egg",
+          "labels": []
+        }
+      ],
+      "searchText": "who's dad made this \n tal egg \n tal egg \n modem 252 \n 252"
+    },
+    {
       "key": "sc:1674673239",
       "kind": "soundcloud",
       "title": "with diaphanous breath",
@@ -182147,6 +182888,30 @@
       "scPlayArtist": "Astro Nautico"
     },
     {
+      "key": "sc:2440966572",
+      "kind": "soundcloud",
+      "title": "amber (sparkle)",
+      "artist": "tau contrib",
+      "artUrl": "https://i1.sndcdn.com/artworks-ZxpjqGjiphm2uUoP-9Yd4VA-t500x500.jpg",
+      "link": "https://soundcloud.com/taucontrib",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2440966572&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 0,
+          "segLabel": "tau contrib",
+          "labels": []
+        }
+      ],
+      "searchText": "amber (sparkle) \n tau contrib \n tau contrib \n modem 252 \n 252"
+    },
+    {
       "key": "bc:-:2710682181",
       "kind": "bandcamp",
       "title": "CMYL",
@@ -182198,10 +182963,10 @@
           ]
         }
       ],
-      "searchText": "grid shift \n tau contrib \n Mizuha 罔象 \n modem 121 \n 121 \n tau contrib - grid shift \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "grid shift \n tau contrib \n Mizuha 罔象 \n modem 121 \n 121 \n tau contrib - grid shift \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1118105245,
       "scPlayTitle": "tau contrib - grid shift",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:598821762:1220584083",
@@ -185152,6 +185917,30 @@
       "searchText": "GAME OVER.mp3 \n Tom Nook \n Mind Club \n modem 98 \n 98"
     },
     {
+      "key": "sc:2435830668",
+      "kind": "soundcloud",
+      "title": "lacewings & grigs",
+      "artist": "tomato-mart up'on thyme",
+      "artUrl": "https://i1.sndcdn.com/artworks-y6LGRcz5QLh4ilHz-N2JJNw-t500x500.jpg",
+      "link": "https://soundcloud.com/tomatomart-755529038",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2435830668&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 7,
+          "segLabel": "tomato-mart up'on thyme",
+          "labels": []
+        }
+      ],
+      "searchText": "lacewings & grigs \n tomato-mart up'on thyme \n tomato-mart up'on thyme \n modem 252 \n 252"
+    },
+    {
       "key": "sc:1856652090",
       "kind": "soundcloud",
       "title": "TOMÉ ~ cry",
@@ -185254,10 +186043,7 @@
           ]
         }
       ],
-      "searchText": "Viewer \n Tominaga \n Squiggle Dot \n modem 1 \n 1 \n viewer \n tominaga",
-      "scPlay": 162502976,
-      "scPlayTitle": "viewer",
-      "scPlayArtist": "tominaga"
+      "searchText": "Viewer \n Tominaga \n Squiggle Dot \n modem 1 \n 1"
     },
     {
       "key": "bc:1333942749:-",
@@ -185527,8 +186313,7 @@
           "labels": []
         }
       ],
-      "searchText": "intro-Winter Insects \n torogu \n torogu \n modem 249 \n 249",
-      "scPlay": 2398707390
+      "searchText": "intro-Winter Insects \n torogu \n torogu \n modem 249 \n 249"
     },
     {
       "key": "sc:2248363577",
@@ -188784,10 +189569,10 @@
           ]
         }
       ],
-      "searchText": "Cortana \n Valet \n Mizuha 罔象 \n modem 128 \n 128 \n Valet - Cortana \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "Cortana \n Valet \n Mizuha 罔象 \n modem 128 \n 128 \n Valet - Cortana \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1171213963,
       "scPlayTitle": "Valet - Cortana",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "sc:2211322574",
@@ -193241,10 +194026,10 @@
           ]
         }
       ],
-      "searchText": "korpokkur \n woopheadclrms \n Mizuha 罔象 \n modem 121 \n 121 \n woopheadclrms - korpokkur \n Mizuha 罔象 / Mizuha 罔象+",
+      "searchText": "korpokkur \n woopheadclrms \n Mizuha 罔象 \n modem 121 \n 121 \n woopheadclrms - korpokkur \n Mizuha 罔象 / Mizuha +",
       "scPlay": 1118102893,
       "scPlayTitle": "woopheadclrms - korpokkur",
-      "scPlayArtist": "Mizuha 罔象 / Mizuha 罔象+"
+      "scPlayArtist": "Mizuha 罔象 / Mizuha +"
     },
     {
       "key": "bc:2714314314:-",
@@ -197586,6 +198371,30 @@
       "searchText": "如狗(NYOKU) \n YNO \n YNO \n modem 174 \n 174"
     },
     {
+      "key": "sc:2439176310",
+      "kind": "soundcloud",
+      "title": "得てれ(ETERE)",
+      "artist": "YNO",
+      "artUrl": "https://i1.sndcdn.com/avatars-000425583105-o59kcl-t500x500.jpg",
+      "link": "https://soundcloud.com/user-252471624",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2439176310&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 16,
+          "segLabel": "YNO",
+          "labels": []
+        }
+      ],
+      "searchText": "得てれ(ETERE) \n YNO \n YNO \n modem 252 \n 252"
+    },
+    {
       "key": "bc:796668852:1388100233",
       "kind": "bandcamp",
       "title": "明るい呪術式 (Akarui jujutsusiki)",
@@ -200818,6 +201627,54 @@
       "searchText": "%appdata%\\.neuro_tow3𒀱r\\screenshot8888☩☩☩⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿ \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n modem 209 \n 209"
     },
     {
+      "key": "sc:2287299698",
+      "kind": "soundcloud",
+      "title": "Fιɾҽɯσɾƙʂ ιɳ ƚԋҽ Cιƚყ Cҽɳƚҽɾ",
+      "artist": "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+      "artUrl": "https://i1.sndcdn.com/artworks-UnVqElrP4DR4h0cn-Z5avnw-t500x500.jpg",
+      "link": "https://soundcloud.com/boneprotrusion",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299698&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 6,
+          "segLabel": "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+          "labels": []
+        }
+      ],
+      "searchText": "Fιɾҽɯσɾƙʂ ιɳ ƚԋҽ Cιƚყ Cҽɳƚҽɾ \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n modem 252 \n 252"
+    },
+    {
+      "key": "sc:2287299692",
+      "kind": "soundcloud",
+      "title": "ɢʟօʀքʊʟօʊֆ ֆʟʊʀքɛɛ ǟɖʋɛռȶʊʀɛ",
+      "artist": "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+      "artUrl": "https://i1.sndcdn.com/artworks-UnVqElrP4DR4h0cn-Z5avnw-t500x500.jpg",
+      "link": "https://soundcloud.com/boneprotrusion",
+      "duration": null,
+      "album": null,
+      "albumUrl": null,
+      "embedSrc": "https://w.soundcloud.com/player/?visual=true&url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2287299692&show_artwork=true",
+      "shows": [
+        {
+          "number": 252,
+          "slug": "modem-252",
+          "date": "23. 11. 2026",
+          "type": "show",
+          "seg": 6,
+          "segLabel": "𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠",
+          "labels": []
+        }
+      ],
+      "searchText": "ɢʟօʀքʊʟօʊֆ ֆʟʊʀքɛɛ ǟɖʋɛռȶʊʀɛ \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n 𖥠 ⚙︎ 𓊆⌖bøne⚕prøtrusiøn⌖𓊇 ⚙︎ 𖥠 \n modem 252 \n 252"
+    },
+    {
       "key": "bc:701408169:-",
       "kind": "bandcamp",
       "title": "Flash",
@@ -201682,5 +202539,5 @@
       "searchText": "Nazo House \n 食品まつり a.k.a. foodman \n Diskotopia \n modem 26 \n 26"
     }
   ],
-  "tracksGeneratedAt": "2026-11-08T18:19:36.619Z"
+  "tracksGeneratedAt": "2026-11-22T10:20:33.010Z"
 }
